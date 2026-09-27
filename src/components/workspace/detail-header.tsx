@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type DetailHeaderProps = {
   backHref?: string;
@@ -69,7 +70,7 @@ export function DetailHeader({
         </div>
       </div>
       {action && (
-        <div className={`min-w-0 self-start xl:max-w-sm xl:shrink-0 xl:[&>div]:justify-end ${actionClassName ?? ""}`}>
+        <div className={cn("min-w-0 self-start xl:max-w-sm xl:shrink-0 xl:[&>div]:justify-end", actionClassName)}>
           {action}
         </div>
       )}
@@ -78,10 +79,12 @@ export function DetailHeader({
 }
 
 /** Real back button and layout; only the record's own title and metadata are placeholders. */
-export function DetailHeaderSkeleton({ backLabel, action = true, inBreadcrumb = false }: {
+export function DetailHeaderSkeleton({ backLabel, action = true, status = true, inBreadcrumb = false }: {
   /** Omit when the back target depends on the record (the label is then a placeholder too). */
   backLabel?: string;
   action?: boolean;
+  /** Omit when the record usually has no status badge. */
+  status?: boolean;
   inBreadcrumb?: boolean;
 }) {
   return (
@@ -90,7 +93,7 @@ export function DetailHeaderSkeleton({ backLabel, action = true, inBreadcrumb = 
       inBreadcrumb={inBreadcrumb}
       backLabel={backLabel ?? <span className="flex h-5 items-center"><Skeleton className="h-3.5 w-20" /></span>}
       title={<div className={`flex items-center ${inBreadcrumb ? "h-[1.5625rem]" : "h-[1.875rem]"}`}><Skeleton className="h-6 w-64 max-w-full" /></div>}
-      status={<Skeleton className={inBreadcrumb ? "h-6 w-20 rounded-full" : "h-5 w-20 rounded-full"} />}
+      status={status ? <Skeleton className={inBreadcrumb ? "h-6 w-20 rounded-full" : "h-5 w-20 rounded-full"} /> : null}
       metadata={<span className="flex h-5 items-center"><Skeleton className="h-3.5 w-56 max-w-full" /></span>}
       action={action ? <Skeleton className={inBreadcrumb ? "h-8 w-32 rounded-full" : "h-8 w-32 rounded-lg"} /> : undefined}
     />

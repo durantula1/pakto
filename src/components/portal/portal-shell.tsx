@@ -1,32 +1,31 @@
-import Link from "next/link";
-import { FileText, Home, MessageCircle, ShieldCheck } from "lucide-react";
+import { Suspense } from "react";
+import { ShieldCheck } from "lucide-react";
 
 import { Wordmark } from "@/components/brand/wordmark";
+import { PortalNav } from "@/components/portal/portal-nav";
 import { PortalProfileMenu } from "@/components/portal/portal-profile-menu";
 import { cn } from "@/lib/utils";
 
-export type PortalSection = "projects" | "questions" | "documents";
-
-const sections = [
-  { id: "projects", href: "/portal", label: "Начало", icon: Home },
-  { id: "questions", href: "/portal/questions", label: "Съобщения", icon: MessageCircle },
-  { id: "documents", href: "/portal/documents", label: "Оферти", icon: FileText },
-] as const;
+async function UnreadCount({ value }: { value: number | Promise<number> }) {
+  const count = await value;
+  if (!count) return null;
+  return <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground">{count}<span className="sr-only"> нови</span></span>;
+}
 
 /**
  * The client portal frame: Pakto and the company the client works with on top, and
  * for a client session the three places a client goes to, in the top bar on desktop and at the bottom
  * on phones.
  */
-export function PortalShell({ organizationName, nav, active, unread = 0, children }: {
+export function PortalShell({ organizationName, nav, unread = 0, children }: {
   organizationName?: string | null;
   /** A client-wide session: "Начало", "Съобщения", "Оферти" and the profile menu. */
   nav: boolean;
-  active?: PortalSection;
-  /** New answers from the company, on "Съобщения". */
-  unread?: number;
+  /** New answers from the company, on "Съобщения"; a promise streams in without holding the frame. */
+  unread?: number | Promise<number>;
   children: React.ReactNode;
 }) {
+  const badge = <Suspense fallback={null}><UnreadCount value={unread} /></Suspense>;
   return (
     <div className="min-h-dvh bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
@@ -42,17 +41,7 @@ export function PortalShell({ organizationName, nav, active, unread = 0, childre
           </div>
           {nav ? (
             <nav aria-label="Портал" className="hidden items-center gap-1 sm:flex">
-              {sections.map((section) => (
-                <Link
-                  key={section.id}
-                  href={section.href}
-                  aria-current={active === section.id ? "page" : undefined}
-                  className={cn("relative inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground", active === section.id && "bg-muted text-foreground")}
-                >
-                  <section.icon className="size-4" /> {section.label}
-                  {section.id === "questions" && unread ? <span className="rounded-full bg-primary px-1.5 text-2xs font-semibold text-primary-foreground">{unread}</span> : null}
-                </Link>
-              ))}
+              <PortalNav variant="top" badge={badge} />
               <span className="ml-2"><PortalProfileMenu /></span>
             </nav>
           ) : (
@@ -67,22 +56,7 @@ export function PortalShell({ organizationName, nav, active, unread = 0, childre
       </main>
       {nav ? (
         <nav aria-label="Портал" className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">
-          <div className="mx-auto grid max-w-md grid-cols-3">
-            {sections.map((section) => (
-              <Link
-                key={section.id}
-                href={section.href}
-                aria-current={active === section.id ? "page" : undefined}
-                className={cn("relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground", active === section.id && "font-semibold text-foreground")}
-              >
-                <span className={cn("relative flex h-7 w-14 items-center justify-center rounded-full", active === section.id && "bg-primary/20")}>
-                  <section.icon className="size-5" />
-                  {section.id === "questions" && unread ? <span className="absolute -top-1 right-2 grid h-4.5 min-w-4.5 place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground">{unread}</span> : null}
-                </span>
-                {section.label}
-              </Link>
-            ))}
-          </div>
+          <PortalNav variant="bottom" badge={badge} />
         </nav>
       ) : null}
     </div>

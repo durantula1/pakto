@@ -78,12 +78,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
           </>
         }
         action={
-          <div className="flex flex-wrap items-center gap-2">
-            <ClientActions client={client} canEdit={managesClients(context)} canArchive={context.role === "owner"} emailLocked={client.emailVerified} hasActiveProject={active > 0} />
-            {can(context, "projects.create") && !client.archivedAt
-              ? <NewProjectSheet label="Нов обект за клиента" defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
-              : null}
-          </div>
+          <ClientActions client={client} canEdit={managesClients(context)} canArchive={context.role === "owner"} emailLocked={client.emailVerified} hasActiveProject={active > 0} />
         }
       />
       {client.notes ? <p className="rounded-xl border bg-card p-4 text-sm whitespace-pre-line">{client.notes}</p> : null}
@@ -105,7 +100,12 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
         </p>
       ) : null}
       <section className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold">Обекти</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">Обекти</h2>
+          {can(context, "projects.create") && !client.archivedAt
+            ? <NewProjectSheet defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
+            : null}
+        </div>
         <DataTable
           label="Обекти на клиента"
           columns={columns}

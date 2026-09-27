@@ -174,8 +174,8 @@ export const getClientPortal = cache(async () => {
   return null;
 });
 
-/** Projects where the client is an active contact with a live link, newest activity first. */
-export async function clientProjects(clientId: string) {
+/** Projects where the client is an active contact with a live link, newest activity first. Shared by the portal frame and its pages. */
+export const clientProjects = cache(async (clientId: string) => {
   const rows = await getDatabase()
     .selectDistinctOn([projects.id], {
       id: projects.id,
@@ -198,10 +198,10 @@ export async function clientProjects(clientId: string) {
   return rows
     .sort((a, b) => Number(!!a.archivedAt) - Number(!!b.archivedAt) || Number(a.status !== "active") - Number(b.status !== "active") || b.updatedAt.getTime() - a.updatedAt.getTime())
     .map((row) => ({ id: row.id, publicId: row.publicId, name: row.name, siteAddress: row.siteAddress, status: row.status, archived: !!row.archivedAt }));
-}
+});
 
 /** The email the client confirmed in any of their projects; the unlock code goes there. */
-export async function clientVerifiedEmail(clientId: string) {
+export const clientVerifiedEmail = cache(async (clientId: string) => {
   const [row] = await getDatabase()
     .select({ email: projectContacts.email })
     .from(projectContacts)
@@ -209,7 +209,7 @@ export async function clientVerifiedEmail(clientId: string) {
     .orderBy(desc(projectContacts.emailVerifiedAt))
     .limit(1);
   return row?.email ?? null;
-}
+});
 
 export async function isOrganizationStaff(organizationId: string) {
   const { data } = await (await createClient()).auth.getClaims();

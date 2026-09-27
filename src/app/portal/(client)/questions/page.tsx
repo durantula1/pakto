@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight, MessageCircle } from "lucide-react";
 
-import { PortalShell } from "@/components/portal/portal-shell";
 import { lastMessages } from "@/modules/change-portal/navigation";
 import { getClientPortal } from "@/modules/change-portal/session";
 import { unreadCount } from "@/modules/messages/queries";
@@ -20,9 +19,8 @@ export default async function PortalQuestionsPage() {
     lastMessages(portal.projects.map((project) => project.id)),
     Promise.all(portal.projects.map((project) => unreadCount({ projectId: project.id }, "client"))),
   ]);
-  const total = unread.reduce((sum, count) => sum + count, 0);
   return (
-    <PortalShell organizationName={portal.organizationName} nav active="questions" unread={total}>
+    <>
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Съобщения</h1>
@@ -52,6 +50,6 @@ export default async function PortalQuestionsPage() {
           })}
         </ul>
       </div>
-    </PortalShell>
+    </>
   );
 }

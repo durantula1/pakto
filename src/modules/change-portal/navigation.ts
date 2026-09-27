@@ -1,17 +1,22 @@
 import "server-only";
 
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { changeOrderRevisions, changeOrders, documentMessages } from "@/db/schema";
 import { clientProjects } from "@/modules/change-portal/session";
-import { unreadCount } from "@/modules/messages/queries";
 
-/** New company answers across every project the client session opens, for "Въпроси" in the portal frame. */
+/** New company answers across every project the client session opens, for the portal badge. */
 export async function clientUnreadQuestions(clientId: string) {
   const projects = await clientProjects(clientId);
-  const counts = await Promise.all(projects.map((project) => unreadCount({ projectId: project.id }, "client")));
-  return counts.reduce((sum, count) => sum + count, 0);
+  if (!projects.length) return 0;
+  const [row] = await getDatabase().select({ total: count() }).from(documentMessages).where(and(
+    inArray(documentMessages.projectId, projects.map((project) => project.id)),
+    isNull(documentMessages.changeOrderId),
+    eq(documentMessages.authorType, "staff"),
+    isNull(documentMessages.readByClientAt),
+  ));
+  return row?.total ?? 0;
 }
 
 /** Every document the client has received, newest first, at its latest sent version; for "Документи". */

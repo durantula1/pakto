@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BookOpen, Building2, CirclePlus, Compass, Contact, Euro, FileText, LayoutDashboard, Search, Settings, Users, type LucideIcon } from "lucide-react";
 
+import { NewProjectSheetControlled } from "@/components/projects/new-project-form";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { searchWorkspaceAction, type SearchHit } from "@/modules/workspace/search-actions";
@@ -11,7 +12,7 @@ import { searchWorkspaceAction, type SearchHit } from "@/modules/workspace/searc
 const pageIcons = { dashboard: LayoutDashboard, projects: Building2, clients: Contact, offers: FileText, catalog: BookOpen, finance: Euro, team: Users, settings: Settings, guide: Compass, notifications: Bell } satisfies Record<string, LucideIcon>;
 
 /** A page or action for the palette; the icon is a name, since the server layout builds the list. */
-export type PaletteLink = { href: string; label: string; icon: keyof typeof pageIcons };
+export type PaletteLink = { href: string; label: string; icon: keyof typeof pageIcons; command?: "new-project" };
 
 const hitIcons: Record<SearchHit["kind"], LucideIcon> = { project: Building2, client: Contact, offer: FileText };
 
@@ -22,6 +23,7 @@ const hitIcons: Record<SearchHit["kind"], LucideIcon> = { project: Building2, cl
 export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actions: PaletteLink[] }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [searching, startSearch] = useTransition();
@@ -55,6 +57,16 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
     router.push(href);
   }
 
+  function run(key: string) {
+    if (key === "new-project") {
+      change(false);
+      // The palette is a modal too; opening the sheet in the same turn fights its focus lock.
+      window.setTimeout(() => setProjectOpen(true), 200);
+      return;
+    }
+    go(key);
+  }
+
   const shownHits = query.trim().length >= 2 ? hits : [];
 
   return (
@@ -71,7 +83,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
           <CommandList
             aria-label="Резултати"
             className="max-h-[min(26rem,60dvh)]"
-            onAction={(key) => go(String(key))}
+            onAction={(key) => run(String(key))}
             renderEmptyState={() => <CommandEmpty>{searching ? "Търсене…" : "Нищо не намерихме."}</CommandEmpty>}
           >
             {shownHits.length ? (
@@ -90,7 +102,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
             {actions.length ? (
               <CommandGroup heading="Ново">
                 {actions.map((item) => (
-                  <CommandItem key={item.href} id={item.href} textValue={item.label}>
+                  <CommandItem key={item.command ?? item.href} id={item.command ?? item.href} textValue={item.label}>
                     <CirclePlus className="text-primary" /> {item.label}
                   </CommandItem>
                 ))}
@@ -110,6 +122,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
           </CommandList>
         </Command>
       </CommandDialog>
+      {actions.some((item) => item.command === "new-project") ? <NewProjectSheetControlled open={projectOpen} onOpenChange={setProjectOpen} /> : null}
     </>
   );
 }

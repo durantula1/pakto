@@ -72,6 +72,22 @@ export function NewProjectForm({ defaultClient = null }: { defaultClient?: Clien
   );
 }
 
+const projectSheetClassName = "w-full overflow-y-auto sm:max-w-md data-[side=right]:sm:max-w-md";
+
+function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOption | null }) {
+  return (
+    <>
+      <SheetHeader className="px-6 pt-6">
+        <SheetTitle className="text-lg font-semibold">Нов обект</SheetTitle>
+        <SheetDescription>Добави мястото и човека, който одобрява.</SheetDescription>
+      </SheetHeader>
+      <div className="px-6 pb-8">
+        <NewProjectForm defaultClient={defaultClient} />
+      </div>
+    </>
+  );
+}
+
 /** "Нов обект" opens a panel over the list instead of a separate page. */
 export function NewProjectSheet({ defaultClient = null, label = "Нов обект" }: { defaultClient?: ClientOption | null; label?: string }) {
   const [open, setOpen] = useState(false);
@@ -80,15 +96,22 @@ export function NewProjectSheet({ defaultClient = null, label = "Нов обек
       <Button type="button" className="min-h-10 gap-2 rounded-xl px-4 font-semibold">
         <Plus className="size-4" /> {label}
       </Button>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md data-[side=right]:sm:max-w-md">
-        <SheetHeader className="px-6 pt-6">
-          <SheetTitle className="text-lg font-semibold">Нов обект</SheetTitle>
-          <SheetDescription>Добави мястото и човека, който одобрява.</SheetDescription>
-        </SheetHeader>
-        <div className="px-6 pb-8">
-          <NewProjectForm defaultClient={defaultClient} />
-        </div>
+      <SheetContent side="right" className={projectSheetClassName}>
+        <NewProjectPanel defaultClient={defaultClient} />
       </SheetContent>
     </SheetTrigger>
+  );
+}
+
+/** The same panel, opened from somewhere that is not a button (the command palette). */
+export function NewProjectSheetControlled({ open, onOpenChange, defaultClient = null }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  defaultClient?: ClientOption | null;
+}) {
+  return (
+    <SheetContent side="right" isOpen={open} onOpenChange={onOpenChange} className={projectSheetClassName}>
+      <NewProjectPanel defaultClient={defaultClient} />
+    </SheetContent>
   );
 }

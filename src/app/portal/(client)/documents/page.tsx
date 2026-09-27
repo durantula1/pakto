@@ -4,9 +4,8 @@ import { redirect } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { ClientStatusBadge } from "@/components/portal/client-status";
-import { PortalShell } from "@/components/portal/portal-shell";
 import { documentName } from "@/modules/change-orders/labels";
-import { clientDocuments, clientUnreadQuestions } from "@/modules/change-portal/navigation";
+import { clientDocuments } from "@/modules/change-portal/navigation";
 import { getClientPortal } from "@/modules/change-portal/session";
 import { cents, formatCents } from "@/modules/projects/state";
 
@@ -16,12 +15,9 @@ export const metadata: Metadata = { title: "Оферти" };
 export default async function PortalDocumentsPage() {
   const portal = await getClientPortal();
   if (!portal || !portal.projects.length) redirect("/portal/invalid");
-  const [documents, unread] = await Promise.all([
-    clientDocuments(portal.projects.map((project) => project.id)),
-    portal.unlocked ? clientUnreadQuestions(portal.clientId) : Promise.resolve(0),
-  ]);
+  const documents = await clientDocuments(portal.projects.map((project) => project.id));
   return (
-    <PortalShell organizationName={portal.organizationName} nav active="documents" unread={unread}>
+    <>
       <div className="mx-auto flex max-w-3xl flex-col gap-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Оферти и промени</h1>
@@ -55,6 +51,6 @@ export default async function PortalDocumentsPage() {
           );
         })}
       </div>
-    </PortalShell>
+    </>
   );
 }

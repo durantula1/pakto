@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -140,7 +141,8 @@ export async function submitPortalDecisionAction(_: DecisionState, formData: For
     return { error: cause instanceof Error ? cause.message : "Решението не беше записано. Опитай отново." };
   }
 
-  if (decisionId) await sendDecisionReceipt(decisionId).catch((cause) => console.error("[portal-receipt]", cause));
+  // The PDF receipt is rendered and emailed after the response, so the redirect does not wait for it.
+  if (decisionId) { const id = decisionId; after(() => sendDecisionReceipt(id).catch((cause) => console.error("[portal-receipt]", cause))); }
   revalidatePath("/app/notifications");
   revalidatePath(`/app/projects/${session.projectId}`);
   revalidatePath(`/app/offers/${data.changeOrderId}`);

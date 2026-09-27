@@ -4,14 +4,12 @@ import { MapPin, MessageCircle } from "lucide-react";
 
 import { UnlockProjectsCard } from "@/components/portal/client-projects-bar";
 import { PortalSteps, stepAmount, type PortalStep } from "@/components/portal/action-card";
-import { PortalShell } from "@/components/portal/portal-shell";
 import { Badge } from "@/components/ui/badge";
 import { formatShortDay } from "@/modules/change-orders/labels";
 import { maskEmail } from "@/lib/email/send";
-import { clientView } from "@/modules/change-portal/queries";
+import { clientProjectCards } from "@/modules/change-portal/cards";
 import { clientVerifiedEmail, getClientPortal } from "@/modules/change-portal/session";
-import { unreadCount } from "@/modules/messages/queries";
-import { cents, formatCents, getProjectState } from "@/modules/projects/state";
+import { cents, formatCents } from "@/modules/projects/state";
 
 const decisionNotices: Record<string, string> = {
   approved: "Одобрението е записано.",
@@ -29,16 +27,13 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
   if (portal.projects.length === 1 && !portal.hiddenProjects) redirect(`/portal/${portal.projects[0]!.publicId}`);
   const decided = typeof query.decision === "string" ? decisionNotices[query.decision] : undefined;
 
-  const unlockEmailPromise = portal.hiddenProjects ? clientVerifiedEmail(portal.clientId) : Promise.resolve(null);
-  const cards = await Promise.all(portal.projects.map(async (project) => {
-    const [state, unread] = await Promise.all([
-      getProjectState(portal.organizationId, project.id).then((state) => (state ? clientView(state) : null)),
-      unreadCount({ projectId: project.id }, "client"),
-    ]);
-    return { project, state, unread };
-  }));
-  const steps: PortalStep[] = cards.flatMap(({ project, state }) => [
-    ...(state?.pendingDocuments ?? [])
+  const [unlockEmail, byProject] = await Promise.all([
+    portal.hiddenProjects ? clientVerifiedEmail(portal.clientId) : Promise.resolve(null),
+    clientProjectCards(portal.organizationId, portal.projects.map((project) => project.id)),
+  ]);
+  const cards = portal.projects.map((project) => ({ project, card: byProject.get(project.id)! }));
+  const steps: PortalStep[] = cards.flatMap(({ project, card }) => [
+    ...card.pendingDocuments
       .toSorted((left, right) => (left.responseDueAt?.getTime() ?? Infinity) - (right.responseDueAt?.getTime() ?? Infinity))
       .map((item) => ({
         key: item.id,
@@ -50,7 +45,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
         href: `/portal/${project.publicId}/changes/${item.id}`,
         action: "Прегледай и реши",
       })),
-    ...(state?.offers ?? []).filter((offer) => offer.status === "awaiting_acceptance").map((offer) => ({
+    ...card.acceptances.map((offer) => ({
       key: `accept-${offer.id}`,
       kind: "Приемане на работа",
       tone: "accept" as const,
@@ -60,12 +55,10 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
       action: "Прегледай и приеми",
     })),
   ]);
-  const unlockEmail = await unlockEmailPromise;
-  const unread = cards.reduce((sum, card) => sum + card.unread, 0);
   const firstName = portal.clientName.split(" ")[0];
 
   return (
-    <PortalShell organizationName={portal.organizationName} nav active="projects" unread={unread}>
+    <>
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Здравейте, {firstName}</h1>
@@ -79,13 +72,12 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
 
         <h2 className="mt-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Вашите обекти</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          {cards.map(({ project, state, unread: projectUnread }) => {
+          {cards.map(({ project, card }) => {
             const done = project.archived || project.status !== "active";
-            const pending = state?.pendingDocuments.length ?? 0;
-            const handover = state?.offers.some((offer) => offer.status === "awaiting_acceptance") ?? false;
-            const stages = state?.milestones ?? [];
-            const completed = stages.filter((stage) => stage.status === "completed").length;
-            const next = state?.nextMilestone;
+            const pending = card.pendingDocuments.length;
+            const handover = card.acceptances.length > 0;
+            const completed = card.stagesCompleted;
+            const next = card.nextStage;
             return (
               <Link key={project.publicId} href={`/portal/${project.publicId}`} className={`group flex flex-col gap-3 rounded-2xl border bg-card p-4 transition-colors hover:border-primary/60 ${done ? "opacity-75" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
@@ -97,11 +89,11 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                     : handover ? <Badge variant="success-soft" className="h-6 px-2.5">Работата е готова</Badge>
                     : done ? <Badge variant="success-soft" className="h-6 px-2.5">Завършен</Badge> : null}
                 </div>
-                {stages.length && !done ? (
+                {card.stagesTotal > 0 && !done ? (
                   <div className="flex flex-col gap-1.5">
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Работа</span><span className="font-semibold">{completed} от {stages.length} {stages.length === 1 ? "етап" : "етапа"}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Работа</span><span className="font-semibold">{completed} от {card.stagesTotal} {card.stagesTotal === 1 ? "етап" : "етапа"}</span></div>
                     <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-                      <div className="h-full rounded-full bg-brand-green" style={{ width: `${Math.round((completed / stages.length) * 100)}%` }} />
+                      <div className="h-full rounded-full bg-brand-green" style={{ width: `${Math.round((completed / card.stagesTotal) * 100)}%` }} />
                     </div>
                   </div>
                 ) : null}
@@ -110,16 +102,16 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                     <div className="flex flex-col gap-0.5 rounded-xl bg-tile-blue px-3 py-2.5 text-tile-blue-foreground">
                       <span className="text-xs">Следва</span>
                       {next ? <><span className="truncate text-sm font-semibold">{next.title}</span><span className="text-xs">до {formatShortDay(next.dueOn)}</span></>
-                        : <span className="text-sm">{stages.length ? "Всички етапи са готови" : "Фирмата още не е добавила график"}</span>}
+                        : <span className="text-sm">{card.stagesTotal ? "Всички етапи са готови" : "Фирмата още не е добавила график"}</span>}
                     </div>
                     <div className="flex flex-col gap-0.5 rounded-xl bg-tile-sand px-3 py-2.5 text-tile-sand-foreground">
                       <span className="text-xs">Остава за плащане</span>
-                      {state && state.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(state.remainingMinor > 0n ? state.remainingMinor : 0n, state.currency)}</span><span className="text-xs tabular-nums">от {formatCents(state.contractMinor, state.currency)}</span></>
+                      {card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
                         : <span className="text-sm">След одобрена оферта</span>}
                     </div>
                   </div>
                 )}
-                {projectUnread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary" /> {projectUnread === 1 ? "1 нов отговор от фирмата" : `${projectUnread} нови отговора от фирмата`}</p> : null}
+                {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : null}
               </Link>
             );
           })}
@@ -129,6 +121,6 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
           <UnlockProjectsCard projectPublicId={portal.projects[0]!.publicId} hidden={portal.hiddenProjects} maskedEmail={unlockEmail ? maskEmail(unlockEmail) : null} />
         ) : null}
       </div>
-    </PortalShell>
+    </>
   );
 }
