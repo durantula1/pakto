@@ -55,11 +55,11 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <input type="hidden" name="step" value={pending.step} />
         <input type="hidden" name="sentTo" value={pending.sentTo} />
         <p className="flex items-center gap-2 text-sm font-medium"><MailCheck className="size-4 text-primary" />
-          {pending.step === "email_change" ? `Код за потвърждение на смяната е изпратен до текущия ти имейл ${pending.sentTo}` : `Изпратихме код до ${pending.sentTo}`}
+          {pending.step === "email_change" ? `Код за потвърждение на смяната е изпратен до текущия ви имейл ${pending.sentTo}` : `Изпратихме код до ${pending.sentTo}`}
         </p>
         <Input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} className="h-11 bg-background font-mono text-lg tracking-[0.4em]" />
         {confirmState.error ? <p role="alert" className="text-sm text-destructive">{confirmState.error}</p> : null}
-        <Button type="submit" className="h-11 w-full" isDisabled={confirming}>{confirming ? "Моля, изчакай…" : "Потвърди"}</Button>
+        <Button type="submit" className="h-11 w-full" isDisabled={confirming}>{confirming ? "Моля, изчакайте…" : "Потвърди"}</Button>
       </form>
     );
   }
@@ -69,11 +69,11 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
       <form action={requestChange} className="space-y-3 rounded-xl border bg-card p-4">
         <input type="hidden" name="projectPublicId" value={projectPublicId} />
         <p className="text-sm font-medium">Нов имейл</p>
-        <p className="text-xs text-muted-foreground">Първо ще потвърдиш с код до текущия имейл, после с код до новия.</p>
+        <p className="text-xs text-muted-foreground">Първо ще потвърдите с код до текущия имейл, после с код до новия.</p>
         <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background" />
         {changeState.error ? <p role="alert" className="text-sm text-destructive">{changeState.error}</p> : null}
         <div className="flex gap-2">
-          <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакай…" : "Изпрати код"}</Button>
+          <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакайте…" : "Изпрати код"}</Button>
           <Button type="button" variant="outline" className="h-11" onPress={() => setChanging(false)}>Отказ</Button>
         </div>
       </form>
@@ -83,15 +83,15 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
   return (
     <form action={requestClaim} className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <input type="hidden" name="projectPublicId" value={projectPublicId} />
-      <p className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-primary" /> Потвърди имейла си</p>
+      <p className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-primary" /> Потвърдете имейла си</p>
       <p className="text-sm leading-6 text-muted-foreground">
         {hasEmail
-          ? `Преди да вземеш решение, ще ти изпратим код до ${maskedEmail}. Само ти ще можеш да одобряваш или отказваш оферти — фирмата няма достъп до кода.`
-          : "Фирмата не е посочила имейл. Въведи своя — на него ще получаваш кодовете за решения и разписките."}
+          ? `Преди да вземете решение, ще ви изпратим код до ${maskedEmail}. Само вие ще можете да одобрявате или отказвате оферти. Фирмата няма достъп до кода.`
+          : "Фирмата не е посочила имейл. Въведете своя. На него ще получавате кодовете за решения и разписките."}
       </p>
       {hasEmail ? null : <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background" />}
       {claimState.error ? <p role="alert" className="text-sm text-destructive">{claimState.error}</p> : null}
-      <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакай…" : "Изпрати ми код"}</Button>
+      <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакайте…" : "Изпрати ми код"}</Button>
     </form>
   );
 }

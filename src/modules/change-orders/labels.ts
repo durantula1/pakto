@@ -10,6 +10,21 @@ export function documentNoun(kind: "offer" | "change") {
   return kind === "offer" ? "Оферта" : "Промяна";
 }
 
+/** How the client portal names a document: "Оферта №1", "Промяна №2". Codes like ОФ-001 stay for the firm. */
+export function documentName(kind: "offer" | "change", sequenceNumber: number) {
+  return `${documentNoun(kind)} №${sequenceNumber}`;
+}
+
+const shortMonths = ["яну.", "фев.", "март", "апр.", "май", "юни", "юли", "авг.", "сеп.", "окт.", "ное.", "дек."];
+const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
+
+/** A date for short client copy: "12 окт.". Takes a `Date` or a `2026-10-12` day. */
+export function formatShortDay(value: Date | string) {
+  const day = typeof value === "string" ? value : sofiaDay.format(value);
+  const [, month, date] = day.split("-").map(Number);
+  return month && date ? `${date} ${shortMonths[month - 1]}` : day;
+}
+
 /** `2026-10-31` → `31.10.2026`; anything else is returned unchanged. */
 export function formatDay(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value.split("-").reverse().join(".") : value;

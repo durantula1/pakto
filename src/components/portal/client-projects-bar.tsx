@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
@@ -62,31 +62,80 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
     );
   }
 
-  const otpId = confirmState.otpId ?? requestState.otpId;
-  const error = confirmState.error ?? requestState.error;
   return (
     <div className="flex items-start gap-2 rounded-xl bg-sidebar px-4 py-3 text-sm text-sidebar-foreground">
       <Building2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>
-        {otpId ? (
-          <form action={confirm} className="mt-2 flex flex-wrap items-center gap-2">
-            <input type="hidden" name="projectPublicId" value={projectPublicId} />
-            <input type="hidden" name="otpId" value={otpId} />
-            <Input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required placeholder="6 цифри" aria-label="Код от имейла" className="h-9 w-28 bg-white text-foreground" />
-            <Button type="submit" isDisabled={confirming} className="h-9">{confirming ? "Проверка…" : "Потвърди"}</Button>
-            <span className="text-sidebar-foreground/60">Изпратихме код на {requestState.sentTo ?? navigation.maskedEmail}</span>
-          </form>
-        ) : (
-          <form action={request} className="mt-2 flex flex-wrap items-center gap-2">
-            <input type="hidden" name="projectPublicId" value={projectPublicId} />
-            <Button type="submit" isDisabled={requesting} className="h-9">{requesting ? "Изпращане…" : "Изпрати код"}</Button>
-            <span className="text-sidebar-foreground/60">{navigation.maskedEmail}</span>
-          </form>
-        )}
-        {error ? <p role="alert" className="mt-2 text-primary">{error}</p> : null}
+        <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={navigation.maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
       </div>
       <button type="button" onClick={() => setOpen(false)} aria-label="Затвори" className="rounded p-1 text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
+    </div>
+  );
+}
+
+function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, requesting, confirm, confirmState, confirming }: {
+  projectPublicId: string;
+  maskedEmail: string;
+  request: (formData: FormData) => void;
+  requestState: UnlockState;
+  requesting: boolean;
+  confirm: (formData: FormData) => void;
+  confirmState: UnlockState;
+  confirming: boolean;
+}) {
+  const otpId = confirmState.otpId ?? requestState.otpId;
+  const error = confirmState.error ?? requestState.error;
+  return (
+    <>
+      {otpId ? (
+        <form action={confirm} className="mt-2 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="projectPublicId" value={projectPublicId} />
+          <input type="hidden" name="otpId" value={otpId} />
+          <Input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required placeholder="6 цифри" aria-label="Код от имейла" className="h-9 w-28 bg-white text-foreground" />
+          <Button type="submit" isDisabled={confirming} className="h-9">{confirming ? "Проверка…" : "Потвърди"}</Button>
+          <span className="text-sidebar-foreground/60">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
+        </form>
+      ) : (
+        <form action={request} className="mt-2 flex flex-wrap items-center gap-2">
+          <input type="hidden" name="projectPublicId" value={projectPublicId} />
+          <Button type="submit" isDisabled={requesting} className="h-9">{requesting ? "Изпращане…" : "Изпрати код"}</Button>
+          <span className="text-sidebar-foreground/60">{maskedEmail}</span>
+        </form>
+      )}
+      {error ? <p role="alert" className="mt-2 text-primary">{error}</p> : null}
+    </>
+  );
+}
+
+/**
+ * On the dashboard of a locked session: the other projects stay hidden until the client enters a code
+ * sent to their confirmed email. Without a confirmed email it only says where to confirm it.
+ */
+export function UnlockProjectsCard({ projectPublicId, hidden, maskedEmail }: { projectPublicId: string; hidden: number; maskedEmail: string | null }) {
+  const [requestState, request, requesting] = useActionState<UnlockState, FormData>(requestUnlockCodeAction, {});
+  const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(confirmUnlockCodeAction, {});
+  const router = useRouter();
+  useEffect(() => {
+    if (confirmState.done || requestState.done) router.refresh();
+  }, [confirmState.done, requestState.done, router]);
+
+  return (
+    <div className="flex items-start gap-3 rounded-2xl bg-sidebar px-4 py-4 text-sm text-sidebar-foreground">
+      <Building2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-white">{hidden === 1 ? "Имате още 1 обект" : `Имате още ${hidden} обекта`}</p>
+        {confirmState.done || requestState.done ? (
+          <p role="status" className="mt-1">Готово. Зареждаме всичките ви обекти…</p>
+        ) : maskedEmail ? (
+          <>
+            <p className="mt-1">За да ги видите тук, въведете код, който ще изпратим на имейла ви.</p>
+            <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
+          </>
+        ) : (
+          <p className="mt-1">Ще ги видите тук, след като потвърдите имейла си в някой обект.</p>
+        )}
+      </div>
     </div>
   );
 }

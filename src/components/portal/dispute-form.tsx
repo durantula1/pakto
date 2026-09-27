@@ -14,7 +14,7 @@ export function PortalDisputeForm({ token }: { token: string }) {
       <Textarea name="reason" maxLength={1000} rows={2} aria-label="Какво се е случило?" placeholder="Какво се е случило? (по желание)" className="bg-background" />
       {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
       <Button type="submit" variant="destructive" className="h-11 px-5" isDisabled={pending}>
-        {pending ? "Моля, изчакай…" : "Оспорвам това решение"}
+        {pending ? "Моля, изчакайте…" : "Оспорвам това решение"}
       </Button>
     </form>
   );

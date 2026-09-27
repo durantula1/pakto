@@ -19,8 +19,8 @@ const RESEND_WINDOW_MS = 15 * 60 * 1000;
  * email is known, and each contact gets at most one such email per 15 minutes.
  */
 export async function requestNewLinksAction(_: LinkRequestState, formData: FormData): Promise<LinkRequestState> {
-  const parsed = z.object({ email: z.email("Въведи валиден имейл.") }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Въведи валиден имейл." };
+  const parsed = z.object({ email: z.email("Въведете валиден имейл.") }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Въведете валиден имейл." };
   const email = parsed.data.email.trim().toLowerCase();
 
   // The lookup and the emails run after the answer, so its timing does not tell a known email apart.

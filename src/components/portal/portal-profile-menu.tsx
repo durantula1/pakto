@@ -10,7 +10,7 @@ import { signOutClientAction } from "@/modules/change-portal/client-session-acti
 export function PortalProfileMenu() {
   return (
     <DropdownMenuTrigger>
-      <Button type="button" variant="ghost" aria-label="Профил" className="size-9 rounded-full p-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-white">
+      <Button type="button" variant="ghost" aria-label="Профил" className="size-10 rounded-full border bg-secondary p-0 text-secondary-foreground hover:bg-secondary/80">
         <UserRound className="size-5" />
       </Button>
       <DropdownMenu placement="bottom end" className="min-w-48" onAction={(key) => { if (key === "sign-out") void signOutClientAction(); }}>

@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, MessageCircle } from "lucide-react";
+import { createContext, useContext, useState } from "react";
+import { Check, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+
+export type DecisionIntent = "approved" | "changes_requested";
+
+const DecisionIntentContext = createContext<DecisionIntent | null>(null);
+
+/** The choice the phone bar opened the decision sheet with; null elsewhere. */
+export function useDecisionIntent() {
+  return useContext(DecisionIntentContext);
+}
 
 /**
  * One offer or change in the portal (docs/portal-simplify-plan.md, Б5): the document in one column,
@@ -29,11 +38,13 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
   aboveBottomNav?: boolean;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [intent, setIntent] = useState<DecisionIntent>("approved");
+  const open = (next: DecisionIntent) => { setIntent(next); setSheetOpen(true); };
   const [asking, setAsking] = useState(unreadAnswers > 0);
 
   return (
-    <div className={cn("grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]", pending && "pb-20 lg:pb-0")}>
-      <div className="flex min-w-0 flex-col gap-5">
+    <div className={cn("grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-6", pending && "pb-20 lg:pb-0")}>
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         <div className="lg:hidden">{summary}</div>
         {details}
         {work ? <section className="flex flex-col gap-4"><h2 className="text-sm font-semibold text-muted-foreground">Изпълнение</h2>{work}</section> : null}
@@ -57,23 +68,23 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
         </details>
       </div>
 
-      <aside className="hidden flex-col gap-3 lg:sticky lg:top-20 lg:flex">
+      <aside className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:flex">
         {summary}
         {pending ? decision : null}
       </aside>
 
       {pending ? (
         <SheetTrigger isOpen={sheetOpen} onOpenChange={setSheetOpen}>
-          <div className={cn("fixed inset-x-0 z-20 border-t bg-card px-4 py-3 lg:hidden", aboveBottomNav ? "bottom-16" : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]")}>
-            <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-              <span className="min-w-0"><span className="block text-xs text-muted-foreground">Чака вашето решение</span><span className="block truncate font-semibold tabular-nums">{amount}</span></span>
-              <Button type="button" className="h-11 rounded-xl px-6 text-base">Реши</Button>
+          <div className={cn("fixed inset-x-0 z-20 border-t bg-card px-4 pt-3 shadow-[0_-0.5rem_1.5rem_-1rem_rgb(16_43_56/0.35)] lg:hidden", aboveBottomNav ? "bottom-16 pb-3" : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]")}>
+            <div className="mx-auto flex max-w-md items-center gap-2">
+              <Button type="button" variant="outline" onPress={() => open("changes_requested")} className="h-13 gap-1 rounded-xl px-4 text-base">Друго <ChevronUp className="size-4" /></Button>
+              <Button type="button" onPress={() => open("approved")} className="h-13 flex-1 gap-2 rounded-xl text-base"><Check className="size-5" strokeWidth={2.5} /> Одобрявам</Button>
             </div>
           </div>
           <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div aria-hidden="true" className="mx-auto mt-1 h-1 w-10 rounded-full bg-muted-foreground/30" />
             <SheetHeader className="sr-only"><SheetTitle>Вашето решение · {amount}</SheetTitle></SheetHeader>
-            {decision}
+            <DecisionIntentContext value={intent}>{decision}</DecisionIntentContext>
           </SheetContent>
         </SheetTrigger>
       ) : null}

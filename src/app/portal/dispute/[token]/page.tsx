@@ -39,16 +39,16 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
           </div>
           {target.accessRevoked && !target.disputed ? (
             <p className="rounded-xl bg-muted p-4 text-sm">
-              Достъпът ти до този обект е спрян, затова решението не може да се оспори оттук. Свържи се с {target.organizationName}.
+              Достъпът ви до този обект е спрян, затова решението не може да се оспори оттук. Свържете се с {target.organizationName}.
             </p>
           ) : target.disputed || query.done ? (
             <p className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary">
-              Оспорването е записано. Фирмата е уведомена, а записът не може да бъде изтрит от нея. Запази имейла с разписката като доказателство.
+              Оспорването е записано. Фирмата е уведомена, а записът не може да бъде изтрит от нея. Запазете имейла с разписката като доказателство.
             </p>
           ) : (
             <>
               <p className="text-sm leading-6 text-muted-foreground">
-                Ако не си взел това решение ти, оспори го. Записът остава постоянно в историята на документа и фирмата получава известие.
+                Ако не сте взели това решение вие, оспорете го. Записът остава постоянно в историята на документа и фирмата получава известие.
               </p>
               <PortalDisputeForm token={token} />
             </>

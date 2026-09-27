@@ -30,10 +30,10 @@ export default function PortalChangeLoading() {
         </Card>
         </div>
         <div className="order-first flex flex-col gap-3 lg:order-none lg:mt-[3.25rem]">
-          <div className="rounded-2xl bg-sidebar p-5">
-            <Skeleton className="h-4 w-44 bg-white/10" />
-            <Skeleton className="mt-3 h-9 w-48 bg-white/15" />
-            <Skeleton className="mt-5 h-4 w-40 bg-white/10" />
+          <div className="rounded-2xl border bg-card p-5">
+            <Skeleton className="h-4 w-44" />
+            <Skeleton className="mt-3 h-9 w-48" />
+            <Skeleton className="mt-5 h-4 w-40" />
           </div>
           <Skeleton className="hidden h-11 w-full rounded-lg lg:block" />
         </div>

@@ -8,7 +8,7 @@ import { lastMessages } from "@/modules/change-portal/navigation";
 import { getClientPortal } from "@/modules/change-portal/session";
 import { unreadCount } from "@/modules/messages/queries";
 
-export const metadata: Metadata = { title: "Въпроси" };
+export const metadata: Metadata = { title: "Съобщения" };
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "short", timeZone: "Europe/Sofia" });
 
@@ -25,7 +25,7 @@ export default async function PortalQuestionsPage() {
     <PortalShell organizationName={portal.organizationName} nav active="questions" unread={total}>
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Въпроси</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Съобщения</h1>
           <p className="mt-1 text-sm text-muted-foreground">Питайте {portal.organizationName} за всеки обект: кога идват, какво да подготвите, достъп.</p>
         </div>
         <ul className="flex flex-col gap-2">

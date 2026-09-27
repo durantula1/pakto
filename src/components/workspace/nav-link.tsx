@@ -31,8 +31,8 @@ export function NavLink({
         className={cn(
           "relative mx-auto flex h-14 w-full max-w-20 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition",
           active
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "text-sidebar-foreground/65 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            ? "bg-primary/20 font-semibold text-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
         )}
       >
         {iconWithBadge}
@@ -48,10 +48,10 @@ export function NavLink({
       title={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
+        "relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
         active
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-          : "text-sidebar-foreground/65 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+          ? "bg-sidebar font-semibold text-sidebar-foreground"
+          : "font-medium text-foreground/80 hover:bg-muted hover:text-foreground",
       )}
     >
       {iconWithBadge}
@@ -67,7 +67,7 @@ function NavPending() {
   return (
     <span
       aria-hidden
-      className="absolute top-1/2 right-1.5 size-1.5 -translate-y-1/2 rounded-full bg-sidebar-primary"
+      className="absolute top-1/2 right-1.5 size-1.5 -translate-y-1/2 rounded-full bg-primary"
     />
   );
 }

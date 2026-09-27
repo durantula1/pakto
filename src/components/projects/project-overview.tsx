@@ -1,21 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock } from "lucide-react";
+import { ArrowRight, CalendarClock, Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { OfferCard, PaidBar } from "@/components/projects/offer-cards";
 import { ClaimPaymentRow, DisputeReceiptRow } from "@/components/portal/inline-forms";
 import { BillLine, Leader, PaperLabel, Quote, Slip } from "@/components/portal/paper";
 import { cn } from "@/lib/utils";
-import { documentCode, formatDay } from "@/modules/change-orders/labels";
+import { documentCode, documentName, formatDay, formatShortDay } from "@/modules/change-orders/labels";
 import type { ScopeView } from "@/modules/projects/scope";
 import { cents, formatCents, type ProjectState } from "@/modules/projects/state";
 
-type Tone = "secondary" | "success-soft" | "warning-soft" | "danger-soft" | "info-soft";
-const stageStates: Record<string, { label: string; tone: Tone }> = {
-  planned: { label: "Предстои", tone: "secondary" },
-  in_progress: { label: "В работа", tone: "info-soft" },
-  completed: { label: "Завършен", tone: "success-soft" },
-};
 const paymentLabels: Record<string, string> = { deposit: "Капаро", progress: "Междинно", final: "Окончателно", other: "Друго" };
 const methodLabels: Record<string, string> = { cash: "в брой", bank: "банков превод", card: "карта", other: "друго" };
 
@@ -91,7 +85,7 @@ export function PortalSummary({ state, view, portalPublicId, offers }: { state: 
   const single = offers.length === 1 && offers[0]!.inForce ? offers[0]! : null;
   if (!view.hasAgreement) return (
     <section className="rounded-2xl border bg-card p-5">
-      <p className="text-sm leading-6 text-muted-foreground">Цената, плащанията и сроковете ще се появят тук, след като одобриш оферта.</p>
+      <p className="text-sm leading-6 text-muted-foreground">Цената, плащанията и сроковете ще се появят тук, след като одобрите оферта.</p>
     </section>
   );
   const lines = single
@@ -115,7 +109,7 @@ export function PortalSummary({ state, view, portalPublicId, offers }: { state: 
         <BillLine
           className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-primary")}
           strong
-          label={left > 0n ? "Остава да платиш" : left < 0n ? "Надплатено" : "Изплатено изцяло"}
+          label={left > 0n ? "Остава да платите" : left < 0n ? "Надплатено" : "Изплатено изцяло"}
           amount={formatCents(left < 0n ? -left : left, view.currency)}
         />
         <PaidBar className="mt-4" paidMinor={view.paidMinor} contractMinor={view.contractMinor} />
@@ -125,7 +119,7 @@ export function PortalSummary({ state, view, portalPublicId, offers }: { state: 
           {state.nextMilestone ? <span>· следва „{state.nextMilestone.title}“ до {formatDay(state.nextMilestone.dueOn)}</span> : null}
         </p>
         {state.unassigned.receiptsCount ? (
-          <Quote className="mt-3 text-muted-foreground">{formatCents(state.unassigned.paidMinor, state.currency)} от плащанията ти още не са отнесени към конкретна оферта. Влизат в платеното.</Quote>
+          <Quote className="mt-3 text-muted-foreground">{formatCents(state.unassigned.paidMinor, state.currency)} от плащанията ви още не са отнесени към конкретна оферта. Влизат в платеното.</Quote>
         ) : null}
       </section>
       {offers.length > 1 ? (
@@ -146,41 +140,50 @@ export function PortalSummary({ state, view, portalPublicId, offers }: { state: 
  */
 export function PortalSchedule({ view }: { view: ScopeView }) {
   const now = today();
-  const nextWeek = new Date(Date.parse(`${now}T00:00:00Z`) + 7 * 86400000).toISOString().slice(0, 10);
   if (!view.hasAgreement) return <section className="rounded-2xl border bg-card p-5">
-    <p className="text-sm leading-6 text-muted-foreground">Графикът ще се появи тук, след като одобриш офертата.</p>
+    <p className="text-sm leading-6 text-muted-foreground">Графикът ще се появи тук, след като одобрите офертата.</p>
   </section>;
   const next = view.milestones.find((item) => item.status !== "completed");
   const done = view.milestones.filter((item) => item.status === "completed").length;
-  const code = (offerId: string | null) => {
+  const name = (offerId: string | null) => {
     const offer = view.offers.find((item) => item.id === offerId);
-    return view.offers.length > 1 && offer ? documentCode("offer", offer.sequenceNumber) : null;
+    return view.offers.length > 1 && offer ? documentName("offer", offer.sequenceNumber) : null;
   };
-  return <section className="rounded-2xl border bg-card px-5 py-4">
+  return <section className="rounded-2xl border bg-card px-4 py-4 sm:px-5">
     <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
       <span className="font-semibold">График на работата</span>
       <span className="text-muted-foreground">
-        {view.milestones.length ? `${done} от ${view.milestones.length} завършени` : ""}
+        {view.milestones.length ? `${done} от ${view.milestones.length} етапа готови` : ""}
         {view.milestones.length && view.deadline ? " · " : ""}
         {view.deadline ? <>срок <strong className="font-semibold text-foreground">{formatDay(view.deadline)}</strong></> : null}
       </span>
     </p>
-    {view.milestones.length ? <ol className="mt-2 divide-y divide-dashed">{view.milestones.map((item) => {
-      const overdue = item.status !== "completed" && item.dueOn < now;
-      const soon = item.status !== "completed" && !overdue && item.dueOn <= nextWeek;
-      const offerCode = code(item.offerId);
-      const state: { label: string; tone: Tone } = overdue ? { label: "Просрочен", tone: "danger-soft" } : item.id === next?.id ? { label: soon ? "Следващ · скоро" : "Следващ", tone: soon ? "warning-soft" : "info-soft" } : stageStates[item.status] ?? { label: item.status, tone: "secondary" };
-      const date = item.completedAt ? formatDay(sofiaDay.format(item.completedAt)) : formatDay(item.dueOn);
-      return <li key={item.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-center gap-x-3 py-2.5 text-sm">
-        <span className={cn("font-mono text-xs text-muted-foreground", overdue && "text-destructive")}>{date}</span>
-        <div className="min-w-0">
-          <p className={cn("font-medium", item.id === next?.id && "text-primary", item.status === "completed" && "text-muted-foreground")}>
-            {offerCode ? <span className="mr-1.5 font-mono text-xs font-normal text-muted-foreground">{offerCode}</span> : null}
-            {item.title}
-          </p>
-          {item.previousDueOn && item.status !== "completed" ? <Quote tone="warning" className="mt-1 text-xs text-muted-foreground">Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}
+    {view.milestones.length ? <ol className="mt-4">{view.milestones.map((item, index) => {
+      const completed = item.status === "completed";
+      const current = item.id === next?.id;
+      const overdue = !completed && item.dueOn < now;
+      const offerName = name(item.offerId);
+      const when = completed
+        ? `Завършен на ${formatShortDay(item.completedAt ? sofiaDay.format(item.completedAt) : item.dueOn)}`
+        : overdue ? `Закъснява · трябваше до ${formatShortDay(item.dueOn)}`
+        : item.status === "in_progress" || current ? `${item.status === "in_progress" ? "В момента" : "Следва"} · до ${formatShortDay(item.dueOn)}`
+        : `Предстои · до ${formatShortDay(item.dueOn)}`;
+      return <li key={item.id} className="flex gap-3">
+        <div className="flex w-6 flex-col items-center">
+          <span className={cn("grid size-6 shrink-0 place-items-center rounded-full",
+            completed ? "bg-brand-green text-foreground" : current ? "bg-primary ring-[5px] ring-primary/25" : "border-2 border-foreground/25 bg-card")}>
+            {completed ? <Check className="size-3.5" strokeWidth={3} /> : null}
+          </span>
+          {index < view.milestones.length - 1 ? <span className="w-0.5 min-h-5 flex-1 bg-foreground/15" /> : null}
         </div>
-        <Badge variant={state.tone}>{state.label}</Badge>
+        <div className="min-w-0 pb-4">
+          <p className={cn("font-semibold", !completed && !current && "text-muted-foreground")}>
+            {item.title}
+            {offerName ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">{offerName}</span> : null}
+          </p>
+          <p className={cn("text-sm text-muted-foreground", overdue && "text-destructive")}>{when}</p>
+          {item.previousDueOn && !completed ? <Quote tone="warning" className="mt-1 text-xs text-muted-foreground">Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}
+        </div>
       </li>;
     })}</ol> : <p className="mt-2 text-sm text-muted-foreground">Фирмата още не е добавила етапи.</p>}
   </section>;
@@ -228,7 +231,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct }: { view:
     <section className="rounded-2xl border bg-card px-5 py-4">
       {canAct ? <ClaimPaymentRow row={balance} stack trigger="Отбележи плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
       {view.hasAgreement ? <PaidBar className="mt-3" paidMinor={view.paidMinor} contractMinor={view.contractMinor} /> : (
-        <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобриш офертата."}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобрите офертата."}</p>
       )}
     </section>
 
@@ -259,7 +262,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct }: { view:
         {[...pendingClaims, ...rejected].map((claim) => <li key={claim.id} className="py-3">
           <Entry
             date={formatDay(claim.paidOn)}
-            title="Отбелязано от теб"
+            title="Отбелязано от вас"
             sub={claim.status === "pending" ? "влиза в платеното, след като фирмата го потвърди" : null}
             amount={<span className="text-muted-foreground">{formatCents(cents(claim.amount), claim.currency)}</span>}
             badge={claim.status === "pending" ? <Badge variant="warning-soft">Чака фирмата</Badge> : <Badge variant="danger-soft">Непотвърдено</Badge>}
@@ -277,7 +280,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct }: { view:
           const canDispute = canAct && Number(item.amount) > 0 && item.dispute?.status !== "open" && !item.correctionOfId;
           return <li key={item.id} className="py-3">
             {canDispute ? <DisputeReceiptRow row={row} portalPublicId={portalPublicId} receiptId={item.id} /> : row}
-            {item.dispute?.status === "open" ? <Quote by="Оспорено от теб:" tone="danger" className="mt-2 sm:ml-[6.25rem]">{item.dispute.reason}</Quote>
+            {item.dispute?.status === "open" ? <Quote by="Оспорено от вас:" tone="danger" className="mt-2 sm:ml-[6.25rem]">{item.dispute.reason}</Quote>
               : item.dispute?.status === "resolved" ? <Quote by="Фирмата:" className="mt-2 sm:ml-[6.25rem]">{item.dispute.resolution}</Quote> : null}
           </li>;
         })}

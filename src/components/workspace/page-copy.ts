@@ -33,7 +33,7 @@ export const workspacePageCopy = {
   notifications: {
     eyebrow: "Комуникация",
     title: "Известия",
-    description: "Решения от клиенти, промени на права и важни действия по обекти.",
+    description: "Клик върху известие го отваря и го отбелязва като прочетено.",
   },
   team: {
     eyebrow: "Управление на достъпа",

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarClock, CheckCircle2, Clock3, Download, History } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Download, History } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
@@ -10,7 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
 import { DocumentBody } from "@/components/change-orders/document-body";
-import { documentCode, scheduleLabel, totalLabel, vatLabel } from "@/modules/change-orders/labels";
+import { documentName, scheduleLabel, totalLabel, vatLabel } from "@/modules/change-orders/labels";
+import { ClientStatusBadge, clientStatusLabels } from "@/components/portal/client-status";
+import { cents, formatCents } from "@/modules/projects/state";
+import { cn } from "@/lib/utils";
 import { discountLabel } from "@/modules/change-orders/pricing";
 import { getPortalChange } from "@/modules/change-portal/queries";
 import { markRevisionViewed } from "@/modules/change-portal/viewed";
@@ -23,16 +26,6 @@ import { AcceptancePanel } from "@/components/portal/acceptance-panel";
 import { PortalPayments, PortalSchedule } from "@/components/projects/project-overview";
 import { scopeView } from "@/modules/projects/scope";
 
-const labels: Record<string, string> = {
-  sent: "Очаква решение",
-  viewed: "Прегледана",
-  approved: "Одобрена",
-  declined: "Отказана",
-  changes_requested: "Поискана промяна",
-  superseded: "Обновява се",
-  expired: "Изтекла",
-  canceled: "Анулирана",
-};
 const eventLabels: Record<string, string> = {
   revision_sent: "Изпратена за решение",
   revision_withdrawn: "Оттеглена от фирмата за корекция",
@@ -57,14 +50,7 @@ const eventLabels: Record<string, string> = {
   acceptance_issues: "Изпратени забележки по работата",
 };
 
-const statusTones: Record<string, "secondary" | "success-soft" | "warning-soft" | "danger-soft"> = {
-  sent: "warning-soft",
-  viewed: "warning-soft",
-  approved: "success-soft",
-  changes_requested: "warning-soft",
-  declined: "danger-soft",
-  expired: "danger-soft",
-};
+const dayFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", timeZone: "Europe/Sofia" });
 
 function daysUntil(date: Date) {
   return Math.ceil((date.getTime() - new Date().getTime()) / 86_400_000);
@@ -92,6 +78,7 @@ export default async function PortalChangePage({
   const attachments = data.attachments;
   const money = (value: string | number) => Number(value).toFixed(2);
   const isOffer = change.documentKind === "offer";
+  const name = documentName(change.documentKind, change.sequenceNumber);
   const inForce = change.approvedRevisionId && change.approvedRevisionId !== change.revisionId
     ? data.revisions.find((revision) => revision.id === change.approvedRevisionId)
     : undefined;
@@ -108,7 +95,7 @@ export default async function PortalChangePage({
     <>
       <DocumentBody document={{ ...change, lineItems: data.lineItems, schedule: data.schedule, paymentTerms: data.paymentTerms, absorbedChanges: data.absorbedChanges }} brand={{ name: data.project.organizationName, logo: data.logo }} />
       {attachments.length ? (
-        <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и документи към тази версия. Отвори ги, за да ги видиш в пълен размер." />
+        <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и документи към тази версия. Отворете ги, за да ги видите в пълен размер." />
       ) : null}
     </>
   );
@@ -124,11 +111,11 @@ export default async function PortalChangePage({
   const decision = awaitingDecision ? (
     <Card className="[--card-spacing:--spacing(5)] sm:[--card-spacing:--spacing(6)]">
       <CardHeader>
-        <CardTitle className="text-lg">Твоето решение</CardTitle>
+        <CardTitle className="text-lg">Вашето решение</CardTitle>
         <CardDescription>
           {data.session.contactEmail
-            ? `Решението се записва към версия ${change.revisionNumber} и го виждате и двете страни. Потвърждаваш го с код на имейла си.`
-            : "Първо потвърди имейла си — после ще можеш да одобриш, да поискаш промяна или да откажеш."}
+            ? `Решението се записва${change.revisionNumber > 1 ? ` към версия ${change.revisionNumber}` : ""} и го виждат и двете страни. Потвърждавате го с код от имейла си.`
+            : "Първо потвърдете имейла си. После ще можете да одобрите, да поискате промяна или да откажете."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -162,7 +149,7 @@ export default async function PortalChangePage({
             {data.decision
               ? `${data.decision.typedName} · ${dateTime(data.decision.createdAt)}${data.decision.verifiedEmail ? ` · потвърдено с код до ${maskEmail(data.decision.verifiedEmail)}` : ""}`
               : data.session.contactRole === "approver"
-                ? "Статус: " + (labels[change.status] ?? change.status)
+                ? "Статус: " + (clientStatusLabels[change.status] ?? change.status)
                 : "Решението се взима от одобряващия контакт по обекта."}
           </p>
         </div>
@@ -181,7 +168,7 @@ export default async function PortalChangePage({
         {data.revisions.some((revision) => revision.frozenAt) ? (
           <div className="flex flex-wrap gap-2 border-b pb-4">
             {data.revisions.filter((revision) => revision.frozenAt).map((revision) => (
-              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${documentCode(change.documentKind, change.sequenceNumber)} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/5">
+              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/5">
                 <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {revision.currency}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
               </DownloadLink>
             ))}
@@ -204,26 +191,54 @@ export default async function PortalChangePage({
     </Card>
   );
 
+  // A change waiting for the client shows what the price of its offer becomes.
+  const waiting = ["sent", "viewed"].includes(change.status);
+  const parentContract = parentOffer?.inForce ? parentOffer.contractMinor : null;
+  const changeMinor = cents(change.total);
+  const priceBefore = !isOffer && waiting && parentContract !== null && changeMinor !== 0n ? parentContract : null;
   const summary = (
-    <div className="rounded-2xl bg-sidebar p-5 text-sidebar-foreground shadow-sm">
-      <p className="text-sm text-white/60">{totalLabel(change.taxRate, isOffer ? "Стойност на офертата" : "Стойност на промяната")}</p>
-      <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums text-white">
-        {money(change.total)} <span className="text-xl text-white/70">{change.currency}</span>
-      </p>
-      <p className="mt-1 text-xs text-white/50">
-        {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${money(change.discountAmount)} · ` : ""}Основа {money(change.subtotal)} · {vatLabel(change.taxRate)}
-      </p>
-      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-sidebar-border pt-4 text-sm">
-        <CalendarClock className="size-4 shrink-0 text-primary" />
-        <span className="text-white/60">{isOffer ? "Срок" : "Отражение върху срока"}:</span>
-        <span className="font-semibold text-white">
-          {scheduleLabel(change.documentKind, change.scheduleImpactType, change.scheduleImpactDays, change.agreedDeadline)}
-        </span>
+    <section className="overflow-hidden rounded-2xl border bg-card">
+      <div className="flex flex-col gap-1.5 border-b p-5">
+        {priceBefore !== null ? (
+          <>
+            <p className="text-sm text-muted-foreground">Цената на {parentOffer ? documentName("offer", parentOffer.sequenceNumber).toLowerCase() : "офертата"} става</p>
+            <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <span className="text-muted-foreground tabular-nums line-through">{formatCents(priceBefore, change.currency)}</span>
+              <span className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(priceBefore + changeMinor, change.currency)}</span>
+              <Badge variant={changeMinor > 0n ? "danger-soft" : "success-soft"} className="h-6 px-2.5 text-sm">{changeMinor < 0n ? "−" : "+"}{formatCents(changeMinor < 0n ? -changeMinor : changeMinor, change.currency)}</Badge>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">{totalLabel(change.taxRate, isOffer ? "Цена на офертата" : "Стойност на промяната")}</p>
+            <p className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(changeMinor, change.currency)}</p>
+            {!isOffer && changeMinor === 0n ? <p className="text-sm text-muted-foreground">Цената на обекта не се променя.</p> : null}
+          </>
+        )}
+        <p className="text-xs text-muted-foreground">
+          {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${formatCents(cents(change.discountAmount), change.currency)} · ` : ""}{Number(change.taxRate) ? `Без ДДС ${formatCents(cents(change.subtotal), change.currency)} · ` : ""}{vatLabel(change.taxRate)}
+        </p>
       </div>
-      <p className="mt-2 text-xs text-white/45">
-        Замразена версия: {change.frozenAt ? dateTime(change.frozenAt, "long") : "—"}
-      </p>
-    </div>
+      <div className="grid grid-cols-2 divide-x">
+        <div className="flex flex-col gap-0.5 px-5 py-3">
+          <span className="text-xs text-muted-foreground">{isOffer ? "Срок" : "Срок на работата"}</span>
+          <span className="font-semibold">{scheduleLabel(change.documentKind, change.scheduleImpactType, change.scheduleImpactDays, change.agreedDeadline)}</span>
+        </div>
+        <div className="flex flex-col gap-0.5 px-5 py-3">
+          {waiting && change.responseDueAt ? (
+            <>
+              <span className="text-xs text-muted-foreground">Отговорете до</span>
+              <span className={cn("font-semibold", daysLeft !== null && daysLeft <= 2 && "text-destructive")}>{dayFormat.format(change.responseDueAt)}{daysLeft !== null && daysLeft <= 2 ? (daysLeft <= 1 ? " · днес" : ` · ${daysLeft} дни`) : ""}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-xs text-muted-foreground">Изпратена</span>
+              <span className="font-semibold">{change.frozenAt ? dayFormat.format(change.frozenAt) : "—"}</span>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
   );
 
   return (
@@ -239,14 +254,14 @@ export default async function PortalChangePage({
         )}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{isOffer ? "Оферта" : "Промяна"} · <span className="font-mono">{documentCode(change.documentKind, change.sequenceNumber)}</span> · версия {change.revisionNumber}
-              {parentOffer ? <> · <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="underline underline-offset-4 hover:text-foreground">към {documentCode("offer", parentOffer.sequenceNumber)}</Link></> : null}
+            <p className="text-sm text-muted-foreground">{name}{change.revisionNumber > 1 ? ` · версия ${change.revisionNumber}` : ""}
+              {parentOffer ? <> · <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="underline underline-offset-4 hover:text-foreground">към {documentName("offer", parentOffer.sequenceNumber)}</Link></> : null}
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{change.title}</h1>
-            <div className="mt-2"><Badge variant={statusTones[change.status] ?? "secondary"}>{labels[change.status] ?? change.status}</Badge></div>
+            <div className="mt-2"><ClientStatusBadge status={change.status} /></div>
           </div>
           {change.frozenAt ? (
-            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${documentCode(change.documentKind, change.sequenceNumber)} · версия ${change.revisionNumber} · PDF`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border bg-card px-3 text-sm font-medium hover:bg-muted">
+            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${name} · PDF`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border bg-card px-3 text-sm font-medium hover:bg-muted">
               <Download className="size-4" /> PDF
             </DownloadLink>
           ) : null}
@@ -254,7 +269,7 @@ export default async function PortalChangePage({
       </div>
       {offerState?.acceptance ? (
         <div className="mt-4">
-          <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={documentCode("offer", change.sequenceNumber)} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
+          <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
         </div>
       ) : null}
       {change.status === "canceled" ? (
@@ -263,22 +278,16 @@ export default async function PortalChangePage({
           <p className="mt-1 text-muted-foreground">Фирмата я анулира и тя вече не чака решение.</p>
         </div>
       ) : null}
-      {daysLeft !== null && ["sent", "viewed"].includes(change.status) ? (
-        <div role="status" className={`mt-4 flex items-center gap-2 rounded-xl border p-3 text-sm ${daysLeft <= 2 ? "border-amber-500/40 bg-amber-500/10" : "bg-card"}`}>
-          <CalendarClock className="size-4 shrink-0 text-primary" />
-          <span>Валидна до <span className="font-semibold">{new Intl.DateTimeFormat("bg-BG", { dateStyle: "long" }).format(change.responseDueAt!)}</span>{daysLeft <= 1 ? " · изтича днес" : ` · остават ${daysLeft} дни`}</span>
-        </div>
-      ) : null}
       {change.status === "expired" ? (
         <div role="status" className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           <p className="font-semibold">Срокът на {isOffer ? "офертата" : "промяната"} изтече</p>
-          <p className="mt-1 text-muted-foreground">Свържи се с {data.project.organizationName}, ако все още се интересуваш — те могат да я изпратят отново с нов срок.</p>
+          <p className="mt-1 text-muted-foreground">Свържете се с {data.project.organizationName}, ако все още се интересувате. Фирмата може да я изпрати отново с нов срок.</p>
         </div>
       ) : null}
       {change.status === "superseded" ? (
         <div role="status" className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           <p className="font-semibold">Фирмата обновява {isOffer ? "тази оферта" : "тази промяна"}</p>
-          <p className="mt-1 text-muted-foreground">Версия {change.revisionNumber} е оттеглена за корекция. Ще получиш имейл, когато новата версия е готова за решение.</p>
+          <p className="mt-1 text-muted-foreground">Версия {change.revisionNumber} е оттеглена за корекция. Ще получите имейл, когато новата версия е готова за решение.</p>
         </div>
       ) : null}
       {inForce ? (
@@ -286,7 +295,7 @@ export default async function PortalChangePage({
           <p className="font-semibold">В сила е одобрената версия {inForce.revisionNumber} · {money(inForce.total)} {inForce.currency}</p>
           <p className="mt-1 text-muted-foreground">
             {["sent", "viewed"].includes(change.status)
-              ? `Версия ${change.revisionNumber} е предложение за промяна на договореното. Ако я одобриш, тя заменя версия ${inForce.revisionNumber}. Ако я откажеш, остава версия ${inForce.revisionNumber}.`
+              ? `Версия ${change.revisionNumber} е предложение за промяна на договореното. Ако я одобрите, тя заменя версия ${inForce.revisionNumber}. Ако я откажете, остава версия ${inForce.revisionNumber}.`
               : `Версия ${change.revisionNumber} не е одобрена, затова договореното по версия ${inForce.revisionNumber} не се променя.`}
           </p>
         </div>
@@ -323,8 +332,8 @@ export default async function PortalChangePage({
               messages={thread}
               action={sendClientMessageAction}
               hidden={{ projectPublicId, changeOrderId: change.id }}
-              placeholder="Напиши въпрос към фирмата…"
-              emptyText={`Не е ясно нещо? Попитай ${data.project.organizationName} тук, без да отказваш или да искаш промяна. Ще получиш отговора и на имейла си.`}
+              placeholder="Напишете въпрос към фирмата…"
+              emptyText={`Не е ясно нещо? Попитайте ${data.project.organizationName} тук, без да отказвате или да искате промяна. Ще получите отговора и на имейла си.`}
               composerClassName="sticky bottom-0 lg:static"
             />
           }

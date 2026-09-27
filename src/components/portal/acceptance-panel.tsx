@@ -42,9 +42,9 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
 
   if (acceptance.kind === "issues") return (
     <section id="acceptance" className="rounded-xl border bg-card px-4 py-3 text-sm">
-      <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-tile-sand-foreground" /> Забележките ти са изпратени на {organizationName}</p>
+      <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-tile-sand-foreground" /> Забележките ви са изпратени на {organizationName}</p>
       <Quote tone="warning" className="mt-1 text-muted-foreground">{acceptance.note}</Quote>
-      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Можете да ги обсъдите във „Въпроси“, докато и двете страни са удовлетворени. След това тя ще поиска приемане отново.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Можете да ги обсъдите в „Съобщения“, докато и двете страни са удовлетворени. След това тя ще поиска приемане отново.</p>
     </section>
   );
 
@@ -57,7 +57,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
   return (
     <Slip id="acceptance" label={`Предаване · ${code}`} meta={day.format(acceptance.createdAt)}>
       <div className="px-4 pt-3 pb-4">
-        <h2 id="acceptance-title" className="text-base font-semibold">{organizationName} отбеляза работата като завършена. Приемаш ли я?</h2>
+        <h2 id="acceptance-title" className="text-base font-semibold">{organizationName} отбеляза работата като завършена. Приемате ли я?</h2>
         {acceptance.note ? <p className="mt-1 text-sm whitespace-pre-line text-muted-foreground">„{acceptance.note}“</p> : null}
 
         {!canAnswer ? (
@@ -93,8 +93,8 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               Нещо не е наред?{" "}
-              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Напиши забележки</button>
-              {" "}вместо да приемаш.
+              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Напишете забележки</button>
+              {" "}вместо да приемате.
             </p>
           </ActionForm>
         )}

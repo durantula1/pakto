@@ -17,13 +17,13 @@ export type UnlockState = { error?: string; otpId?: string; sentTo?: string; don
 
 async function clientSessionFor(projectPublicId: string) {
   const session = await getPortalSession(projectPublicId);
-  if (!session?.clientId) throw new Error("Клиентската сесия е изтекла. Отвори отново линка.");
-  if (await isOrganizationStaff(session.organizationId)) throw new Error("Излез от служебния профил, за да действаш като клиент.");
+  if (!session?.clientId) throw new Error("Клиентската сесия е изтекла. Отворете отново линка.");
+  if (await isOrganizationStaff(session.organizationId)) throw new Error("Излезте от служебния профил, за да действате като клиент.");
   return { ...session, clientId: session.clientId };
 }
 
 function failure(cause: unknown): UnlockState {
-  return { error: cause instanceof Error ? cause.message : "Действието не беше завършено. Опитай отново." };
+  return { error: cause instanceof Error ? cause.message : "Действието не беше завършено. Опитайте отново." };
 }
 
 /** Sends the unlock code to the email the client confirmed; the code opens their other projects here. */
@@ -33,7 +33,7 @@ export async function requestUnlockCodeAction(_: UnlockState, formData: FormData
     const session = await clientSessionFor(projectPublicId);
     if (session.unlocked) return { done: true };
     const email = await clientVerifiedEmail(session.clientId);
-    if (!email) return { error: "Първо потвърди имейла си в този обект." };
+    if (!email) return { error: "Първо потвърдете имейла си в този обект." };
     const otpId = await issueOtp({ sessionId: session.id, contactId: session.contactId, purpose: "unlock", email, ip: clientIp(await headers()) });
     return { otpId, sentTo: maskEmail(email) };
   } catch (cause) {
@@ -50,7 +50,7 @@ export async function confirmUnlockCodeAction(state: UnlockState, formData: Form
       await consumeOtp(tx, otp.id);
       await tx.update(portalSessions).set({ verifiedAt: new Date() }).where(eq(portalSessions.id, session.id));
     });
-    revalidatePath(`/portal/${data.projectPublicId}`);
+    revalidatePath("/portal", "layout");
     return { done: true };
   } catch (cause) {
     return { ...state, ...failure(cause) };

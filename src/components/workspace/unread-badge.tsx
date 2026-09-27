@@ -6,7 +6,7 @@ export async function UnreadBadge({ count }: { count: Promise<number> }) {
   if (!value) return null;
   const label = value >= UNREAD_BADGE_CAP ? `${UNREAD_BADGE_CAP - 1}+` : String(value);
   return <>
-    <span aria-hidden className="absolute -top-1.5 -right-2.5 min-w-4 rounded-full bg-sidebar-primary px-1 text-center text-3xs leading-4 font-semibold tabular-nums text-sidebar-primary-foreground ring-2 ring-sidebar">{label}</span>
+    <span aria-hidden className="absolute -top-1.5 -right-2.5 min-w-4 rounded-full bg-primary px-1 text-center text-3xs leading-4 font-semibold tabular-nums text-primary-foreground ring-2 ring-card">{label}</span>
     <span className="sr-only">{label} непрочетени, </span>
   </>;
 }

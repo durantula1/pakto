@@ -121,7 +121,7 @@ export async function getProjectState(organizationId: string, projectId: string)
       .from(projectReceipts)
       .where(and(receiptScope, isNotNull(projectReceipts.installmentId)))
       .groupBy(projectReceipts.installmentId),
-    db.select({ id: changeOrders.id, kind: changeOrders.documentKind, baselineOfferId: changeOrders.baselineOfferId, sequenceNumber: changeOrders.sequenceNumber, title: changeOrderRevisions.title, total: changeOrderRevisions.total, currency: changeOrderRevisions.currency })
+    db.select({ id: changeOrders.id, kind: changeOrders.documentKind, baselineOfferId: changeOrders.baselineOfferId, sequenceNumber: changeOrders.sequenceNumber, title: changeOrderRevisions.title, total: changeOrderRevisions.total, currency: changeOrderRevisions.currency, responseDueAt: changeOrderRevisions.responseDueAt })
       .from(changeOrders).innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
       .where(and(eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), inArray(changeOrderRevisions.status, ["sent", "viewed"]), isNull(changeOrders.archivedAt))),
     db.select({ offerId: offerAcceptances.offerId, kind: offerAcceptances.kind, note: offerAcceptances.note, typedName: offerAcceptances.typedName, createdAt: offerAcceptances.createdAt })

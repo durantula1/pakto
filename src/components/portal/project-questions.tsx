@@ -29,12 +29,12 @@ export function ProjectQuestions({ projectPublicId, organizationName, messages, 
       <Dialog className="p-0 sm:max-w-lg">
         <MessageThread
           side="portal_contact"
-          title="Въпроси за обекта"
+          title="Съобщения с фирмата"
           messages={messages}
           action={sendProjectQuestionAction}
           hidden={{ projectPublicId }}
           placeholder="Напр. кога идвате утре?"
-          emptyText={`Питай ${organizationName} за обекта: кога идват, какво да подготвиш, достъп. За конкретна оферта питай от нейната страница.`}
+          emptyText={`Питайте ${organizationName} за обекта: кога идват, какво да подготвите, достъп. За конкретна оферта питайте от нейната страница.`}
           composerClassName="sticky bottom-0"
         />
       </Dialog>
