@@ -233,6 +233,7 @@ export async function disputeDecisionAction(_: DecisionState, formData: FormData
   if (!data.success || !decisionId) return { error: "Линкът за оспорване е невалиден." };
   const target = await getDisputeTarget(decisionId);
   if (!target) return { error: "Решението не е намерено." };
+  if (target.accessRevoked && !target.disputed) return { error: `Достъпът ти до този обект е спрян. Свържи се с ${target.organizationName}.` };
   if (!target.disputed) {
     const ip = clientIp(await headers());
     await getDatabase().transaction(async (tx) => {

@@ -15,6 +15,8 @@ export const projectStatLabels = {
 const projectStatTones: Record<keyof typeof projectStatLabels, StatTone> = { price: "mint", paid: "teal", remaining: "sand", deadline: "blue" };
 
 export const projectStatusLabels: Record<string, string> = { active: "Активен", completed: "Приключен", archived: "В архива" };
+// Pastel brand tones for the status badge in project lists.
+export const projectStatusBadgeVariants = { active: "brand-green", completed: "brand-blue", archived: "warning-soft" } as const;
 
 export const projectTabLabels = {
   overview: "Обзор",

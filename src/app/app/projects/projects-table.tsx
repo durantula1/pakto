@@ -9,6 +9,7 @@ import type { TenantContext } from "@/lib/authz/tenant-context";
 import { lastPage, PAGE_SIZE, pageHref, pageOffset } from "@/lib/pagination";
 import { seesClients } from "@/modules/clients/access";
 import { countProjects, listProjects } from "@/modules/projects/queries";
+import { projectStatusBadgeVariants, projectStatusLabels } from "./[projectId]/project-skeleton";
 
 const label = "Обекти";
 
@@ -45,7 +46,7 @@ export async function ProjectsTable({ context, filters, page, searchState }: {
             ? <Link key="client" href={`/app/clients/${project.clientId}`} className="font-medium hover:underline">{project.clientName}</Link>
             : project.clientName
           : project.contactName ?? "Без клиент",
-        <Badge key="status" variant={project.status === "active" ? "info-soft" : "secondary"}>{project.status === "active" ? "Активен" : project.status === "completed" ? "Приключен" : "В архива"}</Badge>,
+        <Badge key="status" variant={projectStatusBadgeVariants[project.status as keyof typeof projectStatusBadgeVariants] ?? "secondary"}>{projectStatusLabels[project.status] ?? project.status}</Badge>,
         project.openChanges,
       ],
     }))}

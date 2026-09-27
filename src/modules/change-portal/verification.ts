@@ -41,8 +41,18 @@ export async function issueOtp(input: {
   summary?: string;
 }) {
   const db = getDatabase();
+  // Counted per person: the contact and every other invitation of the same client share the limit.
   const [recent] = await db.select({ total: count() }).from(portalOtps)
-    .where(and(eq(portalOtps.projectContactId, input.contactId), gt(portalOtps.createdAt, new Date(Date.now() - OTP_SEND_WINDOW_MS))));
+    .where(and(
+      sql`${portalOtps.projectContactId} in (
+        select ${input.contactId}::uuid
+        union
+        select other.id from app.project_contacts own
+        join app.project_contacts other on other.client_id = own.client_id
+        where own.id = ${input.contactId}::uuid and own.client_id is not null
+      )`,
+      gt(portalOtps.createdAt, new Date(Date.now() - OTP_SEND_WINDOW_MS)),
+    ));
   if ((recent?.total ?? 0) >= OTP_MAX_SENDS) throw new Error("Твърде много изпратени кодове. Опитай отново след 15 минути.");
 
   const id = randomUUID();

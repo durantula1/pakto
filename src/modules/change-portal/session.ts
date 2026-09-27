@@ -227,7 +227,9 @@ export async function clientNavigation(session: { clientId: string | null; unloc
   const projects = await clientProjects(session.clientId);
   const others = projects.filter((project) => project.id !== session.projectId).length;
   if (!others) return null;
-  if (session.unlocked) return { unlocked: true as const, others };
+  if (session.unlocked) {
+    return { unlocked: true as const, others, projects: projects.map((project) => ({ publicId: project.publicId, name: project.name, current: project.id === session.projectId })) };
+  }
   const email = await clientVerifiedEmail(session.clientId);
   return email ? { unlocked: false as const, others, maskedEmail: maskEmail(email) } : null;
 }

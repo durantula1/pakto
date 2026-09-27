@@ -966,7 +966,7 @@ export const projects = appSchema.table(
     /** Last time the client got the daily progress email for this project. */
     clientDigestAt: timestamp("client_digest_at", { withTimezone: true }),
     /** The contracting client; set at creation and never changed (a trigger guards it). */
-    clientId: uuid("client_id"),
+    clientId: uuid("client_id").notNull(),
     ...timestamps,
   },
   (table) => [
@@ -1014,9 +1014,9 @@ export const projectContacts = appSchema.table(
     projectId: uuid("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
-    organizationId: uuid("organization_id"),
+    organizationId: uuid("organization_id").notNull(),
     /** The person behind this invitation; name, email and phone here stay a per-project snapshot. */
-    clientId: uuid("client_id"),
+    clientId: uuid("client_id").notNull(),
     name: text("name").notNull(),
     email: text("email"),
     phone: text("phone"),

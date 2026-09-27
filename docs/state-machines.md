@@ -52,6 +52,22 @@ archived -> completed      (owner restores)
 
 - Exactly one primary approver per project (`project_contacts_one_approver_uidx`); viewers see everything and decide nothing. Each contact has their own link.
 - A confirmed email stays the client's. The team can change name, phone and role, or remove a viewer; only an owner's reset (`app.contact_change = 'reset'`) clears the confirmation, revokes the contact's links and sessions and issues a new link.
+- Every contact belongs to a client (`project_contacts.client_id`, required). A project's contracting client (`projects.client_id`) never changes after creation; only a merge (`app.client_merge = 'on'`) moves it.
+
+## Client portal session
+
+```text
+link opened ──> started (only the link's project) ──code on the confirmed email──> unlocked (every invited project)
+      │                    │                                                          │
+      │                    └─ link rotated / contact removed ─> ended                 ├─ contact removed or link revoked ─> loses that project only
+      │                                                                               ├─ owner resets the verification ─> ended on every device
+      └─ same client, same device, confirmed or same project ─> joins the open session └─ "Изход", expiry or 30 idle days ─> ended
+```
+
+- One session per client and device (cookie `sitechange_portal_c_<orgId>`); sessions from before clients (one project each) keep working until they expire.
+- Every request checks that the client is still an active contact of the project with a live link, so removal and revocation apply at once.
+- Decisions, payments and questions still record the per-project contact (`project_contact_id`).
+- A contact removed from a project can no longer dispute its decisions from an old email.
 
 ## Order stage (legacy)
 

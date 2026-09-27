@@ -2,9 +2,12 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { Input } from "@/components/ui/input";
 import { confirmUnlockCodeAction, requestUnlockCodeAction, type UnlockState } from "@/modules/change-portal/client-session-actions";
 
@@ -15,16 +18,37 @@ import { confirmUnlockCodeAction, requestUnlockCodeAction, type UnlockState } fr
 export function ClientProjectsBar({ projectPublicId, organizationName, navigation }: {
   projectPublicId: string;
   organizationName: string;
-  navigation: { unlocked: true; others: number } | { unlocked: false; others: number; maskedEmail: string };
+  navigation: { unlocked: true; others: number; projects: { publicId: string; name: string; current: boolean }[] } | { unlocked: false; others: number; maskedEmail: string };
 }) {
   const [requestState, request, requesting] = useActionState<UnlockState, FormData>(requestUnlockCodeAction, {});
   const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(confirmUnlockCodeAction, {});
   const [hidden, setHidden] = useState(false);
+  const router = useRouter();
 
   if (navigation.unlocked || confirmState.done || requestState.done) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Link href="/portal" className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1.5 font-semibold text-white hover:bg-white/15"><ArrowLeft className="size-4" /> Вашите обекти</Link>
+        {navigation.unlocked && navigation.projects.length > 1 ? (
+          <DropdownMenuTrigger>
+            <Button type="button" variant="ghost" className="h-8 gap-1.5 rounded-lg px-2.5 text-sidebar-foreground hover:bg-white/10 hover:text-white"><ArrowLeftRight className="size-4" /> Смени обект</Button>
+            <DropdownMenu
+              placement="bottom start"
+              className="min-w-64"
+              onAction={(key) => {
+                const href = `/portal/${String(key)}`;
+                startNavigationProgress(href);
+                router.push(href);
+              }}
+            >
+              {navigation.projects.map((project) => (
+                <DropdownMenuItem key={project.publicId} id={project.publicId} textValue={project.name} isDisabled={project.current} className="min-h-11 gap-2">
+                  {project.current ? <Check className="size-4" /> : <span className="size-4" />} {project.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenu>
+          </DropdownMenuTrigger>
+        ) : null}
         {confirmState.done ? <span role="status" className="text-sidebar-foreground/70">Готово. Вече виждате всичките си обекти.</span> : null}
       </div>
     );

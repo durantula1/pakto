@@ -2,6 +2,7 @@
 
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 
@@ -49,6 +50,7 @@ export async function confirmUnlockCodeAction(state: UnlockState, formData: Form
       await consumeOtp(tx, otp.id);
       await tx.update(portalSessions).set({ verifiedAt: new Date() }).where(eq(portalSessions.id, session.id));
     });
+    revalidatePath(`/portal/${data.projectPublicId}`);
     return { done: true };
   } catch (cause) {
     return { ...state, ...failure(cause) };

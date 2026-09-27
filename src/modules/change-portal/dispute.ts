@@ -5,7 +5,7 @@ import { timingSafeEqual } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { changeOrderRevisions, changeOrders, organizations, portalDecisions, projects, timelineEvents } from "@/db/schema";
+import { changeOrderRevisions, changeOrders, organizations, portalDecisions, projectContacts, projects, timelineEvents } from "@/db/schema";
 import { signPortalValue } from "@/lib/crypto/portal-token";
 
 export function createDisputeToken(decisionId: number) {
@@ -36,6 +36,8 @@ export async function getDisputeTarget(decisionId: number) {
       currency: changeOrderRevisions.currency,
       changeOrderId: changeOrders.id,
       projectId: projects.id,
+      projectName: projects.name,
+      contactRemovedAt: projectContacts.removedAt,
       organizationId: organizations.id,
       organizationName: organizations.name,
     })
@@ -44,11 +46,14 @@ export async function getDisputeTarget(decisionId: number) {
     .innerJoin(changeOrders, eq(changeOrders.id, changeOrderRevisions.changeOrderId))
     .innerJoin(projects, eq(projects.id, changeOrders.projectId))
     .innerJoin(organizations, eq(organizations.id, projects.organizationId))
+    .innerJoin(projectContacts, eq(projectContacts.id, portalDecisions.projectContactId))
     .where(eq(portalDecisions.id, decisionId))
     .limit(1);
   if (!target) return null;
   const [disputed] = await db.select({ id: timelineEvents.id }).from(timelineEvents)
     .where(and(eq(timelineEvents.revisionId, target.revisionId), eq(timelineEvents.eventType, "decision_disputed")))
     .limit(1);
-  return { ...target, disputed: !!disputed };
+  // Someone removed from the project can no longer dispute from an old email (docs/clients-plan.md, 14.2).
+  const { contactRemovedAt, ...rest } = target;
+  return { ...rest, accessRevoked: !!contactRemovedAt, disputed: !!disputed };
 }

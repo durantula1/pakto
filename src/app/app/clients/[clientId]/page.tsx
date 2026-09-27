@@ -14,6 +14,7 @@ import { managesClients, seesClients } from "@/modules/clients/access";
 import { ClientActions } from "@/components/clients/client-actions";
 import { getClient } from "@/modules/clients/queries";
 import { formatCents, getProjectState } from "@/modules/projects/state";
+import { projectStatusBadgeVariants } from "@/app/app/projects/[projectId]/project-skeleton";
 
 export const metadata: Metadata = { title: "Клиент" };
 
@@ -109,7 +110,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
             href: `/app/projects/${project.id}`,
             cells: [
               <div key="name"><p className="font-medium">{project.name}</p><p className="text-sm text-muted-foreground">{project.siteAddress}</p></div>,
-              <Badge key="status" variant={project.archivedAt ? "secondary" : project.status === "active" ? "info-soft" : "secondary"}>{project.archivedAt ? "В архива" : project.status === "active" ? "Активен" : "Приключен"}</Badge>,
+              <Badge key="status" variant={project.archivedAt ? projectStatusBadgeVariants.archived : project.status === "active" ? projectStatusBadgeVariants.active : projectStatusBadgeVariants.completed}>{project.archivedAt ? "В архива" : project.status === "active" ? "Активен" : "Приключен"}</Badge>,
               project.documents || <span key="documents" className="text-muted-foreground">—</span>,
               project.waiting ? <Badge key="waiting" variant="warning-soft">{project.waiting}</Badge> : <span key="waiting" className="text-muted-foreground">—</span>,
               ...(seesMoney ? [remainingCell(remainingByProject.get(project.id))] : []),
