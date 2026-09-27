@@ -1,28 +1,26 @@
 import type { Metadata } from "next";
-import { ShieldCheck } from "lucide-react";
 
-import { Wordmark } from "@/components/brand/wordmark";
+import { PortalShell } from "@/components/portal/portal-shell";
 import { DownloadTray } from "@/components/workspace/download-tray";
+import { clientUnreadQuestions } from "@/modules/change-portal/navigation";
+import { getPortalSession } from "@/modules/change-portal/session";
+
 export const metadata: Metadata = {
   title: "Преглед на промяна · Pakto",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };
-export default function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+
+export default async function PortalProjectLayout({ children, params }: LayoutProps<"/portal/[projectPublicId]">) {
+  const { projectPublicId } = await params;
+  const session = await getPortalSession(projectPublicId);
+  // The whole frame only for a client session the code has opened; a bare link stays on its project.
+  const nav = !!session?.clientId && session.unlocked;
+  const unread = nav && session.clientId ? await clientUnreadQuestions(session.clientId) : 0;
   return (
-    <div className="min-h-screen bg-[#f7f4ec] text-foreground">
-      <header className="border-b border-sidebar-border bg-sidebar px-4 py-3 text-sidebar-foreground">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Wordmark inverse href={null} />
-          <span className="inline-flex items-center gap-1.5 text-xs text-white/55"><ShieldCheck className="size-3.5" /> Защитен преглед</span>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</main>
+    <PortalShell organizationName={session?.organizationName} nav={nav} active="projects" unread={unread}>
+      {children}
       <DownloadTray />
-    </div>
+    </PortalShell>
   );
 }

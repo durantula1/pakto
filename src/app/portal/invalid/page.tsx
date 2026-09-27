@@ -1,8 +1,10 @@
+import { PortalShell } from "@/components/portal/portal-shell";
 import { RequestLinksForm } from "@/components/portal/request-links-form";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function InvalidPortalPage() {
   return (
+    <PortalShell nav={false}>
     <div className="mx-auto max-w-lg px-4 py-20">
       <Card>
         <CardContent className="flex flex-col gap-6 py-10 text-center">
@@ -17,5 +19,6 @@ export default function InvalidPortalPage() {
         </CardContent>
       </Card>
     </div>
+    </PortalShell>
   );
 }

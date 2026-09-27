@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { and, desc, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -111,7 +112,8 @@ async function clientSession(secret: string, projectPublicId: string) {
   return { ...rest, unlocked: !!verifiedAt };
 }
 
-export async function getPortalSession(projectPublicId: string) {
+/** Once per request: the layout, the page and the actions of one render share it. */
+export const getPortalSession = cache(async (projectPublicId: string) => {
   const cookieStore = await cookies();
   const projectSecret = cookieStore.get(`${PORTAL_COOKIE}_${projectPublicId}`)?.value;
   if (projectSecret) {
@@ -124,13 +126,13 @@ export async function getPortalSession(projectPublicId: string) {
     if (session) return session;
   }
   return null;
-}
+});
 
 /**
  * The client session behind the portal home, from any client cookie on this device, with the
  * projects it opens: all the client's invitations once unlocked, else the starting project only.
  */
-export async function getClientPortal() {
+export const getClientPortal = cache(async () => {
   const cookieStore = await cookies();
   const db = getDatabase();
   for (const cookie of cookieStore.getAll()) {
@@ -162,6 +164,7 @@ export async function getClientPortal() {
     const visible = session.verifiedAt ? invited : invited.filter((project) => project.id === session.startProjectId);
     return {
       sessionId: session.id,
+      clientId: session.clientId,
       cookieName: cookie.name,
       clientName: session.clientName,
       organizationId: session.organizationId,
@@ -172,7 +175,7 @@ export async function getClientPortal() {
     };
   }
   return null;
-}
+});
 
 /** Projects where the client is an active contact with a live link, newest activity first. */
 export async function clientProjects(clientId: string) {

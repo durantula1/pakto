@@ -1,26 +1,24 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Lock } from "lucide-react";
+import { ArrowLeft, ChevronRight, Lock, MapPin } from "lucide-react";
 import { PaperLabel } from "@/components/portal/paper";
 import { Badge } from "@/components/ui/badge";
 import { cents, formatCents } from "@/modules/projects/state";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ListPagination } from "@/components/workspace/list-filters";
 import { lastPage, pageHref, parsePage } from "@/lib/pagination";
 import { documentCode, formatDay } from "@/modules/change-orders/labels";
 import { getPortalProject } from "@/modules/change-portal/queries";
-import { PortalPayments, PortalSchedule, PortalSummary, WaitingForYou } from "@/components/projects/project-overview";
-import { OfferScopeChips } from "@/components/projects/offer-cards";
+import { PortalPayments, PortalSchedule, PortalSummary } from "@/components/projects/project-overview";
+import { NextStep } from "@/components/portal/next-step";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
-import { PortalHeader } from "@/components/portal/portal-header";
 import { ClientProjectsBar } from "@/components/portal/client-projects-bar";
 import { clientNavigation } from "@/modules/change-portal/session";
 import { ProjectQuestions } from "@/components/portal/project-questions";
 import { maskEmail } from "@/lib/email/send";
 import { markThreadRead } from "@/modules/messages/queries";
 import { after } from "next/server";
-import { parseOfferScope, scopeView, type OfferScope } from "@/modules/projects/scope";
+import { scopeView } from "@/modules/projects/scope";
 
 const labels: Record<string, string> = {
   sent: "Очаква решение",
@@ -32,7 +30,6 @@ const labels: Record<string, string> = {
   expired: "Изтекла",
   superseded: "Обновява се",
 };
-const tabs = ["overview", "documents", "schedule", "payments"] as const;
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
 
 export default async function PortalProjectPage({
@@ -43,9 +40,8 @@ export default async function PortalProjectPage({
   const page = parsePage(query.page);
   const data = await getPortalProject(projectPublicId, { page });
   if (!data || !data.state) notFound();
-  const tab = tabs.find((item) => item === query.tab) ?? "overview";
   const path = `/portal/${projectPublicId}`;
-  if (!data.decided.length && page > lastPage(data.decidedTotal, data.pageSize)) redirect(pageHref(path, { tab: "documents" }, "page", lastPage(data.decidedTotal, data.pageSize)));
+  if (!data.decided.length && page > lastPage(data.decidedTotal, data.pageSize)) redirect(pageHref(path, {}, "page", lastPage(data.decidedTotal, data.pageSize)));
   const state = data.state;
   const thread = data.questions;
   const unread = data.unreadQuestions;
@@ -62,26 +58,34 @@ export default async function PortalProjectPage({
   };
   const { pending, decided } = data;
   const documentsTotal = pending.length + data.decidedTotal;
-  const scope = parseOfferScope(query.offer, state);
-  const view = scopeView(state, scope);
-  const chipOffers = state.offersInForce;
-  const hasUnassigned = !!(state.unassigned.receiptsCount || state.unassigned.installments.length);
-  const hrefFor = (target: string) => (value: OfferScope) => `${path}?tab=${target}${value === "all" ? "" : `&offer=${value}`}`;
   const awaitingAcceptance = state.offers.filter((offer) => offer.status === "awaiting_acceptance");
   const codeOf = new Map(state.offers.map((offer) => [offer.id, documentCode("offer", offer.sequenceNumber)]));
 
+  const steps = [
+    ...awaitingAcceptance.map((offer) => ({ key: `accept-${offer.id}`, eyebrow: "Работата е готова", title: `Приемане на работата: ${offer.title}`, detail: undefined as string | undefined, href: `${path}/changes/${offer.id}#acceptance`, action: "Прегледай и приеми" })),
+    ...pending.map((item) => ({ key: item.id, eyebrow: "Чака вашето решение", title: item.title, detail: `${documentCode(item.documentKind, item.sequenceNumber)} · ${formatCents(cents(item.total), item.currency)}`, href: `${path}/changes/${item.id}`, action: "Прегледай и реши" })),
+  ];
+  const [first, ...more] = active ? steps : [];
+  const all = scopeView(state, "all");
+  const questions = data.project.status !== "archived"
+    ? <ProjectQuestions projectPublicId={projectPublicId} organizationName={data.project.organizationName} messages={thread} unread={unread} defaultOpen={!!query.questions} tone="light" />
+    : null;
+
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-5">
-      <PortalHeader
-        eyebrow={data.project.organizationName}
-        title={data.project.name}
-        address={data.project.siteAddress}
-        meta={navigation ? null : <>Линкът е издаден за <strong className="text-white">{data.session.contactName}</strong></>}
-        aside={data.project.status !== "archived" ? <ProjectQuestions projectPublicId={projectPublicId} organizationName={data.project.organizationName} messages={thread} unread={unread} defaultOpen={!!query.questions} /> : null}
-      >
-        {navigation ? <ClientProjectsBar projectPublicId={projectPublicId} organizationName={data.project.organizationName} navigation={navigation} /> : null}
-        {isApprover && verified ? <div className={navigation ? "mt-3" : undefined}><PortalEmailVerification {...verification} compact /></div> : null}
-      </PortalHeader>
+    <div className="mx-auto flex max-w-5xl flex-col gap-4">
+      <div className="flex flex-col gap-3">
+        {navigation?.unlocked ? (
+          <Link href="/portal" className="inline-flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Обекти</Link>
+        ) : null}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{data.project.name}</h1>
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin className="size-4 shrink-0" /> {data.project.siteAddress}</p>
+          </div>
+          <div className="shrink-0">{questions}</div>
+        </div>
+        {navigation && !navigation.unlocked ? <div className="rounded-xl bg-sidebar px-4 py-3 text-sidebar-foreground"><ClientProjectsBar projectPublicId={projectPublicId} organizationName={data.project.organizationName} navigation={navigation} /></div> : null}
+      </div>
 
       {!active ? (
         <p role="status" className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
@@ -93,51 +97,54 @@ export default async function PortalProjectPage({
       {/* With an email on file the first decision code confirms it; a separate step only when there is none. */}
       {isApprover && !verified && active && !data.session.contactEmail ? <PortalEmailVerification {...verification} /> : null}
 
-      {active ? <WaitingForYou
-        documents={pending.map((item) => ({ id: item.id, kind: item.documentKind, sequenceNumber: item.sequenceNumber, title: item.title, total: item.total, currency: item.currency }))}
-        handovers={awaitingAcceptance.map((offer) => ({ id: offer.id, sequenceNumber: offer.sequenceNumber, title: offer.title }))}
-        portalPublicId={projectPublicId}
-      /> : null}
+      {first ? <NextStep eyebrow={first.eyebrow} title={first.title} detail={first.detail} href={first.href} action={first.action} /> : null}
+      {more.length ? (
+        <ul className="flex flex-col gap-2">
+          {more.map((step) => (
+            <li key={step.key}>
+              <Link href={step.href} className="flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm hover:bg-primary/15">
+                <span className="min-w-0"><span className="block truncate font-semibold">{step.title}</span>{step.detail ? <span className="block truncate text-muted-foreground">{step.detail}</span> : null}</span>
+                <ChevronRight className="size-4 shrink-0" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
-      <Tabs defaultSelectedKey={tab}>
-        <TabsList aria-label="Раздели на обекта">
-          <TabsTrigger id="overview">Обобщение</TabsTrigger>
-          <TabsTrigger id="documents">Оферти{documentsTotal ? ` (${documentsTotal})` : ""}</TabsTrigger>
-          <TabsTrigger id="schedule">Срокове</TabsTrigger>
-          <TabsTrigger id="payments">Плащания</TabsTrigger>
-        </TabsList>
-        <TabsContent id="overview" className="pt-3">
-          <PortalSummary state={state} view={scopeView(state, "all")} portalPublicId={projectPublicId} offers={state.offers} />
-        </TabsContent>
-        <TabsContent id="documents" className="flex flex-col gap-5 pt-3">
-          {documentsTotal ? (
-            <>
-              {pending.length ? <DocumentGroup title="Чакат решение" projectPublicId={projectPublicId} items={pending} codeOf={state.offers.length > 1 ? codeOf : null} /> : null}
-              {decided.length ? <DocumentGroup title="Решени" projectPublicId={projectPublicId} items={decided} codeOf={state.offers.length > 1 ? codeOf : null} /> : null}
-              {data.decidedTotal > data.pageSize ? <div className="overflow-hidden rounded-2xl border bg-card [&>nav]:border-t-0"><ListPagination path={path} params={{ tab: "documents" }} page={page} total={data.decidedTotal} pageSize={data.pageSize} /></div> : null}
-            </>
-          ) : (
-            <EmptyResult className="rounded-2xl border bg-card" title="Още няма оферти за преглед." />
-          )}
-        </TabsContent>
-        <TabsContent id="schedule" className="flex flex-col gap-3 pt-3">
-          <OfferScopeChips offers={chipOffers} scope={scope} hasUnassigned={!!state.unassigned.milestones.length && state.offersInForce.length > 0} hrefFor={hrefFor("schedule")} />
-          <PortalSchedule view={view} />
-        </TabsContent>
-        <TabsContent id="payments" className="flex flex-col gap-3 pt-3">
-          {/* The query param outlives the dispute; once the firm resolves it the receipt shows the answer instead. */}
-          {query.payment === "disputed" && state.receipts.some((item) => item.disputed) ? (
-            <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary">
-              Изпратихме оспорването на фирмата. Отговорът ще се появи при плащането.
-            </p>
-          ) : null}
-          <OfferScopeChips offers={chipOffers} scope={scope} hasUnassigned={hasUnassigned} hrefFor={hrefFor("payments")} />
-          <PortalPayments view={view} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => scope === "all" || (scope === "none" ? !claim.offerId : claim.offerId === scope))} canAct={data.project.status !== "archived"} />
-        </TabsContent>
-      </Tabs>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="flex flex-col gap-4">
+          <div className="lg:hidden"><PortalSummary state={state} view={all} portalPublicId={projectPublicId} offers={state.offers} /></div>
+          <PortalSchedule view={all} />
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold text-muted-foreground">Оферти и промени</h2>
+            {documentsTotal ? (
+              <>
+                {pending.length ? <DocumentGroup title="Чакат решение" projectPublicId={projectPublicId} items={pending} codeOf={state.offers.length > 1 ? codeOf : null} /> : null}
+                {decided.length ? <DocumentGroup title="Решени" projectPublicId={projectPublicId} items={decided} codeOf={state.offers.length > 1 ? codeOf : null} /> : null}
+                {data.decidedTotal > data.pageSize ? <div className="overflow-hidden rounded-2xl border bg-card [&>nav]:border-t-0"><ListPagination path={path} params={{}} page={page} total={data.decidedTotal} pageSize={data.pageSize} /></div> : null}
+              </>
+            ) : (
+              <EmptyResult className="rounded-2xl border bg-card" title="Още няма оферти." />
+            )}
+          </section>
+          <section id="payments" className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold text-muted-foreground">Плащания</h2>
+            {/* The query param outlives the dispute; once the firm resolves it the receipt shows the answer instead. */}
+            {query.payment === "disputed" && state.receipts.some((item) => item.disputed) ? (
+              <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary">
+                Изпратихме оспорването на фирмата. Отговорът ще се появи при плащането.
+              </p>
+            ) : null}
+            <PortalPayments view={all} portalPublicId={projectPublicId} claims={data.claims} canAct={data.project.status !== "archived"} />
+          </section>
+        </div>
+        <aside className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:flex">
+          <PortalSummary state={state} view={all} portalPublicId={projectPublicId} offers={state.offers} />
+        </aside>
+      </div>
 
       <p className="text-center text-xs leading-5 text-muted-foreground">
-        Този портал не е публичен. Не препращай линка на други хора.
+        Този портал не е публичен. Не препращайте линка на други хора.
       </p>
     </div>
   );

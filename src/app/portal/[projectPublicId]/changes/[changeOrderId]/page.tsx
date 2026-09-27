@@ -221,7 +221,7 @@ export default async function PortalChangePage({
   return (
     <>
       <Link
-        href={`/portal/${projectPublicId}?tab=documents`}
+        href={`/portal/${projectPublicId}`}
         className="text-sm text-muted-foreground hover:text-foreground"
       >
         ← Към обекта

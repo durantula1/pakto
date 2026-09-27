@@ -375,7 +375,7 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
     return { error: cause instanceof Error ? cause.message : "Оспорването не беше записано. Опитай отново." };
   }
   revalidatePath(`/portal/${data.projectPublicId}`);
-  redirect(`/portal/${data.projectPublicId}?tab=payments&payment=disputed`);
+  redirect(`/portal/${data.projectPublicId}?payment=disputed#payments`);
 }
 
 /**
