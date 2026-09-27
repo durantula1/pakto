@@ -16,8 +16,9 @@ export const metadata: Metadata = { title: "Вашите обекти · Pakto" 
  * The client's home: what waits for them across projects, what is due, and one card per project
  * (docs/clients-plan.md, 6.7). A client with a single project goes straight into it.
  */
-export default async function ClientPortalHome() {
-  const portal = await getClientPortal();
+export default async function ClientPortalHome({ searchParams }: PageProps<"/portal">) {
+  const [portal, query] = await Promise.all([getClientPortal(), searchParams]);
+  const decided = query.decision === "approved" ? "Одобрението е записано." : query.decision === "declined" ? "Отказът е записан." : query.decision === "changes_requested" ? "Искането за промяна е изпратено." : null;
   if (!portal) redirect("/portal/invalid");
   if (portal.projects.length === 1) redirect(`/portal/${portal.projects[0]!.publicId}`);
   if (!portal.projects.length) redirect("/portal/invalid");
@@ -51,6 +52,8 @@ export default async function ClientPortalHome() {
           <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white"><LogOut className="size-4" /> Изход</button>
         </form>
       </header>
+
+      {decided ? <p role="status" className="rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground">{decided} Разписката е на имейла ви.</p> : null}
 
       {waiting.length || due.size ? (
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">

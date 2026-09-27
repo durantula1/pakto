@@ -118,13 +118,13 @@ export default async function PortalChangePage({
       <CardHeader>
         <CardTitle className="text-lg">Твоето решение</CardTitle>
         <CardDescription>
-          {data.session.contactEmailVerifiedAt
-            ? "Три кратки стъпки. Решението се записва към версия " + change.revisionNumber + " и го виждате и двете страни."
+          {data.session.contactEmail
+            ? `Решението се записва към версия ${change.revisionNumber} и го виждате и двете страни. Потвърждаваш го с код на имейла си.`
             : "Първо потвърди имейла си — после ще можеш да одобриш, да поискаш промяна или да откажеш."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {data.session.contactEmailVerifiedAt ? (
+        {data.session.contactEmail ? (
           <>
             <PortalDecisionForm
               projectPublicId={projectPublicId}
@@ -133,10 +133,11 @@ export default async function PortalChangePage({
               total={change.total}
               currency={change.currency}
               revisionNumber={change.revisionNumber}
-              maskedEmail={data.session.contactEmail ? maskEmail(data.session.contactEmail) : null}
+              maskedEmail={maskEmail(data.session.contactEmail)}
               idempotencyKey={randomUUID()}
+              defaultName={data.session.contactName}
             />
-            <div className="border-t pt-4">{verification}</div>
+            {data.session.contactEmailVerifiedAt ? <div className="border-t pt-4">{verification}</div> : null}
           </>
         ) : verification}
       </CardContent>

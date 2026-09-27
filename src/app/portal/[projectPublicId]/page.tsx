@@ -90,7 +90,8 @@ export default async function PortalProjectPage({
         </p>
       ) : null}
 
-      {isApprover && !verified && active ? <PortalEmailVerification {...verification} /> : null}
+      {/* With an email on file the first decision code confirms it; a separate step only when there is none. */}
+      {isApprover && !verified && active && !data.session.contactEmail ? <PortalEmailVerification {...verification} /> : null}
 
       {active ? <WaitingForYou
         documents={pending.map((item) => ({ id: item.id, kind: item.documentKind, sequenceNumber: item.sequenceNumber, title: item.title, total: item.total, currency: item.currency }))}

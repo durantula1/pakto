@@ -17,7 +17,7 @@ import { requireOwner, requirePermission, requireProjectCapability } from "@/lib
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { createClient } from "@/modules/clients/operations";
-import { findClientDuplicate, findUsableClient } from "@/modules/clients/queries";
+import { clientConfirmedEmail, findClientDuplicate, findUsableClient } from "@/modules/clients/queries";
 
 const projectSchema = z.object({
   name: z.string().trim().min(2, "Въведи име на обекта.").max(160),
@@ -51,6 +51,10 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
     }
   }
 
+  // A client who confirmed this email before does not confirm it again for a new project.
+  const confirmed = existing ? await clientConfirmedEmail(existing.id) : null;
+  const inherited = confirmed && contact.email?.trim().toLowerCase() === confirmed ? new Date() : null;
+
   const projectId = await database.transaction(async (transaction) => {
     const clientId = existing?.id ?? await createClient(transaction, {
       organizationId: context.organizationId,
@@ -80,6 +84,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
       organizationId: context.organizationId,
       clientId,
       ...contact,
+      ...(inherited ? { emailVerifiedAt: inherited, lockedAt: inherited } : {}),
       portalRole: "approver",
       isPrimary: true,
     });

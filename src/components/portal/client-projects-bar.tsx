@@ -22,7 +22,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
 }) {
   const [requestState, request, requesting] = useActionState<UnlockState, FormData>(requestUnlockCodeAction, {});
   const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(confirmUnlockCodeAction, {});
-  const [hidden, setHidden] = useState(false);
+  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   if (navigation.unlocked || confirmState.done || requestState.done) {
@@ -53,7 +53,14 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
       </div>
     );
   }
-  if (hidden) return null;
+  // Any code the client enters (a decision, too) opens all projects; this is only for looking without deciding.
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm text-sidebar-foreground/70 underline-offset-4 hover:text-white hover:underline">
+        <Building2 className="size-4" /> Покажи всичките ми обекти
+      </button>
+    );
+  }
 
   const otpId = confirmState.otpId ?? requestState.otpId;
   const error = confirmState.error ?? requestState.error;
@@ -61,7 +68,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
     <div className="flex items-start gap-2 text-sm">
       <Building2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p>Имате и други обекти при {organizationName}. Потвърдете имейла си, за да ги виждате тук.</p>
+        <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>
         {otpId ? (
           <form action={confirm} className="mt-2 flex flex-wrap items-center gap-2">
             <input type="hidden" name="projectPublicId" value={projectPublicId} />
@@ -79,7 +86,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
         )}
         {error ? <p role="alert" className="mt-2 text-primary">{error}</p> : null}
       </div>
-      <button type="button" onClick={() => setHidden(true)} aria-label="Скрий" className="rounded p-1 text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
+      <button type="button" onClick={() => setOpen(false)} aria-label="Затвори" className="rounded p-1 text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
     </div>
   );
 }

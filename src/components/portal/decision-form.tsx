@@ -6,7 +6,6 @@ import { CheckCircle2, MailCheck, MessageSquareText, XCircle, type LucideIcon } 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { SignatureField } from "@/components/portal/signature-pad";
 import { cn } from "@/lib/utils";
 import {
   requestDecisionCodeAction,
@@ -50,6 +49,7 @@ export function PortalDecisionForm({
   revisionNumber,
   maskedEmail,
   idempotencyKey,
+  defaultName,
 }: {
   projectPublicId: string;
   changeOrderId: string;
@@ -59,18 +59,18 @@ export function PortalDecisionForm({
   revisionNumber: number;
   maskedEmail: string | null;
   idempotencyKey: string;
+  /** The contact's name, prefilled; the client can correct it. */
+  defaultName?: string;
 }) {
   const [decision, setDecision] = useState<Decision>("approved");
   const [codeState, requestCode, requesting] = useActionState<DecisionState, FormData>(requestDecisionCodeAction, {});
   const [submitState, submit, submitting] = useActionState<DecisionState, FormData>(submitPortalDecisionAction, {});
   const [codeFor, setCodeFor] = useState<string | null>(null);
-  const [typedName, setTypedName] = useState("");
+  const [typedName, setTypedName] = useState(defaultName ?? "");
   const [comment, setComment] = useState("");
   const [consent, setConsent] = useState(false);
-  const [signature, setSignature] = useState("");
-  const [signatureError, setSignatureError] = useState("");
   const otpId = codeState.otpId && codeFor === decision ? codeState.otpId : null;
-  const error = signatureError || (otpId ? submitState.error : codeState.error);
+  const error = otpId ? submitState.error : codeState.error;
   const busy = requesting || submitting;
   const amount = `${Number(total).toFixed(2)} ${currency}`;
 
@@ -80,15 +80,13 @@ export function PortalDecisionForm({
   }
 
   const detailsTitle =
-    decision === "approved" ? "Подпиши одобрението" : decision === "changes_requested" ? "Опиши какво да се промени" : "Потвърди отказа";
+    decision === "approved" ? "Потвърди одобрението" : decision === "changes_requested" ? "Опиши какво да се промени" : "Потвърди отказа";
   const finalLabel =
     decision === "approved" ? "Потвърди одобрението" : decision === "changes_requested" ? "Изпрати искането" : "Потвърди отказа";
 
   return (
     <form
       action={otpId ? submit : (formData) => {
-        if (decision === "approved" && !signature) { setSignatureError("Подпиши се в полето за подпис."); return; }
-        setSignatureError("");
         setCodeFor(decision);
         return requestCode(formData);
       }}
@@ -99,7 +97,6 @@ export function PortalDecisionForm({
       <input type="hidden" name="revisionId" value={revisionId} />
       <input type="hidden" name="decision" value={decision} />
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
-      {decision === "approved" ? <input type="hidden" name="signature" value={signature} /> : null}
       {otpId ? <input type="hidden" name="otpId" value={otpId} /> : null}
 
       <Step number={1} title="Какво решаваш?" done>
@@ -165,7 +162,6 @@ export function PortalDecisionForm({
             </label>
           ) : (
             <>
-              <SignatureField onChange={(value) => { setSignature(value); if (value) setSignatureError(""); }} disabled={!!otpId} />
               <label className="flex cursor-pointer items-start gap-3 text-sm">
                 <input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} disabled={!!otpId} className="mt-0.5 size-4 shrink-0 accent-primary" />
                 <span>Одобрявам версия {revisionNumber} за <strong className="whitespace-nowrap tabular-nums">{amount}</strong>: точно тази версия и крайната сума.</span>

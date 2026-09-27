@@ -204,3 +204,14 @@ export async function getClientOption(context: TenantContext, clientId: string |
   const client = await findUsableClient(context, clientId);
   return client ? { ...client, projects: 0 } : null;
 }
+
+/** The email the client confirmed in any invitation; a new invitation with it starts confirmed. */
+export async function clientConfirmedEmail(clientId: string) {
+  const [row] = await getDatabase()
+    .select({ email: projectContacts.email })
+    .from(projectContacts)
+    .where(and(eq(projectContacts.clientId, clientId), sql`${projectContacts.emailVerifiedAt} is not null`, sql`${projectContacts.email} is not null`))
+    .orderBy(desc(projectContacts.emailVerifiedAt))
+    .limit(1);
+  return row?.email?.trim().toLowerCase() ?? null;
+}

@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDatabase } from "@/db";
-import { projectContacts, timelineEvents } from "@/db/schema";
+import { portalSessions, projectContacts, timelineEvents } from "@/db/schema";
 import { maskEmail } from "@/lib/email/send";
 import { clientIp } from "@/lib/http/client-ip";
 import { getPortalSession, isOrganizationStaff } from "@/modules/change-portal/session";
@@ -75,6 +75,8 @@ export async function confirmVerificationCodeAction(_: VerificationState, formDa
       await tx.execute(sql`select set_config('app.contact_change', 'client', true)`);
       const now = new Date();
       await tx.update(projectContacts).set({ email: otp.email, emailVerifiedAt: now, lockedAt: now }).where(eq(projectContacts.id, session.contactId));
+      // The code also opens the client's other projects in this session.
+      if (session.clientId) await tx.update(portalSessions).set({ verifiedAt: now }).where(eq(portalSessions.id, session.id));
       await tx.insert(timelineEvents).values({
         organizationId: session.organizationId,
         projectId: session.projectId,

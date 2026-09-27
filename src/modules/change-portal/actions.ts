@@ -16,6 +16,8 @@ import {
   paymentDisputes,
   paymentInstallments,
   portalDecisions,
+  portalSessions,
+  projectContacts,
   projectMembers,
   projectReceipts,
   timelineEvents,
@@ -24,7 +26,7 @@ import { escapeHtml, maskEmail, projectSubject, sendEmail } from "@/lib/email/se
 import { getPublicEnvironment } from "@/lib/env/public";
 import { clientIp } from "@/lib/http/client-ip";
 import { createDisputeToken, getDisputeTarget, parseDisputeToken } from "@/modules/change-portal/dispute";
-import { getPortalSession, isOrganizationStaff } from "@/modules/change-portal/session";
+import { clientProjects, getPortalSession, isOrganizationStaff } from "@/modules/change-portal/session";
 import { checkOtp, consumeOtp, issueOtp } from "@/modules/change-portal/verification";
 import { getPdfDocumentMeta, renderChangePdf } from "@/modules/pdf/render";
 import { notifyProjectStaff, notifyUsers } from "@/modules/notifications/staff";
@@ -47,11 +49,11 @@ const decisionLabels = { approved: "Одобряваш", declined: "Отказв
 
 async function decisionContext(data: z.infer<typeof decisionSchema>) {
   if (data.decision === "changes_requested" && !data.comment) throw new Error("Опиши накратко какво трябва да се промени.");
-  if (data.decision === "approved") parseSignature(data.signature);
   const session = await getPortalSession(data.projectPublicId);
   if (!session || session.contactRole !== "approver") throw new Error("Нямаш право да вземеш решение.");
   if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържи се с фирмата.");
-  if (!session.contactEmailVerifiedAt || !session.contactEmail) throw new Error("Първо потвърди имейла си.");
+  // The decision code goes to the contact's email, so the first decision also confirms it.
+  if (!session.contactEmail) throw new Error("Първо потвърди имейла си.");
   if (await isOrganizationStaff(session.organizationId)) {
     const [change] = await getDatabase().select({ id: changeOrders.id }).from(changeOrders)
       .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.projectId, session.projectId))).limit(1);
@@ -130,7 +132,7 @@ export async function submitPortalDecisionAction(_: DecisionState, formData: For
     const requestHeaders = await headers();
     const ip = clientIp(requestHeaders);
     // The drawing is stored first so the decision row can point at it; a failed decision removes it again.
-    if (data.decision === "approved") signature = await storeSignature({ organizationId: session.organizationId, revisionId: data.revisionId, key: data.idempotencyKey, bytes: parseSignature(data.signature) });
+    if (data.decision === "approved" && data.signature) signature = await storeSignature({ organizationId: session.organizationId, revisionId: data.revisionId, key: data.idempotencyKey, bytes: parseSignature(data.signature) });
     decisionId = await submitDecision(session, data, otp, ip, requestHeaders.get("user-agent"), signature);
     if (!decisionId && signature) signature = null; // a replayed submission already references this file
   } catch (cause) {
@@ -144,7 +146,38 @@ export async function submitPortalDecisionAction(_: DecisionState, formData: For
   revalidatePath(`/app/offers/${data.changeOrderId}`);
   revalidatePath(`/portal/${data.projectPublicId}`);
   revalidatePath(`/portal/${data.projectPublicId}/changes/${data.changeOrderId}`);
+  // A client with several projects lands on their dashboard, which the code has just opened.
+  if (session.clientId && (await clientProjects(session.clientId)).length > 1) redirect(`/portal?decision=${data.decision}`);
   redirect(`/portal/${data.projectPublicId}/changes/${data.changeOrderId}?decision=${data.decision}`);
+}
+
+/**
+ * A code the client entered proves the email: the contact becomes confirmed (the first decision does
+ * what a separate "confirm your email" step did), and a client session opens all their projects.
+ */
+async function confirmedByCode(
+  tx: Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0],
+  session: NonNullable<Awaited<ReturnType<typeof getPortalSession>>>,
+  email: string,
+  ip: string | null,
+) {
+  if (session.clientId && !session.unlocked) {
+    await tx.update(portalSessions).set({ verifiedAt: new Date() }).where(eq(portalSessions.id, session.id));
+  }
+  if (session.contactEmailVerifiedAt) return;
+  const now = new Date();
+  await tx.execute(sql`select set_config('app.contact_change', 'client', true)`);
+  await tx.update(projectContacts).set({ email, emailVerifiedAt: now, lockedAt: now }).where(eq(projectContacts.id, session.contactId));
+  await tx.insert(timelineEvents).values({
+    organizationId: session.organizationId, projectId: session.projectId, actorType: "portal_contact", actorId: session.contactId,
+    eventType: "contact_verified", visibility: "client", metadata: { email: maskEmail(email), ip },
+  });
+  await notifyProjectStaff(tx, {
+    organizationId: session.organizationId, projectId: session.projectId, eventType: "contact_verified",
+    title: `${session.contactName} потвърди имейл ${maskEmail(email)}`,
+    body: "Кодовете за решенията ще идват на този имейл. Ако не е на клиента, нулирай потвърждението от „Достъп на клиента“.",
+    href: `/app/projects/${session.projectId}?panel=client`,
+  });
 }
 
 async function submitDecision(
@@ -166,6 +199,7 @@ async function submitDecision(
 
     const revision = await pendingRevision(transaction, session.projectId, data.changeOrderId, data.revisionId);
     await consumeOtp(transaction, otp.id);
+    await confirmedByCode(transaction, session, otp.email, ip);
 
     const [inserted] = await transaction
       .insert(portalDecisions)
@@ -176,7 +210,7 @@ async function submitDecision(
         decision: data.decision,
         comment: data.comment || null,
         typedName: data.typedName,
-        consentTextVersion: signature ? "bg-v3-2026-09-24-signature" : "bg-v2-2026-09-23-otp",
+        consentTextVersion: signature ? "bg-v3-2026-09-24-signature" : "bg-v4-2026-09-27-name-otp",
         signatureStoragePath: signature?.path ?? null,
         signatureSha256: signature?.sha256 ?? null,
         revisionContentHash: revision.contentHash,
