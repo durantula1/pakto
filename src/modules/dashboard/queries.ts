@@ -21,15 +21,22 @@ export async function getDashboardStats(context: TenantContext) {
   const overdueMilestones = db.select({ total: sql`count(*)::int` }).from(projectMilestones)
     .innerJoin(projects, eq(projects.id, projectMilestones.projectId))
     .where(and(eq(projectMilestones.organizationId, context.organizationId), ne(projectMilestones.status, "completed"), lt(projectMilestones.dueOn, sofiaToday()), eq(projects.organizationId, context.organizationId), eq(projects.status, "active"), member(projects.id)));
+  // Distinct clients behind the waiting documents: one client can have several projects.
+  const waitingClients = db.select({ total: sql`count(distinct ${projects.clientId})::int` }).from(changeOrders)
+    .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
+    .innerJoin(projects, eq(projects.id, changeOrders.projectId))
+    .where(and(eq(changeOrders.organizationId, context.organizationId), isNull(changeOrders.archivedAt), inArray(changeOrderRevisions.status, ["sent", "viewed"]), member(changeOrders.projectId)));
   const [row] = await db.select({
     activeProjects: sql<number>`(${activeProjects})`,
     awaitingDecision: sql<number>`(${documents(["sent", "viewed"])})`,
+    waitingClients: sql<number>`(${waitingClients})`,
     overdueMilestones: sql<number>`(${overdueMilestones})`,
     changesRequested: sql<number>`(${documents(["changes_requested"])})`,
   }).from(organizations).where(eq(organizations.id, context.organizationId));
   return {
     activeProjects: Number(row?.activeProjects ?? 0),
     awaitingDecision: Number(row?.awaitingDecision ?? 0),
+    waitingClients: Number(row?.waitingClients ?? 0),
     overdueMilestones: Number(row?.overdueMilestones ?? 0),
     changesRequested: Number(row?.changesRequested ?? 0),
   };

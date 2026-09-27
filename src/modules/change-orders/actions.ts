@@ -27,7 +27,7 @@ import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-con
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { hashCanonicalJson } from "@/lib/crypto/canonical-json";
 import { createStablePortalToken } from "@/lib/crypto/portal-token";
-import { escapeHtml, sendEmail } from "@/lib/email/send";
+import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { getProjectState } from "@/modules/projects/state";
 import { summarizeRevisionDiff, type RevisionDiff } from "@/modules/change-orders/revision-diff";
@@ -754,7 +754,8 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
   if (!url) throw new Error("Няма активен линк към портала.");
   const kind = input.documentKind === "offer" ? "оферта" : "промяна";
   const diff = input.diff;
-  const subject = diff ? `${input.organizationName} обнови ${kind}: ${input.title}` : `${input.organizationName} ти изпрати ${kind}: ${input.title}`;
+  const [project] = await getDatabase().select({ name: projects.name }).from(projects).where(eq(projects.id, input.projectId)).limit(1);
+  const subject = projectSubject(project?.name, diff ? `${input.organizationName} обнови ${kind}: ${input.title}` : `${input.organizationName} ти изпрати ${kind}: ${input.title}`);
   const intro = diff
     ? `${input.organizationName} обнови ${kind} „${input.title}“. Версия ${input.revisionNumber} заменя версия ${diff.previousNumber}.`
     : `${input.organizationName} ти изпрати ${kind} „${input.title}“ (версия ${input.revisionNumber}).`;

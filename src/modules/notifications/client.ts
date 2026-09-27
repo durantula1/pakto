@@ -5,7 +5,7 @@ import { and, asc, eq, gt, inArray, isNull, lte, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { organizations, projectContacts, projects, timelineEvents } from "@/db/schema";
-import { escapeHtml, sendEmail } from "@/lib/email/send";
+import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 
 export type ClientMessage = {
@@ -30,7 +30,7 @@ export function emailClient(projectId: string, message: ClientMessage) {
 
 export async function sendClientEmail(projectId: string, message: ClientMessage) {
   const [contact] = await getDatabase()
-    .select({ id: projectContacts.id, name: projectContacts.name, email: projectContacts.email, organizationName: organizations.name })
+    .select({ id: projectContacts.id, name: projectContacts.name, email: projectContacts.email, organizationName: organizations.name, projectName: projects.name })
     .from(projectContacts)
     .innerJoin(projects, eq(projects.id, projectContacts.projectId))
     .innerJoin(organizations, eq(organizations.id, projects.organizationId))
@@ -42,7 +42,7 @@ export async function sendClientEmail(projectId: string, message: ClientMessage)
   const facts = message.facts ?? [];
   await sendEmail({
     to: contact.email,
-    subject: message.subject,
+    subject: projectSubject(contact.projectName, message.subject),
     text: `Здравей, ${contact.name}!\n\n${message.intro}${facts.length ? `\n\n${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}` : ""}\n\n${message.cta ?? "Отвори портала"}: ${url}${message.outro ? `\n\n${message.outro}` : ""}\n\n— ${contact.organizationName}`,
     html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(message.intro)}</p>${facts.length ? `<table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label)}</td><td style="padding:4px 0">${escapeHtml(value)}</td></tr>`).join("")}</table>` : ""}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">${escapeHtml(message.cta ?? "Отвори портала")}</a></p>${message.outro ? `<p style="color:#71717a">${escapeHtml(message.outro)}</p>` : ""}<p style="color:#71717a">— ${escapeHtml(contact.organizationName)}</p></div>`,
   });
@@ -69,8 +69,9 @@ function digestLine(eventType: string, metadata: Record<string, unknown>) {
 }
 
 /**
- * Daily: one email per active project whose schedule moved since the last one (stages added, moved,
- * started, finished). Decisions, payments and documents have their own immediate emails.
+ * Daily: one email per client covering every active project whose schedule moved since the last one
+ * (stages added, moved, started, finished), one section per project. Each project keeps its own
+ * watermark (`client_digest_at`). Decisions, payments and documents have their own immediate emails.
  */
 export async function sendClientDigests(now = new Date()) {
   const db = getDatabase();
@@ -92,20 +93,54 @@ export async function sendClientDigests(now = new Date()) {
     const line = digestLine(row.eventType, (row.metadata ?? {}) as Record<string, unknown>);
     if (line) byProject.set(row.projectId, [...(byProject.get(row.projectId) ?? []), line]);
   }
+  if (!byProject.size) return 0;
+
+  // Who reads each project: its primary approver, grouped by the client behind them.
+  const readers = await db
+    .select({ projectId: projects.id, projectName: projects.name, contactId: projectContacts.id, clientId: projectContacts.clientId, name: projectContacts.name, email: projectContacts.email, verified: projectContacts.emailVerifiedAt, organizationName: organizations.name })
+    .from(projectContacts)
+    .innerJoin(projects, eq(projects.id, projectContacts.projectId))
+    .innerJoin(organizations, eq(organizations.id, projects.organizationId))
+    .where(and(inArray(projectContacts.projectId, [...byProject.keys()]), eq(projectContacts.isPrimary, true), eq(projectContacts.portalRole, "approver"), isNull(projectContacts.removedAt)));
+  const byClient = new Map<string, typeof readers>();
+  for (const reader of readers) {
+    if (!reader.email) continue;
+    byClient.set(reader.clientId, [...(byClient.get(reader.clientId) ?? []), reader]);
+  }
+
   let sent = 0;
-  for (const [projectId, lines] of byProject) {
-    // Claimed first, so a second run of the job does not send the same news again.
-    const [claimed] = await db.update(projects).set({ clientDigestAt: now })
-      .where(and(eq(projects.id, projectId), sql`${projects.clientDigestAt} is distinct from ${now}`)).returning({ id: projects.id });
-    if (!claimed) continue;
-    const shown = lines.slice(-12);
-    if (await sendClientEmail(projectId, {
-      subject: "Новости по графика на обекта",
-      intro: "Ето какво се промени в графика на работата от последното ни писмо:",
-      facts: shown.map((line, index) => [`${index + 1}.`, line]),
-      cta: "Виж графика",
-      outro: lines.length > shown.length ? `И още ${lines.length - shown.length} промени — виж ги в портала.` : undefined,
-    }).catch(() => false)) sent++;
+  for (const group of byClient.values()) {
+    const sections: { name: string; lines: string[]; url: string }[] = [];
+    for (const reader of group) {
+      // Claimed first, so a second run of the job does not send the same news again.
+      const [claimed] = await db.update(projects).set({ clientDigestAt: now })
+        .where(and(eq(projects.id, reader.projectId), sql`${projects.clientDigestAt} is distinct from ${now}`)).returning({ id: projects.id });
+      if (!claimed) continue;
+      const url = await getActivePortalLink(reader.projectId, reader.contactId);
+      if (url) sections.push({ name: reader.projectName, lines: byProject.get(reader.projectId) ?? [], url });
+    }
+    if (!sections.length) continue;
+    // A confirmed address wins when the client's projects hold different ones.
+    const to = group.find((reader) => reader.verified)?.email ?? group[0]!.email!;
+    const { name, organizationName } = group[0]!;
+    const single = sections.length === 1 ? sections[0]! : null;
+    const shownLines = (lines: string[]) => lines.slice(-12);
+    const more = (lines: string[]) => lines.length > 12 ? `И още ${lines.length - 12} промени — виж ги в портала.` : "";
+    const text = sections.map((section) => `${sections.length > 1 ? `${section.name}\n` : ""}${shownLines(section.lines).map((line) => `• ${line}`).join("\n")}${more(section.lines) ? `\n${more(section.lines)}` : ""}\nВиж графика: ${section.url}`).join("\n\n");
+    const html = sections.map((section) => `${sections.length > 1 ? `<p style="margin:20px 0 4px;font-weight:600">${escapeHtml(section.name)}</p>` : ""}<ul style="margin:0;padding-left:20px">${shownLines(section.lines).map((line) => `<li style="margin:4px 0">${escapeHtml(line)}</li>`).join("")}</ul>${more(section.lines) ? `<p style="color:#71717a">${escapeHtml(more(section.lines))}</p>` : ""}<p style="margin:12px 0 0"><a href="${section.url}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600">Виж графика</a></p>`).join("");
+    const subject = single ? projectSubject(single.name, "Новости по графика на обекта") : `Новости по графика на обектите ви (${sections.length})`;
+    const intro = single ? "Ето какво се промени в графика на работата от последното ни писмо:" : "Ето какво се промени в графика на работата по обектите ви от последното ни писмо:";
+    try {
+      await sendEmail({
+        to,
+        subject,
+        text: `Здравей, ${name}!\n\n${intro}\n\n${text}\n\n— ${organizationName}`,
+        html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(name)}!</p><p>${escapeHtml(intro)}</p>${html}<p style="color:#71717a;margin-top:20px">— ${escapeHtml(organizationName)}</p></div>`,
+      });
+      sent++;
+    } catch (cause) {
+      console.error("[client-digest]", cause);
+    }
   }
   return sent;
 }

@@ -13,11 +13,13 @@ import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { ProjectCombobox, type ProjectOption } from "@/components/workspace/project-combobox";
+import { ClientCombobox } from "@/components/clients/client-combobox";
+import type { ClientOption } from "@/modules/clients/queries";
 import { pageHref } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
 import { financeToolbarWidths as widths, formatIsoDate, kindOptions, methodOptions } from "./finance-filters";
 
-type Filters = { from: string; to: string; projectId: string; kind: string; method: string };
+type Filters = { from: string; to: string; projectId: string; clientId: string; kind: string; method: string };
 
 /** First day of the month `offset` months from the month of `iso`. */
 function monthStart(iso: string, offset = 0) {
@@ -38,10 +40,11 @@ function presets(today: string, defaults: { from: string; to: string }) {
  * Filters for the payments list, applied as soon as they change (no submit button).
  * Values equal to the defaults are left out of the URL so a reset link stays clean.
  */
-export function FinanceToolbar({ filters, defaults, project }: {
+export function FinanceToolbar({ filters, defaults, project, client }: {
   filters: Filters;
   defaults: { from: string; to: string };
   project: ProjectOption | null;
+  client: ClientOption | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -54,13 +57,14 @@ export function FinanceToolbar({ filters, defaults, project }: {
       from: merged.from === defaults.from ? undefined : merged.from,
       to: merged.to === defaults.to ? undefined : merged.to,
       projectId: merged.projectId === "all" ? undefined : merged.projectId,
+      clientId: merged.clientId === "all" ? undefined : merged.clientId,
       kind: merged.kind === "all" ? undefined : merged.kind,
       method: merged.method === "all" ? undefined : merged.method,
     };
     startTransition(() => router.replace(pageHref(pathname, params, "page", 1), { scroll: false }));
   }
 
-  const active = filters.from !== defaults.from || filters.to !== defaults.to || filters.projectId !== "all" || filters.kind !== "all" || filters.method !== "all";
+  const active = filters.from !== defaults.from || filters.to !== defaults.to || filters.projectId !== "all" || filters.clientId !== "all" || filters.kind !== "all" || filters.method !== "all";
 
   return <div className="flex flex-wrap items-center gap-2" aria-busy={pending || undefined}>
     <PopoverTrigger isOpen={periodOpen} onOpenChange={setPeriodOpen}>
@@ -105,10 +109,20 @@ export function FinanceToolbar({ filters, defaults, project }: {
       />
     </div>
 
+    <div className={widths.project}>
+      <ClientCombobox
+        key={client?.id ?? "all"}
+        allLabel="Всички клиенти"
+        defaultValue={client}
+        inputClassName="h-8 pl-2.5 pr-8 text-sm"
+        onChange={(next) => apply({ clientId: next?.id ?? "all" })}
+      />
+    </div>
+
     <FacetFilter label="Вид" value={filters.kind} options={kindOptions} className={widths.kind} onChange={(kind) => apply({ kind })} />
     <FacetFilter label="Метод" value={filters.method} options={methodOptions} className={widths.method} onChange={(method) => apply({ method })} />
 
-    {active ? <Button variant="ghost" onPress={() => apply({ ...defaults, projectId: "all", kind: "all", method: "all" })}>
+    {active ? <Button variant="ghost" onPress={() => apply({ ...defaults, projectId: "all", clientId: "all", kind: "all", method: "all" })}>
       Изчисти <X data-icon="inline-end" />
     </Button> : null}
     {pending ? <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Зареждане" /> : null}

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, exists, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, exists, gte, inArray, lte, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { projectMembers, projectReceipts, projects } from "@/db/schema";
@@ -11,6 +11,7 @@ export type ReceiptFilters = {
   from: string;
   to: string;
   projectId?: string;
+  clientId?: string;
   kind?: "deposit" | "progress" | "final" | "other";
   method?: string;
 };
@@ -40,6 +41,7 @@ function receiptFilters(context: TenantContext, filters: ReceiptFilters) {
     eq(projectReceipts.organizationId, context.organizationId),
     seesAllProjects(context) ? undefined : exists(db.select({ id: projectMembers.projectId }).from(projectMembers).where(and(eq(projectMembers.projectId, projectReceipts.projectId), eq(projectMembers.userId, context.userId)))),
     filters.projectId ? eq(projectReceipts.projectId, filters.projectId) : undefined,
+    filters.clientId ? inArray(projectReceipts.projectId, db.select({ id: projects.id }).from(projects).where(and(eq(projects.clientId, filters.clientId), eq(projects.organizationId, context.organizationId)))) : undefined,
     gte(projectReceipts.receivedOn, filters.from),
     lte(projectReceipts.receivedOn, filters.to),
     filters.kind ? eq(projectReceipts.kind, filters.kind) : undefined,

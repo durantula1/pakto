@@ -45,3 +45,8 @@ export function maskEmail(email: string) {
   const [local = "", domain = ""] = email.split("@");
   return `${local.slice(0, 1)}${"*".repeat(Math.max(local.length - 1, 2))}@${domain}`;
 }
+
+/** Client emails start with the project, so a client with several projects knows which one it is about. */
+export function projectSubject(projectName: string | null | undefined, subject: string) {
+  return projectName ? `[${projectName}] ${subject}` : subject;
+}

@@ -4,7 +4,7 @@ import { and, eq, gt, inArray, isNull, lt, lte } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { changeOrderRevisions, changeOrders, organizations, projectContacts, projects, timelineEvents } from "@/db/schema";
-import { escapeHtml, sendEmail } from "@/lib/email/send";
+import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { emailClient, sendClientDigests } from "@/modules/notifications/client";
@@ -18,12 +18,12 @@ export const WARN_BEFORE_DAYS = 2;
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
 
 type Pending = {
-  revisionId: number; changeOrderId: string; projectId: string; organizationId: string; organizationName: string;
+  revisionId: number; changeOrderId: string; projectId: string; projectName: string; organizationId: string; organizationName: string;
   documentKind: "offer" | "change"; title: string; revisionNumber: number; total: string; currency: string; responseDueAt: Date | null;
 };
 
 const pendingColumns = {
-  revisionId: changeOrderRevisions.id, changeOrderId: changeOrders.id, projectId: changeOrders.projectId,
+  revisionId: changeOrderRevisions.id, changeOrderId: changeOrders.id, projectId: changeOrders.projectId, projectName: projects.name,
   organizationId: changeOrders.organizationId, organizationName: organizations.name, documentKind: changeOrders.documentKind,
   title: changeOrderRevisions.title, revisionNumber: changeOrderRevisions.revisionNumber, total: changeOrderRevisions.total,
   currency: changeOrderRevisions.currency, responseDueAt: changeOrderRevisions.responseDueAt,
@@ -55,7 +55,7 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
     : `${document.organizationName} очаква твоето решение по ${kind} „${document.title}“ (${Number(document.total).toFixed(2)} ${document.currency}).${due ? ` Валидна е до ${due}.` : ""}`;
   await sendEmail({
     to: contact.email,
-    subject,
+    subject: projectSubject(document.projectName, subject),
     text: `Здравей, ${contact.name}!\n\n${intro}\n\nМожеш да я одобриш, да поискаш промяна или да зададеш въпрос тук: ${url}`,
     html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледай и реши</a></p><p style="color:#71717a">Можеш да я одобриш, да поискаш промяна или да откажеш.</p></div>`,
   });

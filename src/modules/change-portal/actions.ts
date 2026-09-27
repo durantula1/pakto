@@ -20,7 +20,7 @@ import {
   projectReceipts,
   timelineEvents,
 } from "@/db/schema";
-import { escapeHtml, maskEmail, sendEmail } from "@/lib/email/send";
+import { escapeHtml, maskEmail, projectSubject, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { clientIp } from "@/lib/http/client-ip";
 import { createDisputeToken, getDisputeTarget, parseDisputeToken } from "@/modules/change-portal/dispute";
@@ -303,7 +303,7 @@ async function sendDecisionReceipt(decisionId: number) {
   ];
   await sendEmail({
     to: row.verifiedEmail,
-    subject: `Разписка: ${decisionReceiptLabels[row.decision]} — ${row.title}`,
+    subject: projectSubject(document?.projectName, `Разписка: ${decisionReceiptLabels[row.decision]} — ${row.title}`),
     text: `${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nАко не си взел това решение ти, оспори го тук: ${disputeUrl}`,
     html: `<p>Записахме следното решение от твое име${document ? ` към ${escapeHtml(document.organizationName)}` : ""}:</p><table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label!)}</td><td style="padding:4px 0;word-break:break-all">${escapeHtml(value!)}</td></tr>`).join("")}</table><p>Прилагаме PDF на точно тази версия. Запази този имейл — той е твоето независимо копие.</p><p><a href="${disputeUrl}" style="color:#b91c1c;font-weight:600">Не съм аз — оспори това решение</a></p>`,
     attachments: pdf ? [{ filename: pdf.filename, content: pdf.buffer }] : undefined,

@@ -50,7 +50,8 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
   ]);
   return <>
     <div className={statsClassName}>
-      {stats.map(({ key, label, icon: Icon }) => <StatCard key={key} size="xl" label={label} value={counts[key]} icon={<Icon className="size-5" />} />)}
+      {stats.map(({ key, label, icon: Icon }) => <StatCard key={key} size="xl" label={label} value={counts[key]} icon={<Icon className="size-5" />}
+        hint={key === "awaitingDecision" && counts.waitingClients ? `от ${counts.waitingClients} ${counts.waitingClients === 1 ? "клиент" : "клиента"}` : undefined} />)}
     </div>
     {changes.length ? <section className="flex flex-col gap-3">
       <RecentHeader />

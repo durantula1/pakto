@@ -197,3 +197,10 @@ export async function listDuplicateClients(context: TenantContext): Promise<Dupl
     b: { id: row.b_id, name: row.b_name, email: row.b_email, phone: row.b_phone, projects: row.b_projects },
   }));
 }
+
+/** The chosen client of a list filter, if the caller may see them. */
+export async function getClientOption(context: TenantContext, clientId: string | undefined): Promise<ClientOption | null> {
+  if (!clientId || !/^[0-9a-f-]{36}$/i.test(clientId)) return null;
+  const client = await findUsableClient(context, clientId);
+  return client ? { ...client, projects: 0 } : null;
+}
