@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -21,7 +21,12 @@ async function revokeContactAccess(tx: Transaction, projectId: string, contactId
   const grants = await tx.update(portalGrants).set({ revokedAt: now })
     .where(and(eq(portalGrants.projectId, projectId), eq(portalGrants.projectContactId, contactId), isNull(portalGrants.revokedAt)))
     .returning({ id: portalGrants.id });
-  for (const grant of grants) await tx.update(portalSessions).set({ revokedAt: now }).where(and(eq(portalSessions.portalGrantId, grant.id), isNull(portalSessions.revokedAt)));
+  // A client session confirmed by code keeps the client's other projects; it loses this one because
+  // every request checks the contact and a live link. Anything unconfirmed from these links ends here.
+  for (const grant of grants) {
+    await tx.update(portalSessions).set({ revokedAt: now })
+      .where(and(eq(portalSessions.portalGrantId, grant.id), isNull(portalSessions.revokedAt), or(isNull(portalSessions.clientId), isNull(portalSessions.verifiedAt))));
+  }
 }
 
 async function issueLink(tx: Transaction, projectId: string, contactId: string, createdBy: string) {
@@ -180,6 +185,11 @@ export async function resetContactVerificationAction(formData: FormData): Promis
       await tx.execute(sql`select set_config('app.contact_change', 'reset', true)`);
       await tx.update(projectContacts).set({ email: null, emailVerifiedAt: null, lockedAt: null }).where(eq(projectContacts.id, contact.id));
       await revokeContactAccess(tx, projectId, contact.id);
+      // The wrong person may hold a confirmed client session: it ends on every device and project.
+      if (contact.clientId) {
+        await tx.update(portalSessions).set({ revokedAt: new Date() })
+          .where(and(eq(portalSessions.clientId, contact.clientId), isNull(portalSessions.revokedAt)));
+      }
       await issueLink(tx, projectId, contact.id, context.userId);
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, actorType: "staff", actorId: context.userId, eventType: "contact_verification_reset", visibility: "internal", metadata: { contactId: contact.id, previousEmail: contact.email } });
     });

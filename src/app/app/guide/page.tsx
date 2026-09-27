@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone } from "lucide-react";
+import { Building2, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone } from "lucide-react";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
 import { ScenarioPlayer } from "@/components/guide/scenario-player";
@@ -11,6 +11,11 @@ const promises = [
   { icon: FileLock2, title: "Изпратеното не се променя", text: "Всяка изпратена версия се „замразява“. Поправка значи нова версия, а старата остава." },
   { icon: Smartphone, title: "Клиентът решава от телефона", text: "Без регистрация и парола: линк, код на имейла и подпис с пръст." },
   { icon: Signature, title: "Всяко „да“ има история", text: "Име, подпис, час, имейл и PDF, които и двете страни пазят." },
+];
+
+const clientRules = [
+  { icon: Contact, title: "Клиентът е човекът", text: "Един клиент може да има няколко обекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
+  { icon: Building2, title: "Обектът е мястото", text: "Ново място за същия клиент е нов обект: „Нов обект“ → „Съществуващ клиент“. Нова работа на същото място е нова оферта в същия обект." },
 ];
 
 const statuses: Array<{ status: string; text: string }> = [
@@ -46,6 +51,18 @@ export default function GuidePage() {
           </div>
         ))}
       </div>
+
+      <section className="rounded-2xl border bg-card p-4 sm:p-6">
+        <h2 className="text-lg font-semibold">Клиенти и обекти</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {clientRules.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
+              <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+              <div><p className="font-medium">{title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <ScenarioPlayer />
 

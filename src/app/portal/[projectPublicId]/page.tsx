@@ -14,6 +14,8 @@ import { PortalPayments, PortalSchedule, PortalSummary, WaitingForYou } from "@/
 import { OfferScopeChips } from "@/components/projects/offer-cards";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { PortalHeader } from "@/components/portal/portal-header";
+import { ClientProjectsBar } from "@/components/portal/client-projects-bar";
+import { clientNavigation } from "@/modules/change-portal/session";
 import { ProjectQuestions } from "@/components/portal/project-questions";
 import { maskEmail } from "@/lib/email/send";
 import { markThreadRead } from "@/modules/messages/queries";
@@ -48,6 +50,7 @@ export default async function PortalProjectPage({
   const thread = data.questions;
   const unread = data.unreadQuestions;
   if (unread && query.questions) after(() => markThreadRead({ projectId: state.project.id }, "client"));
+  const navigation = await clientNavigation(data.session);
   const isApprover = data.session.contactRole === "approver";
   const verified = !!data.session.contactEmailVerifiedAt;
   const active = data.project.status === "active";
@@ -73,10 +76,11 @@ export default async function PortalProjectPage({
         eyebrow={data.project.organizationName}
         title={data.project.name}
         address={data.project.siteAddress}
-        meta={<>Линкът е издаден за <strong className="text-white">{data.session.contactName}</strong></>}
+        meta={navigation ? null : <>Линкът е издаден за <strong className="text-white">{data.session.contactName}</strong></>}
         aside={data.project.status !== "archived" ? <ProjectQuestions projectPublicId={projectPublicId} organizationName={data.project.organizationName} messages={thread} unread={unread} defaultOpen={!!query.questions} /> : null}
       >
-        {isApprover && verified ? <PortalEmailVerification {...verification} compact /> : null}
+        {navigation ? <ClientProjectsBar projectPublicId={projectPublicId} organizationName={data.project.organizationName} navigation={navigation} /> : null}
+        {isApprover && verified ? <div className={navigation ? "mt-3" : undefined}><PortalEmailVerification {...verification} compact /></div> : null}
       </PortalHeader>
 
       {!active ? (

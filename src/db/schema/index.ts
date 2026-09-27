@@ -1099,10 +1099,15 @@ export const portalSessions = appSchema.table(
       .defaultNow(),
     createdIp: inet("created_ip"),
     userAgent: text("user_agent"),
+    /** Set for a client-wide session; `portalGrantId` is the link it started from. */
+    clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
+    /** The client confirmed a code in this session; until then only the starting project is open. */
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("portal_sessions_session_hash_uidx").on(table.sessionHash),
     index("portal_sessions_grant_idx").on(table.portalGrantId),
+    index("portal_sessions_client_idx").on(table.clientId).where(sql`${table.clientId} is not null`),
   ],
 );
 
@@ -1354,7 +1359,7 @@ export const portalOtps = appSchema.table(
       .notNull()
       .references(() => projectContacts.id, { onDelete: "cascade" }),
     purpose: text("purpose")
-      .$type<"claim" | "email_change" | "decision">()
+      .$type<"claim" | "email_change" | "decision" | "unlock">()
       .notNull(),
     revisionId: bigint("revision_id", { mode: "number" }).references(
       () => changeOrderRevisions.id,

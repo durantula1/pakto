@@ -14,7 +14,7 @@ const OTP_MAX_ATTEMPTS = 5;
 const OTP_SEND_WINDOW_MS = 15 * 60 * 1000;
 const OTP_MAX_SENDS = 5;
 
-type Purpose = "claim" | "email_change" | "decision";
+type Purpose = "claim" | "email_change" | "decision" | "unlock";
 type Decision = "approved" | "declined" | "changes_requested";
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 
@@ -22,6 +22,7 @@ const purposeText: Record<Purpose, string> = {
   claim: "потвърждаване на имейла ти",
   email_change: "смяна на имейла ти",
   decision: "потвърждаване на решението ти",
+  unlock: "показване на всичките ти обекти",
 };
 
 function hashCode(id: string, code: string) {
