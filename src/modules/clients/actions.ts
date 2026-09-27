@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getDatabase } from "@/db";
-import { clients, projectContacts, projects, timelineEvents } from "@/db/schema";
+import { clients, portalGrants, portalSessions, projectContacts, projects, timelineEvents } from "@/db/schema";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { managesClients } from "@/modules/clients/access";
@@ -151,4 +151,45 @@ export async function mergeClientsAction(formData: FormData): Promise<ActionResu
     revalidatePath(`/app/clients/${keepId}`);
     revalidatePath("/app/projects");
   }, "Клиентите не бяха слети.");
+}
+
+/**
+ * On a personal data request, once no project of the client is active: name and contacts are erased
+ * from the client and every invitation, and their links stop working. Decisions keep the typed name
+ * and confirmed email as the legal record of what was agreed (docs/portal-simplify-plan.md, В3).
+ */
+export async function anonymizeClientAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { clientId } = z.object({ clientId: z.uuid() }).parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    if (context.role !== "owner") throw new Error("Само собственик може да анонимизира клиент.");
+    await getDatabase().transaction(async (tx) => {
+      const [client] = await tx.select({ id: clients.id }).from(clients)
+        .where(and(eq(clients.id, clientId), eq(clients.organizationId, context.organizationId))).for("update").limit(1);
+      if (!client) throw new Error("Клиентът не е намерен.");
+      const [open] = await tx.select({ id: projects.id }).from(projects)
+        .where(and(eq(projects.clientId, clientId), eq(projects.status, "active"), isNull(projects.archivedAt))).limit(1);
+      if (open) throw new Error("Клиентът има активен обект. Приключи го, преди да анонимизираш клиента.");
+
+      const now = new Date();
+      const erased = "Анонимизиран клиент";
+      await tx.update(clients).set({ name: erased, email: null, phone: null, phoneNormalized: null, address: null, notes: null, archivedAt: now, updatedAt: now }).where(eq(clients.id, clientId));
+      // Confirmed contacts are locked against email changes; this is the owner's explicit reset.
+      await tx.execute(sql`select set_config('app.contact_change', 'reset', true)`);
+      const contacts = await tx.update(projectContacts).set({ name: erased, email: null, phone: null, emailVerifiedAt: null, lockedAt: null, removedAt: sql`coalesce(${projectContacts.removedAt}, now())` })
+        .where(eq(projectContacts.clientId, clientId)).returning({ id: projectContacts.id, projectId: projectContacts.projectId });
+      if (!contacts.length) return;
+      const grants = await tx.update(portalGrants).set({ revokedAt: now })
+        .where(and(inArray(portalGrants.projectContactId, contacts.map((contact) => contact.id)), isNull(portalGrants.revokedAt))).returning({ id: portalGrants.id });
+      await tx.update(portalSessions).set({ revokedAt: now }).where(and(eq(portalSessions.clientId, clientId), isNull(portalSessions.revokedAt)));
+      if (grants.length) await tx.update(portalSessions).set({ revokedAt: now }).where(and(inArray(portalSessions.portalGrantId, grants.map((grant) => grant.id)), isNull(portalSessions.revokedAt)));
+      await tx.insert(timelineEvents).values([...new Set(contacts.map((contact) => contact.projectId))].map((projectId) => ({
+        organizationId: context.organizationId, projectId, actorType: "staff" as const, actorId: context.userId,
+        eventType: "client_anonymized", visibility: "internal" as const, metadata: {},
+      })));
+    });
+    revalidatePath("/app/clients");
+    revalidatePath(`/app/clients/${clientId}`);
+    revalidatePath("/app/projects");
+  }, "Клиентът не беше анонимизиран.");
 }

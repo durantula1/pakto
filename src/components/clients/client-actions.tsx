@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Pencil, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,15 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
-import { setClientArchivedAction, updateClientAction } from "@/modules/clients/actions";
+import { anonymizeClientAction, setClientArchivedAction, updateClientAction } from "@/modules/clients/actions";
+import { DownloadLink } from "@/components/workspace/download-tray";
 
 type Client = { id: string; name: string; email: string | null; phone: string | null; address: string | null; notes: string | null; archivedAt: Date | null };
 
 /** "Редактирай" and, for owners, "Архивирай" / "Върни от архива" on the client card. */
-export function ClientActions({ client, canEdit, canArchive, emailLocked }: {
+export function ClientActions({ client, canEdit, canArchive, emailLocked, hasActiveProject = false }: {
   client: Client;
   canEdit: boolean;
   canArchive: boolean;
+  /** Anonymizing waits until no project of the client is active. */
+  hasActiveProject?: boolean;
   /** The client confirmed the email in the portal; only they can change it. */
   emailLocked: boolean;
 }) {
@@ -71,6 +74,25 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked }: {
             success="Клиентът е архивиран"
           />
         )
+      ) : null}
+      {canArchive ? (
+        <>
+          <DownloadLink href={`/api/clients/${client.id}/export`} label={`${client.name} · данни`} className="inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-medium hover:bg-muted">
+            <Download className="size-4" /> Изнеси данните
+          </DownloadLink>
+          {!hasActiveProject ? (
+            <ConfirmDialog
+              trigger={<Button type="button" variant="ghost" className="h-10 gap-1.5 rounded-xl px-3 text-destructive"><UserX className="size-4" /> Анонимизирай</Button>}
+              title="Да анонимизирам ли клиента?"
+              description="Името, имейлът, телефонът и бележките се изтриват от клиента и от всички обекти, а линковете му спират. Решенията остават с името и имейла, с които са подписани, като доказателство. Това не може да се върне."
+              confirmLabel="Анонимизирай"
+              tone="destructive"
+              action={anonymizeClientAction}
+              fields={{ clientId: client.id }}
+              success="Клиентът е анонимизиран"
+            />
+          ) : null}
+        </>
       ) : null}
     </div>
   );

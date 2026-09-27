@@ -1,9 +1,9 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, exists, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { changeOrders, clients, projectContacts, projectMembers, projects } from "@/db/schema";
+import { changeOrders, clients, portalGrants, portalSessions, projectContacts, projectMembers, projects, timelineEvents } from "@/db/schema";
 import { seesAllProjects } from "@/lib/authz/project-access";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { normalizePhone } from "@/modules/clients/operations";
@@ -214,4 +214,26 @@ export async function clientConfirmedEmail(clientId: string) {
     .orderBy(desc(projectContacts.emailVerifiedAt))
     .limit(1);
   return row?.email?.trim().toLowerCase() ?? null;
+}
+
+/**
+ * The client card's history: what the client did or saw across the caller's visible projects,
+ * newest first, and when they last used the portal.
+ */
+export async function getClientHistory(context: TenantContext, clientId: string, projectIds: string[]) {
+  if (!projectIds.length) return { events: [], lastSeenAt: null as Date | null };
+  const db = getDatabase();
+  const [events, [seen]] = await Promise.all([
+    db.select({ id: timelineEvents.id, projectId: timelineEvents.projectId, eventType: timelineEvents.eventType, createdAt: timelineEvents.createdAt })
+      .from(timelineEvents)
+      .where(and(eq(timelineEvents.organizationId, context.organizationId), inArray(timelineEvents.projectId, projectIds), eq(timelineEvents.visibility, "client")))
+      .orderBy(desc(timelineEvents.createdAt))
+      .limit(25),
+    db.select({ lastSeenAt: sql<Date | null>`max(${portalSessions.lastSeenAt})` })
+      .from(portalSessions)
+      .innerJoin(portalGrants, eq(portalGrants.id, portalSessions.portalGrantId))
+      .innerJoin(projectContacts, eq(projectContacts.id, portalGrants.projectContactId))
+      .where(and(eq(projectContacts.clientId, clientId), inArray(projectContacts.projectId, projectIds))),
+  ]);
+  return { events, lastSeenAt: seen?.lastSeenAt ? new Date(seen.lastSeenAt) : null };
 }

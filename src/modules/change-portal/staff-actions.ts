@@ -12,6 +12,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { createStablePortalToken } from "@/lib/crypto/portal-token";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { createClient, syncClientFromContact } from "@/modules/clients/operations";
+import { clientConfirmedEmail, findUsableClient } from "@/modules/clients/queries";
 
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 
@@ -112,21 +113,40 @@ export async function updateContactAction(formData: FormData): Promise<ActionRes
 /** Someone else who follows the project (a spouse, an architect): sees everything, decides nothing. Gets their own link. */
 export async function addViewerAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
-    const data = z.object(contactFields).parse(Object.fromEntries(formData));
+    const raw = Object.fromEntries(formData);
+    const clientId = typeof raw.clientId === "string" && raw.clientId ? z.uuid().parse(raw.clientId) : null;
     const context = await requireTenantContext();
-    await requireProjectCapability(context, data.projectId, "send");
-    await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
+    const projectId = z.uuid().parse(raw.projectId);
+    await requireProjectCapability(context, projectId, "send");
+    await requireActiveProject(context.organizationId, projectId, { allowCompleted: true });
+
+    // Someone already on file (an architect with projects of their own) is invited as they are;
+    // a confirmed email carries over, so they do not confirm it again.
+    const existing = clientId ? await findUsableClient(context, clientId) : null;
+    if (clientId && !existing) throw new Error("Клиентът не е намерен. Избери го отново.");
+    const data = existing ? null : z.object(contactFields).parse(raw);
+    const person = existing
+      ? { name: existing.name, email: existing.email?.trim().toLowerCase() || null, phone: existing.phone }
+      : { name: data!.name, email: data!.email?.trim().toLowerCase() || null, phone: data!.phone || null };
+    const confirmed = existing ? await clientConfirmedEmail(existing.id) : null;
+    const inherited = confirmed && person.email === confirmed ? new Date() : null;
+
     await getDatabase().transaction(async (tx) => {
-      const person = { name: data.name, email: data.email?.trim().toLowerCase() || null, phone: data.phone || null };
-      const clientId = await createClient(tx, { organizationId: context.organizationId, createdBy: context.userId, ...person });
+      if (existing) {
+        const [already] = await tx.select({ id: projectContacts.id }).from(projectContacts)
+          .where(and(eq(projectContacts.projectId, projectId), eq(projectContacts.clientId, existing.id), isNull(projectContacts.removedAt))).limit(1);
+        if (already) throw new Error("Този клиент вече е в обекта.");
+      }
+      const newClientId = existing?.id ?? await createClient(tx, { organizationId: context.organizationId, createdBy: context.userId, ...person });
       const [contact] = await tx.insert(projectContacts).values({
-        projectId: data.projectId, organizationId: context.organizationId, clientId, ...person,
+        projectId, organizationId: context.organizationId, clientId: newClientId, ...person,
+        ...(inherited ? { emailVerifiedAt: inherited, lockedAt: inherited } : {}),
         portalRole: "viewer", isPrimary: false,
       }).returning({ id: projectContacts.id });
-      await issueLink(tx, data.projectId, contact!.id, context.userId);
-      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, actorType: "staff", actorId: context.userId, eventType: "contact_added", visibility: "internal", metadata: { contactId: contact!.id, name: data.name } });
+      await issueLink(tx, projectId, contact!.id, context.userId);
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, actorType: "staff", actorId: context.userId, eventType: "contact_added", visibility: "internal", metadata: { contactId: contact!.id, name: person.name } });
     });
-    refresh(data.projectId);
+    refresh(projectId);
   }, "Контактът не беше добавен.");
 }
 

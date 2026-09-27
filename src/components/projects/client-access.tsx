@@ -9,6 +9,8 @@ import { Dialog, DialogClose, DialogDescription, DialogHeader, DialogTitle, Dial
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
+import { ClientCombobox } from "@/components/clients/client-combobox";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { CopyPortalLink } from "@/components/change-orders/copy-portal-link";
 import {
@@ -42,6 +44,7 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
 }) {
   const approver = contacts.find((contact) => contact.isPrimary) ?? contacts[0];
   const [adding, setAdding] = useState(false);
+  const [viewerMode, setViewerMode] = useState<"new" | "existing">("new");
   return (
     <DialogTrigger defaultOpen={defaultOpen}>
       <Button type="button" variant="outline" className="h-8 max-w-56 gap-1.5 bg-card px-2.5">
@@ -60,10 +63,22 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
         {canEdit ? adding ? (
           <ActionForm action={addViewerAction} success="Контактът е добавен" onSuccess={() => setAdding(false)} className="grid gap-3 rounded-xl border border-dashed p-3 sm:grid-cols-2">
             <input type="hidden" name="projectId" value={projectId} />
-            <p className="text-sm font-medium sm:col-span-2">Нов наблюдател</p>
-            <Field><FieldLabel htmlFor="viewer-name">Име</FieldLabel><Input id="viewer-name" name="name" required minLength={2} maxLength={160} autoFocus /></Field>
-            <Field><FieldLabel htmlFor="viewer-phone">Телефон</FieldLabel><Input id="viewer-phone" name="phone" maxLength={40} /></Field>
-            <Field className="sm:col-span-2"><FieldLabel htmlFor="viewer-email">Имейл (по желание)</FieldLabel><Input id="viewer-email" name="email" type="email" /></Field>
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
+              <p className="text-sm font-medium">Нов наблюдател</p>
+              <div role="radiogroup" aria-label="Наблюдател" className={segmentGroupClassName}>
+                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "new"} onChange={() => setViewerMode("new")} className="sr-only" />Нов човек</label>
+                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "existing"} onChange={() => setViewerMode("existing")} className="sr-only" />От клиентите</label>
+              </div>
+            </div>
+            {viewerMode === "existing" ? (
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="viewer-client">Клиент</FieldLabel><ClientCombobox name="clientId" id="viewer-client" isRequired /></Field>
+            ) : (
+              <>
+                <Field><FieldLabel htmlFor="viewer-name">Име</FieldLabel><Input id="viewer-name" name="name" required minLength={2} maxLength={160} autoFocus /></Field>
+                <Field><FieldLabel htmlFor="viewer-phone">Телефон</FieldLabel><Input id="viewer-phone" name="phone" maxLength={40} /></Field>
+                <Field className="sm:col-span-2"><FieldLabel htmlFor="viewer-email">Имейл (по желание)</FieldLabel><Input id="viewer-email" name="email" type="email" /></Field>
+              </>
+            )}
             <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="ghost" onPress={() => setAdding(false)}>Отказ</Button><ActionSubmit>Добави</ActionSubmit></div>
           </ActionForm>
         ) : (

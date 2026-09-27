@@ -12,7 +12,8 @@ import { can } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { managesClients, seesClients } from "@/modules/clients/access";
 import { ClientActions } from "@/components/clients/client-actions";
-import { getClient } from "@/modules/clients/queries";
+import { getClient, getClientHistory } from "@/modules/clients/queries";
+import { eventLabels } from "@/components/change-orders/document-timeline";
 import { formatCents, getProjectsTotals, type ProjectTotals } from "@/modules/projects/state";
 import { projectStatusBadgeVariants } from "@/app/app/projects/[projectId]/project-skeleton";
 
@@ -25,6 +26,8 @@ const baseColumns: DataTableColumn[] = [
   { id: "waiting", header: "Чака клиента", skeleton: "badge", className: "text-right" },
 ];
 const moneyColumn: DataTableColumn = { id: "remaining", header: "Остава", className: "text-right" };
+
+const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
 
 type Totals = { contract: bigint; paid: bigint; remaining: bigint };
 
@@ -44,6 +47,8 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
   const waiting = client.projects.reduce((sum, project) => sum + project.waiting, 0);
   // Money only for those who already see payments; per currency, never summed across currencies.
   const seesMoney = can(context, "finance.view") || can(context, "payments.record");
+  const history = await getClientHistory(context, client.id, client.projects.map((project) => project.id));
+  const projectName = new Map(client.projects.map((project) => [project.id, project.name]));
   const remainingByProject = seesMoney ? await getProjectsTotals(context.organizationId, client.projects.map((project) => project.id)) : new Map<string, ProjectTotals>();
   const totals = new Map<string, Totals>();
   for (const state of remainingByProject.values()) {
@@ -74,7 +79,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <ClientActions client={client} canEdit={managesClients(context)} canArchive={context.role === "owner"} emailLocked={client.emailVerified} />
+            <ClientActions client={client} canEdit={managesClients(context)} canArchive={context.role === "owner"} emailLocked={client.emailVerified} hasActiveProject={active > 0} />
             {can(context, "projects.create") && !client.archivedAt
               ? <NewProjectSheet label="Нов обект за клиента" defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
               : null}
@@ -116,6 +121,22 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
             ],
           }))}
         />
+      </section>
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-base font-semibold">История</h2>
+          <p className="text-sm text-muted-foreground">{history.lastSeenAt ? `Последно в портала: ${dateTime.format(history.lastSeenAt)}` : "Още не е отварял портала"}</p>
+        </div>
+        {history.events.length ? (
+          <ol className="divide-y rounded-xl border bg-card">
+            {history.events.map((event) => (
+              <li key={event.id} className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-sm">
+                <span className="min-w-0"><span className="font-medium">{eventLabels[event.eventType] ?? event.eventType}</span> <span className="text-muted-foreground">· {projectName.get(event.projectId) ?? ""}</span></span>
+                <span className="shrink-0 text-xs text-muted-foreground">{dateTime.format(event.createdAt)}</span>
+              </li>
+            ))}
+          </ol>
+        ) : <p className="rounded-xl border bg-card px-4 py-3 text-sm text-muted-foreground">Още няма събития.</p>}
       </section>
     </PageShell>
   );

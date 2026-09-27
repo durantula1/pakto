@@ -7,7 +7,7 @@ import { DownloadLink } from "@/components/workspace/download-tray";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { cn } from "@/lib/utils";
 
-const eventLabels: Record<string, string> = {
+export const eventLabels: Record<string, string> = {
   change_created: "Създадена чернова",
   offer_created: "Създадена чернова",
   revision_sent: "Изпратена към клиента",
@@ -39,6 +39,13 @@ const eventLabels: Record<string, string> = {
   acceptance_accepted: "Клиентът прие работата",
   acceptance_issues: "Клиентът изпрати забележки",
   work_status_changed: "Обновен статус на работата",
+  contact_verified: "Клиентът потвърди имейла си",
+  contact_email_changed: "Клиентът смени имейла си",
+  portal_session_created: "Клиентът отвори портала",
+  approver_changed: "Сменен одобряващ",
+  payment_claimed: "Клиентът отбеляза плащане",
+  payment_disputed: "Клиентът оспори плащане",
+  client_merged: "Клиентът е слят с дубликат",
 };
 
 /** Events worth a colored dot: the client's decisions and disputes. */

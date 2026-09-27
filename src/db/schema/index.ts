@@ -1033,6 +1033,7 @@ export const projectContacts = appSchema.table(
   (table) => [
     index("project_contacts_project_idx").on(table.projectId),
     index("project_contacts_client_idx").on(table.clientId),
+    uniqueIndex("project_contacts_one_per_client_uidx").on(table.projectId, table.clientId).where(sql`${table.removedAt} is null`),
     foreignKey({
       columns: [table.organizationId, table.projectId],
       foreignColumns: [projects.organizationId, projects.id],
