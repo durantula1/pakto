@@ -62,7 +62,7 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
         href: `/app/offers/${change.id}`,
         cells: [
           <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode(change.documentKind, change.sequenceNumber)}</span>,
-          <div key="title"><p className="font-medium">{change.title}</p><p className="text-sm text-muted-foreground">{change.projectName}</p></div>,
+          <div key="title"><p className="font-medium">{change.title}</p><p className="text-sm text-muted-foreground">{change.clientName ? `${change.projectName} · ${change.clientName}` : change.projectName}</p></div>,
           <DocumentStatusBadge key="status" status={change.revisionStatus} />,
           <span key="total" className="font-semibold">{Number(change.total ?? 0).toFixed(2)} {change.currency}</span>,
         ],

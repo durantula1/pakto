@@ -4,6 +4,7 @@ import { and, asc, desc, eq, exists, ilike, inArray, isNotNull, isNull, or, sql 
 
 import { getDatabase } from "@/db";
 import {
+  clients,
   changeOrderLineItems,
   changeOrderPaymentTerms,
   changeOrderRevisions,
@@ -44,6 +45,7 @@ export async function listChangeOrders(input: {
       updatedAt: changeOrders.updatedAt,
       projectId: projects.id,
       projectName: projects.name,
+      clientName: clients.name,
       title: changeOrderRevisions.title,
       revisionNumber: changeOrderRevisions.revisionNumber,
       revisionStatus: changeOrderRevisions.status,
@@ -52,6 +54,7 @@ export async function listChangeOrders(input: {
     })
     .from(changeOrders)
     .innerJoin(projects, eq(projects.id, changeOrders.projectId))
+    .leftJoin(clients, eq(clients.id, projects.clientId))
     .leftJoin(
       changeOrderRevisions,
       eq(changeOrderRevisions.id, changeOrders.currentRevisionId),

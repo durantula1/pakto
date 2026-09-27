@@ -160,3 +160,40 @@ export async function findClientDuplicate(context: TenantContext, input: { email
     .limit(1);
   return row ?? null;
 }
+
+export type DuplicatePair = {
+  reason: "email" | "phone";
+  a: { id: string; name: string; email: string | null; phone: string | null; projects: number };
+  b: { id: string; name: string; email: string | null; phone: string | null; projects: number };
+};
+
+/** Owners only: clients that share an email or a phone, for a manual merge. */
+export async function listDuplicateClients(context: TenantContext): Promise<DuplicatePair[]> {
+  if (context.role !== "owner") return [];
+  const db = getDatabase();
+  const rows = await db.execute<{
+    reason: "email" | "phone";
+    a_id: string; a_name: string; a_email: string | null; a_phone: string | null; a_projects: number;
+    b_id: string; b_name: string; b_email: string | null; b_phone: string | null; b_projects: number;
+  }>(sql`
+    with live as (
+      select c.id, c.name, c.email, c.phone, c.email_normalized, c.phone_normalized,
+             (select count(*)::int from app.projects p where p.client_id = c.id) as projects
+      from app.clients c
+      where c.organization_id = ${context.organizationId} and c.merged_into_id is null and c.archived_at is null
+    )
+    select distinct on (least(a.id, b.id), greatest(a.id, b.id))
+      case when a.email_normalized = b.email_normalized then 'email' else 'phone' end as reason,
+      a.id as a_id, a.name as a_name, a.email as a_email, a.phone as a_phone, a.projects as a_projects,
+      b.id as b_id, b.name as b_name, b.email as b_email, b.phone as b_phone, b.projects as b_projects
+    from live a join live b on a.id < b.id
+      and (a.email_normalized = b.email_normalized or a.phone_normalized = b.phone_normalized)
+    order by least(a.id, b.id), greatest(a.id, b.id)
+    limit 50
+  `);
+  return [...rows].map((row) => ({
+    reason: row.reason,
+    a: { id: row.a_id, name: row.a_name, email: row.a_email, phone: row.a_phone, projects: row.a_projects },
+    b: { id: row.b_id, name: row.b_name, email: row.b_email, phone: row.b_phone, projects: row.b_projects },
+  }));
+}

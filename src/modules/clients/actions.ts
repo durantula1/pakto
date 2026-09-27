@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -86,4 +86,69 @@ export async function setClientArchivedAction(formData: FormData): Promise<Actio
     revalidatePath("/app/clients");
     revalidatePath(`/app/clients/${clientId}`);
   }, "Клиентът не беше записан.");
+}
+
+/**
+ * An owner merges a duplicate into the client that stays: projects and invitations move over, the
+ * duplicate is kept (archived, `merged_into_id`) so history still resolves. Refused when both confirmed
+ * different emails, or when both are active contacts on the same project.
+ */
+export async function mergeClientsAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { keepId, mergeId } = z.object({ keepId: z.uuid(), mergeId: z.uuid() }).parse(Object.fromEntries(formData));
+    if (keepId === mergeId) throw new Error("Избери двама различни клиенти.");
+    const context = await requireTenantContext();
+    if (context.role !== "owner") throw new Error("Само собственик може да слива клиенти.");
+    await getDatabase().transaction(async (tx) => {
+      const pair = await tx.select().from(clients)
+        .where(and(inArray(clients.id, [keepId, mergeId]), eq(clients.organizationId, context.organizationId), isNull(clients.mergedIntoId)))
+        .for("update");
+      const keep = pair.find((client) => client.id === keepId);
+      const merge = pair.find((client) => client.id === mergeId);
+      if (!keep || !merge) throw new Error("Клиентът не е намерен.");
+
+      const verified = await tx.select({ clientId: projectContacts.clientId, email: projectContacts.email }).from(projectContacts)
+        .where(and(inArray(projectContacts.clientId, [keepId, mergeId]), isNotNull(projectContacts.emailVerifiedAt)));
+      const emailOf = (id: string) => verified.find((row) => row.clientId === id)?.email?.trim().toLowerCase() ?? null;
+      const keepEmail = emailOf(keepId);
+      const mergeEmail = emailOf(mergeId);
+      if (keepEmail && mergeEmail && keepEmail !== mergeEmail) throw new Error("Двамата клиенти са потвърдили различни имейли. Това са различни хора.");
+
+      const [shared] = await tx.select({ projectId: projectContacts.projectId }).from(projectContacts)
+        .where(and(inArray(projectContacts.clientId, [keepId, mergeId]), isNull(projectContacts.removedAt)))
+        .groupBy(projectContacts.projectId)
+        .having(sql`count(distinct ${projectContacts.clientId}) > 1`)
+        .limit(1);
+      if (shared) throw new Error("И двамата са поканени в един и същ обект. Премахни единия от обекта и опитай отново.");
+
+      // The only path allowed to move a project to another client (trigger projects_protect_client).
+      await tx.execute(sql`select set_config('app.client_merge', 'on', true)`);
+      const moved = await tx.update(projects).set({ clientId: keepId }).where(eq(projects.clientId, mergeId)).returning({ id: projects.id });
+      const contacts = await tx.update(projectContacts).set({ clientId: keepId }).where(eq(projectContacts.clientId, mergeId)).returning({ projectId: projectContacts.projectId });
+      await tx.execute(sql`select set_config('app.client_merge', '', true)`);
+
+      await tx.update(clients).set({
+        // A confirmed email wins over an unconfirmed one.
+        email: mergeEmail && !keepEmail ? merge.email : keep.email ?? merge.email,
+        phone: keep.phone ?? merge.phone,
+        phoneNormalized: keep.phoneNormalized ?? merge.phoneNormalized,
+        address: keep.address ?? merge.address,
+        notes: [keep.notes, merge.notes].filter(Boolean).join("\n\n") || null,
+        archivedAt: null,
+        updatedAt: new Date(),
+      }).where(eq(clients.id, keepId));
+      await tx.update(clients).set({ mergedIntoId: keepId, archivedAt: new Date(), updatedAt: new Date() }).where(eq(clients.id, mergeId));
+
+      const projectIds = [...new Set([...moved.map((row) => row.id), ...contacts.map((row) => row.projectId)])];
+      if (projectIds.length) {
+        await tx.insert(timelineEvents).values(projectIds.map((projectId) => ({
+          organizationId: context.organizationId, projectId, actorType: "staff" as const, actorId: context.userId,
+          eventType: "client_merged", visibility: "internal" as const, metadata: { keptClientId: keepId, mergedClientId: mergeId, name: keep.name },
+        })));
+      }
+    });
+    revalidatePath("/app/clients");
+    revalidatePath(`/app/clients/${keepId}`);
+    revalidatePath("/app/projects");
+  }, "Клиентите не бяха слети.");
 }
