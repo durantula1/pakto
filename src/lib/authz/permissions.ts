@@ -8,6 +8,7 @@ export const PERMISSION_KEYS = [
   "notes.view",
   "payments.record",
   "finance.view",
+  "clients.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSION_KEYS)[number];
@@ -18,6 +19,7 @@ export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label
     items: [
       { key: "projects.create", label: "Създава обекти", description: "Нови обекти и клиенти." },
       { key: "milestones.manage", label: "Управлява етапи", description: "Отбелязва етапи като започнати или завършени." },
+      { key: "clients.manage", label: "Редактира клиенти", description: "Името и контактите на клиента във всичките му обекти. Нужен е достъп до всички обекти." },
     ],
   },
   {

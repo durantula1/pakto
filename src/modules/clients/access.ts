@@ -9,3 +9,11 @@ type Subject = { role: string; allProjects: boolean; permissions: readonly Permi
 export function seesClients(subject: Subject) {
   return subject.role === "owner" || subject.allProjects || can(subject, "finance.view") || can(subject, "payments.record");
 }
+
+/**
+ * Editing a client changes every project of theirs, so it needs the right and sight of all projects;
+ * merging and archiving stay with owners.
+ */
+export function managesClients(subject: Subject) {
+  return subject.role === "owner" || (subject.allProjects && can(subject, "clients.manage"));
+}

@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getDatabase } from "@/db";
 import {
   changeOrderLineItems, changeOrderPaymentTerms, changeOrderRevisions, changeOrderScheduleItems, changeOrders, offerAcceptances, organizationMembers, organizations, paymentClaims, paymentInstallments,
-  portalDecisions, profiles, projectContacts, projectMilestones, projectReceipts, projects, revisionAbsorbedChanges,
+  clients, portalDecisions, profiles, projectContacts, projectMilestones, projectReceipts, projects, revisionAbsorbedChanges,
 } from "@/db/schema";
 import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
 
@@ -20,11 +20,13 @@ export async function GET() {
 
   const db = getDatabase();
   const organizationId = context.organizationId;
-  const [[organization], team, projectRows, documents, milestones, installments, receipts, claims, acceptances] = await Promise.all([
+  const [[organization], team, clientRows, projectRows, documents, milestones, installments, receipts, claims, acceptances] = await Promise.all([
     db.select({ name: organizations.name, currency: organizations.defaultCurrency, createdAt: organizations.createdAt }).from(organizations).where(eq(organizations.id, organizationId)).limit(1),
     db.select({ name: profiles.displayName, email: profiles.email, role: organizationMembers.role, status: organizationMembers.status, joinedAt: organizationMembers.createdAt })
       .from(organizationMembers).leftJoin(profiles, eq(profiles.id, organizationMembers.userId)).where(eq(organizationMembers.organizationId, organizationId)),
-    db.select({ id: projects.id, name: projects.name, siteAddress: projects.siteAddress, reference: projects.reference, status: projects.status, createdAt: projects.createdAt, completedAt: projects.completedAt, archivedAt: projects.archivedAt })
+    db.select({ id: clients.id, name: clients.name, email: clients.email, phone: clients.phone, address: clients.address, notes: clients.notes, mergedIntoId: clients.mergedIntoId, archivedAt: clients.archivedAt, createdAt: clients.createdAt })
+      .from(clients).where(eq(clients.organizationId, organizationId)).orderBy(asc(clients.createdAt)),
+    db.select({ id: projects.id, clientId: projects.clientId, name: projects.name, siteAddress: projects.siteAddress, reference: projects.reference, status: projects.status, createdAt: projects.createdAt, completedAt: projects.completedAt, archivedAt: projects.archivedAt })
       .from(projects).where(eq(projects.organizationId, organizationId)).orderBy(asc(projects.createdAt)),
     db.select({ id: changeOrders.id, projectId: changeOrders.projectId, kind: changeOrders.documentKind, number: changeOrders.sequenceNumber, baselineOfferId: changeOrders.baselineOfferId, absorbedByRevisionId: changeOrders.absorbedByRevisionId, lifecycleStatus: changeOrders.lifecycleStatus, workStatus: changeOrders.workStatus, createdAt: changeOrders.createdAt })
       .from(changeOrders).where(eq(changeOrders.organizationId, organizationId)).orderBy(asc(changeOrders.createdAt)),
@@ -40,7 +42,7 @@ export async function GET() {
   const documentIds = documents.map((row) => row.id);
   const [contacts, revisions] = await Promise.all([
     projectIds.length
-      ? db.select({ projectId: projectContacts.projectId, name: projectContacts.name, email: projectContacts.email, phone: projectContacts.phone, portalRole: projectContacts.portalRole, isPrimary: projectContacts.isPrimary, removedAt: projectContacts.removedAt })
+      ? db.select({ projectId: projectContacts.projectId, clientId: projectContacts.clientId, name: projectContacts.name, email: projectContacts.email, phone: projectContacts.phone, portalRole: projectContacts.portalRole, isPrimary: projectContacts.isPrimary, removedAt: projectContacts.removedAt })
         .from(projectContacts).where(inArray(projectContacts.projectId, projectIds))
       : [],
     documentIds.length
@@ -73,6 +75,7 @@ export async function GET() {
     exportedAt: exportedAt.toISOString(),
     organization,
     team,
+    clients: clientRows,
     projects: projectRows.map((project) => ({
       ...project,
       contacts: contacts.filter((contact) => contact.projectId === project.id),

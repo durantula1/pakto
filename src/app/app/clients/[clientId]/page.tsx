@@ -10,7 +10,8 @@ import { DetailHeader } from "@/components/workspace/detail-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { can } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { seesClients } from "@/modules/clients/access";
+import { managesClients, seesClients } from "@/modules/clients/access";
+import { ClientActions } from "@/components/clients/client-actions";
 import { getClient } from "@/modules/clients/queries";
 
 export const metadata: Metadata = { title: "Клиент" };
@@ -49,13 +50,18 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
         metadata={
           <>
             {client.phone ? <a href={`tel:${client.phone}`} className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"><Phone className="size-3.5" /> {client.phone}</a> : null}
-            {client.email ? <a href={`mailto:${client.email}`} className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"><Mail className="size-3.5" /> {client.email}</a> : null}
+            {client.email ? <a href={`mailto:${client.email}`} className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"><Mail className="size-3.5" /> {client.email}{client.emailVerified ? <span className="text-xs text-muted-foreground">(потвърден)</span> : null}</a> : null}
             <span>{projectsSummary(client.projects.length, active)}</span>
           </>
         }
-        action={can(context, "projects.create") && !client.archivedAt
-          ? <NewProjectSheet label="Нов обект за клиента" defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
-          : null}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <ClientActions client={client} canEdit={managesClients(context)} canArchive={context.role === "owner"} emailLocked={client.emailVerified} />
+            {can(context, "projects.create") && !client.archivedAt
+              ? <NewProjectSheet label="Нов обект за клиента" defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
+              : null}
+          </div>
+        }
       />
       {client.notes ? <p className="rounded-xl border bg-card p-4 text-sm whitespace-pre-line">{client.notes}</p> : null}
       {waiting ? (

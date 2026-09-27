@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, count, desc, eq, exists, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { changeOrders, clients, projectMembers, projects } from "@/db/schema";
+import { changeOrders, clients, projectContacts, projectMembers, projects } from "@/db/schema";
 import { seesAllProjects } from "@/lib/authz/project-access";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { normalizePhone } from "@/modules/clients/operations";
@@ -103,7 +103,9 @@ export async function getClient(context: TenantContext, clientId: string) {
     .groupBy(projects.id)
     .orderBy(asc(sql`${projects.archivedAt} is not null`), desc(projects.updatedAt));
   if (!rows.length) return null;
-  return { ...client, projects: rows };
+  const [verified] = await db.select({ id: projectContacts.id }).from(projectContacts)
+    .where(and(eq(projectContacts.clientId, clientId), sql`${projectContacts.emailVerifiedAt} is not null`)).limit(1);
+  return { ...client, emailVerified: !!verified, projects: rows };
 }
 
 export type ClientOption = { id: string; name: string; email: string | null; phone: string | null; projects: number };

@@ -39,6 +39,7 @@ export const memberPermission = appSchema.enum("member_permission", [
   "notes.view",
   "payments.record",
   "finance.view",
+  "clients.manage",
 ]);
 export const memberStatus = appSchema.enum("member_status", [
   "active",
