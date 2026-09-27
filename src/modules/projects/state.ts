@@ -257,3 +257,90 @@ export async function getProjectState(organizationId: string, projectId: string)
 
 export type ProjectState = NonNullable<Awaited<ReturnType<typeof getProjectState>>>;
 export type OfferState = ProjectState["offers"][number];
+
+export type ProjectTotals = { currency: string; contractMinor: bigint; paidMinor: bigint; remainingMinor: bigint };
+
+/**
+ * Contracted, paid and remaining for many projects at once, in a fixed number of queries however many
+ * projects there are (the client card). The same rules as `getProjectState`: an offer counts while
+ * in force (`offerDisplayStatus` / `offerInForce`), with its approved changes that no later version
+ * absorbed; paid is every receipt of the project.
+ */
+export async function getProjectsTotals(organizationId: string, projectIds: string[]): Promise<Map<string, ProjectTotals>> {
+  const totals = new Map<string, ProjectTotals>();
+  if (!projectIds.length) return totals;
+  const db = getDatabase();
+  const offerScope = and(inArray(changeOrders.projectId, projectIds), eq(changeOrders.organizationId, organizationId), isNull(changeOrders.archivedAt));
+  const [offerRows, changeRows, started, acceptances, receipts] = await Promise.all([
+    db.select({
+      id: changeOrders.id,
+      projectId: changeOrders.projectId,
+      lifecycleStatus: changeOrders.lifecycleStatus,
+      currentStatus: changeOrderRevisions.status,
+      currency: changeOrderRevisions.currency,
+      approvedTitle: approvedRevision.title,
+      approvedTotal: approvedRevision.total,
+      approvedCurrency: approvedRevision.currency,
+    }).from(changeOrders)
+      .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
+      .leftJoin(approvedRevision, eq(approvedRevision.id, changeOrders.approvedRevisionId))
+      .where(and(offerScope, eq(changeOrders.documentKind, "offer")))
+      .orderBy(asc(changeOrders.sequenceNumber)),
+    db.select({ baselineOfferId: changeOrders.baselineOfferId, total: changeOrderRevisions.total })
+      .from(changeOrders)
+      .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
+      .innerJoin(portalDecisions, eq(portalDecisions.revisionId, changeOrderRevisions.id))
+      .where(and(offerScope, eq(changeOrders.documentKind, "change"), isNull(changeOrders.absorbedByRevisionId))),
+    db.select({ offerId: projectMilestones.offerId, count: sql<number>`count(*)::int` })
+      .from(projectMilestones)
+      .where(and(inArray(projectMilestones.projectId, projectIds), eq(projectMilestones.organizationId, organizationId), sql`${projectMilestones.status} <> 'planned'`))
+      .groupBy(projectMilestones.offerId),
+    db.selectDistinctOn([offerAcceptances.offerId], { offerId: offerAcceptances.offerId, kind: offerAcceptances.kind })
+      .from(offerAcceptances)
+      .where(and(inArray(offerAcceptances.projectId, projectIds), eq(offerAcceptances.organizationId, organizationId)))
+      .orderBy(offerAcceptances.offerId, desc(offerAcceptances.createdAt)),
+    db.select({ projectId: projectReceipts.projectId, paid: sql<string>`coalesce(sum(${projectReceipts.amount}), 0)::text`, currency: sql<string | null>`min(${projectReceipts.currency})` })
+      .from(projectReceipts)
+      .where(and(inArray(projectReceipts.projectId, projectIds), eq(projectReceipts.organizationId, organizationId)))
+      .groupBy(projectReceipts.projectId),
+  ]);
+
+  const changesByOffer = new Map<string, bigint>();
+  for (const change of changeRows) {
+    if (!change.baselineOfferId) continue;
+    changesByOffer.set(change.baselineOfferId, (changesByOffer.get(change.baselineOfferId) ?? 0n) + cents(change.total));
+  }
+  const startedByOffer = new Map(started.map((row) => [row.offerId, row.count]));
+  const acceptanceByOffer = new Map(acceptances.map((row) => [row.offerId, row.kind]));
+  const paidByProject = new Map(receipts.map((row) => [row.projectId, row]));
+
+  for (const projectId of projectIds) {
+    const offers = offerRows.filter((row) => row.projectId === projectId).map((row) => {
+      const approved = row.approvedTitle !== null && row.approvedTotal !== null;
+      const status = offerDisplayStatus({
+        approved,
+        currentStatus: row.currentStatus,
+        lifecycleStatus: row.lifecycleStatus,
+        startedStages: startedByOffer.get(row.id) ?? 0,
+        acceptance: acceptanceByOffer.get(row.id) ?? null,
+      });
+      const inForce = approved && offerInForce(status);
+      return {
+        currency: (approved ? row.approvedCurrency : null) ?? row.currency,
+        inForce,
+        contractMinor: inForce ? cents(row.approvedTotal) + (changesByOffer.get(row.id) ?? 0n) : 0n,
+      };
+    });
+    const inForce = offers.filter((offer) => offer.inForce);
+    const receipt = paidByProject.get(projectId);
+    const contractMinor = inForce.reduce((sum, offer) => sum + offer.contractMinor, 0n);
+    const paidMinor = cents(receipt?.paid);
+    totals.set(projectId, {
+      currency: inForce[0]?.currency ?? offers[0]?.currency ?? receipt?.currency ?? "EUR",
+      contractMinor,
+      paidMinor,
+      remainingMinor: contractMinor - paidMinor,
+    });
+  }
+  return totals;
+}

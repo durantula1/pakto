@@ -13,7 +13,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { managesClients, seesClients } from "@/modules/clients/access";
 import { ClientActions } from "@/components/clients/client-actions";
 import { getClient } from "@/modules/clients/queries";
-import { formatCents, getProjectState } from "@/modules/projects/state";
+import { formatCents, getProjectsTotals, type ProjectTotals } from "@/modules/projects/state";
 import { projectStatusBadgeVariants } from "@/app/app/projects/[projectId]/project-skeleton";
 
 export const metadata: Metadata = { title: "Клиент" };
@@ -44,8 +44,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
   const waiting = client.projects.reduce((sum, project) => sum + project.waiting, 0);
   // Money only for those who already see payments; per currency, never summed across currencies.
   const seesMoney = can(context, "finance.view") || can(context, "payments.record");
-  const states = seesMoney ? await Promise.all(client.projects.map((project) => getProjectState(context.organizationId, project.id))) : [];
-  const remainingByProject = new Map(states.flatMap((state) => state ? [[state.project.id, state] as const] : []));
+  const remainingByProject = seesMoney ? await getProjectsTotals(context.organizationId, client.projects.map((project) => project.id)) : new Map<string, ProjectTotals>();
   const totals = new Map<string, Totals>();
   for (const state of remainingByProject.values()) {
     if (!state.contractMinor && !state.paidMinor) continue;
