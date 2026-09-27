@@ -115,17 +115,14 @@ async function clientSession(secret: string, projectPublicId: string) {
 /** Once per request: the layout, the page and the actions of one render share it. */
 export const getPortalSession = cache(async (projectPublicId: string) => {
   const cookieStore = await cookies();
-  const projectSecret = cookieStore.get(`${PORTAL_COOKIE}_${projectPublicId}`)?.value;
-  if (projectSecret) {
-    const session = await projectSession(projectSecret, projectPublicId);
-    if (session) return session;
-  }
+  // A client session first: an older one-project cookie on the same device must not hide it.
   for (const cookie of cookieStore.getAll()) {
     if (!cookie.name.startsWith(CLIENT_COOKIE_PREFIX)) continue;
     const session = await clientSession(cookie.value, projectPublicId);
     if (session) return session;
   }
-  return null;
+  const projectSecret = cookieStore.get(`${PORTAL_COOKIE}_${projectPublicId}`)?.value;
+  return projectSecret ? projectSession(projectSecret, projectPublicId) : null;
 });
 
 /**

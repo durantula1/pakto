@@ -50,7 +50,7 @@ export function PortalShell({ organizationName, nav, active, unread = 0, childre
               <PortalProfileMenu />
             </nav>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs text-white/55"><ShieldCheck className="size-3.5" /> Защитен преглед</span>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-xs text-white/55"><ShieldCheck className="size-3.5" /><span className="hidden sm:inline">Защитен преглед</span></span>
           )}
           {nav ? <div className="sm:hidden"><PortalProfileMenu /></div> : null}
         </div>

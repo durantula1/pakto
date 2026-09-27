@@ -6,7 +6,7 @@ import { clientUnreadQuestions } from "@/modules/change-portal/navigation";
 import { getPortalSession } from "@/modules/change-portal/session";
 
 export const metadata: Metadata = {
-  title: "Преглед на промяна · Pakto",
+  title: "Вашият обект",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

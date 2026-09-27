@@ -10,7 +10,7 @@ import { clientDocuments, clientUnreadQuestions } from "@/modules/change-portal/
 import { getClientPortal } from "@/modules/change-portal/session";
 import { cents, formatCents } from "@/modules/projects/state";
 
-export const metadata: Metadata = { title: "Документи · Pakto" };
+export const metadata: Metadata = { title: "Документи" };
 
 /** Every offer and change the client received, grouped by project, for reference and PDFs. */
 export default async function PortalDocumentsPage() {

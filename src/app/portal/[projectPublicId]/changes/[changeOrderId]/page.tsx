@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarClock, CheckCircle2, Clock3, Download, History } from "lucide-react";
-import { PortalHeader } from "@/components/portal/portal-header";
-import { PortalChangeTabs } from "@/components/portal/change-tabs";
+import { ArrowLeft, CalendarClock, CheckCircle2, Clock3, Download, History } from "lucide-react";
+import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { maskEmail } from "@/lib/email/send";
@@ -56,6 +55,15 @@ const eventLabels: Record<string, string> = {
   acceptance_requested: "Фирмата поиска приемане на работата",
   acceptance_accepted: "Работата е приета",
   acceptance_issues: "Изпратени забележки по работата",
+};
+
+const statusTones: Record<string, "secondary" | "success-soft" | "warning-soft" | "danger-soft"> = {
+  sent: "warning-soft",
+  viewed: "warning-soft",
+  approved: "success-soft",
+  changes_requested: "warning-soft",
+  declined: "danger-soft",
+  expired: "danger-soft",
 };
 
 function daysUntil(date: Date) {
@@ -220,37 +228,29 @@ export default async function PortalChangePage({
 
   return (
     <>
-      <Link
-        href={`/portal/${projectPublicId}`}
-        className="text-sm text-muted-foreground hover:text-foreground"
-      >
-        ← Към обекта
-      </Link>
-      {query.decision && (
-        <div className="mt-3 rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary">
-          Решението е записано успешно. И двете страни виждат същата версия и
-          timestamp.
+      <div className="flex flex-col gap-3">
+        <Link href={`/portal/${projectPublicId}`} className="inline-flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4" /> {data.project.name}
+        </Link>
+        {query.decision && (
+          <p role="status" className="rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground">
+            Решението е записано. Разписката е на имейла ви.
+          </p>
+        )}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm text-muted-foreground">{isOffer ? "Оферта" : "Промяна"} · <span className="font-mono">{documentCode(change.documentKind, change.sequenceNumber)}</span> · версия {change.revisionNumber}
+              {parentOffer ? <> · <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="underline underline-offset-4 hover:text-foreground">към {documentCode("offer", parentOffer.sequenceNumber)}</Link></> : null}
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{change.title}</h1>
+            <div className="mt-2"><Badge variant={statusTones[change.status] ?? "secondary"}>{labels[change.status] ?? change.status}</Badge></div>
+          </div>
+          {change.frozenAt ? (
+            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${documentCode(change.documentKind, change.sequenceNumber)} · версия ${change.revisionNumber} · PDF`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border bg-card px-3 text-sm font-medium hover:bg-muted">
+              <Download className="size-4" /> PDF
+            </DownloadLink>
+          ) : null}
         </div>
-      )}
-      <div className="mt-3">
-        <PortalHeader
-          eyebrow={<>{isOffer ? "Оферта" : "Промяна"} · <span className="font-mono">{documentCode(change.documentKind, change.sequenceNumber)}</span> · версия {change.revisionNumber}</>}
-          title={change.title}
-          meta={<>
-            {data.project.organizationName} · {data.project.name}
-            {parentOffer ? <> · <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="text-white underline underline-offset-4">към {documentCode("offer", parentOffer.sequenceNumber)} · {parentOffer.title}</Link></> : null}
-          </>}
-          aside={
-            <div className="flex flex-col items-end gap-3">
-              <Badge variant={change.status === "approved" ? "default" : "secondary"}>{labels[change.status] ?? change.status}</Badge>
-              {change.frozenAt ? (
-                <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${documentCode(change.documentKind, change.sequenceNumber)} · версия ${change.revisionNumber} · PDF`} className="inline-flex h-9 items-center gap-2 rounded-lg border border-sidebar-border bg-white/5 px-3 text-sm font-medium text-sidebar-foreground transition hover:bg-white/10">
-                  <Download className="size-4" /> <span className="hidden sm:inline">Свали</span> PDF
-                </DownloadLink>
-              ) : null}
-            </div>
-          }
-        />
       </div>
       {offerState?.acceptance ? (
         <div className="mt-4">
@@ -302,13 +302,14 @@ export default async function PortalChangePage({
         </div>
       ) : null}
       <div className="mt-5">
-        <PortalChangeTabs
+        <PortalDocumentLayout
+          amount={`${money(change.total)} ${change.currency}`}
+          aboveBottomNav={!!session.clientId && session.unlocked}
           details={details}
           decision={decision}
           history={history}
           summary={summary}
           pending={awaitingDecision}
-          inForce={!!agreement}
           work={agreement ? (
             <>
               <PortalSchedule view={agreement} />

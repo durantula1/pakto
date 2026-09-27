@@ -8,7 +8,7 @@ import { lastMessages } from "@/modules/change-portal/navigation";
 import { getClientPortal } from "@/modules/change-portal/session";
 import { unreadCount } from "@/modules/messages/queries";
 
-export const metadata: Metadata = { title: "Въпроси · Pakto" };
+export const metadata: Metadata = { title: "Въпроси" };
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "short", timeZone: "Europe/Sofia" });
 

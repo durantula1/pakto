@@ -102,6 +102,8 @@ export async function GET(
     });
   });
   const response = NextResponse.redirect(target);
+  // The client session replaces a one-project cookie of this project from before.
+  if (grant.clientId) response.cookies.delete(`${PORTAL_COOKIE}_${grant.publicId}`);
   response.cookies.set(cookieName, sessionSecret, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

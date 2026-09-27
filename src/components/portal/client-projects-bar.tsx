@@ -28,10 +28,10 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (navigation.unlocked || confirmState.done || requestState.done) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href="/portal" className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-2.5 py-1.5 font-semibold text-white hover:bg-white/15"><ArrowLeft className="size-4" /> Вашите обекти</Link>
+        <Link href="/portal" className="inline-flex items-center gap-1.5 rounded-lg bg-sidebar px-3 py-1.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите обекти</Link>
         {navigation.unlocked && navigation.projects.length > 1 ? (
           <DropdownMenuTrigger>
-            <Button type="button" variant="ghost" className="h-8 gap-1.5 rounded-lg px-2.5 text-sidebar-foreground hover:bg-white/10 hover:text-white"><ArrowLeftRight className="size-4" /> Смени обект</Button>
+            <Button type="button" variant="outline" className="h-8 gap-1.5 rounded-lg bg-card px-2.5"><ArrowLeftRight className="size-4" /> Смени обект</Button>
             <DropdownMenu
               placement="bottom start"
               className="min-w-64"
@@ -49,14 +49,14 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
             </DropdownMenu>
           </DropdownMenuTrigger>
         ) : null}
-        {confirmState.done ? <span role="status" className="text-sidebar-foreground/70">Готово. Вече виждате всичките си обекти.</span> : null}
+        {confirmState.done ? <span role="status" className="text-muted-foreground">Готово. Вече виждате всичките си обекти.</span> : null}
       </div>
     );
   }
   // Any code the client enters (a decision, too) opens all projects; this is only for looking without deciding.
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm text-sidebar-foreground/70 underline-offset-4 hover:text-white hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
         <Building2 className="size-4" /> Покажи всичките ми обекти
       </button>
     );
@@ -65,7 +65,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   const otpId = confirmState.otpId ?? requestState.otpId;
   const error = confirmState.error ?? requestState.error;
   return (
-    <div className="flex items-start gap-2 text-sm">
+    <div className="flex items-start gap-2 rounded-xl bg-sidebar px-4 py-3 text-sm text-sidebar-foreground">
       <Building2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>

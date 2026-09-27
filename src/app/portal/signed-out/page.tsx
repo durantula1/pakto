@@ -2,7 +2,7 @@ import { PortalShell } from "@/components/portal/portal-shell";
 import type { Metadata } from "next";
 import { LogOut } from "lucide-react";
 
-export const metadata: Metadata = { title: "Излязохте · Pakto" };
+export const metadata: Metadata = { title: "Излязохте" };
 
 export default function SignedOutPage() {
   return (

@@ -84,7 +84,7 @@ export default async function PortalProjectPage({
           </div>
           <div className="shrink-0">{questions}</div>
         </div>
-        {navigation && !navigation.unlocked ? <div className="rounded-xl bg-sidebar px-4 py-3 text-sidebar-foreground"><ClientProjectsBar projectPublicId={projectPublicId} organizationName={data.project.organizationName} navigation={navigation} /></div> : null}
+        {navigation && !navigation.unlocked ? <ClientProjectsBar projectPublicId={projectPublicId} organizationName={data.project.organizationName} navigation={navigation} /> : null}
       </div>
 
       {!active ? (
@@ -128,7 +128,6 @@ export default async function PortalProjectPage({
             )}
           </section>
           <section id="payments" className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold text-muted-foreground">Плащания</h2>
             {/* The query param outlives the dispute; once the firm resolves it the receipt shows the answer instead. */}
             {query.payment === "disputed" && state.receipts.some((item) => item.disputed) ? (
               <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary">
