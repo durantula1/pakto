@@ -8,16 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { FilterSelect } from "@/components/workspace/filter-select";
+import { cn } from "@/lib/utils";
 import { claimPaymentAction, disputePaymentAction } from "@/modules/change-portal/actions";
 
 const methodOptions = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** A row whose action opens a small form right under it, instead of a dialog. */
-function Unfolding({ row, trigger, variant = "outline", stack = false, children }: {
+function Unfolding({ row, trigger, variant = "outline", stack = false, triggerClassName, children }: {
   row: ReactNode;
   trigger: string;
   variant?: "outline" | "ghost";
+  /** A bigger button where the action is the point of the row, e.g. the portal's money card. */
+  triggerClassName?: string;
   /** On phones, put the action under the row (for rows that need the full width). */
   stack?: boolean;
   children: (close: () => void) => ReactNode;
@@ -28,7 +31,7 @@ function Unfolding({ row, trigger, variant = "outline", stack = false, children 
       <div className={stack ? "flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3" : "flex items-center gap-3"}>
         <div className="w-full min-w-0 flex-1">{row}</div>
         {open ? null : (
-          <Button type="button" variant={variant} size="xs" className={variant === "ghost" ? "-mx-2 text-muted-foreground" : undefined} onPress={() => setOpen(true)}>{trigger}</Button>
+          <Button type="button" variant={variant} size="sm" className={cn("h-10 px-3 text-sm", variant === "ghost" && "-mx-2 text-muted-foreground", triggerClassName)} onPress={() => setOpen(true)}>{trigger}</Button>
         )}
       </div>
       {open ? <div className="mt-3 border-t border-dashed pt-3">{children(() => setOpen(false))}</div> : null}
@@ -40,9 +43,10 @@ function Unfolding({ row, trigger, variant = "outline", stack = false, children 
  * "Платих": the client says they paid. Amount and date come filled in (the installment's remainder,
  * today), so the usual case is one tap on "Изпрати". The company confirms it before it counts.
  */
-export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, installmentId, amount, stack }: {
+export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, installmentId, amount, stack, triggerClassName }: {
   row: ReactNode;
   stack?: boolean;
+  triggerClassName?: string;
   trigger: string;
   portalPublicId: string;
   offerId: string | null;
@@ -51,7 +55,7 @@ export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, install
 }) {
   const key = installmentId ?? offerId ?? "project";
   return (
-    <Unfolding row={row} trigger={trigger} stack={stack}>
+    <Unfolding row={row} trigger={trigger} stack={stack} triggerClassName={triggerClassName}>
       {(close) => (
         <ActionForm action={claimPaymentAction} success="Изпратено на фирмата" onSuccess={close} className="grid gap-2">
           <input type="hidden" name="projectPublicId" value={portalPublicId} />
@@ -64,7 +68,7 @@ export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, install
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ActionSubmit>Изпрати на фирмата</ActionSubmit>
-            <Button type="button" variant="ghost" size="sm" onPress={close}>Отказ</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-sm" onPress={close}>Отказ</Button>
             <span className="text-xs text-muted-foreground">Влиза в платеното, след като фирмата го потвърди.</span>
           </div>
         </ActionForm>
@@ -84,7 +88,7 @@ export function DisputeReceiptRow({ row, portalPublicId, receiptId }: { row: Rea
           <Textarea aria-label="Какво не е вярно?" name="reason" required minLength={5} maxLength={1000} rows={2} autoFocus placeholder="Какво не е вярно? Напр. платих 4 500 €, не 5 000 €" />
           <div className="flex items-center gap-2">
             <ActionSubmit>Изпрати на фирмата</ActionSubmit>
-            <Button type="button" variant="ghost" size="sm" onPress={close}>Отказ</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-sm" onPress={close}>Отказ</Button>
           </div>
         </ActionForm>
       )}

@@ -138,7 +138,11 @@ export function PortalSummary({ state, view, portalPublicId, offers }: { state: 
  * The work schedule the client sees, one line per stage with its date first. A stage that moved
  * says where it was and why.
  */
-export function PortalSchedule({ view }: { view: ScopeView }) {
+export function PortalSchedule({ view, foldDone = false }: {
+  view: ScopeView;
+  /** Fold the finished stages into one "N завършени" row, so the current one leads (the client's project page). */
+  foldDone?: boolean;
+}) {
   const now = today();
   if (!view.hasAgreement) return <section className="rounded-2xl border bg-card p-5">
     <p className="text-sm leading-6 text-muted-foreground">Графикът ще се появи тук, след като одобрите офертата.</p>
@@ -158,7 +162,22 @@ export function PortalSchedule({ view }: { view: ScopeView }) {
         {view.deadline ? <>срок <strong className="font-semibold text-foreground">{formatDay(view.deadline)}</strong></> : null}
       </span>
     </p>
-    {view.milestones.length ? <ol className="mt-4">{view.milestones.map((item, index) => {
+    {view.milestones.length ? <StageList view={view} now={now} next={next} name={name} foldDone={foldDone} /> : <p className="mt-2 text-sm text-muted-foreground">Фирмата още не е добавила етапи.</p>}
+  </section>;
+}
+
+function StageList({ view, now, next, name, foldDone }: {
+  view: ScopeView;
+  now: string;
+  next: ScopeView["milestones"][number] | undefined;
+  name: (offerId: string | null) => string | null;
+  foldDone: boolean;
+}) {
+  const finished = view.milestones.filter((item) => item.status === "completed");
+  const fold = foldDone && next && finished.length > 1;
+  const shown = fold ? view.milestones.filter((item) => item.status !== "completed") : view.milestones;
+  /** One stage; `line` draws the connector down to the next one. */
+  const stage = (item: ScopeView["milestones"][number], line: boolean) => {
       const completed = item.status === "completed";
       const current = item.id === next?.id;
       const overdue = !completed && item.dueOn < now;
@@ -174,7 +193,7 @@ export function PortalSchedule({ view }: { view: ScopeView }) {
             completed ? "bg-brand-green text-foreground" : current ? "bg-primary ring-[5px] ring-primary/25" : "border-2 border-foreground/25 bg-card")}>
             {completed ? <Check className="size-3.5" strokeWidth={3} /> : null}
           </span>
-          {index < view.milestones.length - 1 ? <span className="w-0.5 min-h-5 flex-1 bg-foreground/15" /> : null}
+          {line ? <span className="w-0.5 min-h-5 flex-1 bg-foreground/15" /> : null}
         </div>
         <div className="min-w-0 pb-4">
           <p className={cn("font-semibold", !completed && !current && "text-muted-foreground")}>
@@ -185,8 +204,20 @@ export function PortalSchedule({ view }: { view: ScopeView }) {
           {item.previousDueOn && !completed ? <Quote tone="warning" className="mt-1 text-xs text-muted-foreground">Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}
         </div>
       </li>;
-    })}</ol> : <p className="mt-2 text-sm text-muted-foreground">Фирмата още не е добавила етапи.</p>}
-  </section>;
+  };
+  return <>
+    {fold ? (
+      <details className="group mt-4 [&>summary::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 text-sm">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-3.5" strokeWidth={3} /></span>
+          <span className="font-medium">{finished.length} завършени етапа</span>
+          <span className="text-muted-foreground underline-offset-4 group-open:hidden hover:underline">покажи</span>
+        </summary>
+        <ol className="mt-2">{finished.map((item) => stage(item, true))}</ol>
+      </details>
+    ) : null}
+    <ol className={fold ? "mt-3" : "mt-4"}>{shown.map((item, index) => stage(item, index < shown.length - 1))}</ol>
+  </>;
 }
 
 type Receipt = ProjectState["receipts"][number];
@@ -213,7 +244,14 @@ function Entry({ date, title, sub, amount, badge, className }: { date: string; t
  * then every payment (the client's own unconfirmed ones first). Answers and disputes are quotes
  * under their line; every form opens in place.
  */
-export function PortalPayments({ view, portalPublicId, claims, canAct }: { view: ScopeView; portalPublicId: string; claims: PortalClaim[]; canAct: boolean }) {
+export function PortalPayments({ view, portalPublicId, claims, canAct, showBalance = true }: {
+  view: ScopeView;
+  portalPublicId: string;
+  claims: PortalClaim[];
+  canAct: boolean;
+  /** Off under the project's money card, which already shows the balance. */
+  showBalance?: boolean;
+}) {
   const overpaid = view.remainingMinor < 0n;
   const pendingClaims = claims.filter((claim) => claim.status === "pending");
   const rejected = claims.filter((claim) => claim.status === "rejected");
@@ -228,12 +266,14 @@ export function PortalPayments({ view, portalPublicId, claims, canAct }: { view:
   </p>;
 
   return <div className="space-y-5">
-    <section className="rounded-2xl border bg-card px-5 py-4">
+    {showBalance ? <section className="rounded-2xl border bg-card px-5 py-4">
       {canAct ? <ClaimPaymentRow row={balance} stack trigger="Отбележи плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
       {view.hasAgreement ? <PaidBar className="mt-3" paidMinor={view.paidMinor} contractMinor={view.contractMinor} /> : (
         <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобрите офертата."}</p>
       )}
-    </section>
+    </section> : canAct ? <section className="rounded-2xl border bg-card px-5 py-3">
+      <ClaimPaymentRow row={<span className="text-sm text-muted-foreground">Платили сте нещо, което не е тук?</span>} trigger="Отбележи плащане" triggerClassName="h-10 px-3 text-sm" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} />
+    </section> : null}
 
     {view.installments.length ? <section className="space-y-2">
       <PaperLabel>Платежен план</PaperLabel>

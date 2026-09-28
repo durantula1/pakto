@@ -12,7 +12,7 @@ export default async function ClientPortalLayout({ children }: LayoutProps<"/por
   const portal = await getClientPortal();
   if (!portal || !portal.projects.length) redirect("/portal/invalid");
   return (
-    <PortalShell organizationName={portal.organizationName} nav unread={clientUnreadQuestions(portal.clientId)}>
+    <PortalShell organizationName={portal.organizationName} logoPath={portal.organizationLogoPath} nav unread={clientUnreadQuestions(portal.clientId)}>
       {children}
     </PortalShell>
   );

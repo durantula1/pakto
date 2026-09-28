@@ -240,6 +240,9 @@ export function LandingExperience() {
             <Link href="/faq" className="transition-colors hover:text-[#ff765f]">
               ЧЗВ
             </Link>
+            <Link href="/contact" className="transition-colors hover:text-[#ff765f]">
+              ВРЪЗКА С НАС
+            </Link>
             {Object.values(LEGAL_DOCUMENTS).map((document) => (
               <Link
                 key={document.href}

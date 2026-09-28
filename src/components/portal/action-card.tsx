@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Clock3 } from "lucide-react";
+import { Check, ChevronRight, Clock3 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { formatCents } from "@/modules/projects/state";
@@ -18,55 +18,52 @@ export type PortalStep = {
 };
 
 /**
- * Everything that waits for the client, as one list of the same card. The first one carries its button;
- * the rest open on a tap. Nothing is shown when nothing waits.
+ * Everything that waits for the client, as one list of the same quiet card: a coloured edge (coral to
+ * decide, green to accept), the whole card opens it. When nothing waits, nothing is shown, or with `calm` one reassuring line.
  */
-export function PortalSteps({ steps, className }: { steps: PortalStep[]; className?: string }) {
-  if (!steps.length) return null;
+export function PortalSteps({ steps, calm = false, className }: {
+  steps: PortalStep[];
+  /** With nothing waiting, say so instead of showing nothing. */
+  calm?: boolean;
+  className?: string;
+}) {
+  if (!steps.length) return calm ? (
+    <p className={cn("flex items-center gap-3 rounded-2xl bg-tile-mint px-4 py-3.5 text-sm text-tile-mint-foreground", className)}>
+      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-4" strokeWidth={3} /></span>
+      <span><b className="font-semibold">Нищо не чака от вас.</b> Ще ви пишем, когато има нещо за решение.</span>
+    </p>
+  ) : null;
   return (
     <ul className={cn("flex flex-col gap-2", className)}>
-      {steps.map((step, index) => <li key={step.key}><ActionCard step={step} primary={index === 0} /></li>)}
+      {steps.map((step) => <li key={step.key}><ActionCard step={step} /></li>)}
     </ul>
   );
 }
 
-function ActionCard({ step, primary }: { step: PortalStep; primary: boolean }) {
-  const chip = (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", step.tone === "accept" ? "bg-tile-mint text-tile-mint-foreground" : "bg-tile-sand text-tile-sand-foreground")}>
-      {step.kind}
-    </span>
-  );
-  const due = step.due ? (
-    <span className="inline-flex items-center gap-1 text-xs font-semibold text-tile-coral-foreground"><Clock3 className="size-3.5" />до {step.due}</span>
-  ) : null;
-  if (primary) {
-    return (
-      <Link href={step.href} className="flex flex-col gap-3 rounded-2xl border-[1.5px] border-primary bg-card p-4 shadow-[0_0.375rem_1.25rem_-0.75rem_rgb(255_118_95/0.7)] transition-colors hover:bg-primary/5 sm:flex-row sm:items-center sm:gap-4">
-        <span className="flex min-w-0 flex-1 flex-col gap-2">
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">{chip}{due}</span>
-          <span className="flex flex-col gap-0.5">
-            <span className="text-lg leading-snug font-semibold">{step.title}</span>
-            {step.detail ? <span className="text-sm text-muted-foreground">{step.detail}</span> : null}
-          </span>
-        </span>
-        <span className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 font-semibold text-primary-foreground">
-          {step.action} <ArrowRight className="size-4" />
-        </span>
-      </Link>
-    );
-  }
+function ActionCard({ step }: { step: PortalStep }) {
   return (
-    <Link href={step.href} className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-colors hover:border-primary/60">
-      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">{chip}{due}</span>
+    <Link
+      href={step.href}
+      className={cn(
+        "group flex min-h-20 items-center gap-3 rounded-2xl border border-l-4 bg-card py-3.5 pr-3 pl-4 transition-colors hover:bg-muted/40",
+        step.tone === "accept" ? "border-l-brand-green" : "border-l-primary",
+      )}
+    >
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-muted-foreground">
+          {step.kind}
+          {step.due ? <span className="inline-flex items-center gap-1 text-tile-coral-foreground"><Clock3 className="size-3.5" />до {step.due}</span> : null}
+        </span>
         <span className="truncate font-semibold">{step.title}</span>
         {step.detail ? <span className="truncate text-sm text-muted-foreground">{step.detail}</span> : null}
       </span>
-      <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold">
+        <span className="hidden sm:inline">{step.action}</span>
+        <ChevronRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
     </Link>
   );
 }
-
 /** "+500,00 EUR към цената" for a change, the full price for an offer. */
 export function stepAmount(kind: "offer" | "change", minor: bigint, currency: string) {
   if (kind === "offer") return formatCents(minor, currency);

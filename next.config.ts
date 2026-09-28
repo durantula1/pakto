@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Hover upgrades a partial prefetch to the full dynamic payload, so the click paints from cache.
     dynamicOnHover: true,
+    // "Връзка с нас" sends up to 10 MB of screenshots in one action (plus multipart overhead);
+    // the proxy buffers the same body, so both limits move together.
+    serverActions: { bodySizeLimit: "12mb" },
+    proxyClientMaxBodySize: "12mb",
     staleTimes: {
       dynamic: 30,
       static: 180,

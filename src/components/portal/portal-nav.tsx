@@ -28,7 +28,7 @@ export function PortalNav({ variant, badge }: { variant: "top" | "bottom"; badge
     return (
       <>
         {sections.map((section) => (
-          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground", active === section.id && "bg-muted text-foreground")}>
+          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground", active === section.id && "bg-muted text-foreground")}>
             <section.icon className="size-4" /> {section.label}
             {section.id === "questions" ? badge : null}
           </Link>

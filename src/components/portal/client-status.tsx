@@ -12,12 +12,13 @@ export const clientStatusLabels: Record<string, string> = {
   canceled: "Анулирана от фирмата",
 };
 
-const tones: Record<string, "success-soft" | "warning-soft" | "danger-soft" | "secondary"> = {
+/** Three colours across the portal: coral waits for the client, blue is with the company, green is done. */
+const tones: Record<string, "success-soft" | "info-soft" | "danger-soft" | "secondary"> = {
   sent: "danger-soft",
   viewed: "danger-soft",
   approved: "success-soft",
-  changes_requested: "warning-soft",
-  superseded: "warning-soft",
+  changes_requested: "info-soft",
+  superseded: "info-soft",
 };
 
 export function ClientStatusBadge({ status, className }: { status: string; className?: string }) {

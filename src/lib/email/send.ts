@@ -11,7 +11,7 @@ const LOGO_CONTENT_ID = "pakto-logo";
 
 let client: Resend | undefined;
 
-export async function sendEmail(message: { to: string; subject: string; text: string; html: string; attachments?: Attachment[] }) {
+export async function sendEmail(message: { to: string; subject: string; text: string; html: string; replyTo?: string; attachments?: Attachment[] }) {
   const environment = getServerEnvironment();
   if (!environment.RESEND_API_KEY) throw new Error("Имейл услугата не е настроена.");
   client ??= new Resend(environment.RESEND_API_KEY);

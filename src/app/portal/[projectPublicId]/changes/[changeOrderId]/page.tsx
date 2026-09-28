@@ -1,16 +1,17 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock3, Download, History } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Clock3, Download, History } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
+import { DecisionDone } from "@/components/portal/decision-done";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { maskEmail } from "@/lib/email/send";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
 import { DocumentBody } from "@/components/change-orders/document-body";
-import { documentName, scheduleLabel, totalLabel, vatLabel } from "@/modules/change-orders/labels";
+import { documentName, scheduleLabel, vatLabel } from "@/modules/change-orders/labels";
 import { ClientStatusBadge, clientStatusLabels } from "@/components/portal/client-status";
 import { cents, formatCents } from "@/modules/projects/state";
 import { cn } from "@/lib/utils";
@@ -109,33 +110,31 @@ export default async function PortalChangePage({
     />
   );
   const decision = awaitingDecision ? (
-    <Card className="[--card-spacing:--spacing(5)] sm:[--card-spacing:--spacing(6)]">
-      <CardHeader>
-        <CardTitle className="text-lg">Вашето решение</CardTitle>
-        <CardDescription>
-          {data.session.contactEmail
-            ? `Решението се записва${change.revisionNumber > 1 ? ` към версия ${change.revisionNumber}` : ""} и го виждат и двете страни. Потвърждавате го с код от имейла си.`
-            : "Първо потвърдете имейла си. После ще можете да одобрите, да поискате промяна или да откажете."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {data.session.contactEmail ? (
-          <>
-            <PortalDecisionForm
-              projectPublicId={projectPublicId}
-              changeOrderId={change.id}
-              revisionId={change.revisionId}
-              total={change.total}
-              currency={change.currency}
-              revisionNumber={change.revisionNumber}
-              maskedEmail={maskEmail(data.session.contactEmail)}
-              idempotencyKey={randomUUID()}
-              defaultName={data.session.contactName}
-            />
-            {data.session.contactEmailVerifiedAt ? <div className="border-t pt-4">{verification}</div> : null}
-          </>
-        ) : verification}
-      </CardContent>
+    <Card className="[--card-spacing:--spacing(5)] max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none max-lg:[--card-spacing:0] sm:[--card-spacing:--spacing(6)]">
+      {data.session.contactEmail ? (
+        <CardContent className="space-y-6">
+          <PortalDecisionForm
+            projectPublicId={projectPublicId}
+            changeOrderId={change.id}
+            revisionId={change.revisionId}
+            total={change.total}
+            currency={change.currency}
+            revisionNumber={change.revisionNumber}
+            maskedEmail={maskEmail(data.session.contactEmail)}
+            idempotencyKey={randomUUID()}
+            defaultName={data.session.contactName}
+          />
+          {data.session.contactEmailVerifiedAt ? <div className="border-t pt-4">{verification}</div> : null}
+        </CardContent>
+      ) : (
+        <>
+          <CardHeader>
+            <CardTitle className="text-lg">Вашето решение</CardTitle>
+            <CardDescription>Първо потвърдете имейла си. После ще можете да одобрите, да поискате промяна или да откажете.</CardDescription>
+          </CardHeader>
+          <CardContent>{verification}</CardContent>
+        </>
+      )}
     </Card>
   ) : (
     <Card>
@@ -191,6 +190,24 @@ export default async function PortalChangePage({
     </Card>
   );
 
+  // One notice above the document, the most important one: gone, then being revised, then which version is in force.
+  const thisOne = isOffer ? "офертата" : "промяната";
+  const notice = change.status === "canceled"
+    ? { warn: false, title: isOffer ? "Офертата е анулирана" : "Промяната е анулирана", body: "Фирмата я анулира и тя вече не чака решение." }
+    : change.status === "expired"
+      ? { warn: true, title: `Срокът на ${thisOne} изтече`, body: `Свържете се с ${data.project.organizationName}, ако все още се интересувате. Фирмата може да я изпрати отново с нов срок.` }
+      : change.status === "superseded"
+        ? { warn: true, title: `Фирмата обновява ${isOffer ? "тази оферта" : "тази промяна"}`, body: `Версия ${change.revisionNumber} е оттеглена за корекция. Ще получите имейл, когато новата версия е готова за решение.` }
+        : inForce
+          ? {
+            warn: false,
+            title: `В сила е одобрената версия ${inForce.revisionNumber} · ${formatCents(cents(inForce.total), inForce.currency)}`,
+            body: ["sent", "viewed"].includes(change.status)
+              ? `Ако одобрите версия ${change.revisionNumber}, тя заменя версия ${inForce.revisionNumber}. Ако я откажете, остава версия ${inForce.revisionNumber}.`
+              : `Версия ${change.revisionNumber} не е одобрена, затова договореното по версия ${inForce.revisionNumber} не се променя.`,
+          }
+          : null;
+
   // A change waiting for the client shows what the price of its offer becomes.
   const waiting = ["sent", "viewed"].includes(change.status);
   const parentContract = parentOffer?.inForce ? parentOffer.contractMinor : null;
@@ -210,13 +227,13 @@ export default async function PortalChangePage({
           </>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">{totalLabel(change.taxRate, isOffer ? "Цена на офертата" : "Стойност на промяната")}</p>
+            <p className="text-sm text-muted-foreground">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
             <p className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(changeMinor, change.currency)}</p>
             {!isOffer && changeMinor === 0n ? <p className="text-sm text-muted-foreground">Цената на обекта не се променя.</p> : null}
           </>
         )}
         <p className="text-xs text-muted-foreground">
-          {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${formatCents(cents(change.discountAmount), change.currency)} · ` : ""}{Number(change.taxRate) ? `Без ДДС ${formatCents(cents(change.subtotal), change.currency)} · ` : ""}{vatLabel(change.taxRate)}
+          {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${formatCents(cents(change.discountAmount), change.currency)} · ` : ""}{Number(change.taxRate) ? `С ${vatLabel(change.taxRate)} · без ДДС ${formatCents(cents(change.subtotal), change.currency)}` : "Не се начислява ДДС"}
         </p>
       </div>
       <div className="grid grid-cols-2 divide-x">
@@ -247,11 +264,7 @@ export default async function PortalChangePage({
         <Link href={`/portal/${projectPublicId}`} className="inline-flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-4" /> {data.project.name}
         </Link>
-        {query.decision && (
-          <p role="status" className="rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground">
-            Решението е записано. Разписката е на имейла ви.
-          </p>
-        )}
+        <DecisionDone decision={query.decision} />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">{name}{change.revisionNumber > 1 ? ` · версия ${change.revisionNumber}` : ""}
@@ -272,47 +285,30 @@ export default async function PortalChangePage({
           <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
         </div>
       ) : null}
-      {change.status === "canceled" ? (
-        <div role="status" className="mt-4 rounded-xl border bg-card p-4 text-sm">
-          <p className="font-semibold">{isOffer ? "Офертата е анулирана" : "Промяната е анулирана"}</p>
-          <p className="mt-1 text-muted-foreground">Фирмата я анулира и тя вече не чака решение.</p>
-        </div>
-      ) : null}
-      {change.status === "expired" ? (
-        <div role="status" className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-          <p className="font-semibold">Срокът на {isOffer ? "офертата" : "промяната"} изтече</p>
-          <p className="mt-1 text-muted-foreground">Свържете се с {data.project.organizationName}, ако все още се интересувате. Фирмата може да я изпрати отново с нов срок.</p>
-        </div>
-      ) : null}
-      {change.status === "superseded" ? (
-        <div role="status" className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-          <p className="font-semibold">Фирмата обновява {isOffer ? "тази оферта" : "тази промяна"}</p>
-          <p className="mt-1 text-muted-foreground">Версия {change.revisionNumber} е оттеглена за корекция. Ще получите имейл, когато новата версия е готова за решение.</p>
-        </div>
-      ) : null}
-      {inForce ? (
-        <div role="status" className="mt-4 rounded-xl border bg-card p-4 text-sm">
-          <p className="font-semibold">В сила е одобрената версия {inForce.revisionNumber} · {money(inForce.total)} {inForce.currency}</p>
-          <p className="mt-1 text-muted-foreground">
-            {["sent", "viewed"].includes(change.status)
-              ? `Версия ${change.revisionNumber} е предложение за промяна на договореното. Ако я одобрите, тя заменя версия ${inForce.revisionNumber}. Ако я откажете, остава версия ${inForce.revisionNumber}.`
-              : `Версия ${change.revisionNumber} не е одобрена, затова договореното по версия ${inForce.revisionNumber} не се променя.`}
-          </p>
+      {notice ? (
+        <div role="status" className={cn("mt-4 rounded-2xl border p-4 text-sm", notice.warn ? "border-amber-500/40 bg-amber-500/10" : "bg-card")}>
+          <p className="font-semibold">{notice.title}</p>
+          <p className="mt-1 leading-6 text-muted-foreground">{notice.body}</p>
         </div>
       ) : null}
       {data.diff ? (
-        <div role="status" className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
-          <p className="font-semibold">Версия {change.revisionNumber} заменя версия {data.diff.previousNumber}</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-            {data.diff.totalBefore !== data.diff.totalAfter ? <li>Сума: {money(data.diff.totalBefore)} → <span className="font-medium text-foreground">{money(data.diff.totalAfter)} {data.diff.currency}</span></li> : null}
+        <details className="group mt-4 rounded-2xl border border-primary/30 bg-primary/5 text-sm [&>summary::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2">
+            <span className="flex flex-col">
+              <span className="font-semibold">Какво е новото във версия {change.revisionNumber}</span>
+              {data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
+            </span>
+            <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <ul className="list-disc space-y-1 border-t border-primary/20 py-3 pr-4 pl-9 text-muted-foreground">
             {data.diff.changes.map((line) => <li key={line} className="break-words">{line}</li>)}
-            {!data.diff.changes.length && data.diff.totalBefore === data.diff.totalAfter ? <li>Уточнени са описанието или бележките.</li> : null}
+            {!data.diff.changes.length ? <li>{data.diff.totalBefore === data.diff.totalAfter ? "Уточнени са описанието или бележките." : "Променена е само сумата."}</li> : null}
           </ul>
-        </div>
+        </details>
       ) : null}
       <div className="mt-5">
         <PortalDocumentLayout
-          amount={`${money(change.total)} ${change.currency}`}
+          amount={formatCents(cents(change.total), change.currency)}
           aboveBottomNav={!!session.clientId && session.unlocked}
           details={details}
           decision={decision}

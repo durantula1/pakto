@@ -80,6 +80,11 @@ export function NavigationProgress() {
     return () => {
       document.removeEventListener("click", onDocumentClick, true);
       window.removeEventListener("popstate", finish);
+      // Leaving the workspace (say, for the landing page) unmounts the bar before the URL commits,
+      // so the finish effect never runs: clear the busy state here, or <html> keeps it for 15 s.
+      clearTimeout(timeout);
+      document.documentElement.removeAttribute("data-navigating");
+      phase = "idle";
     };
   }, []);
 

@@ -2,14 +2,14 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, BookOpen, Building2, CirclePlus, Compass, Contact, Euro, FileText, LayoutDashboard, Search, Settings, Users, type LucideIcon } from "lucide-react";
+import { Bell, BookOpen, Building2, CirclePlus, Compass, Contact, Euro, FileText, LayoutDashboard, LifeBuoy, Search, Settings, Users, type LucideIcon } from "lucide-react";
 
 import { NewProjectSheetControlled } from "@/components/projects/new-project-form";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { searchWorkspaceAction, type SearchHit } from "@/modules/workspace/search-actions";
 
-const pageIcons = { dashboard: LayoutDashboard, projects: Building2, clients: Contact, offers: FileText, catalog: BookOpen, finance: Euro, team: Users, settings: Settings, guide: Compass, notifications: Bell } satisfies Record<string, LucideIcon>;
+const pageIcons = { dashboard: LayoutDashboard, projects: Building2, clients: Contact, offers: FileText, catalog: BookOpen, finance: Euro, team: Users, settings: Settings, guide: Compass, notifications: Bell, support: LifeBuoy } satisfies Record<string, LucideIcon>;
 
 /** A page or action for the palette; the icon is a name, since the server layout builds the list. */
 export type PaletteLink = { href: string; label: string; icon: keyof typeof pageIcons; command?: "new-project" };

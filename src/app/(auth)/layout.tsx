@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { AuthStage } from "@/components/auth/auth-stage";
 import { Wordmark } from "@/components/brand/wordmark";
 
@@ -34,6 +36,10 @@ export default function AuthLayout({
         <div className="mx-auto flex w-full max-w-md flex-1 items-center py-12">
           {children}
         </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Проблем с входа или въпрос?{" "}
+          <Link href="/contact" className="font-medium text-foreground underline-offset-4 hover:underline">Пишете ни</Link>
+        </p>
       </section>
       <aside className="surface-grid relative hidden overflow-hidden bg-sidebar py-12 pr-12 pl-28 text-sidebar-foreground [clip-path:url(#auth-wave)] lg:flex lg:flex-col lg:justify-end xl:pl-36">
         <AuthStage />

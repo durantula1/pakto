@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { Check, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { Check, ChevronDown, MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -77,8 +77,11 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
         <SheetTrigger isOpen={sheetOpen} onOpenChange={setSheetOpen}>
           <div className={cn("fixed inset-x-0 z-20 border-t bg-card px-4 pt-3 shadow-[0_-0.5rem_1.5rem_-1rem_rgb(16_43_56/0.35)] lg:hidden", aboveBottomNav ? "bottom-16 pb-3" : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]")}>
             <div className="mx-auto flex max-w-md items-center gap-2">
-              <Button type="button" variant="outline" onPress={() => open("changes_requested")} className="h-13 gap-1 rounded-xl px-4 text-base">Друго <ChevronUp className="size-4" /></Button>
-              <Button type="button" onPress={() => open("approved")} className="h-13 flex-1 gap-2 rounded-xl text-base"><Check className="size-5" strokeWidth={2.5} /> Одобрявам</Button>
+              <Button type="button" variant="outline" onPress={() => open("changes_requested")} className="h-13 rounded-xl px-3.5 text-sm leading-tight">Не съм<br />съгласен</Button>
+              <Button type="button" onPress={() => open("approved")} className="h-13 flex-1 gap-2.5 rounded-xl">
+                <Check className="size-5" strokeWidth={2.5} />
+                <span className="flex flex-col items-start leading-tight"><span className="text-base font-semibold">Одобрявам</span><span className="text-xs font-medium tabular-nums opacity-80">{amount}</span></span>
+              </Button>
             </div>
           </div>
           <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]">

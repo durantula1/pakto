@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ChevronRight, Info, Lock, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  Lock,
+  MapPin,
+} from "lucide-react";
 import { PaperLabel } from "@/components/portal/paper";
 import {
   PortalSteps,
@@ -15,8 +22,7 @@ import { ListPagination } from "@/components/workspace/list-filters";
 import { lastPage, pageHref, parsePage } from "@/lib/pagination";
 import { documentName, formatShortDay } from "@/modules/change-orders/labels";
 import { getPortalProject } from "@/modules/change-portal/queries";
-import { isProjectTab, type ProjectTab } from "@/components/portal/project-tab";
-import { ProjectTabs } from "@/components/portal/project-tabs";
+import { MoneyCard } from "@/components/portal/money-card";
 import {
   PortalPayments,
   PortalSchedule,
@@ -118,13 +124,10 @@ export default async function PortalProjectPage({
       ]
     : [];
   const all = scopeView(state, "all");
-  const tab: ProjectTab = isProjectTab(query.tab)
-    ? query.tab
-    : query.payment
-      ? "payments"
-      : all.milestones.length
-        ? "stages"
-        : "offers";
+  const canAct = data.project.status !== "archived";
+  const disputed =
+    query.payment === "disputed" &&
+    state.receipts.some((item) => item.disputed);
   const questions =
     data.project.status !== "archived" ? (
       <ProjectQuestions
@@ -189,141 +192,121 @@ export default async function PortalProjectPage({
         <PortalEmailVerification {...verification} />
       ) : null}
 
-      <PortalSteps steps={steps} />
+      <PortalSteps steps={steps} calm={active} />
 
       {all.hasAgreement ? (
-        <div className="grid grid-cols-3 gap-2">
-          <Tile
-            label="Договорено"
-            value={formatCents(all.contractMinor, all.currency)}
-            className="border bg-card"
+        <MoneyCard
+          view={all}
+          portalPublicId={projectPublicId}
+          claims={data.claims}
+          canAct={canAct}
+          open={!!query.payment}
+        >
+          {/* The query param outlives the dispute; once the firm resolves it the receipt shows the answer instead. */}
+          {disputed ? (
+            <p
+              role="status"
+              className="rounded-xl bg-primary/10 p-4 text-sm font-medium"
+            >
+              Изпратихме оспорването на фирмата. Отговорът ще се появи при
+              плащането.
+            </p>
+          ) : null}
+          <PortalSummary
+            state={state}
+            view={all}
+            portalPublicId={projectPublicId}
+            offers={state.offers}
           />
-          <Tile
-            label="Платено"
-            value={formatCents(all.paidMinor, all.currency)}
-            className="bg-tile-mint text-tile-mint-foreground"
+          <PortalPayments
+            view={all}
+            portalPublicId={projectPublicId}
+            claims={data.claims}
+            canAct={canAct}
+            showBalance={false}
           />
-          <Tile
-            label={all.remainingMinor < 0n ? "Надплатено" : "Остава"}
-            value={formatCents(
-              all.remainingMinor < 0n
-                ? -all.remainingMinor
-                : all.remainingMinor,
-              all.currency,
-            )}
-            className="bg-tile-sand text-tile-sand-foreground"
-          />
-        </div>
-      ) : null}
+        </MoneyCard>
+      ) : (
+        <p className="rounded-2xl border bg-card p-5 text-sm leading-6 text-muted-foreground">
+          Цената, плащанията и графикът ще се появят тук, след като одобрите
+          оферта.
+        </p>
+      )}
 
-      <ProjectTabs tab={tab} offersWaiting={pending.length > 0}>
-        {tab === "stages" ? <PortalSchedule view={all} /> : null}
+      {all.hasAgreement ? <PortalSchedule view={all} foldDone /> : null}
 
-        {tab === "offers" ? (
-          <section className="flex flex-col gap-3">
-            <details className="group self-start rounded-xl border bg-card text-sm open:self-stretch [&>summary::-webkit-details-marker]:hidden">
-              <summary className="flex min-h-9 cursor-pointer list-none items-center gap-1.5 px-3 font-medium text-tile-blue-foreground">
-                <Info className="size-4" /> Каква е разликата между оферта и
-                промяна?
-              </summary>
-              <p className="border-t bg-tile-blue px-3 py-2.5 leading-6 text-tile-blue-foreground">
-                <b>Офертата</b> е основната договорка за обекта.{" "}
-                <b>Промяната</b> добавя или маха работа след това и показва с
-                колко се променя цената. Всяка от тях важи, едва след като я
-                одобрите.
-              </p>
-            </details>
-            {documentsTotal ? (
-              <>
-                {pending.length ? (
-                  <DocumentGroup
-                    title="Чакат решение"
-                    projectPublicId={projectPublicId}
-                    items={pending}
-                    nameOf={state.offers.length > 1 ? nameOf : null}
-                  />
-                ) : null}
-                {decided.length ? (
-                  <DocumentGroup
-                    title="Решени"
-                    projectPublicId={projectPublicId}
-                    items={decided}
-                    nameOf={state.offers.length > 1 ? nameOf : null}
-                  />
-                ) : null}
-                {data.decidedTotal > data.pageSize ? (
-                  <div className="overflow-hidden rounded-2xl border bg-card [&>nav]:border-t-0">
-                    <ListPagination
-                      path={path}
-                      params={{ tab: "offers" }}
-                      page={page}
-                      total={data.decidedTotal}
-                      pageSize={data.pageSize}
+      <section
+        id="offers"
+        aria-labelledby="offers-title"
+        className="flex scroll-mt-20 flex-col gap-3"
+      >
+        <h2 id="offers-title" className="text-lg font-semibold">
+          Оферти и промени
+        </h2>
+        <details className="group -mt-1 self-start rounded-xl text-sm open:self-stretch open:border open:bg-card [&>summary::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 px-1 font-medium text-tile-blue-foreground group-open:px-3">
+            <Info className="size-4" /> Каква е разликата между оферта и
+            промяна?
+          </summary>
+          <p className="border-t bg-tile-blue px-3 py-2.5 leading-6 text-tile-blue-foreground">
+            <b>Офертата</b> е основната договорка за обекта. <b>Промяната</b>{" "}
+            добавя или маха работа след това и показва с колко се променя
+            цената. Всяка от тях важи, едва след като я одобрите.
+          </p>
+        </details>
+        {documentsTotal ? (
+          <>
+            {pending.length ? (
+              <DocumentGroup
+                title="Чакат решение"
+                projectPublicId={projectPublicId}
+                items={pending}
+                nameOf={state.offers.length > 1 ? nameOf : null}
+              />
+            ) : null}
+            {decided.length ? (
+              pending.length && page === 1 ? (
+                <details className="group [&>summary::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl border bg-card px-4 text-sm font-medium">
+                    Решени ({data.decidedTotal})
+                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-3">
+                    <DocumentGroup
+                      projectPublicId={projectPublicId}
+                      items={decided}
+                      nameOf={state.offers.length > 1 ? nameOf : null}
                     />
                   </div>
-                ) : null}
-              </>
-            ) : (
-              <EmptyResult
-                className="rounded-2xl border bg-card"
-                title="Още няма оферти."
-              />
-            )}
-          </section>
-        ) : null}
-
-        {tab === "payments" ? (
-          <section id="payments" className="flex flex-col gap-4">
-            {/* The query param outlives the dispute; once the firm resolves it the receipt shows the answer instead. */}
-            {query.payment === "disputed" &&
-            state.receipts.some((item) => item.disputed) ? (
-              <p
-                role="status"
-                className="rounded-xl bg-primary/10 p-4 text-sm font-medium"
-              >
-                Изпратихме оспорването на фирмата. Отговорът ще се появи при
-                плащането.
-              </p>
+                </details>
+              ) : (
+                <DocumentGroup
+                  title="Решени"
+                  projectPublicId={projectPublicId}
+                  items={decided}
+                  nameOf={state.offers.length > 1 ? nameOf : null}
+                />
+              )
             ) : null}
-            <PortalSummary
-              state={state}
-              view={all}
-              portalPublicId={projectPublicId}
-              offers={state.offers}
-            />
-            <PortalPayments
-              view={all}
-              portalPublicId={projectPublicId}
-              claims={data.claims}
-              canAct={data.project.status !== "archived"}
-            />
-          </section>
-        ) : null}
-      </ProjectTabs>
-    </div>
-  );
-}
-
-function Tile({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex min-w-0 flex-col gap-1 rounded-2xl px-3 py-3",
-        className,
-      )}
-    >
-      <span className="text-xs opacity-80">{label}</span>
-      <span className="truncate text-[0.9375rem] font-semibold tabular-nums sm:text-lg">
-        {value}
-      </span>
+            {data.decidedTotal > data.pageSize ? (
+              <div className="overflow-hidden rounded-2xl border bg-card [&>nav]:border-t-0">
+                <ListPagination
+                  path={path}
+                  params={{}}
+                  page={page}
+                  total={data.decidedTotal}
+                  pageSize={data.pageSize}
+                />
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <EmptyResult
+            className="rounded-2xl border bg-card"
+            title="Още няма оферти."
+          />
+        )}
+      </section>
     </div>
   );
 }
@@ -335,7 +318,7 @@ function DocumentGroup({
   items,
   nameOf,
 }: {
-  title: string;
+  title?: string;
   projectPublicId: string;
   items: NonNullable<Awaited<ReturnType<typeof getPortalProject>>>["decided"];
   /** With several offers, a change says which one it belongs to. */
@@ -343,7 +326,7 @@ function DocumentGroup({
 }) {
   return (
     <section className="space-y-2">
-      <PaperLabel>{title}</PaperLabel>
+      {title ? <PaperLabel>{title}</PaperLabel> : null}
       <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
         {items.map((change) => {
           const waiting =

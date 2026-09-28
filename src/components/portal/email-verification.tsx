@@ -5,6 +5,7 @@ import { MailCheck, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OtpInput } from "@/components/portal/otp-input";
 import {
   confirmVerificationCodeAction,
   requestClaimCodeAction,
@@ -57,7 +58,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <p className="flex items-center gap-2 text-sm font-medium"><MailCheck className="size-4 text-primary" />
           {pending.step === "email_change" ? `Код за потвърждение на смяната е изпратен до текущия ви имейл ${pending.sentTo}` : `Изпратихме код до ${pending.sentTo}`}
         </p>
-        <Input name="code" required inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} className="h-11 bg-background font-mono text-lg tracking-[0.4em]" />
+        <OtpInput label="Код от имейла" autoFocus disabled={confirming} />
         {confirmState.error ? <p role="alert" className="text-sm text-destructive">{confirmState.error}</p> : null}
         <Button type="submit" className="h-11 w-full" isDisabled={confirming}>{confirming ? "Моля, изчакайте…" : "Потвърди"}</Button>
       </form>
@@ -70,7 +71,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <input type="hidden" name="projectPublicId" value={projectPublicId} />
         <p className="text-sm font-medium">Нов имейл</p>
         <p className="text-xs text-muted-foreground">Първо ще потвърдите с код до текущия имейл, после с код до новия.</p>
-        <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background" />
+        <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />
         {changeState.error ? <p role="alert" className="text-sm text-destructive">{changeState.error}</p> : null}
         <div className="flex gap-2">
           <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакайте…" : "Изпрати код"}</Button>
@@ -89,7 +90,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
           ? `Преди да вземете решение, ще ви изпратим код до ${maskedEmail}. Само вие ще можете да одобрявате или отказвате оферти. Фирмата няма достъп до кода.`
           : "Фирмата не е посочила имейл. Въведете своя. На него ще получавате кодовете за решения и разписките."}
       </p>
-      {hasEmail ? null : <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background" />}
+      {hasEmail ? null : <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />}
       {claimState.error ? <p role="alert" className="text-sm text-destructive">{claimState.error}</p> : null}
       <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакайте…" : "Изпрати ми код"}</Button>
     </form>

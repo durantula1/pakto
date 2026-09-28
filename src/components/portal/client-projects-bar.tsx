@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
-import { Input } from "@/components/ui/input";
+import { OtpInput } from "@/components/portal/otp-input";
 import { confirmUnlockCodeAction, requestUnlockCodeAction, type UnlockState } from "@/modules/change-portal/client-session-actions";
 
 /**
@@ -28,10 +28,10 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (navigation.unlocked || confirmState.done || requestState.done) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href="/portal" className="inline-flex items-center gap-1.5 rounded-lg bg-sidebar px-3 py-1.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите обекти</Link>
+        <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-sidebar px-3.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите обекти</Link>
         {navigation.unlocked && navigation.projects.length > 1 ? (
           <DropdownMenuTrigger>
-            <Button type="button" variant="outline" className="h-8 gap-1.5 rounded-lg bg-card px-2.5"><ArrowLeftRight className="size-4" /> Смени обект</Button>
+            <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Смени обект</Button>
             <DropdownMenu
               placement="bottom start"
               className="min-w-64"
@@ -56,7 +56,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   // Any code the client enters (a decision, too) opens all projects; this is only for looking without deciding.
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
         <Building2 className="size-4" /> Покажи всичките ми обекти
       </button>
     );
@@ -69,7 +69,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
         <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>
         <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={navigation.maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
       </div>
-      <button type="button" onClick={() => setOpen(false)} aria-label="Затвори" className="rounded p-1 text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
+      <button type="button" onClick={() => setOpen(false)} aria-label="Затвори" className="-m-2 grid size-11 place-items-center rounded text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
     </div>
   );
 }
@@ -89,17 +89,17 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
   return (
     <>
       {otpId ? (
-        <form action={confirm} className="mt-2 flex flex-wrap items-center gap-2">
+        <form action={confirm} className="mt-3 flex flex-col gap-3">
           <input type="hidden" name="projectPublicId" value={projectPublicId} />
           <input type="hidden" name="otpId" value={otpId} />
-          <Input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required placeholder="6 цифри" aria-label="Код от имейла" className="h-9 w-28 bg-white text-foreground" />
-          <Button type="submit" isDisabled={confirming} className="h-9">{confirming ? "Проверка…" : "Потвърди"}</Button>
-          <span className="text-sidebar-foreground/60">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
+          <span className="text-sidebar-foreground/70">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
+          <OtpInput label="Код от имейла" autoFocus disabled={confirming} className="text-foreground" />
+          <Button type="submit" isDisabled={confirming} className="h-11 self-start px-5 text-sm">{confirming ? "Проверка…" : "Потвърди"}</Button>
         </form>
       ) : (
         <form action={request} className="mt-2 flex flex-wrap items-center gap-2">
           <input type="hidden" name="projectPublicId" value={projectPublicId} />
-          <Button type="submit" isDisabled={requesting} className="h-9">{requesting ? "Изпращане…" : "Изпрати код"}</Button>
+          <Button type="submit" isDisabled={requesting} className="h-11 px-5 text-sm">{requesting ? "Изпращане…" : "Изпрати код"}</Button>
           <span className="text-sidebar-foreground/60">{maskedEmail}</span>
         </form>
       )}

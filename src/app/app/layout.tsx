@@ -13,6 +13,7 @@ import {
   FileText,
   Euro,
   LayoutDashboard,
+  LifeBuoy,
   Settings,
   Users,
 } from "lucide-react";
@@ -83,7 +84,10 @@ export default async function WorkspaceLayout({
       ...(owner ? [{ href: "/app/team", label: "Екип", icon: <Users className="size-4" /> }] : []),
       { href: "/app/settings", label: "Настройки", icon: <Settings className="size-4" /> },
     ] },
-    { label: "Помощ", links: [{ href: "/app/guide", label: "Как работи", icon: <Compass className="size-4" /> }] },
+    { label: "Помощ", links: [
+      { href: "/app/guide", label: "Как работи", icon: <Compass className="size-4" /> },
+      { href: "/contact?from=/app", label: "Връзка с нас", icon: <LifeBuoy className="size-4" /> },
+    ] },
   ];
   const palettePages: PaletteLink[] = [
     { href: "/app", label: "Работен преглед", icon: "dashboard" },
@@ -96,6 +100,7 @@ export default async function WorkspaceLayout({
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: "team" as const }] : []),
     { href: "/app/settings", label: "Настройки", icon: "settings" },
     { href: "/app/guide", label: "Как работи", icon: "guide" },
+    { href: "/contact?from=/app", label: "Съобщи за проблем", icon: "support" },
   ];
   const paletteActions: PaletteLink[] = [
     ...(can(context, "projects.create") ? [{ href: "/app/projects/new", label: "Нов обект", icon: "projects" as const, command: "new-project" as const }] : []),

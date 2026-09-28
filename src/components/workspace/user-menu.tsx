@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button as AriaButton, Header } from "react-aria-components";
-import { Bell, Building2, ChevronsUpDown, CircleUserRound, LogOut, ShieldCheck } from "lucide-react";
+import { Bell, Building2, ChevronsUpDown, CircleUserRound, LifeBuoy, LogOut, ShieldCheck } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -37,6 +37,7 @@ function UserAvatar({ name, className }: { name: string; className?: string }) {
 /** Account, settings and sign-out in one place, like the user menu in shadcn-admin. */
 export function UserMenu({ name, email, roleLabel, organizationName, owner, variant }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [signingOut, startSignOut] = useTransition();
   const links = [
     { id: "/app/settings", label: "Профил и вход", icon: CircleUserRound },
@@ -100,6 +101,9 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, vari
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem id={`/contact?from=${encodeURIComponent(pathname)}`} textValue="Съобщи за проблем" className="min-h-9">
+          <LifeBuoy /> Съобщи за проблем
+        </DropdownMenuItem>
         <DropdownMenuItem id="sign-out" variant="destructive" textValue="Изход" className="min-h-9">
           <LogOut /> {signingOut ? "Излизане…" : "Изход"}
         </DropdownMenuItem>

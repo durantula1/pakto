@@ -5,17 +5,12 @@ import { MapPin, MessageCircle } from "lucide-react";
 import { UnlockProjectsCard } from "@/components/portal/client-projects-bar";
 import { PortalSteps, stepAmount, type PortalStep } from "@/components/portal/action-card";
 import { Badge } from "@/components/ui/badge";
+import { DecisionDone } from "@/components/portal/decision-done";
 import { formatShortDay } from "@/modules/change-orders/labels";
 import { maskEmail } from "@/lib/email/send";
 import { clientProjectCards } from "@/modules/change-portal/cards";
 import { clientVerifiedEmail, getClientPortal } from "@/modules/change-portal/session";
 import { cents, formatCents } from "@/modules/projects/state";
-
-const decisionNotices: Record<string, string> = {
-  approved: "Одобрението е записано.",
-  declined: "Отказът е записан.",
-  changes_requested: "Искането за промяна е изпратено.",
-};
 
 /**
  * The client's dashboard (docs/portal-simplify-plan.md, Б2): what waits for them first, then one card
@@ -25,7 +20,6 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
   const [portal, query] = await Promise.all([getClientPortal(), searchParams]);
   if (!portal || !portal.projects.length) redirect("/portal/invalid");
   if (portal.projects.length === 1 && !portal.hiddenProjects) redirect(`/portal/${portal.projects[0]!.publicId}`);
-  const decided = typeof query.decision === "string" ? decisionNotices[query.decision] : undefined;
 
   const [unlockEmail, byProject] = await Promise.all([
     portal.hiddenProjects ? clientVerifiedEmail(portal.clientId) : Promise.resolve(null),
@@ -56,19 +50,18 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
     })),
   ]);
   const firstName = portal.clientName.split(" ")[0];
+  // Right after a decision its own card says what happens next.
+  const decisionMade = typeof query.decision === "string";
 
   return (
     <>
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Здравейте, {firstName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{steps.length ? (steps.length === 1 ? "Едно нещо чака от вас." : `${steps.length} неща чакат от вас.`) : "Нищо не чака от вас в момента."}</p>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Здравейте, {firstName}</h1>
 
-        {decided ? <p role="status" className="rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-foreground">{decided} Разписката е на имейла ви.</p> : null}
+        <DecisionDone decision={query.decision} />
 
         {steps.length ? <h2 className="mt-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Чака от вас</h2> : null}
-        <PortalSteps steps={steps} />
+        <PortalSteps steps={steps} calm={!decisionMade} />
 
         <h2 className="mt-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Вашите обекти</h2>
         <div className="grid gap-3 sm:grid-cols-2">

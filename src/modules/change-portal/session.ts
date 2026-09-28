@@ -143,6 +143,7 @@ export const getClientPortal = cache(async () => {
         clientName: clients.name,
         organizationId: clients.organizationId,
         organizationName: organizations.name,
+        organizationLogoPath: organizations.logoStoragePath,
       })
       .from(portalSessions)
       .innerJoin(portalGrants, eq(portalGrants.id, portalSessions.portalGrantId))
@@ -166,6 +167,7 @@ export const getClientPortal = cache(async () => {
       clientName: session.clientName,
       organizationId: session.organizationId,
       organizationName: session.organizationName,
+      organizationLogoPath: session.organizationLogoPath,
       unlocked: !!session.verifiedAt,
       projects: visible,
       hiddenProjects: invited.length - visible.length,

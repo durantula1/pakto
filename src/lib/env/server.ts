@@ -9,6 +9,7 @@ const serverEnvironmentSchema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(1).default("Pakto <notifications@example.com>"),
+  SUPPORT_EMAIL: z.email().optional(),
 });
 
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
@@ -23,6 +24,7 @@ export function getServerEnvironment(): ServerEnvironment {
     CRON_SECRET: process.env.CRON_SECRET,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || undefined,
   });
 
   return cachedEnvironment;

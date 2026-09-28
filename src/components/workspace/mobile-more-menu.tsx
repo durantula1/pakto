@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Compass, Contact, Euro, LayoutDashboard, Menu, Settings, Users } from "lucide-react";
+import { BookOpen, Compass, Contact, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export function MobileMoreMenu({ owner, finance, clients }: { owner: boolean; fi
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: Euro }] : []),
     { href: "/app/settings", label: "Настройки", icon: Settings },
     { href: "/app/guide", label: "Как работи", icon: Compass },
+    { href: "/contact?from=/app", label: "Връзка с нас", icon: LifeBuoy },
   ];
   return <SheetTrigger isOpen={open} onOpenChange={setOpen}>
     <Button type="button" variant="ghost" className="mx-auto flex h-14 w-full max-w-20 flex-col gap-0.5 rounded-xl px-1 text-muted-foreground hover:bg-muted hover:text-foreground"><Menu className="size-5" /><span className="text-3xs">Още</span></Button>

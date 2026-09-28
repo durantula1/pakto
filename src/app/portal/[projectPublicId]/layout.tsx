@@ -18,7 +18,7 @@ export default async function PortalProjectLayout({ children, params }: LayoutPr
   const nav = !!session?.clientId && session.unlocked;
   const unread = nav && session.clientId ? clientUnreadQuestions(session.clientId) : 0;
   return (
-    <PortalShell organizationName={session?.organizationName} nav={nav} unread={unread}>
+    <PortalShell organizationName={session?.organizationName} logoPath={session?.organizationLogoPath} nav={nav} unread={unread}>
       {children}
       <DownloadTray />
     </PortalShell>
