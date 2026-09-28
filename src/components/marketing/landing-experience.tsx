@@ -14,10 +14,12 @@ import { LazyMotion, m, useScroll, useSpring } from "motion/react";
 
 import { LEGAL_DOCUMENTS } from "@/lib/legal";
 
+import { AudienceSplit } from "./audience-split";
 import { Faq } from "./faq";
 import { FlowStory } from "./flow-story";
 import { PlatformTour } from "./platform-tour";
 import { ProofStrip } from "./proof-strip";
+import { MobileCtaBar } from "./mobile-cta-bar";
 import { HeroReveal, Reveal } from "./reveal";
 import { RevisionStack } from "./revision-stack";
 import { SecuritySection } from "./security-section";
@@ -72,33 +74,33 @@ export function LandingExperience() {
           </Link>
           <nav
             aria-label="Основна навигация"
-            className="hidden items-center gap-8 font-mono text-[0.5625rem] font-bold tracking-[0.12em] md:flex"
+            className="hidden items-center gap-8 font-mono text-[0.6875rem] font-bold tracking-[0.12em] md:flex"
           >
-            <a href="#product">ПРОДУКТ</a>
-            <a href="#workflow">КАК РАБОТИ</a>
-            <a href="#security">СИГУРНОСТ</a>
-            <a href="#beta">БЕТА</a>
+            <a href="#workflow" className="transition-colors hover:text-[#e85f48]">КАК РАБОТИ</a>
+            <a href="#product" className="transition-colors hover:text-[#e85f48]">ФУНКЦИИ</a>
+            <a href="#security" className="transition-colors hover:text-[#e85f48]">СИГУРНОСТ</a>
+            <a href="#faq" className="transition-colors hover:text-[#e85f48]">ВЪПРОСИ</a>
           </nav>
           <div className="flex items-center gap-2">
             <Link
                 href="/app"
                 prefetch={true}
-                className="mf-when-in flex items-center gap-2 border border-[#102b38]/50 bg-[#ff765f] px-3.5 py-2.5 font-mono text-[0.5625rem] font-bold tracking-[0.09em] text-[#102b38]"
+                className="mf-when-in flex items-center gap-2 border border-[#102b38]/50 bg-[#ff765f] px-3.5 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] text-[#102b38]"
               >
                 КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-3.5" />
               </Link>
               <div className="mf-when-out contents">
                 <Link
                   href="/sign-in"
-                  className="hidden px-3 py-2 text-xs font-bold sm:block"
+                  className="px-2 py-2 font-mono text-[0.6875rem] font-bold tracking-[0.09em] transition-colors hover:text-[#e85f48] sm:px-3"
                 >
                   ВХОД
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex items-center gap-2 border border-[#102b38]/50 bg-[#f4efe4]/70 px-3.5 py-2.5 font-mono text-[0.5625rem] font-bold tracking-[0.09em] backdrop-blur-md transition-colors hover:bg-[#ff765f]"
+                  className="flex items-center gap-2 border border-[#102b38]/50 bg-[#f4efe4]/70 px-3.5 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] backdrop-blur-md transition-colors hover:bg-[#ff765f]"
                 >
-                  ЗАПОЧНИ <ArrowUpRight className="size-3.5" />
+                  ЗАПОЧНИ <span className="max-sm:hidden">БЕЗПЛАТНО</span> <ArrowUpRight className="size-3.5" />
                 </Link>
               </div>
           </div>
@@ -138,7 +140,7 @@ export function LandingExperience() {
                 телефона без профил и я одобрява с код от имейла си. Цената,
                 срокът и кой какво е одобрил остават записани.
               </p>
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div id="hero-cta" className="mt-7 flex flex-wrap gap-x-5 gap-y-4">
                 <Link href="/app" className="mf-when-in mf-primary-button">
                   КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
                 </Link>
@@ -152,7 +154,7 @@ export function LandingExperience() {
                   ВИЖ КАК РАБОТИ <ArrowDown className="size-3.5" />
                 </a>
               </div>
-              <p className="mt-6 flex items-center gap-2 font-mono text-[0.5625rem] tracking-[0.12em] text-[#52707d] sm:whitespace-nowrap">
+              <p className="mt-6 flex items-center gap-2 font-mono text-[0.625rem] tracking-[0.12em] text-[#52707d] sm:whitespace-nowrap">
                 <Lock className="size-3.5 shrink-0" /> БЕЗПЛАТНО В БЕТА · БЕЗ КАРТА · БЕЗ ПРОФИЛ ЗА
                 КЛИЕНТА
               </p>
@@ -175,6 +177,8 @@ export function LandingExperience() {
         <ProofStrip />
 
         <FlowStory />
+
+        <AudienceSplit />
 
         <PlatformTour />
 
@@ -236,9 +240,12 @@ export function LandingExperience() {
               думи трудно се доказва. Pakto я записва.
             </p>
           </div>
-          <div className="flex flex-wrap gap-x-8 gap-y-2 font-mono text-[0.5rem] tracking-[0.14em] text-[#9db5b6]">
+          <div className="flex flex-wrap gap-x-8 gap-y-3 font-mono text-[0.6875rem] tracking-[0.12em] text-[#9db5b6]">
             <span>© 2026 PAKTO</span>
             <span>СОФИЯ · БЪЛГАРИЯ</span>
+            <Link href="/sign-in" className="transition-colors hover:text-[#ff765f]">
+              ВХОД
+            </Link>
             <Link href="/faq" className="transition-colors hover:text-[#ff765f]">
               ЧЗВ
             </Link>
@@ -256,6 +263,8 @@ export function LandingExperience() {
             ))}
           </div>
         </footer>
+
+        <MobileCtaBar heroId="hero-cta" finalId="beta" />
       </main>
     </LazyMotion>
   );

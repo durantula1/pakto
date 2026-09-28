@@ -17,6 +17,8 @@ import {
   type MotionValue,
 } from "motion/react";
 
+import { Reveal } from "./reveal";
+
 const chapters = [
   {
     number: "01",
@@ -92,7 +94,7 @@ function StoryChapter({
       <div className="mf-kicker text-[#b8ecda]">
         {chapter.number} — {chapter.eyebrow}
       </div>
-      <h2>{chapter.title}</h2>
+      <h3>{chapter.title}</h3>
       <p>{chapter.text}</p>
     </m.article>
   );
@@ -161,9 +163,30 @@ export function FlowStory() {
     <section
       ref={storyRef}
       id="workflow"
-      className="mf-story relative h-[400vh]"
+      className="mf-story relative md:h-[340vh]"
     >
-      <div className="sticky top-0 h-screen overflow-hidden supports-[height:100svh]:h-svh">
+      <h2 className="sr-only">Как работи Pakto</h2>
+
+      {/* Phones: the four steps as plain cards. A 340vh sticky scene is too many swipes for four sentences. */}
+      <div className="relative px-[6vw] pb-16 pt-20 md:hidden">
+        <div className="mf-story-grid absolute inset-0" aria-hidden="true" />
+        <p className="mf-kicker relative text-[#b8ecda]">КАК РАБОТИ</p>
+        <ol className="relative mt-8 space-y-4">
+          {chapters.map((chapter) => (
+            <li key={chapter.number}>
+              <Reveal className="mf-story-copy rounded-[1.5rem] border border-white/15 bg-white/[0.06] p-6">
+                <div className="mf-kicker text-[#b8ecda]">
+                  {chapter.number} — {chapter.eyebrow}
+                </div>
+                <h3>{chapter.title}</h3>
+                <p>{chapter.text}</p>
+              </Reveal>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="sticky top-0 h-screen overflow-hidden max-md:hidden supports-[height:100svh]:h-svh">
         <m.div
           style={{ x: glowX }}
           className="pointer-events-none absolute left-1/2 top-1/2 size-[60vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#236d86]/30 blur-[100px]"

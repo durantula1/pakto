@@ -10,6 +10,7 @@ import { OfferDemo } from "./platform-demos/offer-demo";
 import { PortalDemo } from "./platform-demos/portal-demo";
 import { QuickChangeDemo } from "./platform-demos/quick-change-demo";
 import { TeamDemo } from "./platform-demos/team-demo";
+import { InlineCta } from "./inline-cta";
 import { Reveal } from "./reveal";
 
 type Module = {
@@ -151,7 +152,7 @@ export function PlatformTour() {
         <div className="mt-16 grid grid-cols-1 gap-10 lg:mt-24 lg:grid-cols-[15rem_1fr] lg:gap-16">
           <nav
             aria-label="Модули"
-            className="mf-tour-nav sticky top-[4.75rem] z-20 -mx-[6vw] self-start px-[6vw] lg:top-32 lg:mx-0 lg:px-0"
+            className="mf-tour-nav z-20 self-start max-md:hidden md:sticky md:top-[4.75rem] md:-mx-[6vw] md:px-[6vw] lg:top-32 lg:mx-0 lg:px-0"
           >
             <p className="mb-4 hidden font-mono text-[0.5625rem] tracking-[0.14em] text-[#52707d] lg:block">
               МОДУЛИ
@@ -226,6 +227,8 @@ export function PlatformTour() {
             ))}
           </div>
         </div>
+
+        <InlineCta title="Всичко това е включено в бетата — от първия ден." />
       </div>
     </section>
   );

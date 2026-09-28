@@ -67,7 +67,7 @@
 .mf-hero-title,
 .mf-section-title,
 .mf-cta-title,
-.mf-story-copy h2 {
+.mf-story-copy h3 {
   font-weight: 900;
   line-height: 0.79;
   letter-spacing: -0.092em;
@@ -82,7 +82,7 @@
 .mf-hero-title i,
 .mf-section-title i,
 .mf-cta-title i,
-.mf-story-copy h2 i {
+.mf-story-copy h3 i {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 600;
   letter-spacing: -0.1em;
@@ -98,7 +98,7 @@
   gap: 0.625rem;
   padding: 0 1.25rem;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.5625rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   transition:
@@ -150,7 +150,7 @@
   transform: rotate(-8deg) scale(1.25);
 }
 
-.mf-story-copy h2 {
+.mf-story-copy h3 {
   max-width: 45rem;
   font-size: clamp(3.3rem, 6.6vw, 7.2rem);
 }
@@ -247,7 +247,7 @@
     top: 45%;
   }
 
-  .mf-story-copy h2 {
+  .mf-story-copy h3 {
     font-size: clamp(3rem, 9vw, 5.5rem);
   }
 
@@ -270,7 +270,7 @@
     z-index: 4;
   }
 
-  .mf-story-copy h2 {
+  .mf-story-copy h3 {
     margin-top: 0.875rem;
     font-size: clamp(2.5rem, 12vw, 4.4rem);
   }
@@ -298,7 +298,7 @@
   .mf-hero-title,
   .mf-section-title,
   .mf-cta-title,
-  .mf-story-copy h2 {
+  .mf-story-copy h3 {
     line-height: 0.88;
     letter-spacing: -0.075em;
   }
