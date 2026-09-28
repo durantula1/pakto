@@ -76,7 +76,7 @@
 
 .mf-hero-title {
   max-width: 66.25rem;
-  font-size: clamp(4.8rem, 10.8vw, 11.8rem);
+  font-size: clamp(4.2rem, 8.4vw, 9.5rem);
 }
 
 .mf-hero-title i,
@@ -262,7 +262,7 @@
   }
 
   .mf-hero-title {
-    font-size: clamp(3rem, 14.5vw, 7rem);
+    font-size: clamp(2.5rem, 11.4vw, 6rem);
   }
 
   .mf-story-copy {

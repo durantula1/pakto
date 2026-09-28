@@ -118,13 +118,15 @@ export function LandingExperience() {
           <div className="relative z-10 mx-auto max-w-[93.75rem]">
             <HeroReveal className="mf-kicker mb-7 flex items-center gap-3">
               <span className="size-2 rounded-full bg-[#ff765f]" />
-              ОФЕРТИ И ПРОМЕНИ ПО ОБЕКТА · ОДОБРЕНИ С КОД
+              ОФЕРТИ И ДОПЪЛНИТЕЛНИ ПРОМЕНИ · ОДОБРЕНИ С КОД
             </HeroReveal>
             <HeroReveal solid delay={0.06}>
               <h1 className="mf-hero-title relative z-20">
-                ПРОМЯНАТА
+                <span className="lg:whitespace-nowrap">„ДОГОВОРИХМЕ СЕ</span>
                 <br />
-                НЕ СЕ <i>губи.</i>
+                НА ДУМИ“
+                <br />
+                <i>не стига.</i>
               </h1>
             </HeroReveal>
             <HeroReveal
@@ -132,27 +134,27 @@ export function LandingExperience() {
               className="relative z-20 mt-9 max-w-[25rem] lg:ml-[8vw]"
             >
               <p className="text-base leading-7 text-[#284955] sm:text-lg">
-                От офертата до решението на клиента — всяка версия, сума и
-                обещание остава на едно място, със запис, който издържа.
+                Пращаш оферта или промяна с линк. Клиентът я отваря от
+                телефона без профил и я одобрява с код от имейла си. Цената,
+                срокът и кой какво е одобрил остават записани.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link href="/app" className="mf-when-in mf-primary-button">
                   КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
                 </Link>
                 <Link href="/sign-up" prefetch={false} className="mf-when-out mf-primary-button">
-                  СЪЗДАЙ WORKSPACE <ArrowRight className="size-4" />
+                  ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
                 </Link>
                 <a
                   href="#workflow"
-                  className="mf-round-button"
-                  aria-label="Виж работния поток"
+                  className="inline-flex items-center gap-2 self-center border-b border-[#102b38] pb-1 font-mono text-[0.6875rem] font-bold tracking-[0.12em] transition-colors hover:border-[#e85f48] hover:text-[#e85f48]"
                 >
-                  <ArrowDown className="size-5" />
+                  ВИЖ КАК РАБОТИ <ArrowDown className="size-3.5" />
                 </a>
               </div>
               <p className="mt-6 flex items-center gap-2 font-mono text-[0.5625rem] tracking-[0.12em] text-[#52707d] sm:whitespace-nowrap">
-                <Lock className="size-3.5 shrink-0" /> БЕЗ РЕГИСТРАЦИЯ ЗА КЛИЕНТА · КОД ПО ИМЕЙЛ ·
-                ЗАКЛЮЧЕНИ ВЕРСИИ
+                <Lock className="size-3.5 shrink-0" /> БЕЗПЛАТНО В БЕТА · БЕЗ КАРТА · БЕЗ ПРОФИЛ ЗА
+                КЛИЕНТА
               </p>
             </HeroReveal>
 
@@ -166,7 +168,7 @@ export function LandingExperience() {
             <i className="size-1.5 rounded-full bg-[#ff765f]" />
             <span>ОДОБРЕНИЕ</span>
             <i className="size-1.5 rounded-full bg-[#ff765f]" />
-            <span>ПЛАЩАНЕ</span>
+            <span>ПЛАЩАНИЯ</span>
           </div>
         </section>
 
@@ -195,17 +197,17 @@ export function LandingExperience() {
           <div className="relative z-10 mx-auto max-w-[93.75rem]">
             <Reveal>
               <div className="mf-kicker flex items-center gap-3">
-                <ShieldCheck className="size-4" /> БЕТА ДОСТЪП · БЕЗПЛАТНО
+                <ShieldCheck className="size-4" /> БЕТА · БЕЗПЛАТНО, БЕЗ КАРТА
               </div>
               <h2 className="mf-cta-title mt-8">
-                ДАЙ НА ВСЯКА
+                СЛЕДВАЩОТО „ДА“ —
                 <br />
-                ПРОМЯНА <i>памет.</i>
+                <i>писмено.</i>
               </h2>
               <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                 <p className="max-w-lg text-base leading-7">
-                  Създай workspace и изпрати първата оферта или промяна още
-                  днес. Клиентът одобрява през защитен линк и потвърждава с код.
+                  Регистрираш фирмата, създаваш проект и пращаш първата оферта
+                  още днес. Клиентът одобрява от телефона с код.
                 </p>
                 <Link href="/app" className="mf-when-in mf-dark-button">
                   КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />

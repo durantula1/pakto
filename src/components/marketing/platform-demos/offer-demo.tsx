@@ -6,9 +6,9 @@ import { CalendarClock } from "lucide-react";
 import { DemoFrame, StatusChip, useDemoLoop } from "./demo-frame";
 
 const lines = [
-  { label: "Демонтаж на стара замазка", qty: "48", unit: "м²", price: 25 },
-  { label: "Нова циментова замазка", qty: "48", unit: "м²", price: 60 },
-  { label: "Хидроизолация баня", qty: "9", unit: "м²", price: 45 },
+  { label: "Долни шкафове, мат МДФ", qty: "4", unit: "л.м", price: 380 },
+  { label: "Горни шкафове", qty: "3", unit: "л.м", price: 290 },
+  { label: "Плот и монтаж", qty: "4", unit: "л.м", price: 120 },
 ] as const;
 
 const format = (value: number) => `${String(Math.round(value)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €`;
@@ -22,7 +22,7 @@ export function OfferDemo() {
     <DemoFrame
       frameRef={ref}
       crumb="ОФЕРТИ / ОФ-017"
-      title="Подове и баня · кв. Бояна"
+      title="Кухня по поръчка · Лозенец"
       status={
         <StatusChip tone={step >= 5 ? "ok" : step >= 4 ? "wait" : "muted"}>
           {step >= 5 ? "ОДОБРЕНА" : step >= 4 ? "ПРИ КЛИЕНТА" : "ЧЕРНОВА"}
@@ -57,7 +57,7 @@ export function OfferDemo() {
           <p>БЕЗ ДДС · {format(subtotal)}</p>
           <p>ДДС 20% · {format(subtotal * 0.2)}</p>
           <p className="flex items-center gap-1.5">
-            <CalendarClock className="size-3" /> СРОК · 12 работни дни
+            <CalendarClock className="size-3" /> КРАЕН СРОК · 14.10
           </p>
         </div>
         <div className="text-right">

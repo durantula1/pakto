@@ -23,7 +23,7 @@ export function QuickChangeDemo() {
       }
     >
       <div className="mb-3 flex items-center gap-2 rounded-lg bg-[#c5e3e5]/60 px-3 py-2 demo-text-10 font-bold">
-        <Link2 className="size-3.5" /> Към оферта ОФ-017 · одобрена
+        <Link2 className="size-3.5" /> Към оферта ОФ-014 · одобрена
       </div>
       <div className="flex flex-wrap gap-1.5">
         {kinds.map((kind, index) => (

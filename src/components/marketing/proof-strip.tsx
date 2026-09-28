@@ -15,11 +15,11 @@ export function ProofStrip() {
           {/* Mirrors the quote: its own kicker, then the answer as a headline. */}
           <p className="mf-kicker">С PAKTO</p>
           <p className="mt-5 max-w-xl text-[clamp(1.75rem,3.2vw,3.25rem)] font-black leading-[1.02] tracking-[-0.04em]">
-            Всяка промяна — писмено, преди да започне.
+            Допълнителната работа — с цена и срок, одобрена преди да я почнеш.
           </p>
           <p className="mt-5 max-w-md text-base leading-7">
-            Описана, оценена и одобрена от клиента с код. Думата срещу дума
-            отпада.
+            Клиентът казва „да“ с код от имейла си. Ако после възрази, имаш
+            точната версия, името му и часа.
           </p>
         </Reveal>
       </div>

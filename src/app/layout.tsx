@@ -9,14 +9,14 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   ),
   title: {
-    default: "Pakto — допълнителната работа, договорена навреме",
+    default: "Pakto — допълнителната работа, одобрена преди да започне",
     template: "%s · Pakto",
   },
   description: productDefinition,
   applicationName: "Pakto",
   openGraph: {
     title: "Pakto",
-    description: "Допълнителната работа, договорена навреме.",
+    description: "Оферти и промени по обекта, одобрени с код от клиента.",
     locale: "bg_BG",
     type: "website",
   },

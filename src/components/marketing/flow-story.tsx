@@ -20,7 +20,7 @@ import {
 const chapters = [
   {
     number: "01",
-    eyebrow: "ДОКУМЕНТИРАНЕ",
+    eyebrow: "НА МЯСТО",
     title: (
       <>
         ПРОМЯНАТА
@@ -28,7 +28,7 @@ const chapters = [
         ЗАПОЧВА <i>ясно.</i>
       </>
     ),
-    text: "Какво се променя, защо, крайната цена и новият срок се записват на място — докато детайлите още са пред очите ти.",
+    text: "Какво се променя, защо, цената и новият срок се записват на място, докато детайлите още са пред очите ти. Вътрешната бележка остава за екипа.",
     range: [0, 0.02, 0.19, 0.27],
   },
   {
@@ -41,7 +41,7 @@ const chapters = [
         ЕДНО <i>да.</i>
       </>
     ),
-    text: "Клиентът вижда точната версия, изписва името си и потвърждава решението с код, изпратен на имейла му.",
+    text: "Клиентът отваря линка от телефона, вижда точната версия и потвърждава с името си и код от имейла.",
     range: [0.2, 0.3, 0.44, 0.54],
   },
   {
@@ -54,7 +54,7 @@ const chapters = [
         <i>презаписва.</i>
       </>
     ),
-    text: "Всяка корекция създава нова ревизия. Изпратеното се заключва, а следващият разговор започва от ясна база.",
+    text: "Изпратеното се заключва. Всяка корекция е нова версия, а клиентът вижда какво се е променило.",
     range: [0.47, 0.57, 0.7, 0.8],
   },
   {
@@ -67,7 +67,7 @@ const chapters = [
         ОСТАВА <i>цяла.</i>
       </>
     ),
-    text: "Кой, кога и какво е решил остава в дневника на обекта. Клиентът получава разписка с право на оспорване, а екипът — PDF копие.",
+    text: "Кой, кога и какво е решил остава в историята на проекта. Клиентът получава разписка с PDF и линк за оспорване, а ти теглиш същия PDF от обекта.",
     range: [0.73, 0.83, 1, 1],
   },
 ] as const;
@@ -170,8 +170,8 @@ export function FlowStory() {
         />
         <div className="mf-story-grid absolute inset-0" />
         <div className="absolute left-[6vw] right-[6vw] top-24 z-20 flex max-md:top-[5.75rem] items-center justify-between font-mono text-[0.5625rem] tracking-[0.16em] text-[#c6dfdf]">
-          <span>LIVE CHANGE RECORD</span>
-          <span>MF / 0042 / SOFIA</span>
+          <span>ЗАПИС НА ПРОМЯНАТА</span>
+          <span>ПР-042 · СОФИЯ</span>
         </div>
 
         <div className="relative z-10 mx-auto grid h-full max-w-[93.75rem] items-center gap-10 px-[6vw] max-md:flex max-md:flex-col max-md:items-stretch max-md:gap-5 max-md:pb-[calc(4svh+2.75rem)] max-md:pt-[7.75rem] lg:grid-cols-[0.9fr_1.1fr]">
@@ -225,7 +225,7 @@ export function FlowStory() {
                   progress={smoothProgress}
                   threshold={0.05}
                   icon={Ruler}
-                  title="Промяната е документирана"
+                  title="Промяната е описана"
                   detail="Описание, причина, цена и срок"
                 />
                 <StoryStatus
@@ -247,7 +247,7 @@ export function FlowStory() {
                   threshold={0.83}
                   icon={Wrench}
                   title="Работата е изпълнена"
-                  detail="Разписка и PDF · пълна следа"
+                  detail="Разписка с PDF до клиента"
                 />
               </div>
             </m.div>
@@ -285,7 +285,7 @@ export function FlowStory() {
 
         <div className="absolute bottom-7 left-[6vw] z-20 flex items-center max-md:hidden gap-3 font-mono text-[0.5rem] tracking-[0.14em] text-[#c6dfdf]">
           <span className="h-14 w-px bg-white/25" />
-          SCROLL TO FOLLOW
+          СКРОЛНИ НАДОЛУ
         </div>
       </div>
     </section>
