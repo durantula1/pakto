@@ -151,13 +151,15 @@ function visibleProjectFilter(context: TenantContext) {
 }
 
 /** Lightweight id/name lookup for pickers; never loads the whole project list. */
-export async function searchProjectOptions(context: TenantContext, query: string, limit = 20) {
+/** `activeOnly` leaves out completed and archived projects, for pickers that start new work. */
+export async function searchProjectOptions(context: TenantContext, query: string, { activeOnly = false, limit = 20 } = {}) {
   const term = query.trim().slice(0, 100);
   return getDatabase()
     .select({ id: projects.id, name: projects.name, siteAddress: projects.siteAddress })
     .from(projects)
     .where(and(
       visibleProjectFilter(context),
+      activeOnly ? eq(projects.status, "active") : undefined,
       term ? or(ilike(projects.name, `%${term}%`), ilike(projects.siteAddress, `%${term}%`), ilike(projects.reference, `%${term}%`)) : undefined,
     ))
     .orderBy(desc(projects.updatedAt))

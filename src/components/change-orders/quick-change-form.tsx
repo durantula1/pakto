@@ -188,6 +188,7 @@ export function QuickChangeForm({
             defaultValue={project}
             placeholder="Избери обект"
             isRequired
+            activeOnly
             inputClassName="h-12 text-base"
             onChange={selectProject}
           />

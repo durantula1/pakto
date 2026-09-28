@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { archiveCatalogItemAction, importCatalogAction, saveCatalogItemAction, type CatalogState } from "@/modules/catalog/actions";
 import type { CatalogPick } from "@/components/catalog/catalog-picker";
+import { UnitField } from "@/components/catalog/unit-field";
 
 const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -129,14 +130,10 @@ function ItemSheet({ item, onClose, currency }: { item: CatalogPick | null; onCl
           <label className="text-sm font-medium">Име
             <Input name="name" required minLength={2} maxLength={300} defaultValue={item?.name ?? ""} autoFocus placeholder="напр. Шпакловка стени" className="mt-1.5 h-11 text-base sm:text-sm" />
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm font-medium">Цена ({currency})
-              <Input name="unitPrice" required inputMode="decimal" defaultValue={item ? String(Number(item.unitPrice)) : ""} placeholder="0" className="mt-1.5 h-11 text-right text-base tabular-nums sm:text-sm" />
-            </label>
-            <label className="text-sm font-medium">Мярка
-              <Input name="unit" maxLength={20} defaultValue={item?.unit ?? ""} placeholder="м², бр., ч." className="mt-1.5 h-11 text-base sm:text-sm" />
-            </label>
-          </div>
+          <label className="text-sm font-medium">Цена ({currency})
+            <Input name="unitPrice" required inputMode="decimal" defaultValue={item ? String(Number(item.unitPrice)) : ""} placeholder="0" className="mt-1.5 h-11 text-right text-base tabular-nums sm:text-sm" />
+          </label>
+          <UnitField defaultValue={item?.unit ?? ""} />
           <label className="text-sm font-medium">Категория <span className="font-normal text-muted-foreground">(по желание)</span>
             <Input name="category" maxLength={80} defaultValue={item?.category ?? ""} placeholder="напр. Баня, Електро, Материали" className="mt-1.5 h-11 text-base sm:text-sm" />
           </label>

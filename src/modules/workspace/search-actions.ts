@@ -23,7 +23,7 @@ export async function searchWorkspaceAction(query: string): Promise<SearchHit[]>
   if (term.length < 2) return [];
   const context = await requireTenantContext();
   const [projects, clients, offers] = await Promise.all([
-    searchProjectOptions(context, term, 5),
+    searchProjectOptions(context, term, { limit: 5 }),
     seesClients(context) ? searchClientOptions(context, term) : Promise.resolve([]),
     listChangeOrders({ context, query: term, limit: 5 }),
   ]);

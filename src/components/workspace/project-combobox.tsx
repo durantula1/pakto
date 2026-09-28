@@ -14,7 +14,8 @@ const ALL = "all";
 /**
  * Project picker that searches on the server (20 results at a time) instead of
  * shipping every project to the client. Posts the selected id through a hidden input
- * when `name` is set; `allLabel` adds an "all projects" entry for list filters.
+ * when `name` is set; `allLabel` adds an "all projects" entry for list filters;
+ * `activeOnly` hides completed and archived projects in forms that start new work.
  */
 export function ProjectCombobox({
   name,
@@ -23,6 +24,7 @@ export function ProjectCombobox({
   allLabel,
   placeholder = "Търси обект",
   isRequired,
+  activeOnly = false,
   className,
   inputClassName,
   "aria-label": ariaLabel = "Обект",
@@ -34,6 +36,7 @@ export function ProjectCombobox({
   allLabel?: string;
   placeholder?: string;
   isRequired?: boolean;
+  activeOnly?: boolean;
   className?: string;
   inputClassName?: string;
   "aria-label"?: string;
@@ -44,6 +47,8 @@ export function ProjectCombobox({
   const [inputValue, setInputValue] = useState(selectedLabel);
   const [options, setOptions] = useState<ProjectOption[]>(defaultValue ? [defaultValue] : []);
   const [loading, setLoading] = useState(false);
+  // Until the first answer arrives the list is unknown, not empty.
+  const [loaded, setLoaded] = useState(false);
   // Nothing is fetched until the picker is first opened, so forms and filters don't hit the server on mount.
   const [activated, setActivated] = useState(false);
   const request = useRef(0);
@@ -55,13 +60,13 @@ export function ProjectCombobox({
     const current = ++request.current;
     const timer = setTimeout(() => {
       setLoading(true);
-      searchProjectsAction(term)
-        .then((rows) => { if (current === request.current) setOptions(rows); })
-        .catch(() => { if (current === request.current) setOptions([]); })
+      searchProjectsAction(term, activeOnly)
+        .then((rows) => { if (current === request.current) { setOptions(rows); setLoaded(true); } })
+        .catch(() => { if (current === request.current) { setOptions([]); setLoaded(true); } })
         .finally(() => { if (current === request.current) setLoading(false); });
     }, term ? 250 : 0);
     return () => clearTimeout(timer);
-  }, [term, activated]);
+  }, [term, activated, activeOnly]);
 
   const items: ProjectOption[] = [
     ...(allLabel ? [{ id: ALL, name: allLabel }] : []),
@@ -106,7 +111,7 @@ export function ProjectCombobox({
       >
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"
-          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !activated ? "Търся…" : "Няма намерени обекти."}</p>}
+          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !loaded ? "Търся…" : activeOnly ? "Няма намерени активни обекти." : "Няма намерени обекти."}</p>}
         >
           {(item: ProjectOption) => <ListBoxItem
             id={item.id}

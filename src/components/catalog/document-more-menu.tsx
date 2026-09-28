@@ -114,7 +114,7 @@ function SaveTemplateDialog({ open, onOpenChange, changeOrderId, defaultName }: 
     <Dialog isOpen={open} onOpenChange={onOpenChange}>
       <DialogHeader>
         <DialogTitle>Запази като шаблон</DialogTitle>
-        <DialogDescription>Обхватът, услугите и материалите, ДДС и бележката към клиента стават начало за следващи оферти. Цените могат да се сменят всеки път.</DialogDescription>
+        <DialogDescription>Заглавието, обхватът, услугите и материалите и ДДС стават начало за следващи оферти. Цените могат да се сменят всеки път.</DialogDescription>
       </DialogHeader>
       <form action={submit} className="flex flex-col gap-3">
         <input type="hidden" name="changeOrderId" value={changeOrderId} />

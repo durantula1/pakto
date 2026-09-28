@@ -145,6 +145,7 @@ export function OfferForm({
                   defaultValue={project}
                   placeholder="Избери обект"
                   isRequired
+                  activeOnly
                   inputClassName="h-10"
                   onChange={setProject}
                 />
