@@ -15,6 +15,8 @@ pnpm lint           # eslint .
 pnpm build          # next build --webpack
 pnpm format         # prettier --write . (tailwind class sorting plugin)
 pnpm db:generate    # drizzle-kit generate from src/db/schema/index.ts
+pnpm video:studio   # Remotion Studio for the landing video (video/, its own pnpm package)
+pnpm video:render   # re-render public/video/*.mp4 + posters (phone + desktop clips); do it after portal/email UI changes
 ```
 
 ## What the product is

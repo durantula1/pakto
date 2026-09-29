@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The landing-page video is its own Remotion package with its own checks.
+    "video/**",
   ]),
 ]);
 

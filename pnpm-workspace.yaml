@@ -1,4 +1,6 @@
-packages: []
+packages:
+  # The landing-page video (Remotion); kept out of the site bundle.
+  - video
 
 autoInstallPeers: false
 
