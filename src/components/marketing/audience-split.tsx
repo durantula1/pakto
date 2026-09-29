@@ -1,131 +1,162 @@
-import {
-  BellRing,
-  FileText,
-  Layers3,
-  Lock,
-  Mail,
-  ReceiptText,
-  Smartphone,
-  Users,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, ArrowRight } from "lucide-react";
 
-import { InlineCta } from "./inline-cta";
 import { Reveal } from "./reveal";
 
-type Point = { icon: LucideIcon; title: string; text: string };
+type Side = { title: string; detail: string };
 
-const company: Point[] = [
+/**
+ * One step of the agreement, as both sides live it. `flow` is who moves first: the business sends,
+ * the client answers, and both keep the record.
+ */
+const steps: {
+  company: Side;
+  client: Side;
+  flow: "to-client" | "to-company" | "both";
+}[] = [
   {
-    icon: FileText,
-    title: "Оферта с редове и ДДС",
-    text: "Количество, мярка, цена и краен срок. Сумите се смятат сами.",
+    company: {
+      title: "Пращаш оферта",
+      detail: "Редове, ДДС, срок и вноски. От шаблон или от каталога си.",
+    },
+    client: {
+      title: "Отваря линка",
+      detail: "Без профил и парола. Всичките му проекти са на едно място.",
+    },
+    flow: "to-client",
   },
   {
-    icon: Layers3,
-    title: "Промяната — веднага",
-    text: "Допълнителна работа, намаление или нов срок, свързани с одобрената оферта.",
+    company: {
+      title: "Правиш промяна",
+      detail: "Тя става нова версия. Изпратената остава заключена.",
+    },
+    client: {
+      title: "Вижда какво се промени",
+      detail: "Точната версия и разликата спрямо предишната.",
+    },
+    flow: "to-client",
   },
   {
-    icon: BellRing,
-    title: "Знаеш кога е решил",
-    text: "Одобрение, искана промяна или отказ идват на момента, при целия екип.",
+    company: {
+      title: "Разбираш веднага",
+      detail: "Известие за всяко решение и напомняне, ако клиентът се бави.",
+    },
+    client: {
+      title: "Решава с код",
+      detail:
+        "Одобрява, иска промяна или отказва. Код от имейла го потвърждава.",
+    },
+    flow: "to-company",
   },
   {
-    icon: Users,
-    title: "Екипът вижда своето",
-    text: "Отделни права за оферти, изпращане, вътрешни бележки и пари.",
+    company: {
+      title: "Следиш плащанията",
+      detail: "Капаро, междинни и окончателни вноски, с месечна справка.",
+    },
+    client: {
+      title: "Отбелязва „Платих“",
+      detail: "Ти потвърждаваш, че парите са получени.",
+    },
+    flow: "to-company",
   },
   {
-    icon: Wallet,
-    title: "Плащанията под ръка",
-    text: "Договорено, платено и остава по всеки проект. Без фактури, без събиране на пари.",
+    company: {
+      title: "Пазиш историята",
+      detail: "Всяка версия и решение, с PDF и логото на фирмата.",
+    },
+    client: {
+      title: "Получава разписка",
+      detail: "PDF по имейл и право да оспори решението.",
+    },
+    flow: "both",
   },
 ];
 
-const client: Point[] = [
-  {
-    icon: Smartphone,
-    title: "Един линк, без профил",
-    text: "Отваря го от телефона. Няма парола и няма приложение за инсталиране.",
-  },
-  {
-    icon: Lock,
-    title: "Точната версия",
-    text: "Вижда какво, за колко и до кога. Изпратеното не може да се промени тайно.",
-  },
-  {
-    icon: Mail,
-    title: "Решение с код",
-    text: "Одобрява, иска промяна или отказва и потвърждава с код от имейла си.",
-  },
-  {
-    icon: ReceiptText,
-    title: "Разписка с право на оспорване",
-    text: "Получава PDF по имейл и може да оспори решението, ако е станала грешка.",
-  },
-];
+const flowIcon = {
+  "to-client": ArrowRight,
+  "to-company": ArrowLeft,
+  both: ArrowLeftRight,
+} as const;
 
-function PointList({ points, dark = false }: { points: Point[]; dark?: boolean }) {
+const flowLabel = {
+  "to-client": "към клиента",
+  "to-company": "към фирмата",
+  both: "и за двете страни",
+} as const;
+
+function Cell({ side, dark = false }: { side: Side; dark?: boolean }) {
   return (
-    <ul className="mt-8 space-y-5">
-      {points.map(({ icon: Icon, title, text }) => (
-        <li key={title} className="flex gap-4">
-          <span
-            className={`grid size-10 shrink-0 place-items-center rounded-full ${
-              dark ? "bg-[#ff765f] text-[#102b38]" : "bg-[#bceba8] text-[#102b38]"
-            }`}
-          >
-            <Icon className="size-[1.125rem]" />
-          </span>
-          <div>
-            <p className="text-base font-black tracking-[-0.02em]">{title}</p>
-            <p className={`mt-1 text-sm leading-6 ${dark ? "text-[#c6d9da]" : "text-[#49626b]"}`}>
-              {text}
-            </p>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div
+      className={`px-6 py-6 sm:px-10 ${dark ? "bg-[#102b38] text-[#f4efe4]" : "bg-[#fffaf0]"}`}
+    >
+      <p className="text-lg font-black leading-snug tracking-[-0.03em]">
+        {side.title}
+      </p>
+      <p
+        className={`mt-1 text-[0.9375rem] leading-6 ${dark ? "text-[#a9c1c3]" : "text-[#52707d]"}`}
+      >
+        {side.detail}
+      </p>
+    </div>
   );
 }
 
-/** Both sides of the agreement: what the business runs, and the little the client has to do. */
+/** Both sides of the agreement, step by step: what the business does, and what the client does in reply. */
 export function AudienceSplit() {
   return (
-    <section id="both-sides" className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[16vh]">
+    <section
+      id="both-sides"
+      className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[16vh]"
+    >
       <div className="mx-auto max-w-[93.75rem]">
         <Reveal className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
           <p className="mf-kicker">ДВЕТЕ СТРАНИ НА ДОГОВОРКАТА</p>
           <h2 className="mf-section-title">
-            ТИ ПОДГОТВЯШ.
+            Ти подготвяш.
             <br />
-            КЛИЕНТЪТ <i>решава.</i>
+            Клиентът <span className="mf-swoosh">решава.</span>
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-4 lg:mt-20 lg:grid-cols-2">
-          <Reveal className="rounded-[1.75rem] border border-[#102b38]/15 bg-[#fffaf0] p-7 sm:p-10">
-            <p className="mf-kicker text-[#c24a35]">ЗА ФИРМАТА</p>
-            <p className="mt-4 text-2xl font-black leading-tight tracking-[-0.04em] sm:text-3xl">
-              Всичко по проекта — на едно място, от телефона.
+        <Reveal className="mt-14 overflow-hidden rounded-[1.75rem] border border-[#102b38]/15 lg:mt-20">
+          <div className="grid grid-cols-2">
+            <p className="bg-[#fffaf0] px-6 pb-2 pt-7 sm:px-10 sm:pt-9">
+              <span className="block text-2xl font-black tracking-[-0.04em] sm:text-3xl">
+                Фирмата
+              </span>
+              <span className="mt-1 block text-sm text-[#52707d]">
+                в приложението
+              </span>
             </p>
-            <PointList points={company} />
-          </Reveal>
-          <Reveal
-            delay={0.08}
-            className="rounded-[1.75rem] bg-[#102b38] p-7 text-[#f4efe4] sm:p-10"
-          >
-            <p className="mf-kicker text-[#b8ecda]">ЗА КЛИЕНТА</p>
-            <p className="mt-4 text-2xl font-black leading-tight tracking-[-0.04em] sm:text-3xl">
-              От телефона, без регистрация, с ясна разписка.
+            <p className="bg-[#102b38] px-6 pb-2 pt-7 text-[#f4efe4] sm:px-10 sm:pt-9">
+              <span className="block text-2xl font-black tracking-[-0.04em] sm:text-3xl">
+                Клиентът
+              </span>
+              <span className="mt-1 block text-sm text-[#a9c1c3]">
+                от телефона, без профил
+              </span>
             </p>
-            <PointList points={client} dark />
-          </Reveal>
-        </div>
+          </div>
 
-        <InlineCta title="Изпрати първата оферта днес. Клиентът ще я одобри от телефона." />
+          <ol>
+            {steps.map(({ company, client, flow }) => {
+              const Icon = flowIcon[flow];
+              return (
+                <li
+                  key={company.title}
+                  className="relative grid md:grid-cols-2 [&>div:first-child]:border-t [&>div:first-child]:border-[#102b38]/10 [&>div:last-of-type]:border-t [&>div:last-of-type]:border-white/10"
+                >
+                  <Cell side={company} />
+                  <Cell side={client} dark />
+                  {/* Who moves: sits on the seam between the sides; phones stack the sides, so it hides there. */}
+                  <span className="absolute left-6 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border-[0.1875rem] border-[#f4efe4] bg-[#ff765f] text-[#102b38] max-md:hidden md:left-1/2 md:-translate-x-1/2">
+                    <Icon className="size-4" />
+                    <span className="sr-only">{flowLabel[flow]}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </Reveal>
       </div>
     </section>
   );

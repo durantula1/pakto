@@ -11,7 +11,7 @@ export const faqQuestions = [
   },
   {
     q: "Това електронен подпис ли е?",
-    a: "Не е квалифициран електронен подпис (КЕП). Pakto пази писмено доказателство за решението: името на клиента, кода от имейла му, точния час, IP адреса и отпечатък на точната версия. Клиентът получава копие с PDF.",
+    a: "Не е квалифициран електронен подпис (КЕП). Pakto пази ясен запис на решението: името на клиента, кода от имейла му, точния час, IP адреса и отпечатък на точната версия, тоест кратък код, който става друг, ако текстът или сумите се променят. Клиентът получава копие с PDF.",
   },
   {
     q: "Мога ли да променя оферта, след като е изпратена?",
@@ -27,7 +27,7 @@ export const faqQuestions = [
   },
   {
     q: "Колко струва?",
-    a: "По време на бетата е безплатно и не се иска карта.",
+    a: "По време на бетата е безплатно и не се иска карта. Преди края на бетата ще те уведомим поне 30 дни по-рано. Данните остават твои и можеш да ги изтеглиш по всяко време.",
   },
 ] as const;
 
@@ -38,20 +38,22 @@ export function Faq() {
         <Reveal>
           <p className="mf-kicker">ВЪПРОСИ</p>
           <h2 className="mf-section-title mt-10">
-            КРАТКО
-            <br />
-            И <i>ясно.</i>
+            Кратко
+            <br />и ясно.
           </h2>
         </Reveal>
         <Reveal delay={0.08}>
           <div className="border-t border-[#102b38]/20">
-            {faqQuestions.map(({ q, a }) => <FaqItem key={q} q={q} a={a} />)}
+            {faqQuestions.map(({ q, a }) => (
+              <FaqItem key={q} q={q} a={a} />
+            ))}
           </div>
           <Link
             href="/faq"
-            className="mt-8 inline-flex items-center gap-2 border-b border-[#102b38] pb-1 font-mono text-[0.625rem] font-bold tracking-[0.12em] transition-colors hover:border-[#e85f48] hover:text-[#e85f48]"
+            className="mt-8 inline-flex items-center gap-2 border-b border-[#102b38] pb-1 pt-1.5 font-mono text-[0.6875rem] font-bold tracking-[0.12em] transition-colors hover:border-[#e85f48] hover:text-[#e85f48]"
           >
-            ВСИЧКИ ВЪПРОСИ: ЕКИП, ПРАВА, СРОКОВЕ <ArrowUpRight className="size-3.5" />
+            ВСИЧКИ ВЪПРОСИ: ЕКИП, ПРАВА, СРОКОВЕ{" "}
+            <ArrowUpRight className="size-3.5" />
           </Link>
         </Reveal>
       </div>

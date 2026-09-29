@@ -5,7 +5,12 @@ import { CalendarClock, EyeOff, Link2 } from "lucide-react";
 
 import { DemoFrame, StatusChip, useDemoLoop } from "./demo-frame";
 
-const kinds = ["Допълнителна работа", "Намаление", "Без промяна в цената", "Само срок"] as const;
+const kinds = [
+  "Допълнителна работа",
+  "Намаление",
+  "Без промяна в цената",
+  "Само срок",
+] as const;
 const description = "Двата контакта в кухнята се местят с 40 см към прозореца.";
 
 export function QuickChangeDemo() {
@@ -14,7 +19,7 @@ export function QuickChangeDemo() {
   return (
     <DemoFrame
       frameRef={ref}
-      crumb="ОБЕКТ / КЪЩА · БОЯНА"
+      crumb="ОБЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
       title="Бърза промяна · ПР-042"
       status={
         <StatusChip tone={step >= 5 ? "info" : "muted"}>
@@ -40,10 +45,14 @@ export function QuickChangeDemo() {
         ))}
       </div>
       <div className="mt-3 min-h-[4rem] rounded-xl border border-[#102b38]/15 bg-white px-3.5 py-3 demo-text-12 leading-5">
-        <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">КАКВО СЕ ПРОМЕНЯ</p>
+        <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+          КАКВО СЕ ПРОМЕНЯ
+        </p>
         <m.p
           initial={false}
-          animate={{ clipPath: step >= 2 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+          animate={{
+            clipPath: step >= 2 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+          }}
           transition={{ duration: 1, ease: "linear" }}
           className="mt-1 font-bold"
         >
@@ -68,7 +77,7 @@ export function QuickChangeDemo() {
           <p className="flex items-center gap-1 font-mono demo-text-8 tracking-[0.12em]">
             <CalendarClock className="size-3" /> НОВ КРАЕН СРОК
           </p>
-          <p className="mt-1 text-xl font-black tracking-[-0.06em]">14.10</p>
+          <p className="mt-1 text-xl font-black tracking-[-0.06em]">16.10</p>
         </m.div>
       </div>
 

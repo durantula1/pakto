@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { Check } from "lucide-react";
-import { m } from "motion/react";
 
 import { FinanceDemo } from "./platform-demos/finance-demo";
 import { HistoryDemo } from "./platform-demos/history-demo";
@@ -98,7 +97,7 @@ const modules: Module[] = [
     points: [
       "Старите версии не се изтриват",
       "Точен час и автор на всяко действие",
-      "PDF с отпечатък на одобреното съдържание",
+      "PDF с отпечатък: по него се вижда, ако текстът е пипан след одобрението",
     ],
     Demo: HistoryDemo,
   },
@@ -126,25 +125,28 @@ export function PlatformTour() {
     const list = tabs.current;
     const current = list?.querySelector<HTMLElement>('[aria-current="true"]');
     if (!list || !current || list.scrollWidth <= list.clientWidth) return;
-    const offset = current.getBoundingClientRect().left - list.getBoundingClientRect().left;
+    const offset =
+      current.getBoundingClientRect().left - list.getBoundingClientRect().left;
     list.scrollTo({ left: list.scrollLeft + offset - 24, behavior: "smooth" });
   }, [active]);
 
   return (
-    <section id="product" className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[18vh]">
+    <section
+      id="product"
+      className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[18vh]"
+    >
       <div className="mx-auto max-w-[93.75rem]">
         <Reveal className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
           <p className="mf-kicker">ЦЕЛИЯТ ПРОЕКТ · ЕДНО МЯСТО</p>
           <div>
             <h2 className="mf-section-title">
-              ОФЕРТА, ПРОМЕНИ,
-              <br />
-              <i>плащания.</i>
+              Оферта, промени
+              <br />и плащания.
             </h2>
             <p className="mt-8 max-w-xl text-base leading-7 text-[#49626b]">
               Pakto подрежда най-трудния разговор с клиента, допълнителната
-              работа, заедно с всичко около нея: офертата, решението на
-              клиента, екипа и получените плащания.
+              работа, заедно с всичко около нея: офертата, решението на клиента,
+              екипа и получените плащания.
             </p>
           </div>
         </Reveal>
@@ -154,21 +156,26 @@ export function PlatformTour() {
             aria-label="Модули"
             className="mf-tour-nav z-20 self-start max-md:hidden md:sticky md:top-[4.75rem] md:-mx-[6vw] md:px-[6vw] lg:top-32 lg:mx-0 lg:px-0"
           >
-            <p className="mb-4 hidden font-mono text-[0.5625rem] tracking-[0.14em] text-[#52707d] lg:block">
+            <p className="mf-kicker mb-4 hidden text-[#46636e] lg:block">
               МОДУЛИ
             </p>
-            <ul ref={tabs} className="flex gap-1 overflow-x-auto py-3 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-[#102b38]/15 lg:py-0">
+            <ul
+              ref={tabs}
+              className="flex gap-1 overflow-x-auto py-3 lg:flex-col lg:gap-0 lg:overflow-visible lg:border-l lg:border-[#102b38]/15 lg:py-0"
+            >
               {modules.map((module, index) => {
                 const isActive = active === module.id;
                 return (
                   <li key={module.id} className="relative shrink-0">
-                    {isActive && (
-                      <m.span
-                        layoutId="mf-tour-indicator"
-                        className="absolute inset-0 rounded-full bg-[#102b38] lg:inset-y-0 lg:-left-px lg:right-auto lg:w-[0.1875rem] lg:rounded-none lg:bg-[#ff765f]"
-                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                      />
-                    )}
+                    {/* Plain CSS: `layoutId` needs motion's layout feature, which this page doesn't load. */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-0 rounded-full bg-[#102b38] transition-[opacity,scale] duration-300 ease-out lg:inset-y-0 lg:-left-px lg:right-auto lg:w-[0.1875rem] lg:rounded-none lg:bg-[#ff765f] ${
+                        isActive
+                          ? "scale-100 opacity-100"
+                          : "scale-y-50 opacity-0"
+                      }`}
+                    />
                     <a
                       href={`#${module.id}`}
                       aria-current={isActive ? "true" : undefined}
@@ -178,7 +185,7 @@ export function PlatformTour() {
                           : "text-[#52707d] hover:text-[#102b38]"
                       }`}
                     >
-                      <span className="hidden font-mono text-[0.5625rem] lg:inline">
+                      <span className="hidden font-mono text-xs lg:inline">
                         0{index + 1}
                       </span>
                       {module.nav}
@@ -200,7 +207,7 @@ export function PlatformTour() {
                 className="grid scroll-mt-40 grid-cols-1 gap-8 border-t border-[#102b38]/15 py-14 first:border-t-0 first:pt-0 lg:scroll-mt-32 xl:grid-cols-[0.8fr_1.2fr] xl:gap-12 xl:py-20"
               >
                 <div>
-                  <span className="inline-block rounded-full bg-[#c5e3e5] px-2.5 py-1 font-mono text-[0.5rem] font-bold tracking-[0.12em]">
+                  <span className="inline-block rounded-full bg-[#c5e3e5] px-3 py-1 text-xs font-bold tracking-[0.08em]">
                     0{index + 1} · {label}
                   </span>
                   <h3 className="mt-4 max-w-md text-3xl font-black leading-[0.98] tracking-[-0.06em] sm:text-4xl">
@@ -211,7 +218,10 @@ export function PlatformTour() {
                   </p>
                   <ul className="mt-5 space-y-2.5">
                     {points.map((point) => (
-                      <li key={point} className="flex items-start gap-2.5 text-[0.8125rem] font-bold">
+                      <li
+                        key={point}
+                        className="flex items-start gap-2.5 text-[0.8125rem] font-bold"
+                      >
                         <span className="mt-0.5 grid size-4 shrink-0 place-items-center rounded-full bg-[#bceba8]">
                           <Check className="size-2.5" />
                         </span>

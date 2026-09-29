@@ -1,4 +1,10 @@
 .marketing-page {
+  /* Motion: one set of curves and durations for the whole landing page. */
+  --mf-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --mf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --mf-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mf-dur-swap: 250ms;
+  --mf-dur-enter: 700ms;
   --mf-ink: #102b38;
   --mf-paper: #f4efe4;
   --mf-sky: #c5e3e5;
@@ -35,12 +41,25 @@
   color: #e85f48;
 }
 
+/*
+ * Keyboard focus: one visible ring across the page, in the text's own colour so it shows on paper,
+ * coral and ink alike. Dark buttons carry light text, so their ring is ink to stand off the paper.
+ */
+.marketing-page :focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.marketing-page .mf-primary-button:focus-visible {
+  outline-color: var(--mf-ink);
+}
+
+/* Section eyebrows: small caps in the body face. Mono is kept for numbers, codes and buttons. */
 .mf-kicker,
 .mf-card-label {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.1em;
 }
 
 .mf-hero {
@@ -54,7 +73,7 @@
   background-image:
     linear-gradient(rgb(16 43 56 / 7%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(16 43 56 / 7%) 1px, transparent 1px);
-  background-size: clamp(56px, 7vw, 108px) clamp(56px, 7vw, 108px);
+  background-size: clamp(3.5rem, 7vw, 6.75rem) clamp(3.5rem, 7vw, 6.75rem);
   mask-image: linear-gradient(
     to bottom,
     transparent,
@@ -64,29 +83,80 @@
   );
 }
 
+/* The shouted, uppercase type is kept for the two ends of the page: the hero and the closing call. */
 .mf-hero-title,
-.mf-section-title,
-.mf-cta-title,
-.mf-story-copy h3 {
+.mf-cta-title {
   font-weight: 900;
-  line-height: 0.79;
+  /* Tight, but "Д" and "Щ" drop below the baseline and need room above the next line's capitals. */
+  line-height: 0.92;
   letter-spacing: -0.092em;
   text-transform: uppercase;
 }
 
+/* Every section in between speaks in plain sentences. */
+.mf-section-title {
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+/* Sized so "„ДОГОВОРИХМЕ", the longest line, fills the text column without reaching the card. */
 .mf-hero-title {
-  max-width: 66.25rem;
-  font-size: clamp(4.2rem, 8.4vw, 9.5rem);
+  font-size: clamp(3.5rem, 6.6vw, 7rem);
+}
+
+/*
+ * Quotes drop the title's tight letter-spacing, which glues the opening one to "Д" and pulls "И" onto
+ * the closing one. The margins are tuned so both quotes sit the same distance from their letters.
+ */
+.mf-quote-open,
+.mf-quote-close {
+  letter-spacing: 0;
+}
+
+.mf-quote-open {
+  margin-right: 0.04em;
+}
+
+.mf-quote-close {
+  margin-left: 0.06em;
 }
 
 .mf-hero-title i,
-.mf-section-title i,
-.mf-cta-title i,
-.mf-story-copy h3 i {
+.mf-cta-title i {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 600;
   letter-spacing: -0.1em;
   text-transform: none;
+}
+
+.mf-swoosh {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.14em;
+}
+
+.mf-swoosh::after {
+  content: "";
+  position: absolute;
+  left: 0.02em;
+  right: 0.04em;
+  bottom: -0.3em;
+  height: 0.2em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 20' preserveAspectRatio='none'%3E%3Cpath d='M3 14 C60 4 130 3 190 8 S270 12 297 5' fill='none' stroke='%23ff765f' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E")
+    center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* The hero's leading is so tight that the default offset drifts toward the paragraph below. */
+.mf-hero-title .mf-swoosh {
+  padding-bottom: 0;
+}
+
+.mf-hero-title .mf-swoosh::after {
+  bottom: -0.17em;
+  height: 0.14em;
 }
 
 .mf-primary-button,
@@ -115,67 +185,21 @@
 
 .mf-primary-button:hover,
 .mf-dark-button:hover {
-  transform: translateY(-3px);
+  transform: translateY(-0.1875rem);
   box-shadow: 0 22px 45px rgb(16 43 56 / 28%);
 }
 
-.mf-round-button {
-  display: grid;
-  width: 3rem;
-  height: 3rem;
-  place-items: center;
-  border: 1px solid rgb(16 43 56 / 45%);
-  border-radius: 50%;
-  transition:
-    transform 180ms ease,
-    background-color 180ms ease;
-}
-
-.mf-round-button:hover {
-  transform: translateY(3px);
-  background: var(--mf-coral);
-}
-
-.mf-story {
-  background: #12364b;
-  color: #fbf7ec;
-}
-
-.mf-story-grid {
+.mf-dark-grid {
   opacity: 0.38;
   background-image:
     linear-gradient(rgb(198 223 223 / 8%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(198 223 223 / 8%) 1px, transparent 1px);
-  background-size: clamp(72px, 8vw, 126px) clamp(72px, 8vw, 126px);
+  background-size: clamp(4.5rem, 8vw, 7.875rem) clamp(4.5rem, 8vw, 7.875rem);
   transform: rotate(-8deg) scale(1.25);
 }
 
-.mf-story-copy h3 {
-  max-width: 45rem;
-  font-size: clamp(3.3rem, 6.6vw, 7.2rem);
-}
-
-.mf-story-copy > p {
-  max-width: 24.375rem;
-  margin-top: 2rem;
-  color: #c6d9da;
-  font-size: 0.9375rem;
-  line-height: 1.65;
-}
-
-.mf-passport {
-  transform-origin: center;
-  will-change: transform;
-}
-
-.mf-story-rail {
-  right: 6vw;
-  bottom: 8vh;
-  left: 52vw;
-}
-
 .mf-section-title {
-  font-size: clamp(3.7rem, 7.2vw, 8rem);
+  font-size: clamp(2.6rem, 4.8vw, 5rem);
 }
 
 .mf-proof-quote {
@@ -187,9 +211,10 @@
   letter-spacing: -0.05em;
 }
 
+/* The strike is a background line (drawn by proof-strip.tsx), so it can grow across wrapped lines. */
 .mf-proof-quote s {
-  text-decoration-color: #102b38;
-  text-decoration-thickness: 0.08em;
+  text-decoration: none;
+  background: linear-gradient(#102b38, #102b38) no-repeat 0 58% / 100% 0.08em;
 }
 
 .mf-tour-nav {
@@ -211,18 +236,8 @@
     #102b38;
 }
 
-.mf-fade-b {
-  mask-image: linear-gradient(to bottom, #000 72%, transparent);
-}
-
-.mf-security-title,
-.mf-updates-title {
-  font-size: clamp(3.2rem, 6vw, 6.6rem);
-}
-
 .mf-cta-title {
-  max-width: 80rem;
-  font-size: clamp(4.2rem, 9.3vw, 10rem);
+  font-size: clamp(4.2rem, 8.4vw, 9rem);
 }
 
 .mf-dark-button {
@@ -242,18 +257,6 @@
   .mf-hero {
     min-height: 48.75rem;
   }
-
-  .mf-story-copy {
-    top: 45%;
-  }
-
-  .mf-story-copy h3 {
-    font-size: clamp(3rem, 9vw, 5.5rem);
-  }
-
-  .mf-passport {
-    opacity: 0.34;
-  }
 }
 
 @media (width < 48rem) {
@@ -265,46 +268,14 @@
     font-size: clamp(2.5rem, 11.4vw, 6rem);
   }
 
-  .mf-story-copy {
-    top: 0;
-    z-index: 4;
-  }
-
-  .mf-story-copy h3 {
-    margin-top: 0.875rem;
-    font-size: clamp(2.5rem, 12vw, 4.4rem);
-  }
-
-  .mf-story-copy > p {
-    max-width: 88vw;
-    margin-top: 1.125rem;
-    font-size: 0.875rem;
-    line-height: 1.55;
-  }
-
-  .mf-passport {
-    width: calc(100% - 3rem);
-    max-height: 100%;
-    opacity: 1;
-    mask-image: linear-gradient(to bottom, black 72%, transparent);
-  }
-
-  .mf-story-rail {
-    right: 8vw;
-    bottom: calc(4svh + 1.125rem);
-    left: 8vw;
-  }
-
   .mf-hero-title,
-  .mf-section-title,
-  .mf-cta-title,
-  .mf-story-copy h3 {
-    line-height: 0.88;
+  .mf-cta-title {
+    line-height: 1;
     letter-spacing: -0.075em;
   }
 
   .mf-section-title {
-    font-size: clamp(2.5rem, 11vw, 4.5rem);
+    font-size: clamp(2.2rem, 10vw, 3.4rem);
   }
 
   .mf-cta-title {
@@ -353,35 +324,175 @@
   animation: mf-rise-solid 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Hero blobs drift on large screens only; on phones they are small and still. */
-@keyframes mf-drift {
-  50% {
-    transform: translate(1.5rem, -1.125rem);
+/*
+ * Hero seal: a change order fills in, the client says "yes" with a code, the version locks and is
+ * stamped. Every rule animates FROM the earlier state, so the element's own styles are the final,
+ * approved state: reduced motion (or a browser without animations) shows the sealed version at once.
+ * `--d` on each element is its beat in the ~3 s sequence.
+ */
+@property --mf-total {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 384;
+}
+
+.mf-seal-anim {
+  animation-delay: var(--d, 0ms);
+  animation-fill-mode: both;
+}
+
+/* Flat card: it rises in once, then nudges when the stamp lands. */
+.mf-seal-card {
+  animation:
+    mf-seal-rise var(--mf-dur-enter) var(--mf-ease-out) 100ms both,
+    mf-seal-nudge 260ms var(--mf-ease-out) 2580ms both;
+}
+
+/* Ink: a rough edge from the SVG filter in hero-seal.tsx, multiplied into the paper. */
+.mf-seal-stamp {
+  transform: rotate(-7deg);
+  opacity: 0.88;
+  mix-blend-mode: multiply;
+  filter: url(#mf-ink);
+}
+
+.mf-seal-row {
+  animation-name: mf-seal-row;
+  animation-duration: 360ms;
+  animation-timing-function: var(--mf-ease-out);
+}
+
+.mf-seal-count::after {
+  counter-reset: mf-total var(--mf-total);
+  content: counter(mf-total);
+}
+
+.mf-seal-count {
+  --mf-total: 384;
+}
+
+.mf-seal-total .mf-seal-count {
+  animation: mf-seal-count 700ms cubic-bezier(0.16, 1, 0.3, 1) 800ms both;
+}
+
+.mf-seal-yes {
+  animation-name: mf-seal-yes;
+  animation-duration: 420ms;
+  animation-timing-function: var(--mf-ease-out);
+}
+
+.mf-seal-current {
+  animation-name: mf-seal-fade-in;
+  animation-duration: var(--mf-dur-swap);
+  animation-timing-function: var(--mf-ease-out);
+}
+
+.mf-seal-out {
+  opacity: 0;
+  animation-name: mf-seal-fade-out;
+  animation-duration: var(--mf-dur-swap);
+  animation-timing-function: var(--mf-ease-in-out);
+}
+
+.mf-seal-in {
+  animation-name: mf-seal-fade-in;
+  animation-duration: var(--mf-dur-swap);
+  animation-timing-function: var(--mf-ease-in-out);
+}
+
+.mf-seal-hash {
+  animation-name: mf-seal-type;
+  animation-duration: 520ms;
+  animation-timing-function: steps(18, end);
+}
+
+.mf-seal-stamp {
+  animation-name: mf-seal-stamp;
+  animation-duration: 420ms;
+}
+
+/* `translate`/`scale`, not `transform`, so it adds to the entrance instead of replacing it. */
+@keyframes mf-seal-nudge {
+  40% {
+    translate: 0 0.125rem;
+    scale: 0.995;
   }
 }
 
-@keyframes mf-breathe {
-  50% {
-    transform: scale(1.08);
+@keyframes mf-seal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
   }
 }
 
-@media (width >= 64rem) {
-  .mf-drift {
-    animation: mf-drift 10s ease-in-out infinite;
+@keyframes mf-seal-row {
+  from {
+    opacity: 0;
+    transform: translateX(0.5rem);
   }
+}
 
-  .mf-breathe {
-    animation: mf-breathe 8s ease-in-out infinite;
+@keyframes mf-seal-count {
+  from {
+    --mf-total: 0;
   }
+}
+
+/* The client's answer slides up out of the card's bottom edge. */
+@keyframes mf-seal-yes {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0 0);
+  }
+}
+
+@keyframes mf-seal-fade-out {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes mf-seal-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes mf-seal-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* Falls fast (accelerating), lands, then settles a touch. */
+@keyframes mf-seal-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(-16deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  45% {
+    opacity: 0.88;
+    transform: scale(0.94) rotate(-7deg);
+    animation-timing-function: var(--mf-ease-out);
+  }
+  100% {
+    transform: rotate(-7deg);
+  }
+}
+
+/* A status chip that changes text fades in, so the swap reads as a state change. */
+.mf-chip-swap {
+  animation: mf-seal-fade-in var(--mf-dur-swap) var(--mf-ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mf-rise,
   .mf-rise-solid,
-  .mf-drift,
-  .mf-breathe {
-    animation: none;
+  .mf-seal *,
+  .mf-seal-count {
+    animation: none !important;
   }
 }
 

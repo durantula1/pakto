@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { m, useReducedMotion } from "motion/react";
+import { m } from "motion/react";
 
 /**
  * Above-the-fold variant: a CSS animation that starts with the first paint instead of waiting
@@ -38,13 +38,13 @@ export function Reveal({
   className?: string;
   delay?: number;
 }) {
-  const reduceMotion = useReducedMotion();
-
+  // The same `initial` on the server and the client: switching it on reduced motion left the server's
+  // opacity 0 in place after hydration. <MotionConfig reducedMotion="user"> drops the rise instead.
   return (
     <m.div
       className={className}
-      initial={reduceMotion ? false : { opacity: 0, y: 28 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.75, delay, ease: [0.22, 1, 0.36, 1] }}
     >

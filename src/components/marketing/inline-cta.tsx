@@ -12,11 +12,15 @@ export function InlineCta({ title }: { title: string }) {
         <Link href="/app" className="mf-when-in mf-primary-button">
           КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
         </Link>
-        <Link href="/sign-up" prefetch={false} className="mf-when-out mf-primary-button">
+        <Link
+          href="/sign-up"
+          prefetch={false}
+          className="mf-when-out mf-primary-button"
+        >
           ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
         </Link>
-        <p className="mf-when-out font-mono text-[0.625rem] tracking-[0.12em] text-[#52707d]">
-          БЕЗПЛАТНО В БЕТА · БЕЗ КАРТА
+        <p className="mf-when-out text-sm text-[#46636e]">
+          Безплатно в бета · без карта
         </p>
       </div>
     </div>

@@ -8,7 +8,13 @@ import { useEffect, useState } from "react";
  * Phone-only bottom bar with the main action. It appears once the hero button has scrolled away
  * and hides again while the final call to action is on screen, so the page never shows two at once.
  */
-export function MobileCtaBar({ heroId, finalId }: { heroId: string; finalId: string }) {
+export function MobileCtaBar({
+  heroId,
+  finalId,
+}: {
+  heroId: string;
+  finalId: string;
+}) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -42,7 +48,11 @@ export function MobileCtaBar({ heroId, finalId }: { heroId: string; finalId: str
       <Link href="/app" className="mf-when-in mf-primary-button w-full">
         КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
       </Link>
-      <Link href="/sign-up" prefetch={false} className="mf-when-out mf-primary-button w-full">
+      <Link
+        href="/sign-up"
+        prefetch={false}
+        className="mf-when-out mf-primary-button w-full"
+      >
         ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
       </Link>
     </div>

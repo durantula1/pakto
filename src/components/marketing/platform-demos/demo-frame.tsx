@@ -4,25 +4,31 @@ import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import { useInView, useReducedMotion } from "motion/react";
 
 /**
- * Steps a demo from 0 to `steps` while it is on screen, holds the final state,
- * then starts over. Reduced motion shows the final state only.
+ * Shows the final state first (and whenever the demo is off screen, so a visitor
+ * scrolling past never sees it half-built), then, once on screen, builds it up
+ * from 0 a single time and stays on the final state: no endless loop to pause.
+ * Reduced motion shows the final state only.
  */
 export function useDemoLoop(steps: number, stepMs = 1100, holdMs = 3200) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.45 });
   const reduceMotion = useReducedMotion();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(steps);
+  const [played, setPlayed] = useState(false);
 
   useEffect(() => {
-    if (reduceMotion || !inView) return;
+    if (reduceMotion || !inView || played) return;
     const timer = window.setTimeout(
-      () => setStep((current) => (current >= steps ? 0 : current + 1)),
+      () => {
+        if (step === steps - 1) setPlayed(true);
+        setStep((current) => (current >= steps ? 0 : current + 1));
+      },
       step >= steps ? holdMs : step === 0 ? 500 : stepMs,
     );
     return () => window.clearTimeout(timer);
-  }, [holdMs, inView, reduceMotion, step, stepMs, steps]);
+  }, [holdMs, inView, played, reduceMotion, step, stepMs, steps]);
 
-  return { ref, step: reduceMotion ? steps : step };
+  return { ref, step: reduceMotion || !inView ? steps : step };
 }
 
 export function DemoFrame({

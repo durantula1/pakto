@@ -4,10 +4,15 @@ import { faqQuestions } from "./faq";
 
 type Question = { q: string; a: string };
 
-const [clientAccount, eSignature, editSent, wrongApproval, invoices, price] = faqQuestions;
+const [clientAccount, eSignature, editSent, wrongApproval, invoices, price] =
+  faqQuestions;
 
 /** The full question list for /faq, grouped by topic. The landing page shows only `faqQuestions`. */
-export const faqSections: { id: string; title: string; questions: readonly Question[] }[] = [
+export const faqSections: {
+  id: string;
+  title: string;
+  questions: readonly Question[];
+}[] = [
   {
     id: "start",
     title: "Започване",

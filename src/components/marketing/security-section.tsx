@@ -1,12 +1,15 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BadgeCheck, Fingerprint, Lock, Mail, PenLine } from "lucide-react";
+import { m, useInView, useReducedMotion } from "motion/react";
 
 import { Reveal } from "./reveal";
 
 const record = [
   ["ПРОМЯНА", "ПР-042 · версия 2"],
   ["СУМА", "+384 € с ДДС"],
-  ["ЧАС", "23.09.2026 · 14:32"],
+  ["ЧАС", "24.09.2026 · 14:32"],
   ["ПОТВЪРДЕНО", "код до iv•••@gmail.com"],
 ] as const;
 
@@ -21,29 +24,27 @@ const fineprint = [
   },
   {
     label: "КЛИЕНТСКИЯТ ПОРТАЛ",
-    text: "Не се кешира, не изпраща referrer и не може да се вгради в чужд сайт.",
+    text: "Страниците на клиента не остават в паметта на браузъра, не издават адреса си на други сайтове и не могат да се покажат вътре в чужд сайт.",
   },
 ] as const;
 
-/** One bento tile: a product detail on top (faded when it is cropped), then a single sentence with a bright lead-in. */
+/** One bento tile: a product detail on top, then a single sentence with a bright lead-in. */
 function Tile({
   title,
   text,
   visualClassName = "h-56",
-  fade = false,
   children,
 }: {
   title: string;
   text: string;
   visualClassName?: string;
-  fade?: boolean;
   children: ReactNode;
 }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#12364b]/55">
       <div
         aria-hidden="true"
-        className={`${fade ? "mf-fade-b items-start" : "items-center"} relative flex justify-center overflow-hidden px-6 pt-8 ${visualClassName}`}
+        className={`relative flex items-center justify-center overflow-hidden px-6 pt-8 ${visualClassName}`}
       >
         <div className="w-full transition-transform duration-500 ease-out group-hover:-translate-y-1">
           {children}
@@ -57,11 +58,47 @@ function Tile({
   );
 }
 
+/** Each tile proves its claim once, when it scrolls into view; nothing loops. */
+const once = { once: true, amount: 0.6 } as const;
+const easeOut = [0.22, 1, 0.36, 1] as const;
+
+const HASH = "3f9a8c…dc21e";
+const HEX = "0123456789abcdef";
+
+/** The fingerprint settles from noise to its value, left to right. */
+function ScrambledHash() {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, once);
+  const reduceMotion = useReducedMotion();
+  const [text, setText] = useState(HASH);
+
+  useEffect(() => {
+    if (!inView || reduceMotion) return;
+    let frame = 0;
+    const timer = window.setInterval(() => {
+      frame += 1;
+      const settled = Math.floor(frame / 1.5);
+      setText(
+        [...HASH]
+          .map((char, index) =>
+            index < settled || char === "…"
+              ? char
+              : HEX[Math.floor(Math.random() * HEX.length)],
+          )
+          .join(""),
+      );
+      if (settled >= HASH.length) window.clearInterval(timer);
+    }, 40);
+    return () => window.clearInterval(timer);
+  }, [inView, reduceMotion]);
+
+  return <span ref={ref}>{text}</span>;
+}
+
 function RecordVisual() {
   return (
-    <div className="relative mx-auto max-w-[26rem] pt-4">
-      <div className="absolute inset-x-8 top-0 h-24 -rotate-3 rounded-2xl bg-[#fffaf0]/25" />
-      <div className="relative rounded-2xl bg-[#fffaf0] p-5 text-[#102b38] shadow-[0_30px_60px_rgba(0,0,0,.35)]">
+    <div className="mx-auto max-w-[26rem]">
+      <div className="rounded-2xl bg-[#fffaf0] p-5 text-[#102b38] shadow-[0_30px_60px_rgba(0,0,0,.35)]">
         <div className="flex items-center justify-between border-b border-[#102b38]/10 pb-3">
           <p className="flex items-center gap-2 font-mono text-[0.6875rem] font-bold tracking-[0.12em]">
             <BadgeCheck className="size-4 text-[#16916d]" /> ЗАПИС НА РЕШЕНИЕ
@@ -72,19 +109,26 @@ function RecordVisual() {
         </div>
         <dl className="divide-y divide-[#102b38]/8">
           {record.map(([label, value]) => (
-            <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
-              <dt className="font-mono text-[0.6875rem] tracking-[0.1em] text-[#52707d]">{label}</dt>
+            <div
+              key={label}
+              className="flex items-baseline justify-between gap-4 py-2.5"
+            >
+              <dt className="font-mono text-[0.6875rem] tracking-[0.1em] text-[#52707d]">
+                {label}
+              </dt>
               <dd className="text-right text-sm font-bold">{value}</dd>
             </div>
           ))}
         </dl>
         <div className="flex items-end justify-between gap-4 border-t border-dashed border-[#102b38]/25 pt-3">
           <div>
-            <p className="font-mono text-[0.6875rem] tracking-[0.1em] text-[#52707d]">ИЗПИСАНО ИМЕ</p>
-            <p className="font-serif text-2xl italic tracking-[-0.03em]">Иван Петров</p>
+            <p className="font-mono text-[0.6875rem] tracking-[0.1em] text-[#52707d]">
+              ИЗПИСАНО ИМЕ
+            </p>
+            <p className="text-lg font-bold tracking-[-0.02em]">Иван Петров</p>
           </div>
           <p className="flex items-center gap-1.5 rounded-lg bg-[#102b38] px-2.5 py-1.5 font-mono text-[0.6875rem] text-[#e8f1ed]">
-            <Fingerprint className="size-3.5" /> 3f9a8c…dc21e
+            <Fingerprint className="size-3.5" /> <ScrambledHash />
           </p>
         </div>
       </div>
@@ -115,13 +159,34 @@ function CodeVisual() {
               index === 2 ? "mr-2" : ""
             }`}
           >
-            {digit}
+            <m.span
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={once}
+              transition={{
+                duration: 0.3,
+                delay: 0.3 + index * 0.09,
+                ease: easeOut,
+              }}
+            >
+              {digit}
+            </m.span>
           </span>
         ))}
       </div>
       <p className="mt-3 text-center font-mono text-[0.6875rem] tracking-[0.1em] text-[#8fa9ad]">
         ВАЖИ 10 МИН · ДО 5 ОПИТА
       </p>
+      {/* The last digit lands and the decision is recorded. */}
+      <m.p
+        className="mx-auto mt-5 flex w-fit items-center gap-2 rounded-full bg-[#bceba8] px-3.5 py-1.5 text-sm font-bold text-[#102b38]"
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={once}
+        transition={{ duration: 0.3, delay: 0.95, ease: easeOut }}
+      >
+        <BadgeCheck className="size-4" /> Потвърдено · Иван Петров
+      </m.p>
     </div>
   );
 }
@@ -130,8 +195,24 @@ function LinkVisual() {
   return (
     <div className="mx-auto max-w-[18rem] space-y-2.5 font-mono text-xs">
       <div className="flex items-center justify-between gap-3 rounded-xl border border-white/8 px-3.5 py-3 text-[#6f8c95]">
-        <span className="truncate line-through decoration-[#ff765f]">pakto.bg/access/7fk2…</span>
-        <span className="shrink-0 text-[0.6875rem] text-[#ff8f7a]">СПРЯН</span>
+        <m.span
+          className="truncate bg-[linear-gradient(#ff765f,#ff765f)] bg-no-repeat [background-position:0_55%]"
+          initial={{ backgroundSize: "0% 1px" }}
+          whileInView={{ backgroundSize: "100% 1px" }}
+          viewport={once}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.65, 0, 0.35, 1] }}
+        >
+          pakto.bg/access/7fk2…
+        </m.span>
+        <m.span
+          className="shrink-0 text-[0.6875rem] text-[#ff8f7a]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={once}
+          transition={{ duration: 0.25, delay: 0.9 }}
+        >
+          СПРЯН
+        </m.span>
       </div>
       <div className="flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-white/8 px-3.5 py-3 text-[#fbf7ec]">
         <span className="truncate">pakto.bg/access/q9m1…</span>
@@ -144,23 +225,42 @@ function LinkVisual() {
 }
 
 const versions = [
-  { name: "Версия 1", meta: "изпратена 12.09", locked: true },
-  { name: "Версия 2", meta: "изпратена 22.09", locked: true },
-  { name: "Версия 3", meta: "чернова", locked: false },
+  { name: "Версия 1", meta: "изпратена 18.09", locked: true },
+  { name: "Версия 2", meta: "чернова", locked: false },
 ];
 
 function VersionsVisual() {
   return (
     <div className="mx-auto max-w-[18rem] space-y-2 text-sm">
-      {versions.map(({ name, meta, locked }) => (
+      {versions.map(({ name, meta, locked }, index) => (
         <div
           key={name}
           className={`flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 ${
-            locked ? "bg-white/8 text-[#fbf7ec]" : "border border-dashed border-white/20 text-[#b8ced2]"
+            locked
+              ? "bg-white/8 text-[#fbf7ec]"
+              : "border border-dashed border-white/20 text-[#b8ced2]"
           }`}
         >
           <span className="flex items-center gap-2 font-bold">
-            {locked ? <Lock className="size-3.5 text-[#ff8f7a]" /> : <PenLine className="size-3.5" />}
+            {locked ? (
+              // The lock snaps shut, one version after the other.
+              <m.span
+                className="inline-flex"
+                initial={{ rotate: -35, scale: 0.6, opacity: 0 }}
+                whileInView={{ rotate: 0, scale: 1, opacity: 1 }}
+                viewport={once}
+                transition={{
+                  type: "spring",
+                  stiffness: 520,
+                  damping: 18,
+                  delay: 0.3 + index * 0.18,
+                }}
+              >
+                <Lock className="size-3.5 text-[#ff8f7a]" />
+              </m.span>
+            ) : (
+              <PenLine className="size-3.5" />
+            )}
             {name}
           </span>
           <span className="text-xs text-[#8fa9ad]">{meta}</span>
@@ -174,11 +274,19 @@ function ReceiptVisual() {
   return (
     <div className="mx-auto max-w-[18rem] rounded-2xl bg-[#fffaf0] p-4 text-[#102b38] shadow-[0_20px_40px_rgba(0,0,0,.3)]">
       <p className="text-xs text-[#52707d]">До: Иван Петров</p>
-      <p className="mt-1 text-sm font-black tracking-[-0.02em]">Разписка: одобрихте ПР-042</p>
-      <div className="mt-3 space-y-1.5">
-        <span className="block h-1.5 w-full rounded-full bg-[#102b38]/10" />
-        <span className="block h-1.5 w-3/4 rounded-full bg-[#102b38]/10" />
-      </div>
+      <p className="mt-1 text-sm font-black tracking-[-0.02em]">
+        Разписка: одобрихте ПР-042
+      </p>
+      <dl className="mt-3 space-y-1 text-xs">
+        <div className="flex justify-between gap-3">
+          <dt className="text-[#52707d]">Версия 2</dt>
+          <dd className="font-bold">+384 € с ДДС</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-[#52707d]">Одобрена</dt>
+          <dd className="font-bold">24.09 · 14:32</dd>
+        </div>
+      </dl>
       <span className="mt-4 block rounded-lg border border-[#102b38]/20 py-2 text-center text-xs font-bold">
         Оспори решението
       </span>
@@ -192,23 +300,25 @@ export function SecuritySection() {
       id="security"
       className="mf-security relative overflow-hidden px-[6vw] py-[14vh] text-[#fbf7ec] lg:py-[18vh]"
     >
-      <div className="mf-story-grid absolute inset-0" aria-hidden="true" />
+      <div className="mf-dark-grid absolute inset-0" aria-hidden="true" />
       <div className="relative z-10 mx-auto max-w-[93.75rem]">
         <Reveal className="grid gap-8 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <p className="mf-kicker flex items-center gap-3 text-[#b8ecda]">
               <span className="h-px w-8 bg-current" /> СИГУРНОСТ
             </p>
-            <h2 className="mf-section-title mf-security-title mt-6">
+            <h2 className="mf-section-title mt-6">
               Всяко „да“
               <br />
-              има <i>история.</i>
+              има история.
             </h2>
           </div>
           <p className="max-w-md text-base leading-7 text-[#c6d9da] lg:col-span-5 lg:justify-self-end">
-            Когато има спор, думата на едната страна срещу другата не стига.
-            Pakto пази кой, кога и какво точно е одобрил: име, код от имейла,
-            час, IP и отпечатък на версията. Записът е видим и след месеци.
+            Ясната договорка пази добрите отношения. Pakto пази кой, кога и
+            какво точно е одобрил: име, код от имейла, час и IP адрес. Към тях
+            добавя отпечатък: кратък код от точния текст и сумите, който става
+            друг, ако някой пипне и една цифра. Записът е видим и за двете
+            страни, и след месеци.
           </p>
         </Reveal>
 
@@ -216,9 +326,8 @@ export function SecuritySection() {
           <Reveal className="md:col-span-6 lg:col-span-3">
             <Tile
               title="Запис на всяко решение."
-              text="Кой, кога и какво точно е одобрил, с изписано име, точен час и отпечатък на одобреното съдържание."
-              visualClassName="h-80"
-              fade
+              text="Кой, кога и какво точно е одобрил: изписано име, точен час и отпечатък, по който се вижда, че текстът не е пипан след това."
+              visualClassName="h-[23rem]"
             >
               <RecordVisual />
             </Tile>
@@ -227,7 +336,7 @@ export function SecuritySection() {
             <Tile
               title="Код за всяко решение."
               text="Одобрението минава само с 6-цифрен код, изпратен на имейла на клиента. Новите кодове са ограничени, за да не се налучкват."
-              visualClassName="h-80"
+              visualClassName="h-[23rem]"
             >
               <CodeVisual />
             </Tile>
@@ -235,7 +344,7 @@ export function SecuritySection() {
           <Reveal className="md:col-span-2" delay={0.1}>
             <Tile
               title="Линк, който можеш да спреш."
-              text="Подписан е криптографски и пазим само хеша му. Собственикът го сменя с един бутон и старият спира веднага."
+              text="Всеки клиент има свой линк, който не може да се налучка. Сменяш го с един бутон и старият спира веднага."
             >
               <LinkVisual />
             </Tile>
@@ -250,8 +359,8 @@ export function SecuritySection() {
           </Reveal>
           <Reveal className="md:col-span-2" delay={0.18}>
             <Tile
-              title="Право на оспорване."
-              text="След решението клиентът получава разписка с личен линк, през който може да го оспори."
+              title="Спокойствие и за клиента."
+              text="След решението клиентът получава разписка с личен линк. Ако нещо не е наред, може да го отбележи и ти го виждаш веднага."
             >
               <ReceiptVisual />
             </Tile>

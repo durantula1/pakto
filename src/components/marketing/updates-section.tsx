@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, Mail, MessagesSquare, Minus, Plus, type LucideIcon } from "lucide-react";
+import {
+  Bell,
+  Mail,
+  MessagesSquare,
+  Minus,
+  Plus,
+  type LucideIcon,
+} from "lucide-react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 
 import { useAutoCycle } from "./auto-cycle";
@@ -19,23 +26,23 @@ type Channel = {
 const channels: Channel[] = [
   {
     title: "Клиентът научава по имейл",
-    text: "Изпратиш ли или обновиш ли оферта, клиентът получава имейл с линк и списък какво се е променило. Преди срока Pakto му напомня сам, а след решението му праща разписка.",
-    event: "Офертата е обновена · версия 3",
+    text: "Имейл с линк и списък какво се е променило. Преди срока Pakto му напомня сам, а след решението праща разписка.",
+    event: "Офертата е обновена · версия 2",
     node: "Клиент",
     icon: Mail,
     x: 140,
   },
   {
     title: "Екипът разбира на момента",
-    text: "Одобрение, искана промяна, отказ или оспорване се появяват веднага в Pakto при всички, които следят проекта. Всеки сам избира кои от тях да получава и по имейл. Виждаш и кога клиентът е отворил офертата.",
-    event: "Иван Петров одобри офертата",
+    text: "Одобрение, промяна или отказ се появяват веднага при всички в проекта. Виждаш и кога клиентът е отворил офертата.",
+    event: "Мария Георгиева одобри офертата",
     node: "Екип",
     icon: Bell,
     x: 300,
   },
   {
     title: "Въпросите стоят до офертата",
-    text: "Клиентът пита направо под офертата. Ти виждаш въпроса веднага и отговаряш на същото място, а той получава отговора по имейл. Разговорът остава до договорката, за която се отнася.",
+    text: "Клиентът пита под офертата, ти отговаряш на същото място, а той получава отговора по имейл.",
     event: "Нов въпрос от клиента",
     node: "Разговор",
     icon: MessagesSquare,
@@ -46,8 +53,12 @@ const channels: Channel[] = [
 // Diagram coordinates share one 600×360 box; nodes are placed in percent of it.
 const HUB = { x: 300, y: 160 };
 const LEAF_Y = 290;
-const branch = (x: number) => `M${HUB.x} ${HUB.y + 30} C${HUB.x} ${HUB.y + 80}, ${x} ${LEAF_Y - 80}, ${x} ${LEAF_Y - 30}`;
-const at = (x: number, y: number) => ({ left: `${(x / 600) * 100}%`, top: `${(y / 360) * 100}%` });
+const branch = (x: number) =>
+  `M${HUB.x} ${HUB.y + 30} C${HUB.x} ${HUB.y + 80}, ${x} ${LEAF_Y - 80}, ${x} ${LEAF_Y - 30}`;
+const at = (x: number, y: number) => ({
+  left: `${(x / 600) * 100}%`,
+  top: `${(y / 360) * 100}%`,
+});
 
 const CYCLE_MS = 6500;
 
@@ -55,9 +66,15 @@ function Preview({ index }: { index: number }) {
   if (index === 0) {
     return (
       <div className="rounded-2xl bg-[#fffaf0] p-4 text-[#102b38]">
-        <p className="text-xs text-[#52707d]">От: Ивент Студио ЕООД · чрез Pakto</p>
-        <p className="mt-1 text-sm font-black tracking-[-0.02em]">Ивент Студио обнови офертата: Украса и цветя</p>
-        <p className="mt-1 text-xs text-[#52707d]">Версия 3 · +384 € с ДДС · валидна до 30.09</p>
+        <p className="text-xs text-[#52707d]">
+          От: Ивент Студио ЕООД · чрез Pakto
+        </p>
+        <p className="mt-1 text-sm font-black tracking-[-0.02em]">
+          Ивент Студио обнови офертата: Украса и цветя
+        </p>
+        <p className="mt-1 text-xs text-[#52707d]">
+          Версия 2 · +260 € с ДДС · валидна до 30.09
+        </p>
         <span className="mt-3 block rounded-lg bg-[#102b38] py-2 text-center text-xs font-bold text-[#fffaf0]">
           Прегледай и реши
         </span>
@@ -71,8 +88,12 @@ function Preview({ index }: { index: number }) {
           <Bell className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-black tracking-[-0.02em]">Иван Петров одобри „Украса и цветя“</p>
-          <p className="mt-0.5 text-xs text-[#52707d]">Проект „Сватба · 14 юни“ · преди 2 сек.</p>
+          <p className="text-sm font-black tracking-[-0.02em]">
+            Мария Георгиева одобри „Украса и цветя“
+          </p>
+          <p className="mt-0.5 text-xs text-[#52707d]">
+            Проект „Сватба · 14 юни“ · преди 2 сек.
+          </p>
         </div>
       </div>
     );
@@ -80,7 +101,7 @@ function Preview({ index }: { index: number }) {
   return (
     <div className="space-y-2 rounded-2xl bg-[#fffaf0] p-4 text-sm text-[#102b38]">
       <p className="w-fit max-w-[85%] rounded-2xl rounded-bl-md bg-[#102b38]/8 px-3 py-2">
-        Може ли фугата да е сива вместо бяла?
+        Може ли цветята да са бели вместо розови?
       </p>
       <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-[#102b38] px-3 py-2 text-[#fffaf0]">
         Да, без промяна в цената.
@@ -90,25 +111,30 @@ function Preview({ index }: { index: number }) {
 }
 
 export function UpdatesSection() {
-  const { active, running, choose, stageProps } = useAutoCycle(channels.length, CYCLE_MS);
+  const { active, running, inView, choose, stageProps } = useAutoCycle(
+    channels.length,
+    CYCLE_MS,
+  );
   const reduceMotion = useReducedMotion();
   const current = channels[active]!;
 
   return (
-    <section id="updates" className="bg-[#c5e3e5] px-[6vw] py-[14vh] text-[#102b38] lg:py-[18vh]">
-      <div {...stageProps} className="mx-auto grid max-w-[93.75rem] gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+    <section
+      id="updates"
+      className="bg-[#c5e3e5] px-[6vw] py-[14vh] text-[#102b38] lg:py-[18vh]"
+    >
+      <div
+        {...stageProps}
+        className="mx-auto grid max-w-[93.75rem] gap-12 lg:grid-cols-12 lg:items-center lg:gap-16"
+      >
         <Reveal className="lg:col-span-5">
           <p className="mf-kicker flex items-center gap-3 text-[#17485a]">
             <span className="h-px w-8 bg-current" /> ИЗВЕСТИЯ И СЪОБЩЕНИЯ
           </p>
-          <h2 className="mf-section-title mf-updates-title mt-6">
-            Никой не
-            <br />
-            научава <i>последен.</i>
-          </h2>
+          <h2 className="mf-section-title mt-6">Никой не научава последен.</h2>
           <p className="mt-6 max-w-md text-base leading-7 text-[#35535e]">
-            Всяка промяна по офертата стига до точния човек, без да звъниш и
-            без да препращаш снимки във вайбър.
+            Всяка промяна по офертата стига до точния човек, без да звъниш и без
+            да препращаш снимки във вайбър.
           </p>
 
           <ul className="mt-10 border-t border-[#102b38]/15">
@@ -116,7 +142,10 @@ export function UpdatesSection() {
               const isActive = index === active;
               const Toggle = isActive ? Minus : Plus;
               return (
-                <li key={channel.title} className="relative border-b border-[#102b38]/15">
+                <li
+                  key={channel.title}
+                  className="relative border-b border-[#102b38]/15"
+                >
                   <button
                     type="button"
                     aria-expanded={isActive}
@@ -125,7 +154,9 @@ export function UpdatesSection() {
                     className="flex w-full items-center justify-between gap-4 py-5 text-left text-lg font-black tracking-[-0.03em]"
                   >
                     {channel.title}
-                    <Toggle className={`size-4 shrink-0 ${isActive ? "text-[#102b38]" : "text-[#52707d]"}`} />
+                    <Toggle
+                      className={`size-4 shrink-0 ${isActive ? "text-[#102b38]" : "text-[#52707d]"}`}
+                    />
                   </button>
                   <div
                     id={`updates-panel-${index}`}
@@ -134,15 +165,17 @@ export function UpdatesSection() {
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <p className="pb-6 text-[0.9375rem] leading-7 text-[#35535e]">{channel.text}</p>
+                      <p className="pb-6 text-[0.9375rem] leading-7 text-[#35535e]">
+                        {channel.text}
+                      </p>
                     </div>
                   </div>
                   {isActive && running && (
                     <m.span
                       key={`progress-${active}`}
-                      className="absolute -bottom-px left-0 h-px bg-[#102b38]"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
+                      className="absolute inset-x-0 -bottom-px h-px origin-left bg-[#102b38]"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
                       transition={{ duration: CYCLE_MS / 1000, ease: "linear" }}
                       aria-hidden="true"
                     />
@@ -159,8 +192,17 @@ export function UpdatesSection() {
             className="rounded-[1.75rem] bg-[#102b38] p-4 text-[#fbf7ec] shadow-[0_40px_90px_rgba(16,43,56,.3)] sm:p-6"
           >
             <div className="relative aspect-[5/3] w-full">
-              <svg viewBox="0 0 600 360" className="absolute inset-0 size-full" fill="none">
-                <path d={`M${HUB.x} 62 V${HUB.y - 30}`} stroke="#ff8f7a" strokeOpacity={0.7} strokeWidth={1.5} />
+              <svg
+                viewBox="0 0 600 360"
+                className="absolute inset-0 size-full"
+                fill="none"
+              >
+                <path
+                  d={`M${HUB.x} 62 V${HUB.y - 30}`}
+                  stroke="#ff8f7a"
+                  strokeOpacity={0.7}
+                  strokeWidth={1.5}
+                />
                 {channels.map((channel, index) => (
                   <path
                     key={channel.node}
@@ -171,7 +213,8 @@ export function UpdatesSection() {
                     className="transition-[stroke,stroke-opacity] duration-500"
                   />
                 ))}
-                {!reduceMotion && (
+                {/* SMIL keeps running off-screen, so the dot exists only while the diagram is in view. */}
+                {!reduceMotion && inView && (
                   <circle key={active} r={3.5} fill="#ff8f7a">
                     <animateMotion
                       dur="1.8s"
@@ -182,7 +225,10 @@ export function UpdatesSection() {
                 )}
               </svg>
 
-              <div className="absolute -translate-x-1/2 -translate-y-1/2" style={at(HUB.x, 40)}>
+              <div
+                className="absolute -translate-x-1/2 -translate-y-1/2"
+                style={at(HUB.x, 40)}
+              >
                 <AnimatePresence mode="wait">
                   <m.span
                     key={current.event}
@@ -192,7 +238,8 @@ export function UpdatesSection() {
                     transition={{ duration: 0.25 }}
                     className="flex items-center gap-2 whitespace-nowrap rounded-full border border-white/15 bg-[#12364b] px-3.5 py-1.5 text-xs font-bold sm:text-sm"
                   >
-                    <span className="size-1.5 rounded-full bg-[#ff8f7a]" /> {current.event}
+                    <span className="size-1.5 rounded-full bg-[#ff8f7a]" />{" "}
+                    {current.event}
                   </m.span>
                 </AnimatePresence>
               </div>
@@ -201,7 +248,13 @@ export function UpdatesSection() {
                 className="absolute grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#12364b] sm:size-16"
                 style={at(HUB.x, HUB.y)}
               >
-                <Image src="/pakto-mark.svg" alt="" width={32} height={32} className="size-7 sm:size-8" />
+                <Image
+                  src="/pakto-mark.svg"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="size-7 sm:size-8"
+                />
               </div>
 
               {channels.map((channel, index) => {
@@ -223,7 +276,7 @@ export function UpdatesSection() {
                       <Icon className="size-5" />
                     </span>
                     <span
-                      className={`absolute top-full mt-2 font-mono text-[0.625rem] tracking-[0.12em] transition-colors ${
+                      className={`absolute top-full mt-2 text-xs font-bold tracking-[0.08em] transition-colors ${
                         isActive ? "text-[#fbf7ec]" : "text-[#8fa9ad]"
                       }`}
                     >

@@ -18,13 +18,17 @@ export function useAutoCycle(count: number, intervalMs: number) {
 
   useEffect(() => {
     if (!running) return;
-    const timer = window.setTimeout(() => setActive((current) => (current + 1) % count), intervalMs);
+    const timer = window.setTimeout(
+      () => setActive((current) => (current + 1) % count),
+      intervalMs,
+    );
     return () => window.clearTimeout(timer);
   }, [active, count, intervalMs, running]);
 
   return {
     active,
     running,
+    inView,
     choose(index: number) {
       setActive(index);
       setAutoplay(false);

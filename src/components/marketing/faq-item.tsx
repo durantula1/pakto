@@ -7,7 +7,15 @@ import { Plus } from "lucide-react";
  * One question that opens and closes smoothly (grid row 0fr ↔ 1fr; `<details>` cannot animate
  * its height in Safari). The answer stays in the HTML while closed, so search engines still read it.
  */
-export function FaqItem({ q, a, size = "lg" }: { q: string; a: string; size?: "md" | "lg" }) {
+export function FaqItem({
+  q,
+  a,
+  size = "lg",
+}: {
+  q: string;
+  a: string;
+  size?: "md" | "lg";
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
 
@@ -34,7 +42,9 @@ export function FaqItem({ q, a, size = "lg" }: { q: string; a: string; size?: "m
         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className="overflow-hidden" inert={!open}>
-          <p className="max-w-2xl pb-6 text-[0.9375rem] leading-7 text-[#49626b]">{a}</p>
+          <p className="max-w-2xl pb-6 text-[0.9375rem] leading-7 text-[#49626b]">
+            {a}
+          </p>
         </div>
       </div>
     </div>
