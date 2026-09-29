@@ -60,6 +60,10 @@
   --color-tile-sand-foreground: var(--tile-sand-foreground);
   --color-tile-coral: var(--tile-coral);
   --color-tile-coral-foreground: var(--tile-coral-foreground);
+  --color-tile-lilac: var(--tile-lilac);
+  --color-tile-lilac-foreground: var(--tile-lilac-foreground);
+  --color-tile-stone: var(--tile-stone);
+  --color-tile-stone-foreground: var(--tile-stone-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -119,6 +123,11 @@
   --tile-sand-foreground: #6b4a12;
   --tile-coral: #ffe3dc;
   --tile-coral-foreground: #8f2f1f;
+  /* Status-only tones: lilac = the client asked for a change, stone = no longer active. */
+  --tile-lilac: #ebe4f7;
+  --tile-lilac-foreground: #4b2e83;
+  --tile-stone: #ebe8e1;
+  --tile-stone-foreground: #5b5a55;
   --sidebar: #102b38;
   --sidebar-foreground: #e8f1ed;
   --sidebar-primary: #ff765f;
@@ -183,6 +192,11 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 

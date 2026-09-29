@@ -26,6 +26,7 @@ import {
 } from "@/modules/change-orders/labels";
 import type { getChangeOrder } from "@/modules/change-orders/queries";
 import { remindClientAction } from "@/modules/change-orders/reminder-actions";
+import { formatAmount } from "@/lib/money";
 
 type Document = NonNullable<Awaited<ReturnType<typeof getChangeOrder>>>;
 
@@ -41,7 +42,7 @@ const shortDateTime = (value: Date) => {
   const time = new Intl.DateTimeFormat("bg-BG", { hour: "2-digit", minute: "2-digit" }).format(value);
   return `${day}, ${time}`;
 };
-const money = (value: string | number) => Number(value).toFixed(2);
+const money = formatAmount;
 
 const decisionLabels: Record<string, string> = {
   approved: "Одобрена",

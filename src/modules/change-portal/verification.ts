@@ -19,10 +19,10 @@ type Decision = "approved" | "declined" | "changes_requested";
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 
 const purposeText: Record<Purpose, string> = {
-  claim: "потвърждаване на имейла ти",
-  email_change: "смяна на имейла ти",
-  decision: "потвърждаване на решението ти",
-  unlock: "показване на всичките ти обекти",
+  claim: "потвърждаване на имейла Ви",
+  email_change: "смяна на имейла Ви",
+  decision: "потвърждаване на решението Ви",
+  unlock: "показване на всичките Ви обекти",
 };
 
 function hashCode(id: string, code: string) {
@@ -53,7 +53,7 @@ export async function issueOtp(input: {
       )`,
       gt(portalOtps.createdAt, new Date(Date.now() - OTP_SEND_WINDOW_MS)),
     ));
-  if ((recent?.total ?? 0) >= OTP_MAX_SENDS) throw new Error("Твърде много изпратени кодове. Опитай отново след 15 минути.");
+  if ((recent?.total ?? 0) >= OTP_MAX_SENDS) throw new Error("Изпратихме много кодове за кратко време. Опитайте отново след 15 минути.");
 
   const id = randomUUID();
   const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
@@ -79,8 +79,8 @@ export async function issueOtp(input: {
   await sendEmail({
     to: input.email,
     subject: `Код за ${purposeText[input.purpose]}: ${code}`,
-    text: `Кодът ти за ${purposeText[input.purpose]} е ${code}. Валиден е 10 минути.${input.summary ? `\n\n${input.summary}` : ""}\n\nАко не си го поискал ти, не го споделяй с никого.`,
-    html: `<p>Кодът ти за ${purposeText[input.purpose]}:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>${summary}<p style="color:#71717a">Валиден е 10 минути. Ако не си го поискал ти, не го споделяй с никого — включително с фирмата изпълнител.</p>`,
+    text: `Вашият код за ${purposeText[input.purpose]} е ${code}. Валиден е 10 минути.${input.summary ? `\n\n${input.summary}` : ""}\n\nАко не сте го поискали Вие, не го споделяйте с никого.`,
+    html: `<p>Вашият код за ${purposeText[input.purpose]}:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>${summary}<p style="color:#71717a">Валиден е 10 минути. Ако не сте го поискали Вие, не го споделяйте с никого — включително с фирмата.</p>`,
   });
   return id;
 }
@@ -97,7 +97,7 @@ export async function checkOtp(input: { otpId: string; code: string; sessionId: 
       lt(portalOtps.attempts, OTP_MAX_ATTEMPTS),
     ))
     .returning();
-  if (!otp) throw new Error("Кодът е изтекъл или са изчерпани опитите. Поискай нов код.");
+  if (!otp) throw new Error("Кодът е изтекъл или опитите свършиха. Поискайте нов код.");
   const expected = Buffer.from(otp.codeHash);
   const actual = Buffer.from(hashCode(otp.id, input.code.trim()));
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw new Error("Грешен код.");

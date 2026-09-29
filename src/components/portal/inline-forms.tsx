@@ -69,7 +69,7 @@ export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, install
           <div className="flex flex-wrap items-center gap-2">
             <ActionSubmit>Изпрати на фирмата</ActionSubmit>
             <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-sm" onPress={close}>Отказ</Button>
-            <span className="text-xs text-muted-foreground">Влиза в платеното, след като фирмата го потвърди.</span>
+            <span className="text-xs text-muted-foreground">Ще се отчете като платено, щом фирмата го потвърди.</span>
           </div>
         </ActionForm>
       )}

@@ -19,7 +19,7 @@ type Decision = "approved" | "changes_requested" | "declined";
 
 const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: string }[] = [
   { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Фирмата ще изпрати нова версия" },
-  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Работата по нея няма да се прави" },
+  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Фирмата няма да прави тази работа" },
 ];
 
 const RESEND_SECONDS = 30;
@@ -95,9 +95,14 @@ export function PortalDecisionForm({
   return (
     <form
       ref={formRef}
-      action={otpId ? submit : (formData) => {
+      action={otpId ? submit : undefined}
+      // Not a form action: React resets the form after an action, and React Aria's RadioGroup then
+      // snaps back to the option it mounted with, so "Отказвам" turned into "Искам промяна".
+      onSubmit={otpId ? undefined : (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
         setCodeFor(decision);
-        return requestCode(formData);
+        startTransition(() => requestCode(formData));
       }}
       className="flex flex-col gap-5"
     >
@@ -117,7 +122,7 @@ export function PortalDecisionForm({
               <ArrowLeft className="size-4" /> Назад
             </button>
             <h3 className="flex items-center gap-2 text-lg font-semibold"><MailCheck className="size-5 text-primary" /> Въведете кода от имейла</h3>
-            <p className="text-sm leading-6 text-muted-foreground">Изпратихме 6 цифри до {codeState.sentTo}. Кодът е само за вас, фирмата не го вижда.</p>
+            <p className="text-sm leading-6 text-muted-foreground">Изпратихме 6-цифрен код на {codeState.sentTo}. Кодът е само за вас, фирмата не го вижда.</p>
           </div>
           <OtpInput label="Код от имейла" autoFocus disabled={submitting} />
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
@@ -210,7 +215,7 @@ export function PortalDecisionForm({
             <Button type="submit" className="h-12 w-full rounded-xl text-base" isDisabled={busy}>
               {requesting ? "Изпращаме кода…" : "Изпрати ми код"}
             </Button>
-            <p className="text-center text-xs leading-5 text-muted-foreground">Ще получите 6 цифри на {maskedEmail ?? "имейла си"}. С тях потвърждавате, че решението е ваше.</p>
+            <p className="text-center text-xs leading-5 text-muted-foreground">Ще получите 6-цифрен код на {maskedEmail ?? "имейла си"}. С него потвърждавате, че решението е ваше.</p>
           </div>
         </>
       )}

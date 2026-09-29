@@ -97,7 +97,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
         {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt attribute */}
         {logo ? <Image src={logo.data} style={[styles.logo, logoBox(logo, logo.size)]} /> : null}
         <Text style={styles.organization}>{organization}</Text>
-        <Text style={{ color: muted, fontSize: 9 }}>Документ, създаден с Pakto</Text>
+        <Text style={{ color: muted, fontSize: 9 }}>Създадено с Pakto</Text>
       </View>
       <View>
         <Text style={[styles.kind, { textAlign: "right" }]}>{noun} · версия {revision.revisionNumber}</Text>

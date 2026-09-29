@@ -33,28 +33,29 @@ import { getPdfDocumentMeta, renderChangePdf } from "@/modules/pdf/render";
 import { notifyProjectStaff, notifyUsers } from "@/modules/notifications/staff";
 import { parseSignature, removeSignature, storeSignature } from "@/modules/change-portal/signature";
 import { applyApprovedOffer } from "@/modules/change-orders/approval";
+import { formatAmount } from "@/lib/money";
 
 const decisionSchema = z.object({
   projectPublicId: z.uuid(),
   changeOrderId: z.uuid(),
   revisionId: z.coerce.number().int().positive(),
   decision: z.enum(["approved", "declined", "changes_requested"]),
-  typedName: z.string().trim().min(2, "Въведи името си.").max(160),
+  typedName: z.string().trim().min(2, "Въведете името си.").max(160),
   comment: z.string().trim().max(2000).optional(),
   signature: z.string().max(400_000).optional(),
 });
 
 export type DecisionState = { error?: string; otpId?: string; sentTo?: string };
 
-const decisionLabels = { approved: "Одобряваш", declined: "Отказваш", changes_requested: "Искаш промяна по" } as const;
+const decisionLabels = { approved: "Одобрявате", declined: "Отказвате", changes_requested: "Искате промяна по" } as const;
 
 async function decisionContext(data: z.infer<typeof decisionSchema>) {
-  if (data.decision === "changes_requested" && !data.comment) throw new Error("Опиши накратко какво трябва да се промени.");
+  if (data.decision === "changes_requested" && !data.comment) throw new Error("Опишете накратко какво да се промени.");
   const session = await getPortalSession(data.projectPublicId);
-  if (!session || session.contactRole !== "approver") throw new Error("Нямаш право да вземеш решение.");
-  if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържи се с фирмата.");
+  if (!session || session.contactRole !== "approver") throw new Error("Решението взима човекът, когото фирмата е посочила да одобрява.");
+  if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържете се с фирмата.");
   // The decision code goes to the contact's email, so the first decision also confirms it.
-  if (!session.contactEmail) throw new Error("Първо потвърди имейла си.");
+  if (!session.contactEmail) throw new Error("Първо потвърдете имейла си.");
   if (await isOrganizationStaff(session.organizationId)) {
     const [change] = await getDatabase().select({ id: changeOrders.id }).from(changeOrders)
       .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.projectId, session.projectId))).limit(1);
@@ -91,10 +92,10 @@ async function pendingRevision(tx: Pick<ReturnType<typeof getDatabase>, "select"
     ))
     .for("update")
     .limit(1);
-  if (revision?.status === "superseded") throw new Error("Фирмата обнови този документ. Презареди страницата, за да видиш последната версия.");
+  if (revision?.status === "superseded") throw new Error("Фирмата обнови офертата. Презаредете страницата, за да видите последната версия.");
   if (!revision?.contentHash || revision.currentRevisionId !== revision.id || !["sent", "viewed"].includes(revision.status)) throw new Error("Тази версия вече не очаква решение.");
   // The daily job may not have run yet; the validity date on the document is what counts.
-  if (revision.responseDueAt && revision.responseDueAt < new Date()) throw new Error("Срокът за решение по тази версия изтече. Презареди страницата.");
+  if (revision.responseDueAt && revision.responseDueAt < new Date()) throw new Error("Срокът за решение по тази версия изтече. Презаредете страницата.");
   return { ...revision, contentHash: revision.contentHash };
 }
 
@@ -111,17 +112,17 @@ export async function requestDecisionCodeAction(_: DecisionState, formData: Form
       revisionId: revision.id,
       decision: data.decision,
       ip: clientIp(await headers()),
-      summary: `${decisionLabels[data.decision]} „${revision.title}“, версия ${revision.revisionNumber}, ${Number(revision.total).toFixed(2)} ${revision.currency}.`,
+      summary: `${decisionLabels[data.decision]} „${revision.title}“, версия ${revision.revisionNumber}, ${formatAmount(revision.total)} ${revision.currency}.`,
     });
     return { otpId, sentTo: maskEmail(session.contactEmail!) };
   } catch (cause) {
-    return { error: cause instanceof Error ? cause.message : "Кодът не беше изпратен. Опитай отново." };
+    return { error: cause instanceof Error ? cause.message : "Кодът не беше изпратен. Опитайте отново." };
   }
 }
 
 export async function submitPortalDecisionAction(_: DecisionState, formData: FormData): Promise<DecisionState> {
   const parsed = decisionSchema.extend({ otpId: z.uuid(), code: z.string().trim().regex(/^\d{6}$/, "Кодът е 6 цифри."), idempotencyKey: z.uuid() }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Невалидни данни." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
   const data = parsed.data;
   let session: Awaited<ReturnType<typeof decisionContext>>;
   let decisionId: number | undefined;
@@ -129,7 +130,7 @@ export async function submitPortalDecisionAction(_: DecisionState, formData: For
   try {
     session = await decisionContext(data);
     const otp = await checkOtp({ otpId: data.otpId, code: data.code, sessionId: session.id, contactId: session.contactId, purpose: "decision" });
-    if (otp.revisionId !== data.revisionId || otp.decision !== data.decision) return { error: "Кодът е за друго решение. Поискай нов код." };
+    if (otp.revisionId !== data.revisionId || otp.decision !== data.decision) return { error: "Този код е за друго решение. Поискайте нов." };
     const requestHeaders = await headers();
     const ip = clientIp(requestHeaders);
     // The drawing is stored first so the decision row can point at it; a failed decision removes it again.
@@ -138,7 +139,7 @@ export async function submitPortalDecisionAction(_: DecisionState, formData: For
     if (!decisionId && signature) signature = null; // a replayed submission already references this file
   } catch (cause) {
     if (signature) await removeSignature(signature.path);
-    return { error: cause instanceof Error ? cause.message : "Решението не беше записано. Опитай отново." };
+    return { error: cause instanceof Error ? cause.message : "Решението не беше записано. Опитайте отново." };
   }
 
   // The PDF receipt is rendered and emailed after the response, so the redirect does not wait for it.
@@ -269,7 +270,7 @@ export async function disputeDecisionAction(_: DecisionState, formData: FormData
   if (!data.success || !decisionId) return { error: "Линкът за оспорване е невалиден." };
   const target = await getDisputeTarget(decisionId);
   if (!target) return { error: "Решението не е намерено." };
-  if (target.accessRevoked && !target.disputed) return { error: `Достъпът ти до този обект е спрян. Свържи се с ${target.organizationName}.` };
+  if (target.accessRevoked && !target.disputed) return { error: `Достъпът ви до този обект е спрян. Свържете се с ${target.organizationName}.` };
   if (!target.disputed) {
     const ip = clientIp(await headers());
     await getDatabase().transaction(async (tx) => {
@@ -329,10 +330,10 @@ async function sendDecisionReceipt(decisionId: number) {
   const when = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Sofia" }).format(row.createdAt);
   const facts = [
     [document?.kind === "change" ? "Промяна" : "Оферта", `${row.title}, версия ${row.revisionNumber}`],
-    ["Сума", `${Number(row.total).toFixed(2)} ${row.currency}`],
+    ["Сума", `${formatAmount(row.total)} ${row.currency}`],
     ["Решение", decisionReceiptLabels[row.decision]],
     ["Име", row.typedName],
-    ...(row.signatureSha256 ? [["Подпис", "Нарисуван на екрана — виж го в приложения PDF"]] : []),
+    ...(row.signatureSha256 ? [["Подпис", "Нарисуван на екрана — вижте го в приложения PDF"]] : []),
     ["Време", when],
     ["IP адрес", row.ip ?? "—"],
     ["Отпечатък", row.contentHash],
@@ -340,19 +341,19 @@ async function sendDecisionReceipt(decisionId: number) {
   await sendEmail({
     to: row.verifiedEmail,
     subject: projectSubject(document?.projectName, `Разписка: ${decisionReceiptLabels[row.decision]} — ${row.title}`),
-    text: `${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nАко не си взел това решение ти, оспори го тук: ${disputeUrl}`,
-    html: `<p>Записахме следното решение от твое име${document ? ` към ${escapeHtml(document.organizationName)}` : ""}:</p><table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label!)}</td><td style="padding:4px 0;word-break:break-all">${escapeHtml(value!)}</td></tr>`).join("")}</table><p>Прилагаме PDF на точно тази версия. Запази този имейл — той е твоето независимо копие.</p><p><a href="${disputeUrl}" style="color:#b91c1c;font-weight:600">Не съм аз — оспори това решение</a></p>`,
+    text: `${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nАко решението не е Ваше или е взето по грешка, можете да го оспорите тук: ${disputeUrl}`,
+    html: `<p>Записахме следното Ваше решение${document ? ` към ${escapeHtml(document.organizationName)}` : ""}:</p><table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label!)}</td><td style="padding:4px 0;word-break:break-all">${escapeHtml(value!)}</td></tr>`).join("")}</table><p>Прилагаме PDF на точно тази версия. Запазете този имейл — той е Вашето независимо копие.</p><p>Ако решението не е Ваше или е взето по грешка, <a href="${disputeUrl}" style="color:#b91c1c;font-weight:600">оспорете го тук</a>.</p>`,
     attachments: pdf ? [{ filename: pdf.filename, content: pdf.buffer }] : undefined,
   });
 }
 
 export async function disputePaymentAction(formData: FormData): Promise<{ error?: string }> {
-  const parsed = z.object({ projectPublicId: z.uuid(), receiptId: z.uuid(), reason: z.string().trim().min(5, "Опиши накратко какво не е вярно.").max(1000) }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Невалидни данни." };
+  const parsed = z.object({ projectPublicId: z.uuid(), receiptId: z.uuid(), reason: z.string().trim().min(5, "Опишете накратко какво не е вярно.").max(1000) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
   const data = parsed.data;
   const session = await getPortalSession(data.projectPublicId);
-  if (!session) return { error: "Сесията е изтекла. Отвори отново линка от фирмата." };
-  if (session.projectStatus === "archived") return { error: "Обектът е в архива на фирмата. Свържи се с нея директно." };
+  if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
+  if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
   try {
     await getDatabase().transaction(async (tx) => {
       const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount, correctionOfId: projectReceipts.correctionOfId }).from(projectReceipts)
@@ -374,7 +375,7 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
       await notifyUsers(tx, handlers.map((handler) => handler.userId), { organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_disputed", title: "Клиент оспори плащане", body: data.reason, href: `/app/projects/${session.projectId}?tab=payments#dispute-${dispute!.id}` });
     });
   } catch (cause) {
-    return { error: cause instanceof Error ? cause.message : "Оспорването не беше записано. Опитай отново." };
+    return { error: cause instanceof Error ? cause.message : "Оспорването не беше записано. Опитайте отново." };
   }
   revalidatePath(`/portal/${data.projectPublicId}`);
   redirect(`/portal/${data.projectPublicId}?payment=disputed#payments`);
@@ -389,16 +390,16 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
     projectPublicId: z.uuid(),
     installmentId: z.union([z.literal(""), z.uuid()]).optional(),
     offerId: z.union([z.literal(""), z.uuid()]).optional(),
-    amount: z.coerce.number().positive("Въведи сумата.").max(999999999),
+    amount: z.coerce.number().positive("Въведете сумата.").max(999999999),
     method: z.enum(["cash", "bank", "card", "other"]),
-    paidOn: z.iso.date("Избери дата."),
+    paidOn: z.iso.date("Изберете дата."),
     note: z.string().trim().max(500).optional(),
   }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Невалидни данни." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
   const data = parsed.data;
   const session = await getPortalSession(data.projectPublicId);
-  if (!session) return { error: "Сесията е изтекла. Отвори отново линка от фирмата." };
-  if (session.projectStatus === "archived") return { error: "Обектът е в архива на фирмата. Свържи се с нея директно." };
+  if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
+  if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
@@ -415,20 +416,20 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
       }
       const [pending] = await tx.select({ total: sql<number>`count(*)::int` }).from(paymentClaims)
         .where(and(eq(paymentClaims.projectId, session.projectId), eq(paymentClaims.status, "pending")));
-      if ((pending?.total ?? 0) >= 10) throw new Error("Имаш много неразгледани плащания. Изчакай фирмата да ги потвърди.");
+      if ((pending?.total ?? 0) >= 10) throw new Error("Няколко ваши плащания още чакат фирмата. Изчакайте да ги потвърди.");
       await tx.insert(paymentClaims).values({
         organizationId: session.organizationId, projectId: session.projectId, offerId, installmentId: data.installmentId || null,
         projectContactId: session.contactId, amount: data.amount.toFixed(2), currency: "EUR", method: data.method, paidOn: data.paidOn, note: data.note || null,
       });
       await notifyProjectStaff(tx, {
         organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_claimed",
-        title: `${session.contactName} отбеляза плащане: ${data.amount.toFixed(2)} EUR`,
+        title: `${session.contactName} отбеляза плащане: ${formatAmount(data.amount)} EUR`,
         body: data.note || "Провери получената сума и я потвърди.",
         href: `/app/projects/${session.projectId}?tab=payments`,
       });
     });
   } catch (cause) {
-    return { error: cause instanceof Error ? cause.message : "Плащането не беше отбелязано. Опитай отново." };
+    return { error: cause instanceof Error ? cause.message : "Плащането не беше отбелязано. Опитайте отново." };
   }
   revalidatePath(`/portal/${data.projectPublicId}`);
   revalidatePath(`/app/projects/${session.projectId}`);
@@ -447,14 +448,14 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
     typedName: z.string().trim().max(160).optional(),
     note: z.string().trim().max(2000).optional(),
   }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Невалидни данни." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
   const data = parsed.data;
-  if (data.answer === "accepted" && (!data.typedName || data.typedName.length < 2)) return { error: "Въведи името си." };
-  if (data.answer === "issues" && (!data.note || data.note.length < 5)) return { error: "Опиши забележките си." };
+  if (data.answer === "accepted" && (!data.typedName || data.typedName.length < 2)) return { error: "Въведете името си." };
+  if (data.answer === "issues" && (!data.note || data.note.length < 5)) return { error: "Опишете забележките си." };
   const session = await getPortalSession(data.projectPublicId);
-  if (!session || session.contactRole !== "approver") return { error: "Само одобряващият може да приеме работата." };
-  if (!session.contactEmailVerifiedAt) return { error: "Първо потвърди имейла си." };
-  if (session.projectStatus !== "active") return { error: "Обектът е приключен. Свържи се с фирмата." };
+  if (!session || session.contactRole !== "approver") return { error: "Работата приема човекът, когото фирмата е посочила да одобрява." };
+  if (!session.contactEmailVerifiedAt) return { error: "Първо потвърдете имейла си." };
+  if (session.projectStatus !== "active") return { error: "Обектът е приключен. Свържете се с фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   const requestHeaders = await headers();
   try {
@@ -463,7 +464,7 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
       const [latest] = await tx.select({ kind: offerAcceptances.kind }).from(offerAcceptances)
         .where(and(eq(offerAcceptances.offerId, data.offerId), eq(offerAcceptances.projectId, session.projectId)))
         .orderBy(desc(offerAcceptances.createdAt)).limit(1);
-      if (latest?.kind !== "requested") throw new Error("Фирмата още не е поискала приемане, или вече си отговорил.");
+      if (latest?.kind !== "requested") throw new Error("Фирмата още не е поискала приемане или вече сте отговорили.");
       const [offer] = await tx.select({ title: changeOrderRevisions.title }).from(changeOrders)
         .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
         .where(eq(changeOrders.id, data.offerId)).limit(1);
@@ -484,7 +485,7 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
       });
     });
   } catch (cause) {
-    return { error: cause instanceof Error ? cause.message : "Отговорът не беше записан. Опитай отново." };
+    return { error: cause instanceof Error ? cause.message : "Отговорът не беше записан. Опитайте отново." };
   }
   revalidatePath(`/portal/${data.projectPublicId}`, "layout");
   revalidatePath(`/app/projects/${session.projectId}`);

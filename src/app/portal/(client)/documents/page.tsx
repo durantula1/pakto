@@ -21,7 +21,7 @@ export default async function PortalDocumentsPage() {
       <div className="mx-auto flex max-w-3xl flex-col gap-5">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Оферти и промени</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Всичко, което фирмата ви е изпращала. От всяка има PDF.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Всички оферти и промени от фирмата. Всяка може да се изтегли като PDF.</p>
         </div>
         {portal.projects.map((project) => {
           const rows = documents.filter((document) => document.projectId === project.id);

@@ -45,7 +45,7 @@ export function NotificationBell({ items: itemsPromise, unread: unreadPromise }:
 
   return (
     <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
-      <AriaButton aria-label={unread ? `Известия, ${unread} непрочетени` : "Известия"} className={cn(bellClassName, open && "border-sidebar bg-sidebar text-sidebar-foreground hover:bg-sidebar")}>
+      <AriaButton aria-label={unread ? `Известия, ${unread} ${unread === 1 ? "непрочетено" : "непрочетени"}` : "Известия"} className={cn(bellClassName, open && "border-sidebar bg-sidebar text-sidebar-foreground hover:bg-sidebar")}>
         <Bell className="size-4" />
         <Count value={unread} />
       </AriaButton>

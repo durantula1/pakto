@@ -110,7 +110,7 @@ export default async function PortalProjectPage({
             ),
             due: item.responseDueAt ? formatShortDay(item.responseDueAt) : null,
             href: `${path}/changes/${item.id}`,
-            action: "Прегледай и реши",
+            action: "Прегледайте и решете",
           })),
         ...awaitingAcceptance.map((offer) => ({
           key: `accept-${offer.id}`,
@@ -119,7 +119,7 @@ export default async function PortalProjectPage({
           title: offer.title,
           detail: "Работата е готова за преглед",
           href: `${path}/changes/${offer.id}#acceptance`,
-          action: "Прегледай и приеми",
+          action: "Прегледайте и приемете",
         })),
       ]
     : [];

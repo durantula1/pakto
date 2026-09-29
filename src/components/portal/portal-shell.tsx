@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
 
 import { Wordmark } from "@/components/brand/wordmark";
+import { PortalLiveRefresh } from "@/components/portal/portal-live-refresh";
 import { PortalNav } from "@/components/portal/portal-nav";
 import { PortalProfileMenu } from "@/components/portal/portal-profile-menu";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function PortalShell({ organizationName, logoPath, nav, unread = 0, child
   const badge = <Suspense fallback={null}><UnreadCount value={unread} /></Suspense>;
   return (
     <div className="min-h-dvh bg-background text-foreground">
+      {organizationName ? <PortalLiveRefresh /> : null}
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-15 max-w-6xl items-center justify-between gap-4 px-4">
           <div className="flex min-w-0 items-center gap-3">
@@ -61,7 +63,7 @@ export function PortalShell({ organizationName, logoPath, nav, unread = 0, child
       </header>
       <main className={cn("mx-auto max-w-6xl px-4 py-5 sm:py-8", nav && "pb-24 sm:pb-8")}>
         {children}
-        <p className="mt-10 flex items-center justify-center gap-1.5 text-center text-xs leading-5 text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0" /> Защитен личен линк, не го препращайте · чрез Pakto</p>
+        <p className="mt-10 flex items-center justify-center gap-1.5 text-center text-xs leading-5 text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0" /> Линкът е личен, не го препращайте · Pakto</p>
       </main>
       {nav ? (
         <nav aria-label="Портал" className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">

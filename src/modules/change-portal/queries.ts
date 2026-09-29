@@ -224,9 +224,9 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
       .orderBy(asc(timelineEvents.createdAt), asc(timelineEvents.id)),
     getProjectState(session.organizationId, session.projectId),
     listPortalClaims(session.projectId),
-    // Read by the document id before the document is confirmed; returned only when it belongs to this project.
-    listThread(changeOrderId),
-    unreadCount(changeOrderId, "client"),
+    // One conversation per project: the offer page shows the whole project chat.
+    listThread({ projectId: session.projectId }),
+    unreadCount({ projectId: session.projectId }, "client"),
   ]);
   if (!change) return null;
   if (pastDue([change])) return { expired: true as const, data: null };

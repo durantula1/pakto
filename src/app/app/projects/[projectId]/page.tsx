@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailTabs } from "@/components/workspace/detail-tabs";
-import { NotesSection, NotesSectionSkeleton } from "@/components/notes/notes-section";
-import { countNotes } from "@/modules/notes/queries";
+import { loadNotes, NotesSection, NotesSectionSkeleton } from "@/components/notes/notes-section";
 import { TabCount } from "@/components/workspace/tab-count";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
@@ -50,7 +49,8 @@ import { offerLabel, parseOfferScope, scopeView, type OfferScope } from "@/modul
 import { sendProjectAnswerAction } from "@/modules/messages/actions";
 import { listThread, markThreadRead, unreadCount } from "@/modules/messages/queries";
 import { cn } from "@/lib/utils";
-import { projectStatLabels, projectStatsClassName, projectStatusLabels, projectTabLabels } from "./project-skeleton";
+import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, projectStatusLabels, projectTabLabels } from "./project-skeleton";
+import { formatAmount } from "@/lib/money";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
@@ -64,8 +64,14 @@ export async function generateMetadata({ params }: PageProps<"/app/projects/[pro
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/app/projects/[projectId]">) {
   const [{ projectId }, query, context] = await Promise.all([params, searchParams, requireTenantContext()]);
+  const offersPage = parsePage(query.offersPage);
+  const changesPage = parsePage(query.changesPage);
+  const notesPage = parsePage(query.notesPage);
+  // Started now, with the reads below, and streamed into their tabs behind their own skeletons.
+  const canNotes = can(context, "notes.view");
+  const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
+  const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  // Document lists, notes and the tab counts stream in behind their own skeletons.
   const [member, project, offersTotal, state, disputes, contacts, claims, questions, unreadQuestions] = await Promise.all([
     requireProjectCapability(context, projectId, "view"),
     getProject(context.organizationId, projectId),
@@ -84,11 +90,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     unreadCount({ projectId }, "staff"),
   ]);
   if (!project || !state) notFound();
-  const canNotes = can(member, "notes.view");
-  const notesTotal = canNotes ? countNotes(context.organizationId, { projectId }) : null;
-  const offersPage = parsePage(query.offersPage);
-  const changesPage = parsePage(query.changesPage);
-  const notesPage = parsePage(query.notesPage);
+  const notesTotal = notes?.total ?? null;
   const path = `/app/projects/${projectId}`;
   const showQuestions = questions.length > 0 || query.tab === "questions";
   const tab = tabs.find((item) => item === query.tab) ?? "overview";
@@ -167,7 +169,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         backHref="/app/projects"
         backLabel="Обекти"
         title={project.name}
-        status={<Badge className="h-6 bg-sidebar px-2.5 text-sidebar-foreground">{projectStatusLabels[project.status] ?? project.status}</Badge>}
+        status={<Badge variant={projectStatusBadgeVariants[project.status as keyof typeof projectStatusBadgeVariants] ?? "secondary"} className="h-6 px-2.5">{projectStatusLabels[project.status] ?? project.status}</Badge>}
         metadata={<>
           <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4" /> {project.siteAddress}</span>
           {project.clientId && project.clientName ? (
@@ -210,7 +212,6 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         </TabsList>
         <TabsContent id="overview" className="pt-4">
           <ProjectDashboard
-            contacts={contacts}
             state={state}
             today={today}
             showPayments={showPayments}
@@ -221,7 +222,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         <TabsContent id="documents" className="flex flex-col gap-5 pt-5">
           {/* Keyed by page, so a page link shows the skeleton instead of the old rows. */}
           <Suspense key={`${offersPage}-${changesPage}`} fallback={<ProjectDocumentsSkeleton />}>
-            <ProjectDocuments context={context} projectId={projectId} path={path} offersTotal={offersTotal} offersPage={offersPage} changesPage={changesPage} />
+            <ProjectDocuments documents={documents} path={path} />
           </Suspense>
         </TabsContent>
         <TabsContent id="work" className="flex flex-col gap-8 pt-5">
@@ -327,7 +328,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         </TabsContent>
         {showPayments ? <TabsContent id="payments" className="flex flex-col gap-5 pt-5">
           <PaymentClaimsBlock projectId={projectId} claims={pendingClaims} canResolve={canRecordPayments} />
-          <SectionHeader title="Получени суми" description="Всяко записано плащане се вижда от клиента в портала. Грешка се поправя с корекция, не с изтриване." action={canRecordPayments ? <RecordPaymentDialog projectId={projectId} offerOptions={offerOptions} installments={state.installments.filter((item) => item.remainingMinor > 0n).map((item) => ({ id: item.id, title: item.title, offerLabel: several ? codeOf(item.offerId) : null }))} /> : null} />
+          <SectionHeader title="Получени суми" description="Всяко записано плащане се вижда от клиента в портала. Грешка се поправя с корекция, не с изтриване." action={canRecordPayments ? <RecordPaymentDialog projectId={projectId} offerOptions={offerOptions} remaining={inForce.length ? { cents: Number(state.remainingMinor), currency: state.currency } : undefined} installments={state.installments.filter((item) => item.remainingMinor > 0n).map((item) => ({ id: item.id, title: item.title, offerLabel: several ? codeOf(item.offerId) : null }))} /> : null} />
           <OfferScopeChips offers={inForce} scope={scope} hasUnassigned={state.unassigned.receiptsCount > 0 || state.unassigned.installments.length > 0} hrefFor={hrefFor("payments")} />
           {scope !== "all" ? <p className="text-sm text-muted-foreground">
             {view.hasAgreement ? <>Договорено <strong className="text-foreground tabular-nums">{formatCents(view.contractMinor, view.currency)}</strong> · платено <strong className="text-foreground tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> · остава <strong className="text-foreground tabular-nums">{formatCents(view.remainingMinor, view.currency)}</strong></> : <>Без оферта: <strong className="text-foreground tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> получени. Разпредели ги към оферта, когато стане ясно за какво са.</>}
@@ -345,7 +346,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
                 formatDay(item.receivedOn),
                 <span key="kind" className="inline-flex flex-col"><span>{item.correctionOfId ? (Number(item.amount) < 0 ? "Сторно" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>{several && scope === "all" ? <span className="text-xs text-muted-foreground">{codeOf(item.offerId) ?? "Без оферта"}</span> : null}</span>,
                 <span key="method" className="inline-flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:justify-start">{item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}{methodLabels[item.method] ?? item.method}{item.note ? <span className="text-muted-foreground">· {item.note}</span> : null}</span>,
-                <span key="amount" className="tabular-nums whitespace-nowrap">{Number(item.amount).toFixed(2)} {item.currency}</span>,
+                <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
                 ...(canRecordPayments ? [<ReceiptActions key="actions" projectId={projectId} receipt={item} receipts={state.receipts} dispute={disputes.find((dispute) => dispute.receiptId === item.id)} assignOptions={assignOptions} />] : []),
               ],
             }))}
@@ -364,7 +365,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
                 <span key="title" className="min-w-0"><span className="block">{item.title}</span><span className="block text-xs text-muted-foreground">{[paymentLabels[item.kind] ?? item.kind, several && scope === "all" ? codeOf(item.offerId) ?? "Без оферта" : null, item.termId ? "по офертата" : null].filter(Boolean).join(" · ")}</span></span>,
                 <span key="due" className={cn("tabular-nums", item.dueOn < today && item.remainingMinor > 0n && "font-medium text-destructive")}>{formatDay(item.dueOn)}</span>,
                 item.remainingMinor > 0n ? formatCents(item.remainingMinor, item.currency) : <Badge key="left" variant="success-soft">Платено</Badge>,
-                <span key="amount" className="tabular-nums whitespace-nowrap">{Number(item.amount).toFixed(2)} {item.currency}</span>,
+                <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
                 ...(canRecordPayments ? [<span key="actions" className="inline-flex gap-1">
                   <InstallmentDialog projectId={projectId} offerOptions={offerOptions} stages={stageChoices} installment={item} />
                   {item.receivedMinor === 0n ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="icon" className="size-9 text-destructive" aria-label={`Изтрий ${item.title}`}><Trash2 /></Button>} title="Да изтрия ли вноската?" description={`„${item.title}“ изчезва от платежния план на клиента.`} confirmLabel="Изтрий" action={deleteInstallmentAction} fields={{ projectId, installmentId: item.id }} success="Вноската е изтрита" /> : null}
@@ -374,11 +375,11 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           /> : <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">Няма вноски. Сложи условия за плащане в офертата или добави вноска тук.</p>}
         </TabsContent> : null}
         {showQuestions ? <TabsContent id="questions" className="pt-5">
-          <MessageThread side="staff" title="Въпроси за обекта" messages={questions} action={sendProjectAnswerAction} hidden={{ projectId }} placeholder="Отговори на клиента…" emptyText="Клиентът още не е питал нищо за обекта." />
+          <MessageThread side="staff" title="Разговор с клиента" messages={questions} action={sendProjectAnswerAction} hidden={{ projectId }} topicHref="/app/offers/{id}?tab=messages" placeholder="Напиши на клиента…" emptyText="Клиентът още не е писал. Тук ще виждаш всичко: въпросите за обекта и тези по отделните оферти." />
         </TabsContent> : null}
         {notesTotal ? <TabsContent id="notes" className="pt-5">
           <Suspense key={notesPage} fallback={<NotesSectionSkeleton />}>
-            <NotesSection organizationId={context.organizationId} projectId={projectId} total={notesTotal} page={notesPage} path={path} currentUserId={context.userId} isOwner={isOwner} />
+            <NotesSection organizationId={context.organizationId} projectId={projectId} notes={notes!} page={notesPage} path={path} currentUserId={context.userId} isOwner={isOwner} />
           </Suspense>
         </TabsContent> : null}
       </DetailTabs>
@@ -386,27 +387,31 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   );
 }
 
-async function ProjectDocuments({ context, projectId, path, offersTotal, offersPage, changesPage }: {
-  context: TenantContext;
-  projectId: string;
-  path: string;
-  offersTotal: number;
-  offersPage: number;
-  changesPage: number;
-}) {
-  // Counts and rows in one round; a page past the end (an old link) is read again as the last page.
+/** Both document lists with their counts, in one round; a page past the end (an old link) is read again as the last page. */
+function loadProjectDocuments(context: TenantContext, projectId: string, offersPage: number, changesPage: number) {
   const read = (kind: "offer" | "change", page: number) => listChangeOrders({ context, projectId, documentKind: kind, limit: DOCUMENTS_PAGE_SIZE, offset: pageOffset(page, DOCUMENTS_PAGE_SIZE) });
-  const [changesTotal, firstOffers, firstChanges] = await Promise.all([
-    countChangeOrders({ context, projectId, documentKind: "change" }),
-    offersTotal ? read("offer", offersPage) : Promise.resolve([]),
-    read("change", changesPage),
-  ]);
-  const offersCurrent = Math.min(offersPage, lastPage(offersTotal, DOCUMENTS_PAGE_SIZE));
-  const changesCurrent = Math.min(changesPage, lastPage(changesTotal, DOCUMENTS_PAGE_SIZE));
-  const [offers, changes] = await Promise.all([
-    offersCurrent !== offersPage && offersTotal ? read("offer", offersCurrent) : firstOffers,
-    changesCurrent !== changesPage && changesTotal ? read("change", changesCurrent) : firstChanges,
-  ]);
+  const load = (async () => {
+    const [offersTotal, changesTotal, firstOffers, firstChanges] = await Promise.all([
+      countChangeOrders({ context, projectId, documentKind: "offer" }),
+      countChangeOrders({ context, projectId, documentKind: "change" }),
+      read("offer", offersPage),
+      read("change", changesPage),
+    ]);
+    const offersCurrent = Math.min(offersPage, lastPage(offersTotal, DOCUMENTS_PAGE_SIZE));
+    const changesCurrent = Math.min(changesPage, lastPage(changesTotal, DOCUMENTS_PAGE_SIZE));
+    const [offers, changes] = await Promise.all([
+      offersCurrent !== offersPage ? read("offer", offersCurrent) : firstOffers,
+      changesCurrent !== changesPage ? read("change", changesCurrent) : firstChanges,
+    ]);
+    return { offersTotal, changesTotal, offersCurrent, changesCurrent, offers, changes };
+  })();
+  // The page may bail out (not found, no access) before the tab awaits this; don't leave a rejection unhandled.
+  load.catch(() => {});
+  return load;
+}
+
+async function ProjectDocuments({ documents, path }: { documents: ReturnType<typeof loadProjectDocuments>; path: string }) {
+  const { offersTotal, changesTotal, offersCurrent, changesCurrent, offers, changes } = await documents;
   const params = { tab: "documents", offersPage: offersCurrent > 1 ? String(offersCurrent) : undefined, changesPage: changesCurrent > 1 ? String(changesCurrent) : undefined };
   return <>
     <DocumentTable label="Оферти" empty="Започни с оферта за този обект." rows={offers} pagination={<ListPagination path={path} params={params} page={offersCurrent} total={offersTotal} pageSize={DOCUMENTS_PAGE_SIZE} pageParam="offersPage" />} />
@@ -442,7 +447,7 @@ function DocumentTable({ label, empty, rows, pagination }: {
       cells: [
         <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode(kind, row.sequenceNumber)}</span>,
         <div key="title"><p className="font-medium">{row.title}</p><p className="text-sm text-muted-foreground">Версия {row.revisionNumber}</p></div>,
-        <span key="total" className="font-semibold">{Number(row.total ?? 0).toFixed(2)} {row.currency}</span>,
+        <span key="total" className="font-semibold">{formatAmount(row.total ?? 0)} {row.currency}</span>,
       ],
     }))}
     footer={pagination}

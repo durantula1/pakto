@@ -33,7 +33,7 @@ import { SidebarToggle } from "@/components/workspace/sidebar-toggle";
 import { SIDEBAR_COOKIE, WORKSPACE_SHELL_ID } from "@/components/workspace/sidebar-state";
 import { DeletionPendingBanner } from "@/components/settings/account-dialogs";
 import { can, roleLabel } from "@/lib/authz/permissions";
-import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
+import { getOptionalTenantContext, getSessionUserId } from "@/lib/authz/tenant-context";
 import { accountDeletionDate } from "@/lib/legal";
 import { getAccountSummary } from "@/modules/account/queries";
 import { countUnreadNotifications, recentNotifications } from "@/modules/notifications/queries";
@@ -47,13 +47,14 @@ export default async function WorkspaceLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const context = await getOptionalTenantContext();
+  // The account row needs only the user id from the session, so it is read alongside the membership.
+  const userId = await getSessionUserId();
+  const [context, account, cookieStore] = await Promise.all([getOptionalTenantContext(), userId ? getAccountSummary(userId) : null, cookies()]);
   if (!context) redirect("/onboarding");
   // Streamed into the badge so the shell never waits on it. The layout re-renders on the realtime
   // refresh LiveNotifications triggers for each new notification, which is what keeps the badge live.
   const unread = countUnreadNotifications(context.organizationId, context.userId);
   const unreadBadge = <Suspense fallback={null}><UnreadBadge count={unread} /></Suspense>;
-  const [account, cookieStore] = await Promise.all([getAccountSummary(context.userId), cookies()]);
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "collapsed";
   const pendingDeletion = account?.deletionRequestedAt ?? null;
   const userMenu = {

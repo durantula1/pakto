@@ -18,7 +18,7 @@ export type UnlockState = { error?: string; otpId?: string; sentTo?: string; don
 async function clientSessionFor(projectPublicId: string) {
   const session = await getPortalSession(projectPublicId);
   if (!session?.clientId) throw new Error("Клиентската сесия е изтекла. Отворете отново линка.");
-  if (await isOrganizationStaff(session.organizationId)) throw new Error("Излезте от служебния профил, за да действате като клиент.");
+  if (await isOrganizationStaff(session.organizationId)) throw new Error("Излез от служебния профил, за да действаш като клиент.");
   return { ...session, clientId: session.clientId };
 }
 

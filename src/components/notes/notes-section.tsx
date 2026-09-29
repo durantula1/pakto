@@ -4,17 +4,32 @@ import { NotesPanel } from "@/components/notes/notes-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListPagination } from "@/components/workspace/list-filters";
 import { lastPage, pageOffset } from "@/lib/pagination";
-import { listNotes, NOTES_PAGE_SIZE } from "@/modules/notes/queries";
+import { countNotes, listNotes, NOTES_PAGE_SIZE, type NoteItem } from "@/modules/notes/queries";
+
+export type NotesLoad = { total: Promise<number>; rows: Promise<NoteItem[]> };
+
+/**
+ * Starts the notes count and the requested page together, so the tab costs one round trip.
+ * Call it early (with the page's other reads); `total` also feeds the tab's count badge.
+ */
+export function loadNotes(organizationId: string, scope: { projectId: string; changeOrderId?: string }, page: number): NotesLoad {
+  const total = countNotes(organizationId, scope);
+  const rows = listNotes(organizationId, scope, { limit: NOTES_PAGE_SIZE, offset: pageOffset(page, NOTES_PAGE_SIZE) });
+  // The page may bail out (not found, no access) before the tab awaits these; don't leave rejections unhandled.
+  total.catch(() => {});
+  rows.catch(() => {});
+  return { total, rows };
+}
 
 /**
  * The notes tab of a project or document page, streamed on its own so the page shows before
- * the notes load. `total` is shared with the tab's count badge, so the count runs once.
+ * the notes load. `notes` comes from `loadNotes`, started with the page's own reads.
  */
-export async function NotesSection({ organizationId, projectId, changeOrderId, total, page, path, legacy = [], currentUserId, isOwner }: {
+export async function NotesSection({ organizationId, projectId, changeOrderId, notes: load, page, path, legacy = [], currentUserId, isOwner }: {
   organizationId: string;
   projectId: string;
   changeOrderId?: string;
-  total: Promise<number>;
+  notes: NotesLoad;
   page: number;
   /** Page the pagination links point at; they keep the notes tab open. */
   path: string;
@@ -22,11 +37,11 @@ export async function NotesSection({ organizationId, projectId, changeOrderId, t
   currentUserId: string;
   isOwner: boolean;
 }) {
-  const count = await total;
-  // A page past the end (a note was deleted, an old link) shows the last page instead of an empty list.
+  const [count, requested] = await Promise.all([load.total, load.rows]);
+  // A page past the end (a note was deleted, an old link) is read again as the last page.
   const pages = lastPage(count, NOTES_PAGE_SIZE);
   const current = Math.min(page, pages);
-  const notes = count ? await listNotes(organizationId, { projectId, changeOrderId }, { limit: NOTES_PAGE_SIZE, offset: pageOffset(current, NOTES_PAGE_SIZE) }) : [];
+  const notes = current === page ? requested : await listNotes(organizationId, { projectId, changeOrderId }, { limit: NOTES_PAGE_SIZE, offset: pageOffset(current, NOTES_PAGE_SIZE) });
   return (
     <NotesPanel
       projectId={projectId}

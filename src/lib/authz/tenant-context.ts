@@ -26,13 +26,21 @@ export class MembershipRequiredError extends Error {
   readonly code = "MEMBERSHIP_REQUIRED";
 }
 
+/**
+ * The signed-in user's id from the session JWT, verified locally (no query), once per request.
+ * Lets callers start user-scoped reads alongside the membership read instead of after it.
+ */
+export const getSessionUserId = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  return error ? null : data?.claims?.sub ?? null;
+});
+
 export const getOptionalTenantContext = cache(
   async (): Promise<TenantContext | null> => {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getClaims();
-    const claims = data?.claims;
+    const userId = await getSessionUserId();
 
-    if (error || !claims?.sub) {
+    if (!userId) {
       return null;
     }
 
@@ -53,7 +61,7 @@ export const getOptionalTenantContext = cache(
       )
       .where(
         and(
-          eq(organizationMembers.userId, claims.sub),
+          eq(organizationMembers.userId, userId),
           eq(organizationMembers.status, "active"),
         ),
       )
@@ -65,7 +73,7 @@ export const getOptionalTenantContext = cache(
     }
 
     return {
-      userId: claims.sub,
+      userId,
       organizationId: membership.organizationId,
       organizationName: membership.organizationName,
       organizationSlug: membership.organizationSlug,

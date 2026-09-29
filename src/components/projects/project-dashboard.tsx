@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Mail, Phone } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +13,6 @@ import { cents, formatCents, type ProjectState } from "@/modules/projects/state"
 import { Meter, PaidBar } from "@/components/projects/offer-cards";
 
 type Milestone = ProjectState["milestones"][number];
-type Contact = { id: string; name: string; email: string | null; phone: string | null; isPrimary: boolean; emailVerifiedAt: Date | null };
 
 export const stageLabels: Record<string, string> = { planned: "Предстои", in_progress: "В работа", completed: "Завършен" };
 export const workLabels: Record<string, string> = { not_started: "Одобрена, предстои", scheduled: "Планирана", in_progress: "В работа", completed: "Завършена" };
@@ -23,16 +20,16 @@ export const paymentLabels: Record<string, string> = { deposit: "Капаро", 
 export const methodLabels: Record<string, string> = { cash: "В брой", bank: "Банков превод", card: "Карта", other: "Друго" };
 
 
-export const overviewCardTitles = { stages: "Етапи", payments: "Плащания", documents: "Оферти", client: "Клиент" };
+export const overviewCardTitles = { stages: "Етапи", payments: "Плащания", documents: "Оферти" };
 const pendingLabels = { offer: "Оферта", change: "Промяна" } as const;
 export const overviewGridClassName = "grid gap-4 lg:grid-cols-2";
 
 const linkClassName = "text-sm font-medium text-primary underline-offset-4 hover:underline";
 const rowClassName = "flex min-h-8 items-center justify-between gap-3 border-t pt-2 first:border-t-0 first:pt-0";
 
-function OverviewCard({ title, tab, children }: { title: string; tab?: string; children: ReactNode }) {
+function OverviewCard({ title, tab, className, children }: { title: string; tab?: string; className?: string; children: ReactNode }) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {tab ? <CardAction><DetailTabLink tab={tab} className={linkClassName}>Всички</DetailTabLink></CardAction> : null}
@@ -49,15 +46,12 @@ function StageBadge({ item, today }: { item: Milestone; today: string }) {
   return <Badge variant="secondary">{stageLabels[item.status] ?? item.status}</Badge>;
 }
 
-export function ProjectDashboard({ contacts, state, today, showPayments, openDisputes, pendingClaims, clientAccess }: {
-  contacts: Contact[];
+export function ProjectDashboard({ state, today, showPayments, openDisputes, pendingClaims }: {
   state: ProjectState;
   today: string;
   showPayments: boolean;
   openDisputes: number;
   pendingClaims: number;
-  /** The "Достъп на клиента" button, rendered by the page. */
-  clientAccess?: React.ReactNode;
 }) {
   const completed = state.milestones.filter((item) => item.status === "completed");
   const open = state.milestones.filter((item) => item.status !== "completed");
@@ -115,7 +109,8 @@ export function ProjectDashboard({ contacts, state, today, showPayments, openDis
         }) : <EmptyResult title="Още няма получени плащания." />}
       </OverviewCard> : null}
 
-      <OverviewCard title={overviewCardTitles.documents} tab="documents">
+      {/* Full width under stages and payments; the client's details live in the header. */}
+      <OverviewCard title={overviewCardTitles.documents} tab="documents" className={showPayments ? "lg:col-span-2" : undefined}>
         {offers.length || pendingChanges.length ? <>
           {offers.map((offer) => (
             <Link key={offer.id} href={`/app/offers/${offer.id}`} className={cn(rowClassName, "flex-col items-stretch gap-1.5 hover:text-primary")}>
@@ -142,24 +137,6 @@ export function ProjectDashboard({ contacts, state, today, showPayments, openDis
         </> : <EmptyResult title="Още няма оферти." description="Започни с оферта за този обект." />}
       </OverviewCard>
 
-      <OverviewCard title={overviewCardTitles.client}>
-        {contacts.map((contact) => (
-          <div key={contact.id} className={rowClassName}>
-            <span className="min-w-0">
-              <span className="block truncate font-medium">{contact.name}</span>
-              <span className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                {contact.email ? <span className="inline-flex min-w-0 items-center gap-1"><Mail className="size-3" /><span className="truncate">{contact.email}</span></span> : null}
-                {contact.phone ? <span className="inline-flex items-center gap-1"><Phone className="size-3" />{contact.phone}</span> : null}
-              </span>
-            </span>
-            <span className="flex shrink-0 gap-1.5">
-              <Badge variant={contact.isPrimary ? "info-soft" : "secondary"}>{contact.isPrimary ? "Одобрява" : "Наблюдава"}</Badge>
-              {contact.emailVerifiedAt ? null : <Badge variant="warning-soft">Непотвърден</Badge>}
-            </span>
-          </div>
-        ))}
-        {clientAccess ? <div className="pt-1">{clientAccess}</div> : null}
-      </OverviewCard>
     </div>
   );
 }
@@ -183,12 +160,7 @@ export function ProjectDashboardSkeleton() {
         <RowsSkeleton rows={4} />
       </OverviewCard>
       <OverviewCard title={overviewCardTitles.payments}><RowsSkeleton rows={4} badge={false} /></OverviewCard>
-      <OverviewCard title={overviewCardTitles.documents}><RowsSkeleton rows={3} /></OverviewCard>
-      <OverviewCard title={overviewCardTitles.client}>
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-3.5 w-56" />
-        <div className="flex gap-2 pt-1"><Skeleton className="h-5 w-28 rounded-full" /><Skeleton className="h-5 w-32 rounded-full" /></div>
-      </OverviewCard>
+      <OverviewCard title={overviewCardTitles.documents} className="lg:col-span-2"><RowsSkeleton rows={3} /></OverviewCard>
     </div>
   );
 }

@@ -61,12 +61,12 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
         {acceptance.note ? <p className="mt-1 text-sm whitespace-pre-line text-muted-foreground">„{acceptance.note}“</p> : null}
 
         {!canAnswer ? (
-          <p className="mt-3 text-sm text-muted-foreground">Приема се от одобряващия контакт с потвърден имейл.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Работата приема човекът, когото фирмата е посочила да одобрява, след като потвърди имейла си.</p>
         ) : issues ? (
           <ActionForm key="issues" action={answerAcceptanceAction} success="Изпратено на фирмата" className="mt-3 grid gap-2">
             {hidden("issues")}
-            <label htmlFor="acceptance-note" className="sr-only">Твоите забележки</label>
-            <Textarea id="acceptance-note" name="note" required minLength={5} maxLength={2000} rows={3} autoFocus placeholder="Твоите забележки. Напр. фугата в ъгъла е напукана" />
+            <label htmlFor="acceptance-note" className="sr-only">Вашите забележки</label>
+            <Textarea id="acceptance-note" name="note" required minLength={5} maxLength={2000} rows={3} autoFocus placeholder="Напр. фугата в ъгъла е напукана" />
             <div className="flex flex-wrap items-center gap-3">
               <ActionSubmit>Изпрати забележките</ActionSubmit>
               <Button type="button" variant="ghost" size="sm" onPress={() => setIssues(false)}>Назад</Button>
@@ -84,7 +84,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
                   maxLength={160}
                   autoComplete="name"
                   placeholder={signerName}
-                  aria-label="Твоето име като подпис"
+                  aria-label="Вашето име като подпис"
                   className="w-full border-0 border-b-2 border-dashed border-foreground/30 bg-transparent px-0.5 pb-1 text-lg italic outline-none placeholder:text-muted-foreground/50 focus:border-solid focus:border-primary"
                 />
                 <span className="mt-1 block text-xs text-muted-foreground">Име и фамилия · важи като подпис</span>

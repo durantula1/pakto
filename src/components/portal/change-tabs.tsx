@@ -35,7 +35,7 @@ export function PortalChangeTabs({ details, decision, history, summary, pending,
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_21.25rem]">
       <Tabs selectedKey={tab} onSelectionChange={setTab} className="min-w-0">
-        <TabsList aria-label="Раздели на документа">
+        <TabsList aria-label="Раздели на офертата">
           <TabsTrigger id="details">{inForce ? "Договор" : "Детайли"}</TabsTrigger>
           {showDecision ? (
             <TabsTrigger id="decision">

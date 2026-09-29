@@ -17,7 +17,7 @@ import { cents, formatCents } from "@/modules/projects/state";
 import { cn } from "@/lib/utils";
 import { discountLabel } from "@/modules/change-orders/pricing";
 import { getPortalChange } from "@/modules/change-portal/queries";
-import { markRevisionViewed } from "@/modules/change-portal/viewed";
+import { isStaffPreview, markRevisionViewed } from "@/modules/change-portal/viewed";
 import { MessageThread } from "@/components/messages/message-thread";
 import { sendClientMessageAction } from "@/modules/messages/actions";
 import { markThreadRead } from "@/modules/messages/queries";
@@ -26,6 +26,7 @@ import { DownloadLink } from "@/components/workspace/download-tray";
 import { AcceptancePanel } from "@/components/portal/acceptance-panel";
 import { PortalPayments, PortalSchedule } from "@/components/projects/project-overview";
 import { scopeView } from "@/modules/projects/scope";
+import { formatAmount } from "@/lib/money";
 
 const eventLabels: Record<string, string> = {
   revision_sent: "Изпратена за решение",
@@ -71,13 +72,14 @@ export default async function PortalChangePage({
   const { thread, unreadAnswers } = data;
   // Writes that do not change what this page shows happen after the response.
   const session = data.session;
+  const staffPreview = change.status === "sent" ? isStaffPreview(session) : Promise.resolve(false);
   after(async () => {
-    await markRevisionViewed(session, change).catch(() => false);
-    if (unreadAnswers) await markThreadRead(change.id, "client");
+    await markRevisionViewed(session, change, staffPreview).catch(() => false);
+    if (unreadAnswers) await markThreadRead({ projectId: session.projectId }, "client");
   });
   const daysLeft = change.responseDueAt ? daysUntil(change.responseDueAt) : null;
   const attachments = data.attachments;
-  const money = (value: string | number) => Number(value).toFixed(2);
+  const money = formatAmount;
   const isOffer = change.documentKind === "offer";
   const name = documentName(change.documentKind, change.sequenceNumber);
   const inForce = change.approvedRevisionId && change.approvedRevisionId !== change.revisionId
@@ -96,7 +98,7 @@ export default async function PortalChangePage({
     <>
       <DocumentBody document={{ ...change, lineItems: data.lineItems, schedule: data.schedule, paymentTerms: data.paymentTerms, absorbedChanges: data.absorbedChanges }} brand={{ name: data.project.organizationName, logo: data.logo }} />
       {attachments.length ? (
-        <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и документи към тази версия. Отворете ги, за да ги видите в пълен размер." />
+        <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и файлове към тази версия. Отворете ги, за да ги видите в пълен размер." />
       ) : null}
     </>
   );
@@ -149,7 +151,7 @@ export default async function PortalChangePage({
               ? `${data.decision.typedName} · ${dateTime(data.decision.createdAt)}${data.decision.verifiedEmail ? ` · потвърдено с код до ${maskEmail(data.decision.verifiedEmail)}` : ""}`
               : data.session.contactRole === "approver"
                 ? "Статус: " + (clientStatusLabels[change.status] ?? change.status)
-                : "Решението се взима от одобряващия контакт по обекта."}
+                : "Решението взима човекът, когото фирмата е посочила да одобрява."}
           </p>
         </div>
       </CardContent>
@@ -322,12 +324,19 @@ export default async function PortalChangePage({
             </>
           ) : undefined}
           unreadAnswers={unreadAnswers}
+          questionsOpen={!!query.questions}
           questions={
             <MessageThread
               side="portal_contact"
               messages={thread}
               action={sendClientMessageAction}
               hidden={{ projectPublicId, changeOrderId: change.id }}
+              title="Съобщения с фирмата"
+              topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
+              currentTopic={change.id}
+              readFor={projectPublicId}
+              unread={unreadAnswers}
+              composerNote={`Новото съобщение ще е по ${name}`}
               placeholder="Напишете въпрос към фирмата…"
               emptyText={`Не е ясно нещо? Попитайте ${data.project.organizationName} тук, без да отказвате или да искате промяна. Ще получите отговора и на имейла си.`}
               composerClassName="sticky bottom-0 lg:static"

@@ -38,6 +38,7 @@ import { paymentTermsField, type PaymentTerm } from "@/modules/change-orders/pay
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { emailClient } from "@/modules/notifications/client";
+import { formatAmount } from "@/lib/money";
 
 /** `createdId` comes back instead of a redirect when the form still has files to upload. */
 export type QuickChangeState = { error?: string; createdId?: string };
@@ -755,19 +756,19 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
   const kind = input.documentKind === "offer" ? "оферта" : "промяна";
   const diff = input.diff;
   const [project] = await getDatabase().select({ name: projects.name }).from(projects).where(eq(projects.id, input.projectId)).limit(1);
-  const subject = projectSubject(project?.name, diff ? `${input.organizationName} обнови ${kind}: ${input.title}` : `${input.organizationName} ти изпрати ${kind}: ${input.title}`);
+  const subject = projectSubject(project?.name, diff ? `${input.organizationName} обнови ${kind}: ${input.title}` : `${input.organizationName} Ви изпрати ${kind}: ${input.title}`);
   const intro = diff
     ? `${input.organizationName} обнови ${kind} „${input.title}“. Версия ${input.revisionNumber} заменя версия ${diff.previousNumber}.`
-    : `${input.organizationName} ти изпрати ${kind} „${input.title}“ (версия ${input.revisionNumber}).`;
-  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${diff.totalBefore.toFixed(2)} → ${diff.totalAfter.toFixed(2)} ${diff.currency}` : null;
+    : `${input.organizationName} Ви изпрати ${kind} „${input.title}“ (версия ${input.revisionNumber}).`;
+  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${formatAmount(diff.totalBefore)} → ${formatAmount(diff.totalAfter)} ${diff.currency}` : null;
   const changeLines = diff ? [...(totalLine ? [totalLine] : []), ...diff.changes] : [];
   const changesText = changeLines.length ? `\n\nКакво се промени:\n${changeLines.map((line) => `• ${line}`).join("\n")}` : "";
   const changesHtml = changeLines.length ? `<p style="margin:16px 0 4px;font-weight:600">Какво се промени</p><ul style="margin:0;padding-left:20px">${changeLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
   await sendEmail({
     to: input.contact.email,
     subject,
-    text: `Здравей, ${input.contact.name}!\n\n${intro}${changesText}\n\nПрегледай я тук: ${url}\n\nРешението се потвърждава с еднократен код, който получаваш само ти на този имейл.`,
-    html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледай документа</a></p><p style="color:#71717a">Решението се потвърждава с еднократен код, който получаваш само ти на този имейл. Не препращай този линк.</p></div>`,
+    text: `Здравейте, ${input.contact.name}!\n\n${intro}${changesText}\n\nПрегледайте я тук: ${url}\n\nРешението се потвърждава с еднократен код, който получавате само Вие на този имейл.`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте ${input.documentKind === "offer" ? "офертата" : "промяната"}</a></p><p style="color:#71717a">Решението се потвърждава с еднократен код, който получавате само Вие на този имейл. Не препращайте този линк.</p></div>`,
   });
   return "sent";
 }
@@ -829,8 +830,8 @@ export async function cancelDocumentAction(formData: FormData): Promise<ActionRe
       emailClient(document.projectId, {
         subject: outcome.partial ? `Новата версия на ${noun} „${outcome.title}“ е оттеглена` : `${outcome.kind === "offer" ? "Офертата" : "Промяната"} „${outcome.title}“ е анулирана`,
         intro: outcome.partial
-          ? `Фирмата оттегли новата версия на ${noun} „${outcome.title}“. В сила остава версията, която вече си одобрил. Не е нужно да правиш нищо.`
-          : `Фирмата анулира ${noun} „${outcome.title}“. Тя вече не чака твоето решение.`,
+          ? `Фирмата оттегли новата версия на ${noun} „${outcome.title}“. В сила остава версията, която вече сте одобрили. Не е нужно да правите нищо.`
+          : `Фирмата анулира ${noun} „${outcome.title}“. Тя вече не очаква Вашето решение.`,
         facts: reason ? [["Причина", reason]] : undefined,
       });
     }

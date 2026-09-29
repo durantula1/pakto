@@ -15,6 +15,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { formatDay } from "@/modules/change-orders/labels";
 import { emailClient } from "@/modules/notifications/client";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
+import { formatAmount } from "@/lib/money";
 
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 type Executor = Pick<Transaction, "select">;
@@ -296,10 +297,10 @@ function emailReceipt(projectId: string, input: { amount: string; currency: stri
     subject: input.corrected ? `Коригирано плащане: ${input.amount} ${input.currency}` : `Записано плащане: ${input.amount} ${input.currency}`,
     intro: input.corrected
       ? "Фирмата коригира записано плащане. Вярната сума вече е в портала."
-      : "Фирмата записа, че е получила плащане от теб. Провери дали всичко е вярно.",
+      : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
     facts: [["Сума", `${input.amount} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин", methodLabels[input.method] ?? input.method]],
-    cta: "Виж плащанията",
-    outro: "Ако нещо не е вярно, натисни „Не е вярно?“ до плащането в портала.",
+    cta: "Вижте плащанията",
+    outro: "Ако нещо не е вярно, натиснете „Не е вярно?“ до плащането в портала.",
   });
 }
 
@@ -401,10 +402,10 @@ export async function resolvePaymentDisputeAction(formData: FormData): Promise<A
     });
     emailClient(projectId, {
       subject: "Фирмата отговори на оспорено плащане",
-      intro: "Фирмата прегледа плащането, което оспори, и отговори.",
+      intro: "Фирмата прегледа плащането, което оспорихте, и отговори.",
       facts: [["Отговор", resolution]],
-      cta: "Виж плащанията",
-      outro: "Ако още не си съгласен, можеш да оспориш плащането отново от портала.",
+      cta: "Вижте плащанията",
+      outro: "Ако все още не сте съгласни, можете да оспорите плащането отново от портала.",
     });
     refresh(projectId);
   }, "Спорът не беше разрешен.");
@@ -444,10 +445,10 @@ export async function rejectPaymentClaimAction(formData: FormData): Promise<Acti
       .returning({ amount: paymentClaims.amount, currency: paymentClaims.currency, paidOn: paymentClaims.paidOn });
     if (!claim) throw new Error("Отбелязването вече е обработено.");
     emailClient(projectId, {
-      subject: "Плащането ти още не е потвърдено",
-      intro: `Фирмата още не може да потвърди плащането от ${formatDay(claim.paidOn)} за ${Number(claim.amount).toFixed(2)} ${claim.currency}. Виж отговора ѝ по-долу. Ако имаш потвърждение за плащането, пиши ѝ от портала, за да го изясните.`,
+      subject: "Плащането Ви още не е потвърдено",
+      intro: `Фирмата още не може да потвърди плащането от ${formatDay(claim.paidOn)} за ${formatAmount(claim.amount)} ${claim.currency}. Отговорът ѝ е по-долу. Ако имате потвърждение за плащането, пишете ѝ от портала, за да го изясните.`,
       facts: [["Отговор", response]],
-      cta: "Виж плащанията",
+      cta: "Вижте плащанията",
     });
     refresh(projectId);
   }, "Отговорът не беше записан.");
@@ -476,10 +477,10 @@ export async function requestAcceptanceAction(formData: FormData): Promise<Actio
       return offer.title;
     });
     emailClient(projectId, {
-      subject: `Работата по „${title}“ чака твоя преглед`,
-      intro: `Фирмата отбеляза работата по „${title}“ като завършена и те моли да я прегледаш. В портала можеш да я приемеш или да опишеш забележките си. Всяка забележка остава записана, за да я обсъдите, докато и двете страни са удовлетворени.`,
+      subject: `Работата по „${title}“ очаква Вашия преглед`,
+      intro: `Фирмата отбеляза работата по „${title}“ като завършена и Ви моли да я прегледате. В портала можете да я приемете или да опишете забележките си. Всяка забележка остава записана, за да я обсъдите, докато и двете страни са удовлетворени.`,
       facts: note ? [["Бележка от фирмата", note]] : undefined,
-      cta: "Прегледай и приеми",
+      cta: "Прегледайте и приемете",
     });
     refresh(projectId);
   }, "Искането не беше изпратено.");

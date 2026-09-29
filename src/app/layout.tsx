@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LocaleProvider } from "@/components/locale-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { authHintScript } from "@/lib/auth/session-hint";
 import { productDefinition } from "@/lib/seo/site";
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: authHintScript }} />
       </head>
       <body className="flex min-h-full flex-col">
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

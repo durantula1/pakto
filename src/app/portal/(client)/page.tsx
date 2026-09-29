@@ -37,7 +37,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
         detail: <>{project.name} · {stepAmount(item.kind, cents(item.total), item.currency)}</>,
         due: item.responseDueAt ? formatShortDay(item.responseDueAt) : null,
         href: `/portal/${project.publicId}/changes/${item.id}`,
-        action: "Прегледай и реши",
+        action: "Прегледайте и решете",
       })),
     ...card.acceptances.map((offer) => ({
       key: `accept-${offer.id}`,
@@ -46,7 +46,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
       title: offer.title,
       detail: `${project.name} · работата е готова за преглед`,
       href: `/portal/${project.publicId}/changes/${offer.id}#acceptance`,
-      action: "Прегледай и приеми",
+      action: "Прегледайте и приемете",
     })),
   ]);
   const firstName = portal.clientName.split(" ")[0];
@@ -100,7 +100,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                     <div className="flex flex-col gap-0.5 rounded-xl bg-tile-sand px-3 py-2.5 text-tile-sand-foreground">
                       <span className="text-xs">Остава за плащане</span>
                       {card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
-                        : <span className="text-sm">След одобрена оферта</span>}
+                        : <span className="text-sm">Още няма одобрена оферта</span>}
                     </div>
                   </div>
                 )}

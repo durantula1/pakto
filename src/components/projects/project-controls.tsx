@@ -2,6 +2,7 @@ import { ClipboardCheck, Pencil, Plus } from "lucide-react";
 
 import { BillLine, Quote, Slip } from "@/components/portal/paper";
 import { ClaimRow, DisputeRow } from "@/components/projects/inline-actions";
+import { PaymentAmountField } from "@/components/projects/payment-amount-field";
 
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
 } from "@/modules/projects/operations";
 import type { ProjectState } from "@/modules/projects/state";
 import { formatDay } from "@/modules/change-orders/labels";
+import { formatAmount } from "@/lib/money";
 
 const paymentKinds = [{ value: "deposit", label: "Капаро" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 const methods = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
@@ -89,8 +91,10 @@ function Entry({ date, title, sub, amount }: { date: string; title: React.ReactN
   </div>;
 }
 
-export function RecordPaymentDialog({ projectId, offerOptions, installments }: {
+export function RecordPaymentDialog({ projectId, offerOptions, installments, remaining }: {
   projectId: string;
+  /** What the agreed offers still owe, to warn before an overpayment. */
+  remaining?: { cents: number; currency: string };
   /** Shown when there is a choice; a single offer is filled in. */
   offerOptions: OfferOption[];
   installments: { id: string; title: string; offerLabel: string | null }[];
@@ -106,7 +110,7 @@ export function RecordPaymentDialog({ projectId, offerOptions, installments }: {
       <ActionForm action={recordReceiptAction} success="Плащането е записано" className="grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="projectId" value={projectId} />
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value="deposit" options={paymentKinds} /></Field>
-        <Field><FieldLabel htmlFor="receipt-amount">Получена сума</FieldLabel><Input id="receipt-amount" type="number" name="amount" min="0.01" step="0.01" required /></Field>
+        <PaymentAmountField remaining={remaining} />
         <Field><FieldLabel htmlFor="receipt-date">Дата</FieldLabel><DatePicker id="receipt-date" name="receivedOn" defaultValue={today()} required aria-label="Дата на получаване" /></Field>
         <Field><FieldLabel>Метод</FieldLabel><FilterSelect name="method" value="bank" options={methods} /></Field>
         {installments.length ? <Field className="sm:col-span-2"><FieldLabel>За вноска</FieldLabel><FilterSelect name="installmentId" value="none" options={installmentOptions} /></Field> : null}
@@ -190,7 +194,7 @@ function AssignReceiptDialog({ projectId, receipt, options }: { projectId: strin
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Към коя оферта е плащането?</DialogTitle>
-        <DialogDescription>{Number(receipt.amount).toFixed(2)} {receipt.currency} от {formatDay(receipt.receivedOn)}. Разпределя се веднъж и влиза в платеното по тази оферта.</DialogDescription>
+        <DialogDescription>{formatAmount(receipt.amount)} {receipt.currency} от {formatDay(receipt.receivedOn)}. Разпределя се веднъж и влиза в платеното по тази оферта.</DialogDescription>
       </DialogHeader>
       <ActionForm action={assignReceiptAction} success="Плащането е разпределено" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
@@ -212,11 +216,11 @@ function CorrectReceiptDialog({ projectId, receipt }: { projectId: string; recei
         <DialogTitle>Коригирай плащане</DialogTitle>
         <DialogDescription>Записът не се изтрива. Добавяме сторно и нов запис с вярната сума, а клиентът вижда корекцията.</DialogDescription>
       </DialogHeader>
-      <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${Number(receipt.amount).toFixed(2)} ${receipt.currency}`} className="border-y border-dashed py-2.5" />
+      <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${formatAmount(receipt.amount)} ${receipt.currency}`} className="border-y border-dashed py-2.5" />
       <ActionForm action={correctReceiptAction} success="Плащането е коригирано" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="receiptId" value={receipt.id} />
-        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({receipt.currency})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0.01" defaultValue={Number(receipt.amount).toFixed(2)} required autoFocus /></Field>
+        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({receipt.currency})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0.01" defaultValue={formatAmount(receipt.amount)} required autoFocus /></Field>
         <Field><FieldLabel htmlFor={reasonId}>Причина</FieldLabel><Input id={reasonId} name="reason" required minLength={3} maxLength={500} placeholder="Напр. грешно въведена сума" /></Field>
         <div className="flex justify-end gap-2 pt-1">
           <DialogClose>Отказ</DialogClose>

@@ -1,9 +1,9 @@
 import { Check } from "lucide-react";
 
 const copy: Record<string, { title: string; next: string }> = {
-  approved: { title: "Одобрено", next: "Фирмата е уведомена и може да започне по договореното." },
-  changes_requested: { title: "Искането е изпратено", next: "Фирмата ще ви изпрати нова версия. Ще получите имейл, когато е готова." },
-  declined: { title: "Отказът е записан", next: "Фирмата е уведомена. Работата по нея няма да се прави." },
+  approved: { title: "Одобрено", next: "Фирмата е уведомена и може да започне работа." },
+  changes_requested: { title: "Искането е изпратено", next: "Фирмата ще подготви нова версия. Ще получите имейл, когато е готова." },
+  declined: { title: "Отказът е записан", next: "Фирмата е уведомена, че няма да прави тази работа." },
 };
 
 /** After a decision: what was recorded and what happens next, where the client lands. */
@@ -15,7 +15,7 @@ export function DecisionDone({ decision }: { decision: unknown }) {
       <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-5" strokeWidth={3} /></span>
       <div className="flex flex-col gap-1">
         <p className="text-lg font-semibold">{text.title}</p>
-        <p className="text-sm leading-6">{text.next} Разписката е на имейла ви.</p>
+        <p className="text-sm leading-6">{text.next} Разписката е в имейла ви.</p>
       </div>
     </div>
   );

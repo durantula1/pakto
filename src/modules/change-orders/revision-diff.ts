@@ -1,5 +1,6 @@
 import { formatDay } from "@/modules/change-orders/labels";
 import { daysLabel, scheduleDays, type ScheduleLine } from "@/modules/change-orders/schedule";
+import { formatAmount } from "@/lib/money";
 
 type DiffLine = { description: string; quantity: string | number; unit: string | null; unitPrice: string | number; lineTotal: string | number };
 type DiffRevision = { revisionNumber: number; total: string | number; taxRate: string | number; agreedDeadline: string | null; currency: string; discountAmount?: string | number | null; lineItems: DiffLine[]; schedule?: ScheduleLine[] };
@@ -13,7 +14,7 @@ export type RevisionDiff = {
 };
 
 const key = (line: DiffLine) => line.description.trim().toLocaleLowerCase("bg-BG");
-const amount = (value: string | number) => Number(value).toFixed(2);
+const amount = formatAmount;
 
 /** Plain-language list of what changed between two versions the client saw. */
 export function summarizeRevisionDiff(previous: DiffRevision, next: DiffRevision): RevisionDiff {

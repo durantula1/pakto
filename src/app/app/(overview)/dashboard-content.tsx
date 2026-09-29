@@ -10,6 +10,7 @@ import type { TenantContext } from "@/lib/authz/tenant-context";
 import { documentCode } from "@/modules/change-orders/labels";
 import { listChangeOrders } from "@/modules/change-orders/queries";
 import { getDashboardStats } from "@/modules/dashboard/queries";
+import { formatAmount } from "@/lib/money";
 
 const statsClassName = "grid grid-cols-2 gap-3 xl:grid-cols-4";
 const label = "Последни оферти";
@@ -65,7 +66,7 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
           <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode(change.documentKind, change.sequenceNumber)}</span>,
           <div key="title"><p className="font-medium">{change.title}</p><p className="text-sm text-muted-foreground">{change.clientName ? `${change.projectName} · ${change.clientName}` : change.projectName}</p></div>,
           <DocumentStatusBadge key="status" status={change.revisionStatus} />,
-          <span key="total" className="font-semibold">{Number(change.total ?? 0).toFixed(2)} {change.currency}</span>,
+          <span key="total" className="font-semibold">{formatAmount(change.total ?? 0)} {change.currency}</span>,
         ],
       }))}
       />

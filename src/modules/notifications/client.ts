@@ -43,8 +43,8 @@ export async function sendClientEmail(projectId: string, message: ClientMessage)
   await sendEmail({
     to: contact.email,
     subject: projectSubject(contact.projectName, message.subject),
-    text: `Здравей, ${contact.name}!\n\n${message.intro}${facts.length ? `\n\n${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}` : ""}\n\n${message.cta ?? "Отвори портала"}: ${url}${message.outro ? `\n\n${message.outro}` : ""}\n\n— ${contact.organizationName}`,
-    html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(message.intro)}</p>${facts.length ? `<table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label)}</td><td style="padding:4px 0">${escapeHtml(value)}</td></tr>`).join("")}</table>` : ""}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">${escapeHtml(message.cta ?? "Отвори портала")}</a></p>${message.outro ? `<p style="color:#71717a">${escapeHtml(message.outro)}</p>` : ""}<p style="color:#71717a">— ${escapeHtml(contact.organizationName)}</p></div>`,
+    text: `Здравейте, ${contact.name}!\n\n${message.intro}${facts.length ? `\n\n${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}` : ""}\n\n${message.cta ?? "Отвори портала"}: ${url}${message.outro ? `\n\n${message.outro}` : ""}\n\n— ${contact.organizationName}`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(message.intro)}</p>${facts.length ? `<table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label)}</td><td style="padding:4px 0">${escapeHtml(value)}</td></tr>`).join("")}</table>` : ""}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">${escapeHtml(message.cta ?? "Отвори портала")}</a></p>${message.outro ? `<p style="color:#71717a">${escapeHtml(message.outro)}</p>` : ""}<p style="color:#71717a">— ${escapeHtml(contact.organizationName)}</p></div>`,
   });
   return true;
 }
@@ -125,17 +125,17 @@ export async function sendClientDigests(now = new Date()) {
     const { name, organizationName } = group[0]!;
     const single = sections.length === 1 ? sections[0]! : null;
     const shownLines = (lines: string[]) => lines.slice(-12);
-    const more = (lines: string[]) => lines.length > 12 ? `И още ${lines.length - 12} промени — виж ги в портала.` : "";
-    const text = sections.map((section) => `${sections.length > 1 ? `${section.name}\n` : ""}${shownLines(section.lines).map((line) => `• ${line}`).join("\n")}${more(section.lines) ? `\n${more(section.lines)}` : ""}\nВиж графика: ${section.url}`).join("\n\n");
-    const html = sections.map((section) => `${sections.length > 1 ? `<p style="margin:20px 0 4px;font-weight:600">${escapeHtml(section.name)}</p>` : ""}<ul style="margin:0;padding-left:20px">${shownLines(section.lines).map((line) => `<li style="margin:4px 0">${escapeHtml(line)}</li>`).join("")}</ul>${more(section.lines) ? `<p style="color:#71717a">${escapeHtml(more(section.lines))}</p>` : ""}<p style="margin:12px 0 0"><a href="${section.url}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600">Виж графика</a></p>`).join("");
-    const subject = single ? projectSubject(single.name, "Новости по графика на обекта") : `Новости по графика на обектите ви (${sections.length})`;
-    const intro = single ? "Ето какво се промени в графика на работата от последното ни писмо:" : "Ето какво се промени в графика на работата по обектите ви от последното ни писмо:";
+    const more = (lines: string[]) => lines.length > 12 ? `И още ${lines.length - 12} промени — вижте ги в портала.` : "";
+    const text = sections.map((section) => `${sections.length > 1 ? `${section.name}\n` : ""}${shownLines(section.lines).map((line) => `• ${line}`).join("\n")}${more(section.lines) ? `\n${more(section.lines)}` : ""}\nВижте графика: ${section.url}`).join("\n\n");
+    const html = sections.map((section) => `${sections.length > 1 ? `<p style="margin:20px 0 4px;font-weight:600">${escapeHtml(section.name)}</p>` : ""}<ul style="margin:0;padding-left:20px">${shownLines(section.lines).map((line) => `<li style="margin:4px 0">${escapeHtml(line)}</li>`).join("")}</ul>${more(section.lines) ? `<p style="color:#71717a">${escapeHtml(more(section.lines))}</p>` : ""}<p style="margin:12px 0 0"><a href="${section.url}" style="display:inline-block;padding:10px 16px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600">Вижте графика</a></p>`).join("");
+    const subject = single ? projectSubject(single.name, "Новости по графика на проекта") : `Новости по графика на проектите Ви (${sections.length})`;
+    const intro = single ? "Ето какво се промени в графика на работата от последното ни писмо:" : "Ето какво се промени в графика на работата по проектите Ви от последното ни писмо:";
     try {
       await sendEmail({
         to,
         subject,
-        text: `Здравей, ${name}!\n\n${intro}\n\n${text}\n\n— ${organizationName}`,
-        html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(name)}!</p><p>${escapeHtml(intro)}</p>${html}<p style="color:#71717a;margin-top:20px">— ${escapeHtml(organizationName)}</p></div>`,
+        text: `Здравейте, ${name}!\n\n${intro}\n\n${text}\n\n— ${organizationName}`,
+        html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(name)}!</p><p>${escapeHtml(intro)}</p>${html}<p style="color:#71717a;margin-top:20px">— ${escapeHtml(organizationName)}</p></div>`,
       });
       sent++;
     } catch (cause) {

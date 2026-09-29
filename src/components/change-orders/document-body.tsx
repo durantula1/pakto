@@ -5,8 +5,9 @@ import { daysLabel, scheduleDays } from "@/modules/change-orders/schedule";
 import { discountLabel, type DiscountType } from "@/modules/change-orders/pricing";
 import { paymentTriggerLabels, termAmounts, type PaymentTermTrigger } from "@/modules/change-orders/payment-terms";
 import { logoBox, ptToRem, type DocumentLogo } from "@/modules/organizations/logo-box";
+import { formatAmount } from "@/lib/money";
 
-const money = (value: string | number) => Number(value).toFixed(2);
+const money = formatAmount;
 
 export type DocumentBodyLine = {
   id: number | string;

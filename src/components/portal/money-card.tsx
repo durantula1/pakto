@@ -25,7 +25,8 @@ export function MoneyCard({ view, portalPublicId, claims, canAct, open, children
   children: React.ReactNode;
 }) {
   const left = view.remainingMinor;
-  const next = view.installments.find((item) => item.remainingMinor > 0n);
+  // Paid in full or more: no installment is due, whatever the plan still lists.
+  const next = left > 0n ? view.installments.find((item) => item.remainingMinor > 0n) : undefined;
   const claimed = next ? claims.some((claim) => claim.status === "pending" && claim.installmentId === next.id) : false;
   const overdue = next ? next.dueOn < today() : false;
   const nextRow = next ? (
@@ -34,7 +35,7 @@ export function MoneyCard({ view, portalPublicId, claims, canAct, open, children
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="truncate font-semibold">{next.title}</span>
         <span className="font-semibold whitespace-nowrap tabular-nums">{formatCents(next.remainingMinor, next.currency)}</span>
-        {claimed ? <Badge variant="warning-soft">Чака фирмата</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
+        {claimed ? <Badge variant="warning-soft">Чака потвърждение</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
       </span>
     </span>
   ) : null;
@@ -44,7 +45,7 @@ export function MoneyCard({ view, portalPublicId, claims, canAct, open, children
       <div className="flex flex-col gap-3 p-5">
         <div className="flex flex-col gap-0.5">
           <h2 id="money-title" className="text-sm text-muted-foreground">
-            {left > 0n ? "Остава да платите" : left < 0n ? "Надплатено" : "Изплатено изцяло"}
+            {left > 0n ? "Остава да платите" : left < 0n ? "Платили сте повече с" : "Изплатено изцяло"}
           </h2>
           <p className="text-3xl font-semibold tracking-tight tabular-nums">
             {formatCents(left < 0n ? -left : left, view.currency)}

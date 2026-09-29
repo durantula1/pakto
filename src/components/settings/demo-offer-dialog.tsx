@@ -152,7 +152,7 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
               <img src={logo.url} alt="" style={{ ...pdfLogoStyle(logo), objectFit: "contain", objectPosition: "left", marginBottom: "8pt" }} />
             ) : null}
             <p style={{ fontSize: "11pt", fontWeight: 600 }}>{organizationName}</p>
-            <p style={{ color: muted, fontSize: "9pt" }}>Документ, създаден с Pakto</p>
+            <p style={{ color: muted, fontSize: "9pt" }}>Създадено с Pakto</p>
           </div>
           <div className="text-right">
             <p style={{ fontSize: "9pt", color: muted, textTransform: "uppercase", letterSpacing: "0.6pt" }}>Оферта · версия 1</p>

@@ -30,7 +30,7 @@ export function PortalSteps({ steps, calm = false, className }: {
   if (!steps.length) return calm ? (
     <p className={cn("flex items-center gap-3 rounded-2xl bg-tile-mint px-4 py-3.5 text-sm text-tile-mint-foreground", className)}>
       <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-4" strokeWidth={3} /></span>
-      <span><b className="font-semibold">Нищо не чака от вас.</b> Ще ви пишем, когато има нещо за решение.</span>
+      <span><b className="font-semibold">Всичко е решено.</b> Когато фирмата изпрати нова оферта или промяна, ще получите имейл.</span>
     </p>
   ) : null;
   return (

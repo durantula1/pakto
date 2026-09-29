@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/workspace/page/page-shell";
 import { lastPage, PAGE_SIZE, pageHref, pageOffset } from "@/lib/pagination";
 import { documentCode } from "@/modules/change-orders/labels";
 import { countChangeOrders, countChangesByOffer, listChangeOrders } from "@/modules/change-orders/queries";
+import { formatAmount } from "@/lib/money";
 
 const label = "Всички оферти";
 
@@ -44,7 +45,7 @@ export async function OffersTable({ filters, page, searchState }: {
           <div key="title"><p className="font-medium">{offer.title}</p><p className="text-sm text-muted-foreground">{offer.projectName} · версия {offer.revisionNumber}</p></div>,
           <DocumentStatusBadge key="status" status={offer.revisionStatus} />,
           changeCount?.total ? <span key="changes" className="inline-flex items-center gap-2 whitespace-nowrap"><span className="tabular-nums">{changeCount.total}</span>{changeCount.pending ? <Badge variant="sent">{changeCount.pending} {changeCount.pending === 1 ? "чака решение" : "чакат решение"}</Badge> : null}</span> : <span key="changes" className="text-muted-foreground">—</span>,
-          <span key="total" className="font-semibold">{Number(offer.total ?? 0).toFixed(2)} {offer.currency}</span>,
+          <span key="total" className="font-semibold">{formatAmount(offer.total ?? 0)} {offer.currency}</span>,
         ],
       };
     })}

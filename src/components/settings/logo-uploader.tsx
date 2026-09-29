@@ -185,7 +185,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
                   )}
                 </div>
                 <p className="truncate text-sm font-semibold">{organizationName}</p>
-                <p className="text-[0.625rem] text-neutral-500">Документ, създаден с Pakto</p>
+                <p className="text-[0.625rem] text-neutral-500">Създадено с Pakto</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-[0.625rem] tracking-wide text-neutral-500 uppercase">Оферта · версия 1</p>

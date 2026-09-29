@@ -7,7 +7,7 @@ export const clientStatusLabels: Record<string, string> = {
   approved: "Одобрихте",
   declined: "Отказахте",
   changes_requested: "Поискахте промяна",
-  superseded: "Фирмата я обновява",
+  superseded: "Фирмата подготвя нова версия",
   expired: "Срокът изтече",
   canceled: "Анулирана от фирмата",
 };

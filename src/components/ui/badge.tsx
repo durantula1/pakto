@@ -18,6 +18,11 @@ const badgeVariants = cva(
         "warning-soft": "bg-tile-sand text-tile-sand-foreground",
         "danger-soft": "bg-tile-coral text-tile-coral-foreground",
         "info-soft": "bg-tile-blue text-tile-blue-foreground",
+        "teal-soft": "bg-tile-teal text-tile-teal-foreground",
+        "lilac-soft": "bg-tile-lilac text-tile-lilac-foreground",
+        "stone-soft": "bg-tile-stone text-tile-stone-foreground",
+        "stone-struck": "bg-tile-stone text-tile-stone-foreground line-through decoration-tile-stone-foreground/40",
+        draft: "border-dashed border-muted-foreground/60 bg-transparent text-muted-foreground",
         "brand-green": "bg-brand-green text-foreground",
         "brand-blue": "bg-brand-blue text-foreground",
         outline:
@@ -32,6 +37,8 @@ const badgeVariants = cva(
     },
   }
 )
+
+type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>
 
 function Badge({
   className,
@@ -63,4 +70,4 @@ function Badge({
   )
 }
 
-export { Badge, badgeVariants }
+export { Badge, badgeVariants, type BadgeVariant }

@@ -21,7 +21,7 @@ export function useDecisionIntent() {
  * the amount and the decision beside it on desktop; on phones a bar at the bottom opens the decision
  * in a sheet. Questions and history fold away under the document.
  */
-export function PortalDocumentLayout({ details, decision, history, summary, pending, questions, work, unreadAnswers = 0, amount, aboveBottomNav = false }: {
+export function PortalDocumentLayout({ details, decision, history, summary, pending, questions, work, unreadAnswers = 0, questionsOpen = false, amount, aboveBottomNav = false }: {
   details: React.ReactNode;
   decision: React.ReactNode;
   history: React.ReactNode;
@@ -32,6 +32,8 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
   /** Stages and payments of this offer, once it is in force. */
   work?: React.ReactNode;
   unreadAnswers?: number;
+  /** Arrived from "Съобщения": the chat starts open. */
+  questionsOpen?: boolean;
   /** Shown in the phone bar, e.g. "2 340,00 EUR". */
   amount: string;
   /** The portal's bottom navigation is on screen, so the phone bar sits above it. */
@@ -40,7 +42,7 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
   const [sheetOpen, setSheetOpen] = useState(false);
   const [intent, setIntent] = useState<DecisionIntent>("approved");
   const open = (next: DecisionIntent) => { setIntent(next); setSheetOpen(true); };
-  const [asking, setAsking] = useState(unreadAnswers > 0);
+  const [asking, setAsking] = useState(questionsOpen || unreadAnswers > 0);
 
   return (
     <div className={cn("grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-6", pending && "pb-20 lg:pb-0")}>
@@ -77,7 +79,7 @@ export function PortalDocumentLayout({ details, decision, history, summary, pend
         <SheetTrigger isOpen={sheetOpen} onOpenChange={setSheetOpen}>
           <div className={cn("fixed inset-x-0 z-20 border-t bg-card px-4 pt-3 shadow-[0_-0.5rem_1.5rem_-1rem_rgb(16_43_56/0.35)] lg:hidden", aboveBottomNav ? "bottom-16 pb-3" : "bottom-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]")}>
             <div className="mx-auto flex max-w-md items-center gap-2">
-              <Button type="button" variant="outline" onPress={() => open("changes_requested")} className="h-13 rounded-xl px-3.5 text-sm leading-tight">Не съм<br />съгласен</Button>
+              <Button type="button" variant="outline" onPress={() => open("changes_requested")} className="h-13 rounded-xl px-3.5 text-sm leading-tight">Не<br />одобрявам</Button>
               <Button type="button" onPress={() => open("approved")} className="h-13 flex-1 gap-2.5 rounded-xl">
                 <Check className="size-5" strokeWidth={2.5} />
                 <span className="flex flex-col items-start leading-tight"><span className="text-base font-semibold">Одобрявам</span><span className="text-xs font-medium tabular-nums opacity-80">{amount}</span></span>

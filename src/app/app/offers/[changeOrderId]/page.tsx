@@ -4,11 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { DocumentMoreMenu } from "@/components/catalog/document-more-menu";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
-import { NotesSection, NotesSectionSkeleton } from "@/components/notes/notes-section";
+import { loadNotes, NotesSection, NotesSectionSkeleton } from "@/components/notes/notes-section";
 import { MessageThread } from "@/components/messages/message-thread";
 import { sendStaffMessageAction } from "@/modules/messages/actions";
 import { listThread, unreadCount } from "@/modules/messages/queries";
-import { countNotes } from "@/modules/notes/queries";
 import { TabCount } from "@/components/workspace/tab-count";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
@@ -36,6 +35,7 @@ import { changeHasStage } from "@/modules/projects/queries";
 import { loadSignature } from "@/modules/change-portal/signature";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
 import { changesCardTitle, documentAreas, documentLayoutClassName, documentTabLabels } from "./document-skeleton";
+import { formatAmount } from "@/lib/money";
 
 const CHANGES_PAGE_SIZE = 10;
 
@@ -76,8 +76,9 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const thread = showThread ? loadStaffThread(change.id) : null;
   // Older versions kept one internal note each; a note carried unchanged into later versions is shown once.
   const legacyNotes = [...new Map(change.revisions.filter((revision) => revision.internalNote).map((revision) => [revision.internalNote!, { revisionNumber: revision.revisionNumber, text: revision.internalNote! }])).values()];
-  const notesTotal = canNotes ? countNotes(context.organizationId, { projectId: change.projectId, changeOrderId: change.id }) : null;
   const notesPage = parsePage(query.notesPage);
+  const notes = canNotes ? loadNotes(context.organizationId, { projectId: change.projectId, changeOrderId: change.id }, notesPage) : null;
+  const notesTotal = notes?.total ?? null;
   const changesPageParam = changesPage > 1 ? String(changesPage) : undefined;
   const olderEventsHref = change.hasOlderEvents && change.events.length ? pageHref(path, { changesPage: changesPageParam, eventsBefore: String(change.events[change.events.length - 1].id) }, "changesPage", changesPage) : null;
   const latestEventsHref = eventsBefore !== undefined ? pageHref(path, {}, "changesPage", changesPage) : null;
@@ -145,11 +146,11 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
               ) : null}
             </TabsContent>
             {thread ? <TabsContent id="messages" className="pt-4">
-              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} thread={thread} /></Suspense>
+              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} projectId={change.projectId} thread={thread} /></Suspense>
             </TabsContent> : null}
             {notesTotal ? <TabsContent id="notes" className="pt-4">
               <Suspense key={notesPage} fallback={<NotesSectionSkeleton />}>
-                <NotesSection organizationId={context.organizationId} projectId={change.projectId} changeOrderId={change.id} total={notesTotal} page={notesPage} path={path} legacy={legacyNotes} currentUserId={context.userId} isOwner={member.role === "owner"} />
+                <NotesSection organizationId={context.organizationId} projectId={change.projectId} changeOrderId={change.id} notes={notes!} page={notesPage} path={path} legacy={legacyNotes} currentUserId={context.userId} isOwner={member.role === "owner"} />
               </Suspense>
             </TabsContent> : null}
             <TabsContent id="history" className="pt-4">
@@ -183,9 +184,13 @@ async function loadStaffThread(changeOrderId: string) {
   return { messages, unread };
 }
 
-async function StaffThread({ changeOrderId, thread }: { changeOrderId: string; thread: ReturnType<typeof loadStaffThread> }) {
+/** Only the messages about this offer; the whole conversation with the client is on the project. */
+async function StaffThread({ changeOrderId, projectId, thread }: { changeOrderId: string; projectId: string; thread: ReturnType<typeof loadStaffThread> }) {
   const { messages } = await thread;
-  return <MessageThread side="staff" messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} placeholder="Отговори на клиента…" emptyText="Клиентът още не е задавал въпроси. Когато попита нещо от портала, ще го видиш тук и ще получиш известие." />;
+  return <div className="flex flex-col gap-2">
+    <MessageThread side="staff" title="Съобщения по тази оферта" messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} currentTopic={changeOrderId} composerNote="Клиентът ще го види в общия разговор, с етикет на офертата." placeholder="Отговори на клиента…" emptyText="Клиентът още не е питал за тази оферта. Когато попита, ще го видиш тук и в разговора на обекта." />
+    <Link href={`/app/projects/${projectId}?tab=questions`} className="self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">Целият разговор с клиента →</Link>
+  </div>;
 }
 
 function MessageThreadSkeleton() {
@@ -215,7 +220,7 @@ async function OfferChanges({ context, offerId, path, total, page }: { context: 
         <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode("change", item.sequenceNumber)}</span>,
         <div key="title"><p className="font-medium">{item.title}</p><p className="text-sm text-muted-foreground">версия {item.revisionNumber}</p></div>,
         <DocumentStatusBadge key="status" status={item.revisionStatus} />,
-        <span key="total" className="font-semibold tabular-nums">{Number(item.total ?? 0).toFixed(2)} {item.currency}</span>,
+        <span key="total" className="font-semibold tabular-nums">{formatAmount(item.total ?? 0)} {item.currency}</span>,
       ],
     }))}
     footer={<ListPagination path={path} params={{}} page={current} total={total} pageSize={CHANGES_PAGE_SIZE} pageParam="changesPage" />}

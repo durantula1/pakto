@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Mail, Phone, Plus, ShieldCheck, UserRound, Users } from "lucide-react";
 
+import { contactRoleHint, contactRoleLabel } from "@/components/projects/contact-role";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -105,7 +106,7 @@ function ContactCard({ projectId, contact, canEdit, isOwner }: { projectId: stri
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          <Badge variant={contact.isPrimary ? "info-soft" : "secondary"}>{contact.isPrimary ? "Одобрява" : "Наблюдава"}</Badge>
+          <Badge variant="outline" title={contactRoleHint(contact.isPrimary)}>{contactRoleLabel(contact.isPrimary)}</Badge>
           {contact.emailVerifiedAt ? <Badge variant="success-soft"><ShieldCheck className="size-3" />Потвърден</Badge> : <Badge variant="warning-soft">Непотвърден</Badge>}
         </div>
       </div>

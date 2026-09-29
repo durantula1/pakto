@@ -8,6 +8,7 @@ import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { emailClient, sendClientDigests } from "@/modules/notifications/client";
+import { formatAmount } from "@/lib/money";
 
 const DAY = 86_400_000;
 /** A client who has not decided this long after sending gets one gentle reminder. */
@@ -49,15 +50,15 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
   const due = document.responseDueAt ? dateFormat.format(document.responseDueAt) : null;
   const subject = reason === "expiring" && due
     ? `Напомняне: ${kind} „${document.title}“ е валидна до ${due}`
-    : `Напомняне: ${kind} „${document.title}“ очаква твоето решение`;
+    : `Напомняне: ${kind} „${document.title}“ очаква Вашето решение`;
   const intro = reason === "expiring" && due
-    ? `${document.organizationName} ти напомня, че ${kind} „${document.title}“ (${Number(document.total).toFixed(2)} ${document.currency}) е валидна до ${due}.`
-    : `${document.organizationName} очаква твоето решение по ${kind} „${document.title}“ (${Number(document.total).toFixed(2)} ${document.currency}).${due ? ` Валидна е до ${due}.` : ""}`;
+    ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) е валидна до ${due}.`
+    : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}).${due ? ` Валидна е до ${due}.` : ""}`;
   await sendEmail({
     to: contact.email,
     subject: projectSubject(document.projectName, subject),
-    text: `Здравей, ${contact.name}!\n\n${intro}\n\nМожеш да я одобриш, да поискаш промяна или да зададеш въпрос тук: ${url}`,
-    html: `<div style="max-width:600px"><p>Здравей, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледай и реши</a></p><p style="color:#71717a">Можеш да я одобриш, да поискаш промяна или да откажеш.</p></div>`,
+    text: `Здравейте, ${contact.name}!\n\n${intro}\n\nМожете да я одобрите, да поискате промяна или да зададете въпрос тук: ${url}`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте и решете</a></p><p style="color:#71717a">Можете да я одобрите, да поискате промяна или да откажете.</p></div>`,
   });
   return true;
 }
@@ -87,7 +88,7 @@ export async function expireOverdue(now = new Date(), scope: { projectId?: strin
       const kind = document.documentKind === "offer" ? "Офертата" : "Промяната";
       emailClient(document.projectId, {
         subject: `${kind} „${document.title}“ изтече`,
-        intro: `${kind} „${document.title}“ (${Number(document.total).toFixed(2)} ${document.currency}) вече не е валидна, защото срокът за решение мина. Ако още я искаш, пиши на ${document.organizationName} и попитай за нова версия.`,
+        intro: `${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) вече не е валидна, защото срокът за решение мина. Ако все още я искате, пишете на ${document.organizationName} за нова версия.`,
       });
     }
   }

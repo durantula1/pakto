@@ -1,3 +1,5 @@
+import type { BadgeVariant } from "@/components/ui/badge";
+
 /**
  * The one status an offer shows everywhere (staff and portal). It combines the commercial state of
  * its versions with how far the work got and whether the client accepted it.
@@ -48,18 +50,19 @@ export const offerStatusLabels: Record<OfferDisplayStatus, string> = {
   accepted: "Приета",
 };
 
-export const offerStatusTones: Record<OfferDisplayStatus, "secondary" | "warning-soft" | "success-soft" | "danger-soft" | "info-soft"> = {
-  draft: "secondary",
-  pending: "warning-soft",
-  changes_requested: "warning-soft",
+/** Same scheme as `documentStatusTones`: blue waits on the client, lilac on the team, mint and teal are agreed work. */
+export const offerStatusTones: Record<OfferDisplayStatus, BadgeVariant> = {
+  draft: "draft",
+  pending: "info-soft",
+  changes_requested: "lilac-soft",
   declined: "danger-soft",
-  expired: "danger-soft",
-  canceled: "secondary",
-  in_force: "info-soft",
-  in_progress: "info-soft",
+  expired: "stone-soft",
+  canceled: "stone-struck",
+  in_force: "success-soft",
+  in_progress: "teal-soft",
   awaiting_acceptance: "warning-soft",
   issues: "danger-soft",
-  accepted: "success-soft",
+  accepted: "approved",
 };
 
 /** Whether the offer counts toward the contract: the client approved a version of it and it was not canceled. */
