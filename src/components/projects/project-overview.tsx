@@ -125,7 +125,7 @@ function StageList({ view, now, next, name, foldDone }: {
   return <>
     {fold ? (
       <details className="group mt-4 [&>summary::-webkit-details-marker]:hidden">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 pl-[3.125rem] text-sm">
+        <summary className="flex min-h-11 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center gap-3 pl-[3.125rem] text-sm">
           <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-3.5" strokeWidth={3} /></span>
           <span className="font-medium">{finished.length} завършени етапа</span>
           <span className="text-muted-foreground underline-offset-4 group-open:hidden hover:underline">покажи</span>

@@ -1721,8 +1721,8 @@ export const documentMessages = appSchema.table(
     id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
     organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
     projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-    /** Null: a question about the project as a whole. */
-    changeOrderId: uuid("change_order_id").references(() => changeOrders.id, { onDelete: "cascade" }),
+    /** Every message is about one offer or change (docs/chat-narrowing-plan.md). */
+    changeOrderId: uuid("change_order_id").notNull().references(() => changeOrders.id, { onDelete: "cascade" }),
     revisionId: bigint("revision_id", { mode: "number" }).references(() => changeOrderRevisions.id, { onDelete: "set null" }),
     authorType: text("author_type", { enum: ["staff", "portal_contact"] }).notNull(),
     authorId: uuid("author_id").notNull(),
@@ -1733,7 +1733,6 @@ export const documentMessages = appSchema.table(
   },
   (table) => [
     index("document_messages_change_order_idx").on(table.changeOrderId, table.createdAt),
-    index("document_messages_project_idx").on(table.projectId, table.createdAt).where(sql`${table.changeOrderId} is null`),
   ],
 );
 

@@ -146,7 +146,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
               ) : null}
             </TabsContent>
             {thread ? <TabsContent id="messages" className="pt-4">
-              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} projectId={change.projectId} thread={thread} /></Suspense>
+              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} thread={thread} /></Suspense>
             </TabsContent> : null}
             {notesTotal ? <TabsContent id="notes" className="pt-4">
               <Suspense key={notesPage} fallback={<NotesSectionSkeleton />}>
@@ -184,12 +184,11 @@ async function loadStaffThread(changeOrderId: string) {
   return { messages, unread };
 }
 
-/** Only the messages about this offer; the whole conversation with the client is on the project. */
-async function StaffThread({ changeOrderId, projectId, thread }: { changeOrderId: string; projectId: string; thread: ReturnType<typeof loadStaffThread> }) {
+/** The client's questions about this offer and the team's answers; the client sees them under the offer. */
+async function StaffThread({ changeOrderId, thread }: { changeOrderId: string; thread: ReturnType<typeof loadStaffThread> }) {
   const { messages } = await thread;
   return <div className="flex flex-col gap-2">
-    <MessageThread side="staff" title="Съобщения по тази оферта" messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} currentTopic={changeOrderId} composerNote="Клиентът ще го види в общия разговор, с етикет на офертата." placeholder="Отговори на клиента…" emptyText="Клиентът още не е питал за тази оферта. Когато попита, ще го видиш тук и в разговора на обекта." />
-    <Link href={`/app/projects/${projectId}?tab=questions`} className="self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">Целият разговор с клиента →</Link>
+    <MessageThread side="staff" title="Въпроси по тази оферта" messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} currentTopic={changeOrderId} composerNote="Клиентът ще го види под офертата и ще получи имейл." placeholder="Отговори на клиента…" emptyText="Клиентът още не е питал за тази оферта. Когато попита, ще го видиш тук." />
   </div>;
 }
 

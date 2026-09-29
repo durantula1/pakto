@@ -23,7 +23,6 @@ export const projectTabLabels = {
   documents: "Оферти",
   work: "Работа",
   payments: "Плащания",
-  questions: "Разговор",
   notes: "Бележки",
 };
 
@@ -38,8 +37,7 @@ export function ProjectPageSkeleton() {
         {(Object.keys(projectStatLabels) as Array<keyof typeof projectStatLabels>).map((key) => <StatCardSkeleton key={key} label={projectStatLabels[key]} tone={projectStatTones[key]} hint />)}
       </div>
       <div className="flex flex-col gap-2">
-        {/* "Въпроси" appears only once the client asked something, so the skeleton leaves it out. */}
-        <TabsSkeleton labels={Object.values(projectTabLabels).filter((label) => label !== projectTabLabels.questions)} />
+        <TabsSkeleton labels={Object.values(projectTabLabels)} />
         <div className="pt-4"><ProjectDashboardSkeleton /></div>
       </div>
     </PageShell>

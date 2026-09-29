@@ -13,7 +13,6 @@ import {
   timelineEvents,
 } from "@/db/schema";
 import { getPortalSession } from "@/modules/change-portal/session";
-import { PAGE_SIZE, pageOffset } from "@/lib/pagination";
 import { getProjectState, type ProjectState } from "@/modules/projects/state";
 import { summarizeRevisionDiff } from "@/modules/change-orders/revision-diff";
 import { documentLogo } from "@/modules/organizations/logo";
@@ -72,7 +71,6 @@ const portalDocumentColumns = {
 const latestClientRevision = sql`${changeOrderRevisions.id} = (select max(r.id) from app.change_order_revisions r where r.change_order_id = ${changeOrders.id} and r.frozen_at is not null and r.status in ('sent','viewed','approved','declined','changes_requested','canceled','expired','superseded'))`;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const pendingStatuses = ["sent", "viewed"] as const;
-const decidedStatuses = clientStatuses.filter((status) => !pendingStatuses.some((pending) => pending === status));
 
 function portalDocumentScope(projectId: string, statuses: readonly (typeof clientStatuses)[number][]) {
   return and(eq(changeOrders.projectId, projectId), inArray(changeOrderRevisions.status, [...statuses]));
@@ -117,48 +115,46 @@ function pastDue(rows: Array<{ status: string; responseDueAt: Date | null }>, no
 }
 
 /**
- * Portal home. Documents awaiting a decision are always returned in full (they drive the call to action);
- * decided documents are paginated with `page` / `pageSize`.
+ * Portal home. Documents awaiting a decision drive the call to action; every document the client
+ * received (waiting ones included) makes the project's history, grouped by offer on the page.
  */
-export async function getPortalProject(projectPublicId: string, options: { page?: number; pageSize?: number } = {}) {
+export async function getPortalProject(projectPublicId: string) {
   const session = await getPortalSession(projectPublicId);
   if (!session) return null;
-  const first = await loadPortalProject(session, options);
+  const first = await loadPortalProject(session);
   // The daily job may not have run yet: a version past its validity is expired now, then read again.
   if (!pastDue(first.pending)) return first;
   await expireOverdue(new Date(), { projectId: session.projectId, notifyClient: false });
-  return loadPortalProject(session, options);
+  return loadPortalProject(session);
 }
 
-async function loadPortalProject(session: PortalSession, options: { page?: number; pageSize?: number }) {
-  const project = portalProjectHeader(session);
+/** A project holds a handful of documents; the cap only guards the page. */
+const HISTORY_LIMIT = 200;
 
-  const pageSize = options.pageSize ?? PAGE_SIZE;
-  const page = options.page ?? 1;
+async function loadPortalProject(session: PortalSession) {
+  const project = portalProjectHeader(session);
   const db = getDatabase();
   // One parallel round after the session.
-  const [pending, decided, decidedTotal, state, claims] = await Promise.all([
+  const [pending, documents, state, claims] = await Promise.all([
     db.select(portalDocumentColumns)
       .from(changeOrders)
       .innerJoin(changeOrderRevisions, latestClientRevision)
       .where(portalDocumentScope(session.projectId, pendingStatuses))
       .orderBy(desc(changeOrderRevisions.createdAt), desc(changeOrderRevisions.id)),
-    db.select(portalDocumentColumns)
+    db.select({
+      ...portalDocumentColumns,
+      /** When the client first received this document (its first sent version). */
+      firstSentAt: sql<Date>`(select min(r.frozen_at) from app.change_order_revisions r where r.change_order_id = ${changeOrders.id} and r.frozen_at is not null)`.mapWith(changeOrderRevisions.frozenAt),
+    })
       .from(changeOrders)
       .innerJoin(changeOrderRevisions, latestClientRevision)
-      .where(portalDocumentScope(session.projectId, decidedStatuses))
-      .orderBy(desc(changeOrderRevisions.createdAt), desc(changeOrderRevisions.id))
-      .limit(pageSize)
-      .offset(pageOffset(page, pageSize)),
-    db.select({ total: sql<number>`count(*)::int` })
-      .from(changeOrders)
-      .innerJoin(changeOrderRevisions, latestClientRevision)
-      .where(portalDocumentScope(session.projectId, decidedStatuses))
-      .then((rows) => rows[0]?.total ?? 0),
+      .where(portalDocumentScope(session.projectId, clientStatuses))
+      .orderBy(asc(changeOrders.sequenceNumber))
+      .limit(HISTORY_LIMIT),
     getProjectState(session.organizationId, session.projectId),
     listPortalClaims(session.projectId),
   ]);
-  return { project, session, pending, decided, decidedTotal, page, pageSize, state: state ? clientView(state) : null, claims };
+  return { project, session, pending, documents, state: state ? clientView(state) : null, claims };
 }
 
 

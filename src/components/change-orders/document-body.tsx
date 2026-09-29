@@ -136,7 +136,7 @@ export function DocumentBody({ document, brand, compact = false }: {
         {table}
         {compact && (schedule || terms) ? (
           <details className="group rounded-xl border [&>summary::-webkit-details-marker]:hidden">
-            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2">
+            <summary className="flex min-h-12 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 px-3 py-2">
               <span className="flex flex-col">
                 <span className="text-sm font-medium">{schedule && terms ? "Срок и плащане" : schedule ? "Ориентировъчен график" : "Плащане"}</span>
                 <span className="text-xs text-muted-foreground">{[document.schedule?.length ? `${document.schedule.length} ${document.schedule.length === 1 ? "етап" : "етапа"}, около ${daysLabel(scheduleDays(document.schedule))}` : null, document.paymentTerms?.length ? `${document.paymentTerms.length} ${document.paymentTerms.length === 1 ? "плащане" : "плащания"}` : null].filter(Boolean).join(" · ")}</span>

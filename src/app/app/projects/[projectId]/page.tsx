@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { after } from "next/server";
 import { Contact, Eye, Lock, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,6 @@ import { InstallmentDialog, PaymentClaimsBlock, PaymentDisputesAlert, ReceiptAct
 import { ClientAccess } from "@/components/projects/client-access";
 import { ProjectMenu } from "@/components/projects/project-menu";
 import { OfferScopeChips } from "@/components/projects/offer-cards";
-import { MessageThread } from "@/components/messages/message-thread";
 import { MilestoneDialog } from "@/components/projects/milestone-dialog";
 import { ScheduleStagesDialog } from "@/components/projects/schedule-stages-dialog";
 import { daysLabel, scheduleDays } from "@/modules/change-orders/schedule";
@@ -46,15 +44,13 @@ import { formatCents, getProjectState, type ProjectState } from "@/modules/proje
 import { deleteInstallmentAction, deleteMilestoneAction, updateChangeWorkAction, updateMilestoneAction } from "@/modules/projects/operations";
 import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
 import { offerLabel, parseOfferScope, scopeView, type OfferScope } from "@/modules/projects/scope";
-import { sendProjectAnswerAction } from "@/modules/messages/actions";
-import { listThread, markThreadRead, unreadCount } from "@/modules/messages/queries";
 import { cn } from "@/lib/utils";
 import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, projectStatusLabels, projectTabLabels } from "./project-skeleton";
 import { formatAmount } from "@/lib/money";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
-const tabs = ["overview", "documents", "work", "payments", "questions", "notes"] as const;
+const tabs = ["overview", "documents", "work", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/projects/[projectId]">): Promise<Metadata> {
@@ -72,7 +68,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  const [member, project, offersTotal, state, disputes, contacts, claims, questions, unreadQuestions] = await Promise.all([
+  const [member, project, offersTotal, state, disputes, contacts, claims] = await Promise.all([
     requireProjectCapability(context, projectId, "view"),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
@@ -86,13 +82,10 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       .from(paymentClaims).innerJoin(projectContacts, eq(projectContacts.id, paymentClaims.projectContactId))
       .where(and(eq(paymentClaims.organizationId, context.organizationId), eq(paymentClaims.projectId, projectId), eq(paymentClaims.status, "pending")))
       .orderBy(asc(paymentClaims.createdAt)),
-    listThread({ projectId }),
-    unreadCount({ projectId }, "staff"),
   ]);
   if (!project || !state) notFound();
   const notesTotal = notes?.total ?? null;
   const path = `/app/projects/${projectId}`;
-  const showQuestions = questions.length > 0 || query.tab === "questions";
   const tab = tabs.find((item) => item === query.tab) ?? "overview";
   const active = project.status === "active";
   const canManage = can(member, "milestones.manage") && active;
@@ -103,7 +96,6 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const showPayments = can(member, "payments.record") || can(member, "finance.view");
   const isOwner = member.role === "owner";
   const today = new Date().toISOString().slice(0, 10);
-  if (unreadQuestions && tab === "questions") after(() => markThreadRead({ projectId }, "staff"));
 
   // Offers: the ones in force carry work and money; a chip row filters the work and payment tabs by offer.
   const inForce = state.offersInForce;
@@ -201,13 +193,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         <StatCard tone={daysToDeadline !== null && daysToDeadline < 0 && active ? "coral" : "blue"} label={projectStatLabels.deadline} value={state.deadline ? formatDay(state.deadline) : "—"} hint={daysToDeadline === null ? "Очаква одобрение" : daysToDeadline > 0 ? `След ${daysToDeadline} ${daysToDeadline === 1 ? "ден" : "дни"}` : daysToDeadline === 0 ? "Днес" : `Изтекъл преди ${-daysToDeadline} ${daysToDeadline === -1 ? "ден" : "дни"}`} />
       </div>
       {showPayments ? <PaymentDisputesAlert projectId={projectId} disputes={disputes} canResolve={canRecordPayments} /> : null}
-      <DetailTabs key={`${tab}-${scope}`} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) || (tab === "questions" && !showQuestions) ? "overview" : tab}>
+      <DetailTabs key={`${tab}-${scope}`} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) ? "overview" : tab}>
         <TabsList>
           <TabsTrigger id="overview">{projectTabLabels.overview}</TabsTrigger>
           <TabsTrigger id="documents">{projectTabLabels.documents}</TabsTrigger>
           <TabsTrigger id="work">{projectTabLabels.work}</TabsTrigger>
           {showPayments ? <TabsTrigger id="payments">{projectTabLabels.payments}{disputes.length || claims.length ? <CountPill value={disputes.length + claims.length} highlight /> : null}</TabsTrigger> : null}
-          {showQuestions ? <TabsTrigger id="questions">{projectTabLabels.questions}{unreadQuestions ? <CountPill value={unreadQuestions} highlight /> : null}</TabsTrigger> : null}
           {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}<Suspense fallback={null}><TabCount count={notesTotal} /></Suspense></TabsTrigger> : null}
         </TabsList>
         <TabsContent id="overview" className="pt-4">
@@ -373,9 +364,6 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
               ],
             }))}
           /> : <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">Няма вноски. Сложи условия за плащане в офертата или добави вноска тук.</p>}
-        </TabsContent> : null}
-        {showQuestions ? <TabsContent id="questions" className="pt-5">
-          <MessageThread side="staff" title="Разговор с клиента" messages={questions} action={sendProjectAnswerAction} hidden={{ projectId }} topicHref="/app/offers/{id}?tab=messages" placeholder="Напиши на клиента…" emptyText="Клиентът още не е писал. Тук ще виждаш всичко: въпросите за обекта и тези по отделните оферти." />
         </TabsContent> : null}
         {notesTotal ? <TabsContent id="notes" className="pt-5">
           <Suspense key={notesPage} fallback={<NotesSectionSkeleton />}>

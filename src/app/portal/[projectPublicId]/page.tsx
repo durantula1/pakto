@@ -1,17 +1,12 @@
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { ArrowUpRight, ChevronDown, FilePlus2, FileText, History, Lock, MapPin } from "lucide-react";
+import { notFound } from "next/navigation";
+import { ChevronDown, History, Lock, MapPin } from "lucide-react";
 import {
   PortalSteps,
   stepAmount,
   type PortalStep,
 } from "@/components/portal/action-card";
-import { ClientStatusBadge } from "@/components/portal/client-status";
-import { cn } from "@/lib/utils";
-import { cents, formatCents } from "@/modules/projects/state";
+import { cents } from "@/modules/projects/state";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
-import { ListPagination } from "@/components/workspace/list-filters";
-import { lastPage, pageHref, parsePage } from "@/lib/pagination";
 import { documentName, formatShortDay } from "@/modules/change-orders/labels";
 import { AgreementTree } from "@/components/portal/agreement-tree";
 import { ProjectGlance } from "@/components/portal/project-glance";
@@ -29,6 +24,7 @@ import {
 } from "@/components/projects/project-overview";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { ClientProjectsBar } from "@/components/portal/client-projects-bar";
+import { DocumentTimeline } from "@/components/portal/document-timeline";
 import { CompanyContact } from "@/components/portal/company-contact";
 import { clientNavigation } from "@/modules/change-portal/session";
 import { maskEmail } from "@/lib/email/send";
@@ -47,14 +43,9 @@ export default async function PortalProjectPage({
     params,
     searchParams,
   ]);
-  const page = parsePage(query.page);
-  const data = await getPortalProject(projectPublicId, { page });
+  const data = await getPortalProject(projectPublicId);
   if (!data || !data.state) notFound();
   const path = `/portal/${projectPublicId}`;
-  if (!data.decided.length && page > lastPage(data.decidedTotal, data.pageSize))
-    redirect(
-      pageHref(path, {}, "page", lastPage(data.decidedTotal, data.pageSize)),
-    );
   const state = data.state;
   const navigation = await clientNavigation(data.session);
   const isApprover = data.session.contactRole === "approver";
@@ -68,7 +59,7 @@ export default async function PortalProjectPage({
     hasEmail: !!data.session.contactEmail,
     verified,
   };
-  const { pending, decided } = data;
+  const { pending, documents } = data;
   const multipleOffers = state.offers.length > 1;
   const awaitingAcceptance = state.offers.filter(
     (offer) => offer.status === "awaiting_acceptance",
@@ -140,9 +131,6 @@ export default async function PortalProjectPage({
   const disputed =
     query.payment === "disputed" &&
     state.receipts.some((item) => item.disputed);
-  // Waiting documents lead the page while the project is active; afterwards they are only history.
-  const history = active ? decided : [...pending, ...decided];
-  const historyTotal = data.decidedTotal + (active ? 0 : pending.length);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -263,42 +251,32 @@ export default async function PortalProjectPage({
         aria-label="Всички оферти и промени"
         className="scroll-mt-20"
       >
-        {historyTotal ? (
+        {documents.length ? (
           <details
-            open={page > 1 || !all.hasAgreement}
-            className="group [&>summary::-webkit-details-marker]:hidden"
+            open={!all.hasAgreement}
+            // Open, the row and its list sit in one framed well, so it is clear what the row unfolded.
+            className="group rounded-[2rem] transition-colors open:bg-foreground/[0.04] open:p-1.5 open:shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--foreground)_12%,transparent)] [&>summary::-webkit-details-marker]:hidden"
           >
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-full bg-card py-2 pr-2 pl-3 text-sm font-medium">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-full bg-card py-2 pr-2 pl-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
               <span className="inline-flex items-center gap-2.5">
                 <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground">
                   <History className="size-4" />
                 </span>
                 Всички оферти и промени
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
-                  {historyTotal}
+                  {documents.length}
                 </span>
               </span>
               <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted">
                 <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
               </span>
             </summary>
-            <div className="mt-2 flex flex-col gap-3">
-              <DocumentList
+            <div className="mt-1.5">
+              <DocumentTimeline
+                documents={documents}
                 projectPublicId={projectPublicId}
-                items={history}
-                nameOf={multipleOffers ? nameOf : null}
+                offerNames={nameOf}
               />
-              {data.decidedTotal > data.pageSize ? (
-                <div className="overflow-hidden rounded-3xl bg-card [&>nav]:border-t-0">
-                  <ListPagination
-                    path={path}
-                    params={{}}
-                    page={page}
-                    total={data.decidedTotal}
-                    pageSize={data.pageSize}
-                  />
-                </div>
-              ) : null}
             </div>
           </details>
         ) : !pending.length ? (
@@ -309,84 +287,5 @@ export default async function PortalProjectPage({
         ) : null}
       </section>
     </div>
-  );
-}
-
-/** Every offer and change the client was sent: name, title, amount and what the client did with it. */
-function DocumentList({
-  projectPublicId,
-  items,
-  nameOf,
-}: {
-  projectPublicId: string;
-  items: NonNullable<Awaited<ReturnType<typeof getPortalProject>>>["decided"];
-  /** With several offers, a change says which one it belongs to. */
-  nameOf: Map<string, string> | null;
-}) {
-  return (
-    <ul className="divide-y divide-dashed overflow-hidden rounded-3xl bg-card px-2">
-      {items.map((change) => {
-        const waiting = change.status === "sent" || change.status === "viewed";
-        const parent = change.baselineOfferId
-          ? nameOf?.get(change.baselineOfferId)
-          : null;
-        const minor = cents(change.total);
-        return (
-          <li key={change.id}>
-            <Link
-              href={`/portal/${projectPublicId}/changes/${change.id}`}
-              className={cn(
-                "group flex items-center gap-3 px-2 py-3.5",
-                change.status === "superseded" || change.status === "canceled"
-                  ? "opacity-70"
-                  : "",
-              )}
-            >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-10 shrink-0 place-items-center rounded-full",
-                  change.documentKind === "offer"
-                    ? "bg-tile-blue text-tile-blue-foreground"
-                    : "bg-tile-lilac text-tile-lilac-foreground",
-                )}
-              >
-                {change.documentKind === "offer" ? (
-                  <FileText className="size-4" />
-                ) : (
-                  <FilePlus2 className="size-4" />
-                )}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="text-xs font-medium text-muted-foreground">
-                  {documentName(change.documentKind, change.sequenceNumber)}
-                  {parent ? ` към ${parent}` : ""}
-                  {change.revisionNumber > 1 ? " · обновена" : ""}
-                </span>
-                <span className="truncate font-semibold">{change.title}</span>
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <ClientStatusBadge status={change.status} />
-                  {waiting && change.responseDueAt ? (
-                    <span className="text-xs text-muted-foreground">
-                      до {formatShortDay(change.responseDueAt)}
-                    </span>
-                  ) : null}
-                </span>
-              </span>
-              <span className="shrink-0 font-semibold tabular-nums">
-                {change.documentKind === "change" && minor > 0n ? "+" : ""}
-                {formatCents(minor, change.currency)}
-              </span>
-              <span
-                aria-hidden="true"
-                className="grid size-8 shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"
-              >
-                <ArrowUpRight className="size-4" />
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

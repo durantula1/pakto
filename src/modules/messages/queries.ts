@@ -15,18 +15,13 @@ export type ThreadMessage = { id: number; authorType: "staff" | "portal_contact"
 
 const messageRevision = alias(changeOrderRevisions, "message_revision");
 
-/**
- * One conversation per project: `{ projectId }` is every message on the project, tagged or not; an
- * offer id narrows it to the messages about that offer (the "Разговор" tab on the offer).
- */
-function threadScope(target: string | { projectId: string }) {
-  return typeof target === "string"
-    ? eq(documentMessages.changeOrderId, target)
-    : eq(documentMessages.projectId, target.projectId);
+/** Every message belongs to one offer (docs/chat-narrowing-plan.md): its questions and the answers. */
+function threadScope(changeOrderId: string) {
+  return eq(documentMessages.changeOrderId, changeOrderId);
 }
 
 /** The conversation, oldest first, each message with its offer if it has one. Staff names come from profiles, client names from contacts. */
-export async function listThread(target: string | { projectId: string }): Promise<ThreadMessage[]> {
+export async function listThread(target: string): Promise<ThreadMessage[]> {
   const rows = await getDatabase().select({
     id: documentMessages.id, authorType: documentMessages.authorType, body: documentMessages.body, createdAt: documentMessages.createdAt,
     staffName: profiles.displayName, contactName: projectContacts.name, revisionNumber: messageRevision.revisionNumber, readByClientAt: documentMessages.readByClientAt,
@@ -48,7 +43,7 @@ export async function listThread(target: string | { projectId: string }): Promis
 }
 
 /** Unread counts for one side: staff count client messages they have not opened, and the other way round. */
-export async function unreadCount(target: string | { projectId: string }, reader: "staff" | "client") {
+export async function unreadCount(target: string, reader: "staff" | "client") {
   const [row] = await getDatabase().select({ total: count() }).from(documentMessages).where(and(
     threadScope(target),
     reader === "staff" ? eq(documentMessages.authorType, "portal_contact") : eq(documentMessages.authorType, "staff"),
@@ -57,7 +52,7 @@ export async function unreadCount(target: string | { projectId: string }, reader
   return row?.total ?? 0;
 }
 
-export async function markThreadRead(target: string | { projectId: string }, reader: "staff" | "client") {
+export async function markThreadRead(target: string, reader: "staff" | "client") {
   const now = new Date();
   await getDatabase().update(documentMessages)
     .set(reader === "staff" ? { readByStaffAt: now } : { readByClientAt: now })

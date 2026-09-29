@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, FileDiff, TriangleAlert } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { DecisionDone } from "@/components/portal/decision-done";
@@ -165,7 +165,7 @@ export default async function PortalChangePage({
   const versions = data.revisions.filter((revision) => revision.frozenAt);
   const history = (
     <details className="group rounded-3xl bg-card [&>summary::-webkit-details-marker]:hidden">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-2 pr-2 pl-3 text-sm font-medium">
+      <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 py-2 pr-2 pl-3 text-sm font-medium">
         <span className="inline-flex items-center gap-2.5">
           <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground"><History className="size-4" /></span>
           Версии и история
@@ -271,8 +271,8 @@ export default async function PortalChangePage({
 
   const diff = data.diff ? (
     <details open className="group rounded-3xl bg-tile-coral/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2">
-        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sidebar"><Sparkles className="size-4" /></span>
+      <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 px-3 py-2">
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sidebar"><FileDiff className="size-4" /></span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="font-semibold">Какво е новото спрямо {inForce ? `версия ${inForce.revisionNumber}` : "предишната версия"}</span>
           {data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
