@@ -18,11 +18,11 @@ export type TenantContext = {
   allProjects: boolean;
 };
 
-export class AuthenticationRequiredError extends Error {
+class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHORIZED";
 }
 
-export class MembershipRequiredError extends Error {
+class MembershipRequiredError extends Error {
   readonly code = "MEMBERSHIP_REQUIRED";
 }
 
@@ -88,7 +88,7 @@ export async function requireTenantContext(): Promise<TenantContext> {
   const context = await getOptionalTenantContext();
   if (!context) {
     throw new MembershipRequiredError(
-      "Профилът няма активна организация. Завърши настройката на workspace-а.",
+      "Профилът няма фирма. Завърши настройката на фирмата.",
     );
   }
   return context;

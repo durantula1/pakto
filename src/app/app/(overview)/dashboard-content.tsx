@@ -34,7 +34,7 @@ const stats = [
   { key: "activeProjects", label: "Активни обекти", icon: Building2 },
   { key: "awaitingDecision", label: "Чакат решение", icon: Hourglass },
   { key: "overdueMilestones", label: "Просрочени етапи", icon: CalendarX2 },
-  { key: "changesRequested", label: "Искат корекция", icon: PencilLine },
+  { key: "changesRequested", label: "Искат промяна", icon: PencilLine },
 ] as const;
 
 const columns: DataTableColumn[] = [

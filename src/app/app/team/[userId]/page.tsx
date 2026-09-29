@@ -67,7 +67,7 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
             {isSelf ? <p className="text-sm text-muted-foreground">Това е твоят профил. Ролята на собственик се сменя от друг собственик.</p> : (
               <ActionForm action={requestOwnerChangeAction} success="Предложението е изпратено" className="flex flex-col gap-3">
                 <input type="hidden" name="targetUserId" value={member.userId} />
-                <Field><FieldLabel>Нова роля</FieldLabel><FilterSelect name="requestedRole" value="office" options={[{ value: "office", label: "Промени на офис" }, { value: "remove", label: "Премахни" }]} /></Field>
+                <Field><FieldLabel>Нова роля</FieldLabel><FilterSelect name="requestedRole" value="office" options={[{ value: "office", label: "Офис" }, { value: "remove", label: "Премахване от екипа" }]} /></Field>
                 <ActionSubmit variant="outline">Предложи промяна</ActionSubmit>
               </ActionForm>
             )}

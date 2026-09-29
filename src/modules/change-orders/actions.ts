@@ -333,7 +333,7 @@ export async function createOfferAction(
     .from(organizations)
     .where(eq(organizations.id, context.organizationId))
     .limit(1);
-  if (!organization) return { error: "Организацията не е намерена." };
+  if (!organization) return { error: "Фирмата не е намерена." };
 
   const priced = data.lines.map((line) => ({
     ...line,
@@ -464,7 +464,7 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   const db = getDatabase();
   const [document] = await db.select({ projectId: changeOrders.projectId, documentKind: changeOrders.documentKind, baselineOfferId: changeOrders.baselineOfferId })
     .from(changeOrders).where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
-  if (!document) return { error: "Документът не е намерен." };
+  if (!document) return { error: "Не намерихме тази оферта или промяна." };
   try {
     await requireProjectCapability(context, document.projectId, document.documentKind === "offer" ? "offer" : "draft");
     await requireActiveProject(context.organizationId, document.projectId);
@@ -551,7 +551,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
   const database = getDatabase();
   const [target] = await database.select({ projectId: changeOrders.projectId })
     .from(changeOrders).where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
-  if (!target) throw new Error("Документът не е намерен.");
+  if (!target) throw new Error("Не намерихме тази оферта или промяна.");
   await requireProjectCapability(context, target.projectId, "send");
   await requireActiveProject(context.organizationId, target.projectId);
   const { projectId, ...sent } = await database.transaction(
@@ -601,7 +601,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
           ),
         )
         .limit(1);
-      if (!contact) throw new Error("Обектът няма избран approver.");
+      if (!contact) throw new Error("Обектът няма одобряващ.");
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`${change.projectId}:${contact.id}`}))`);
 
       const lineItems = await transaction
@@ -785,7 +785,7 @@ export async function cancelDocumentAction(formData: FormData): Promise<ActionRe
     const db = getDatabase();
     const [document] = await db.select({ projectId: changeOrders.projectId }).from(changeOrders)
       .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
-    if (!document) throw new Error("Документът не е намерен.");
+    if (!document) throw new Error("Не намерихме тази оферта или промяна.");
     await requireProjectCapability(context, document.projectId, "send");
     await requireActiveProject(context.organizationId, document.projectId);
     const outcome = await db.transaction(async (tx) => {
@@ -802,9 +802,9 @@ export async function cancelDocumentAction(formData: FormData): Promise<ActionRe
         .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
         .where(eq(changeOrders.id, changeOrderId))
         .for("update").limit(1);
-      if (!current) throw new Error("Документът не е намерен.");
-      if (current.lifecycleStatus === "canceled") throw new Error("Документът вече е анулиран.");
-      if (current.status === "approved") throw new Error("Одобрен документ не се анулира. Той е договореното с клиента.");
+      if (!current) throw new Error("Не намерихме тази оферта или промяна.");
+      if (current.lifecycleStatus === "canceled") throw new Error("Вече е анулирана.");
+      if (current.status === "approved") throw new Error("Одобрена оферта или промяна не се анулира. Тя е договореното с клиента.");
       const wasPending = current.status === "sent" || current.status === "viewed";
       const visibility = current.frozenAt ? "client" : "internal";
 
@@ -838,5 +838,5 @@ export async function cancelDocumentAction(formData: FormData): Promise<ActionRe
     revalidatePath(`/app/offers/${changeOrderId}`);
     revalidatePath(`/app/projects/${document.projectId}`);
     revalidatePath("/app/offers");
-  }, "Документът не беше анулиран.");
+  }, "Анулирането не беше записано.");
 }

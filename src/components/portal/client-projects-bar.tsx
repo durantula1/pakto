@@ -94,7 +94,7 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
           <input type="hidden" name="otpId" value={otpId} />
           <span className="text-sidebar-foreground/70">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
           <OtpInput label="Код от имейла" autoFocus disabled={confirming} className="text-foreground" />
-          <Button type="submit" isDisabled={confirming} className="h-11 self-start px-5 text-sm">{confirming ? "Проверка…" : "Потвърди"}</Button>
+          <Button type="submit" isDisabled={confirming} className="h-11 self-start px-5 text-sm">{confirming ? "Проверка…" : "Потвърдете"}</Button>
         </form>
       ) : (
         <form action={request} className="mt-2 flex flex-wrap items-center gap-2">

@@ -60,7 +60,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         </p>
         <OtpInput label="Код от имейла" autoFocus disabled={confirming} />
         {confirmState.error ? <p role="alert" className="text-sm text-destructive">{confirmState.error}</p> : null}
-        <Button type="submit" className="h-11 w-full" isDisabled={confirming}>{confirming ? "Моля, изчакайте…" : "Потвърди"}</Button>
+        <Button type="submit" className="h-11 w-full" isDisabled={confirming}>{confirming ? "Моля, изчакайте…" : "Потвърдете"}</Button>
       </form>
     );
   }

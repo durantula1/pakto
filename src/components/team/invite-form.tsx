@@ -73,6 +73,6 @@ function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: bool
     </div>
     {preset !== "owner" ? <div className="flex flex-col gap-2"><p className="text-sm font-medium">Обекти</p><ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} /></div> : null}
     {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
-    <Button type="submit" className="w-full" isDisabled={pending}>{pending ? "Изпращам…" : "Изпрати поканата"}</Button>
+    <Button type="submit" className="w-full" isDisabled={pending}>{pending ? "Изпращане…" : "Изпрати поканата"}</Button>
   </form>;
 }

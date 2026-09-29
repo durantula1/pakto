@@ -38,7 +38,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
   const menu: { id: MenuId; label: string; icon: typeof Archive; destructive?: boolean }[] = canArchive
     ? [
         { id: "archive", label: archive.label, icon: archive.icon },
-        { id: "export", label: "Изнеси данните", icon: Download },
+        { id: "export", label: "Изтегли данните", icon: Download },
         ...(!hasActiveProject ? [{ id: "anonymize" as const, label: "Анонимизирай", icon: UserX, destructive: true }] : []),
       ]
     : [];

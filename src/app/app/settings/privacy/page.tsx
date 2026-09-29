@@ -61,7 +61,7 @@ export default async function PrivacySettingsPage() {
       ))}
     </SettingsGroup>
 
-    <SettingsGroup title="Опасна зона" danger>
+    <SettingsGroup title="Напускане и изтриване" danger>
       <SettingsRow label={`Напусни „${context.organizationName}“`} description="Губиш достъп до фирмата, но профилът ти остава." align="end">
         <LeaveOrganizationDialog organizationName={context.organizationName} blocker={leaveBlocker} />
       </SettingsRow>

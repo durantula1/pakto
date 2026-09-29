@@ -12,9 +12,9 @@ import { formatAmount } from "@/lib/money";
 
 const DAY = 86_400_000;
 /** A client who has not decided this long after sending gets one gentle reminder. */
-export const NUDGE_AFTER_DAYS = 3;
+const NUDGE_AFTER_DAYS = 3;
 /** Clients are warned this long before the offer stops being valid. */
-export const WARN_BEFORE_DAYS = 2;
+const WARN_BEFORE_DAYS = 2;
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
 
@@ -58,7 +58,7 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
     to: contact.email,
     subject: projectSubject(document.projectName, subject),
     text: `Здравейте, ${contact.name}!\n\n${intro}\n\nМожете да я одобрите, да поискате промяна или да зададете въпрос тук: ${url}`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте и решете</a></p><p style="color:#71717a">Можете да я одобрите, да поискате промяна или да откажете.</p></div>`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте и решете</a></p><p style="color:#71717a">Можете да я одобрите, да поискате промяна или да зададете въпрос.</p></div>`,
   });
   return true;
 }

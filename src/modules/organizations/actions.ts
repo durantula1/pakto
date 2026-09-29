@@ -45,7 +45,7 @@ export async function completeOnboardingAction(
   try {
     await bootstrapOrganization({ userId, ...parsed.data });
   } catch {
-    return { error: "Workspace-ът не беше създаден. Опитай отново." };
+    return { error: "Фирмата не беше създадена. Опитай отново." };
   }
 
   redirect("/app");

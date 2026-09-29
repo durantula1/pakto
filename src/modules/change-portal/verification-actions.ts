@@ -19,13 +19,13 @@ const STAFF_BLOCKED = "Излез от служебния профил, за д�
 
 async function portalSessionFor(projectPublicId: string) {
   const session = await getPortalSession(projectPublicId);
-  if (!session) throw new Error("Клиентската сесия е изтекла. Отвори отново линка.");
+  if (!session) throw new Error("Сесията изтече. Отворете отново линка от имейла.");
   if (await isOrganizationStaff(session.organizationId)) throw new Error(STAFF_BLOCKED);
   return session;
 }
 
 function failure(cause: unknown): VerificationState {
-  return { error: cause instanceof Error ? cause.message : "Действието не беше завършено. Опитай отново." };
+  return { error: cause instanceof Error ? cause.message : "Действието не беше завършено. Опитайте отново." };
 }
 
 export async function requestClaimCodeAction(_: VerificationState, formData: FormData): Promise<VerificationState> {
@@ -34,7 +34,7 @@ export async function requestClaimCodeAction(_: VerificationState, formData: For
     const session = await portalSessionFor(data.projectPublicId);
     if (session.contactEmailVerifiedAt) return { done: true };
     const email = (session.contactEmail ?? data.email ?? "").trim().toLowerCase();
-    if (!email) return { error: "Въведи имейла си." };
+    if (!email) return { error: "Въведете имейла си." };
     const otpId = await issueOtp({ sessionId: session.id, contactId: session.contactId, purpose: "claim", email, ip: clientIp(await headers()) });
     return { otpId, sentTo: maskEmail(email), step: "claim" };
   } catch (cause) {
@@ -46,9 +46,9 @@ export async function requestEmailChangeCodeAction(_: VerificationState, formDat
   try {
     const data = z.object({ projectPublicId: z.uuid(), email: z.email("Невалиден имейл.") }).parse(Object.fromEntries(formData));
     const session = await portalSessionFor(data.projectPublicId);
-    if (!session.contactEmailVerifiedAt || !session.contactEmail) return { error: "Първо потвърди текущия си имейл." };
+    if (!session.contactEmailVerifiedAt || !session.contactEmail) return { error: "Първо потвърдете текущия си имейл." };
     const target = data.email.trim().toLowerCase();
-    if (target === session.contactEmail.toLowerCase()) return { error: "Това е текущият ти имейл." };
+    if (target === session.contactEmail.toLowerCase()) return { error: "Това е текущият ви имейл." };
     const otpId = await issueOtp({ sessionId: session.id, contactId: session.contactId, purpose: "email_change", email: session.contactEmail, targetEmail: target, ip: clientIp(await headers()) });
     return { otpId, sentTo: maskEmail(session.contactEmail), step: "email_change" };
   } catch (cause) {

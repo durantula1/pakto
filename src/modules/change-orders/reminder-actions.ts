@@ -15,7 +15,7 @@ export async function remindClientAction(formData: FormData) {
   const { changeOrderId } = z.object({ changeOrderId: z.uuid() }).parse(Object.fromEntries(formData));
   const context = await requireTenantContext();
   const document = await getPendingDocument(context.organizationId, changeOrderId);
-  if (!document) return { error: "Документът вече не очаква решение." };
+  if (!document) return { error: "Тази оферта или промяна вече не очаква решение." };
   await requireProjectCapability(context, document.projectId, "send");
   const now = new Date();
   const [claimed] = await getDatabase().update(changeOrderRevisions).set({ clientRemindedAt: now })

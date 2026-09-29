@@ -32,7 +32,7 @@ export async function ProjectsTable({ context, filters, page, searchState }: {
   ]);
   if (!projects.length && page > lastPage(total)) redirect(pageHref("/app/projects", searchState, "page", lastPage(total)));
   const linkClients = seesClients(context);
-  if (!projects.length) return <EmptyState title="Добави първия обект" description="Необходим е обект и approver преди изпращане на промяна." />;
+  if (!projects.length) return <EmptyState title="Добави първия обект" description="Преди да изпратиш оферта, ти трябват обект и одобряващ." />;
   return <DataTable
     label={label}
     columns={columns}

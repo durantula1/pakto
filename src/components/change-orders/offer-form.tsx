@@ -101,7 +101,7 @@ export function OfferForm({
       return setLocalError("Добави описание на всяка услуга и материал.");
     }
     if (payload.some((line) => line.quantity <= 0)) {
-      return setLocalError("Количеството трябва да е поне 1.");
+      return setLocalError("Количеството трябва да е над 0.");
     }
     const termsError = termsProblem(termRows);
     if (termsError) return setLocalError(termsError);

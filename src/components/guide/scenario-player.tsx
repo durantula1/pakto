@@ -14,7 +14,7 @@ type Lane = "company" | "client" | "both";
 type Step = { lane: Lane; icon: ComponentType<{ className?: string }>; title: string; text: string; status?: string };
 type Scenario = { id: string; label: string; summary: string; steps: Step[] };
 
-export const scenarios: Scenario[] = [
+const scenarios: Scenario[] = [
   {
     id: "happy",
     label: "Обикновена оферта",
@@ -24,14 +24,14 @@ export const scenarios: Scenario[] = [
       { lane: "company", icon: Send, title: "Изпращаш я", text: "Офертата се „замразява“: никой не може да я промени тихомълком. Клиентът получава имейл с личен линк.", status: "Изпратена" },
       { lane: "client", icon: Smartphone, title: "Клиентът я отваря", text: "От телефона, без регистрация и парола. Ти получаваш известие, че я е видял.", status: "Прегледана" },
       { lane: "client", icon: MailCheck, title: "Потвърждава, че е той", text: "Въвежда 6-цифрен код, изпратен на неговия имейл." },
-      { lane: "client", icon: Signature, title: "Подписва се", text: "Изписва името си, подписва се с пръст и потвърждава с още един код.", status: "Одобрена" },
-      { lane: "both", icon: Handshake, title: "Договорката е записана", text: "И двамата имате PDF с подписа, точния час и отпечатъка на версията. Можете да започвате." },
+      { lane: "client", icon: Signature, title: "Одобрява", text: "Изписва името си, отмята, че одобрява точно тази версия и сумата, и потвърждава с още един код.", status: "Одобрена" },
+      { lane: "both", icon: Handshake, title: "Договорката е записана", text: "И двамата имате PDF с името му, точния час и отпечатъка на версията. Можете да започвате." },
     ],
   },
   {
     id: "fix",
     label: "Забравих нещо",
-    summary: "Изпратил си офертата и се сещаш, че си пропуснал материал. Клиентът още не е решил.",
+    summary: "Офертата е изпратена, а се сещаш, че липсва материал. Клиентът още не е решил.",
     steps: [
       { lane: "company", icon: Send, title: "Офертата е изпратена", text: "Клиентът я има, но още не е казал „да“.", status: "Изпратена" },
       { lane: "company", icon: PencilLine, title: "Натискаш „Коригирай“", text: "Изпратената версия се оттегля. Клиентът вижда „Обновява се“ и не може да одобри старата.", status: "Обновява се" },
@@ -45,7 +45,7 @@ export const scenarios: Scenario[] = [
     label: "Клиентът иска промяна",
     summary: "Клиентът не е съгласен с нещо, но не отказва.",
     steps: [
-      { lane: "client", icon: MessageSquareText, title: "Натиска „Промяна“", text: "Пише какво иска да е различно, например „без демонтаж, ще го направим сами“.", status: "Иска промяна" },
+      { lane: "client", icon: MessageSquareText, title: "Натиска „Не одобрявам“", text: "Избира „Искам промяна“ и пише какво иска да е различно, например „без демонтаж, ще го направим сами“.", status: "Иска промяна" },
       { lane: "company", icon: BellRing, title: "Получаваш известие", text: "Виждаш коментара му директно в офертата." },
       { lane: "company", icon: FilePen, title: "Правиш нова версия", text: "С едно натискане. Услугите и материалите, файловете и снимките се пренасят.", status: "Чернова" },
       { lane: "company", icon: Send, title: "Изпращаш я", text: "Клиентът вижда какво се е променило спрямо предишната.", status: "Изпратена" },
@@ -60,14 +60,14 @@ export const scenarios: Scenario[] = [
       { lane: "both", icon: Handshake, title: "Офертата е одобрена", text: "Тя е основата. Всичко след нея е „промяна“ към нея.", status: "Одобрена" },
       { lane: "company", icon: Hammer, title: "На обекта изниква нещо", text: "Например гнила замазка под плочките." },
       { lane: "company", icon: FilePen, title: "Правиш „Нова промяна“", text: "Допълнителна работа, намаление или само нов срок. Добавяш цена, снимки и причина.", status: "Чернова" },
-      { lane: "client", icon: Signature, title: "Клиентът я одобрява", text: "По същия начин: код и подпис. Никакво „ама ти не ми каза“.", status: "Одобрена" },
+      { lane: "client", icon: Signature, title: "Клиентът я одобрява", text: "По същия начин: име и код. Никакво „ама ти не ми каза“.", status: "Одобрена" },
       { lane: "both", icon: Wallet, title: "Сумата на обекта се обновява", text: "Виждате колко е договорено общо и колко е платено." },
     ],
   },
   {
     id: "silent",
     label: "Клиентът мълчи",
-    summary: "Изпратил си офертата, а отговор няма.",
+    summary: "Офертата е изпратена, а отговор няма.",
     steps: [
       { lane: "company", icon: Send, title: "Изпращаш офертата", text: "Тя е валидна определен брой дни. Настройваш ги във фирмените настройки.", status: "Изпратена" },
       { lane: "client", icon: Mail, title: "След 3 дни: напомняне", text: "Клиентът получава автоматичен учтив имейл. Можеш да натиснеш и „Напомни“ сам." },
@@ -81,7 +81,7 @@ export const scenarios: Scenario[] = [
     label: "Ако има спор",
     summary: "„Аз не съм одобрявал това!“ Какви доказателства имаш.",
     steps: [
-      { lane: "client", icon: Signature, title: "Одобрение с код и подпис", text: "Записват се името, подписът, имейлът, до който е пратен кодът, IP адресът и точният час.", status: "Одобрена" },
+      { lane: "client", icon: Signature, title: "Одобрение с име и код", text: "Записват се името, имейлът, до който е пратен кодът, IP адресът и точният час.", status: "Одобрена" },
       { lane: "client", icon: MailCheck, title: "Разписка на имейла му", text: "Веднага получава PDF на точно тази версия, негово независимо копие." },
       { lane: "client", icon: ShieldAlert, title: "Ако не е бил той", text: "В разписката има бутон „Не съм аз“. Натиска го." },
       { lane: "company", icon: BellRing, title: "Виждаш червено предупреждение", text: "Разбираш веднага, а не месец по-късно." },

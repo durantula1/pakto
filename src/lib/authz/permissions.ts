@@ -27,8 +27,8 @@ export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label
     items: [
       { key: "offers.edit", label: "Прави оферти", description: "Създава и редактира оферти." },
       { key: "changes.draft", label: "Подготвя промени", description: "Чернови на допълнителна работа по обекта." },
-      { key: "documents.send", label: "Изпраща на клиента", description: "Замразява документа и го праща за решение." },
-      { key: "drafts.view_all", label: "Вижда чужди чернови", description: "Без това вижда само своите чернови и изпратените документи." },
+      { key: "documents.send", label: "Изпраща на клиента", description: "Замразява офертата или промяната и я праща за решение." },
+      { key: "drafts.view_all", label: "Вижда чужди чернови", description: "Без това вижда само своите чернови и изпратените оферти и промени." },
       { key: "notes.view", label: "Вътрешни бележки", description: "Вижда бележките, които клиентът не вижда." },
     ],
   },

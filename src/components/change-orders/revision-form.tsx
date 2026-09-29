@@ -41,7 +41,7 @@ export type RevisionFormInitial = {
 export type AbsorbableChange = { id: string; sequenceNumber: number; title: string; total: string };
 
 const changeKinds: Array<{ value: ChangeKind; label: string }> = [
-  { value: "addition", label: "Добавка" },
+  { value: "addition", label: "Допълнителна работа" },
   { value: "credit", label: "Намаление" },
   { value: "no_cost", label: "Без цена" },
   { value: "schedule_only", label: "Само срок" },
@@ -259,7 +259,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               </EditorSection>
             ) : null}
 
-            <EditorSection title="За клиента" description="Двете полета се виждат в документа и в портала.">
+            <EditorSection title="За клиента" description="Двете полета се виждат в PDF-а и в портала.">
               <Field>
                 <FieldLabel htmlFor={`${formId}-reason`}>Причина</FieldLabel>
                 <Input id={`${formId}-reason`} name="reason" defaultValue={initial.reason ?? ""} maxLength={2000} placeholder={isOffer ? "По желание" : "Защо е необходима промяната?"} className="h-10" />
@@ -267,7 +267,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               <Field>
                 <FieldLabel htmlFor={`${formId}-client-note`}>Бележка към клиента</FieldLabel>
                 <Textarea id={`${formId}-client-note`} name="clientNote" defaultValue={initial.clientNote ?? ""} maxLength={2000} className="min-h-20" />
-                <FieldDescription>Бележки само за екипа се пишат в таб „Бележки“ на документа.</FieldDescription>
+                <FieldDescription>Бележки само за екипа се пишат в таб „Бележки“.</FieldDescription>
               </Field>
             </EditorSection>
           </form>

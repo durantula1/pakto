@@ -18,8 +18,9 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { startDownload } from "@/components/workspace/download-tray";
 
 /** Secondary document actions, kept out of the header's main row so phones see only what matters. */
-export function DocumentMoreMenu({ changeOrderId, title, pdfHref, canCopy, renegotiateHref = null, cancel }: {
+export function DocumentMoreMenu({ changeOrderId, kind, title, pdfHref, canCopy, renegotiateHref = null, cancel }: {
   changeOrderId: string;
+  kind: "offer" | "change";
   title: string;
   pdfHref: string | null;
   canCopy: boolean;
@@ -81,15 +82,15 @@ export function DocumentMoreMenu({ changeOrderId, title, pdfHref, canCopy, reneg
       {cancel ? (
         <Dialog isOpen={cancelOpen} onOpenChange={setCancelOpen} className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{cancel.partial ? "Да оттегля ли новата версия?" : "Да анулирам ли документа?"}</DialogTitle>
+            <DialogTitle>{cancel.partial ? "Да оттегля ли новата версия?" : `Да анулирам ли ${kind === "offer" ? "офертата" : "промяната"}?`}</DialogTitle>
             <DialogDescription>
               {cancel.partial
                 ? "В сила остава одобрената версия. Новата остава в историята като оттеглена."
-                : "Документът спира да чака решение и остава в историята като анулиран. Това не може да се върне."}
+                : `${kind === "offer" ? "Офертата" : "Промяната"} спира да чака решение и остава в историята като анулирана. Това не може да се върне.`}
               {cancel.notifiesClient ? " Клиентът получава имейл." : ""}
             </DialogDescription>
           </DialogHeader>
-          <ActionForm action={cancelDocumentAction} success={cancel.partial ? "Новата версия е оттеглена" : "Документът е анулиран"} onSuccess={() => setCancelOpen(false)} className="grid gap-3">
+          <ActionForm action={cancelDocumentAction} success={cancel.partial ? "Новата версия е оттеглена" : kind === "offer" ? "Офертата е анулирана" : "Промяната е анулирана"} onSuccess={() => setCancelOpen(false)} className="grid gap-3">
             <input type="hidden" name="changeOrderId" value={changeOrderId} />
             <Field><FieldLabel htmlFor="cancel-reason">Причина (по желание)</FieldLabel><Input id="cancel-reason" name="reason" maxLength={500} placeholder="Напр. клиентът се отказа по телефона" /></Field>
             <div className="flex justify-end gap-2"><DialogClose>Отказ</DialogClose><ActionSubmit variant="destructive">{cancel.partial ? "Оттегли" : "Анулирай"}</ActionSubmit></div>

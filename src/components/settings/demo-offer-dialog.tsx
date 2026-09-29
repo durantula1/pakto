@@ -201,7 +201,7 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
         </div>
 
         <div className="absolute flex justify-between" style={{ bottom: "24pt", left: "44pt", right: "44pt", fontSize: "7pt", color: muted, borderTop: `0.75pt solid ${rule}`, paddingTop: "6pt" }}>
-          <span>{demoOffer.code} · версия 1 · примерен документ</span>
+          <span>{demoOffer.code} · версия 1 · примерна оферта</span>
           <span>Страница 1 от 1</span>
         </div>
       </div>

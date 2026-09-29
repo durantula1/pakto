@@ -100,7 +100,7 @@ export default async function PortalProjectPage({
             kind:
               item.documentKind === "offer"
                 ? "Нова оферта"
-                : "Промяна в цената",
+                : "Промяна по офертата",
             tone: "decide" as const,
             title: item.title,
             detail: stepAmount(

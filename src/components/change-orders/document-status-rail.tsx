@@ -156,7 +156,7 @@ export function DocumentStatusCard({
     primary = (
       <ActionForm
         action={sendChangeOrderAction}
-        success="Документът е изпратен"
+        success="Изпратено на клиента"
         redirects
       >
         <input type="hidden" name="changeOrderId" value={change.id} />

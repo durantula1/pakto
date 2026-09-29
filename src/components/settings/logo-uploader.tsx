@@ -210,8 +210,8 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
 
         {shown ? (
           <fieldset className="flex flex-wrap items-center justify-between gap-2">
-            <legend className="sr-only">Размер на логото в документите</legend>
-            <span aria-hidden className="text-xs text-muted-foreground">Размер в документите</span>
+            <legend className="sr-only">Размер на логото в офертите</legend>
+            <span aria-hidden className="text-xs text-muted-foreground">Размер в офертите</span>
             <div className="grid grid-cols-3 gap-0.5 rounded-lg bg-muted p-0.5">
               {LOGO_SIZES.map((option) => (
                 <label key={option} className="flex h-7 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium text-muted-foreground transition has-checked:bg-background has-checked:text-foreground has-checked:shadow-sm has-focus-visible:ring-3 has-focus-visible:ring-ring/50">

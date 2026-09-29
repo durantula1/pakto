@@ -267,7 +267,7 @@ export function RequestAcceptanceDialog({ projectId, offerId, title, openStages,
       <ActionForm action={requestAcceptanceAction} success="Искането е изпратено" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="offerId" value={offerId} />
-        <Field><FieldLabel htmlFor={`acceptance-note-${offerId}`}>Бележка към клиента (по желание)</FieldLabel><Textarea id={`acceptance-note-${offerId}`} name="note" maxLength={2000} placeholder={again ? "Напр. фугата е подменена" : "Напр. готови сме, мини да видиш"} /></Field>
+        <Field><FieldLabel htmlFor={`acceptance-note-${offerId}`}>Бележка към клиента (по желание)</FieldLabel><Textarea id={`acceptance-note-${offerId}`} name="note" maxLength={2000} placeholder={again ? "Напр. фугата е подменена" : "Напр. готови сме, заповядайте на оглед"} /></Field>
         <div className="flex justify-end gap-2"><DialogClose>Отказ</DialogClose><ActionSubmit>Изпрати</ActionSubmit></div>
       </ActionForm>
     </Dialog>

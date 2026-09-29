@@ -62,7 +62,7 @@ export async function bootstrapOrganization(input: {
       .returning({ id: organizations.id });
 
     if (!organization) {
-      throw new Error("Организацията не беше създадена.");
+      throw new Error("Фирмата не беше създадена.");
     }
 
     await transaction.insert(organizationMembers).values({

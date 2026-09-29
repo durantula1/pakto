@@ -114,7 +114,7 @@ function ProjectSearch({ selected, onAdd, disabled }: { selected: ProjectOption[
     >
       <ListBox
         className="max-h-72 overflow-y-auto p-1 outline-hidden"
-        renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading ? "Търся…" : options.length ? "Всички намерени обекти са добавени." : "Няма намерени обекти."}</p>}
+        renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading ? "Търсене…" : options.length ? "Всички намерени обекти са добавени." : "Няма намерени обекти."}</p>}
       >
         {(item: ProjectOption) => <ListBoxItem
           id={item.id}

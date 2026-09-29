@@ -110,7 +110,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
             </> : null}
           </>
         }
-        action={<DocumentMoreMenu changeOrderId={change.id} title={change.title} pdfHref={change.frozenAt ? `/api/changes/${change.id}/pdf` : null} canCopy={isOffer && can(member, "offers.edit")} renegotiateHref={isOffer && canEdit && change.revisionStatus === "approved" ? `${path}/edit` : null} cancel={can(member, "documents.send") && change.projectStatus === "active" && change.lifecycleStatus !== "canceled" && !["approved", "superseded", "canceled"].includes(change.revisionStatus) ? { partial: !!change.approvedRevisionId, notifiesClient: change.revisionStatus === "sent" || change.revisionStatus === "viewed" } : null} />}
+        action={<DocumentMoreMenu changeOrderId={change.id} kind={isOffer ? "offer" : "change"} title={change.title} pdfHref={change.frozenAt ? `/api/changes/${change.id}/pdf` : null} canCopy={isOffer && can(member, "offers.edit")} renegotiateHref={isOffer && canEdit && change.revisionStatus === "approved" ? `${path}/edit` : null} cancel={can(member, "documents.send") && change.projectStatus === "active" && change.lifecycleStatus !== "canceled" && !["approved", "superseded", "canceled"].includes(change.revisionStatus) ? { partial: !!change.approvedRevisionId, notifiesClient: change.revisionStatus === "sent" || change.revisionStatus === "viewed" } : null} />}
       />
       <div className={documentLayoutClassName}>
         <div className={documentAreas.status}>

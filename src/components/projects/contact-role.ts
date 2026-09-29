@@ -1,6 +1,6 @@
 /** A client contact's role on a project: one decides on offers and changes, the rest only follow. */
 export function contactRoleLabel(isPrimary: boolean) {
-  return isPrimary ? "Решава по офертите" : "Само преглежда";
+  return isPrimary ? "Одобряващ" : "Наблюдател";
 }
 
 export function contactRoleHint(isPrimary: boolean) {

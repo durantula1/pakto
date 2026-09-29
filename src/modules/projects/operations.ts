@@ -181,7 +181,7 @@ export async function deleteMilestoneAction(formData: FormData): Promise<ActionR
     await requireActiveProject(context.organizationId, projectId);
     await getDatabase().transaction(async (tx) => {
       const [installment] = await tx.select({ title: paymentInstallments.title }).from(paymentInstallments).where(eq(paymentInstallments.milestoneId, milestoneId)).limit(1);
-      if (installment) throw new Error(`Към етапа е вързана вноската „${installment.title}“. Първо я премести на друга дата.`);
+      if (installment) throw new Error(`Към етапа е свързана вноската „${installment.title}“. Първо я премести на друга дата.`);
       const [removed] = await tx.delete(projectMilestones)
         .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, context.organizationId)))
         .returning({ title: projectMilestones.title, dueOn: projectMilestones.dueOn, offerId: projectMilestones.offerId });

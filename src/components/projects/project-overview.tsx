@@ -1,10 +1,9 @@
-import Link from "next/link";
-import { ArrowRight, CalendarClock, Check } from "lucide-react";
+import { CalendarClock, Check } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { OfferCard, PaidBar } from "@/components/projects/offer-cards";
 import { ClaimPaymentRow, DisputeReceiptRow } from "@/components/portal/inline-forms";
-import { BillLine, Leader, PaperLabel, Quote, Slip } from "@/components/portal/paper";
+import { BillLine, PaperLabel, Quote } from "@/components/portal/paper";
 import { cn } from "@/lib/utils";
 import { documentCode, documentName, formatDay, formatShortDay } from "@/modules/change-orders/labels";
 import type { ScopeView } from "@/modules/projects/scope";
@@ -21,60 +20,6 @@ const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
 /** An amount without the currency, for bill lines whose currency the result line already names. */
 const plain = (minor: bigint) => formatCents(minor, "").trim();
 const signed = (minor: bigint) => `${minor < 0n ? "−" : "+"} ${plain(minor < 0n ? -minor : minor)}`;
-
-/**
- * Everything waiting for the client, on top of the portal home: documents to decide and finished
- * work to accept, as one slip of rows.
- */
-export function WaitingForYou({ documents, handovers, portalPublicId }: {
-  documents: { id: string; kind: "offer" | "change"; sequenceNumber: number; title: string; total: string; currency: string }[];
-  handovers: { id: string; sequenceNumber: number; title: string }[];
-  portalPublicId: string;
-}) {
-  if (!documents.length && !handovers.length) return null;
-  const path = `/portal/${portalPublicId}/changes`;
-  const offers = documents.filter((item) => item.kind === "offer").length;
-  const changes = documents.length - offers;
-  const summary = [
-    offers ? (offers === 1 ? "1 оферта" : `${offers} оферти`) : null,
-    changes ? (changes === 1 ? "1 промяна" : `${changes} промени`) : null,
-    handovers.length ? (handovers.length === 1 ? "приемане на работа" : `${handovers.length} приемания на работа`) : null,
-  ].filter(Boolean).join(" · ");
-  return (
-    <Slip label={documents.length ? `Очаква решение · ${summary}` : `Очаква приемане · ${summary}`}>
-      <ul className="divide-y divide-dashed">
-        {handovers.map((item) => (
-          <WaitingRow key={`handover-${item.id}`} href={`${path}/${item.id}#acceptance`} kind={`Приемане на работа · ${documentCode("offer", item.sequenceNumber)}`} action="Приеми">
-            <span className="min-w-0 truncate font-medium">{item.title}</span>
-            <Leader />
-            <span className="shrink-0 text-muted-foreground">за преглед</span>
-          </WaitingRow>
-        ))}
-        {documents.map((item) => (
-          <WaitingRow key={item.id} href={`${path}/${item.id}`} kind={`${item.kind === "offer" ? "Оферта" : "Промяна"} · ${documentCode(item.kind, item.sequenceNumber)}`} action="Реши">
-            <span className="min-w-0 truncate font-medium">{item.title}</span>
-            <Leader />
-            <span className="shrink-0 tabular-nums">{formatCents(cents(item.total), item.currency)}</span>
-          </WaitingRow>
-        ))}
-      </ul>
-    </Slip>
-  );
-}
-
-function WaitingRow({ href, kind, action, children }: { href: string; kind: string; action: string; children: React.ReactNode }) {
-  return (
-    <li>
-      <Link href={href} className="group flex items-center gap-3 px-4 py-3 text-sm transition hover:bg-primary/5">
-        <span className="min-w-0 flex-1">
-          <span className="block font-mono text-xs text-muted-foreground">{kind}</span>
-          <span className="mt-0.5 flex items-baseline">{children}</span>
-        </span>
-        <span className="flex shrink-0 items-center gap-1 font-semibold text-primary">{action}<ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" /></span>
-      </Link>
-    </li>
-  );
-}
 
 /**
  * The portal's "Обобщение", written as the calculation the client would do on paper: what was agreed
@@ -223,7 +168,7 @@ function StageList({ view, now, next, name, foldDone }: {
 type Receipt = ProjectState["receipts"][number];
 
 function receiptLabel(receipt: Receipt) {
-  if (receipt.correctionOfId) return Number(receipt.amount) < 0 ? "Сторно" : "Корекция";
+  if (receipt.correctionOfId) return Number(receipt.amount) < 0 ? "Отменено плащане" : "Корекция";
   return paymentLabels[receipt.kind] ?? "Плащане";
 }
 
@@ -267,12 +212,12 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
 
   return <div className="space-y-5">
     {showBalance ? <section className="rounded-2xl border bg-card px-5 py-4">
-      {canAct ? <ClaimPaymentRow row={balance} stack trigger="Отбележи плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
+      {canAct ? <ClaimPaymentRow row={balance} stack trigger="Отбележете плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
       {view.hasAgreement ? <PaidBar className="mt-3" paidMinor={view.paidMinor} contractMinor={view.contractMinor} /> : (
         <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобрите офертата."}</p>
       )}
     </section> : canAct ? <section className="rounded-2xl border bg-card px-5 py-3">
-      <ClaimPaymentRow row={<span className="text-sm text-muted-foreground">Платили сте нещо, което не е тук?</span>} trigger="Отбележи плащане" triggerClassName="h-10 px-3 text-sm" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} />
+      <ClaimPaymentRow row={<span className="text-sm text-muted-foreground">Платили сте нещо, което не е тук?</span>} trigger="Отбележете плащане" triggerClassName="h-10 px-3 text-sm" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} />
     </section> : null}
 
     {view.installments.length ? <section className="space-y-2">

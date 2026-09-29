@@ -247,7 +247,7 @@ export default async function PortalChangePage({
           {waiting && change.responseDueAt ? (
             <>
               <span className="text-xs text-muted-foreground">Отговорете до</span>
-              <span className={cn("font-semibold", daysLeft !== null && daysLeft <= 2 && "text-destructive")}>{dayFormat.format(change.responseDueAt)}{daysLeft !== null && daysLeft <= 2 ? (daysLeft <= 1 ? " · днес" : ` · ${daysLeft} дни`) : ""}</span>
+              <span className={cn("font-semibold", daysLeft !== null && daysLeft <= 2 && "text-destructive")}>{dayFormat.format(change.responseDueAt)}{daysLeft !== null && daysLeft <= 2 ? (daysLeft <= 1 ? " · под 24 часа" : ` · ${daysLeft} дни`) : ""}</span>
             </>
           ) : (
             <>

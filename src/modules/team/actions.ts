@@ -123,7 +123,7 @@ export async function acceptTeamInviteAction(formData: FormData) {
       await tx.insert(projectMembers).values(invite.projectIds.map((projectId) => ({ projectId, userId: user.id, permission: "view" as const }))).onConflictDoNothing();
     }
     await tx.update(teamInvites).set({ acceptedAt: new Date() }).where(eq(teamInvites.id, invite.id));
-    await tx.insert(staffNotifications).values({ organizationId: invite.organizationId, userId: user.id, eventType: "invitation_accepted", title: "Добре дошъл в екипа", href: "/app" });
+    await tx.insert(staffNotifications).values({ organizationId: invite.organizationId, userId: user.id, eventType: "invitation_accepted", title: "Добре дошли в екипа", href: "/app" });
   });
   revalidatePath("/app", "layout");
   redirect("/app");
@@ -163,7 +163,7 @@ export async function disableTeamMemberAction(formData: FormData) {
   await getDatabase().transaction(async (tx) => {
     const [member] = await tx.select({ role: organizationMembers.role }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, userId), eq(organizationMembers.status, "active"))).for("update").limit(1);
-    if (!member || member.role === "owner") throw new Error("Owner се премахва с второ потвърждение.");
+    if (!member || member.role === "owner") throw new Error("Собственик се премахва с второ потвърждение.");
     await tx.update(organizationMembers).set({ status: "disabled", permissions: [], allProjects: false })
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, userId)));
     const assigned = await tx.select({ id: projects.id }).from(projects).where(eq(projects.organizationId, context.organizationId));
@@ -195,19 +195,19 @@ export async function requestOwnerChangeAction(formData: FormData) {
     const [target] = await tx.select({ role: organizationMembers.role }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, targetUserId), eq(organizationMembers.status, "active"))).limit(1);
     if (!target) throw new Error("Членът не е намерен.");
-    if (requestedRole === "owner" && target.role === "owner") throw new Error("Този човек вече е owner.");
-    if (requestedRole !== "owner" && target.role !== "owner") throw new Error("Тази промяна не изисква втори owner.");
+    if (requestedRole === "owner" && target.role === "owner") throw new Error("Този човек вече е собственик.");
+    if (requestedRole !== "owner" && target.role !== "owner") throw new Error("Тази промяна не изисква втори собственик.");
     const owners = await tx.select({ userId: organizationMembers.userId }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.role, "owner"), eq(organizationMembers.status, "active")));
-    if (target.role === "owner" && owners.length < 2) throw new Error("Фирмата трябва да има поне един owner.");
+    if (target.role === "owner" && owners.length < 2) throw new Error("Фирмата трябва да има поне един собственик.");
     if (requestedRole === "owner" && owners.length === 1) {
       await tx.update(organizationMembers).set({ role: "owner", permissions: [], allProjects: false }).where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, targetUserId)));
-      await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId: targetUserId, eventType: "owner_promoted", title: "Вече си owner", href: "/app/team" });
+      await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId: targetUserId, eventType: "owner_promoted", title: "Вече си собственик", href: "/app/team" });
       return;
     }
     const [request] = await tx.insert(ownerRoleRequests).values({ organizationId: context.organizationId, targetUserId, requestedRole, removeMember, requestedBy: context.userId, expiresAt: new Date(Date.now() + 7 * 86400000) }).returning({ id: ownerRoleRequests.id });
     const approvers = owners.filter((owner) => owner.userId !== context.userId);
-    if (approvers.length && request) await tx.insert(staffNotifications).values(approvers.map((owner) => ({ organizationId: context.organizationId, userId: owner.userId, eventType: "owner_change_requested", title: "Потвърди промяна на owner роля", href: "/app/team" })));
+    if (approvers.length && request) await tx.insert(staffNotifications).values(approvers.map((owner) => ({ organizationId: context.organizationId, userId: owner.userId, eventType: "owner_change_requested", title: "Потвърди промяна на собственик", href: "/app/team" })));
   });
   revalidatePath("/app/team");
 }
@@ -228,7 +228,7 @@ export async function approveOwnerChangeAction(formData: FormData) {
     if (!target || (request.requestedRole === "owner" ? target.role === "owner" : target.role !== "owner")) throw new Error("Ролята се е променила. Създай ново предложение.");
     const owners = await tx.select({ userId: organizationMembers.userId }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.role, "owner"), eq(organizationMembers.status, "active")));
-    if ((request.removeMember || request.requestedRole !== "owner") && owners.some((owner) => owner.userId === request.targetUserId) && owners.length < 2) throw new Error("Фирмата трябва да има owner.");
+    if ((request.removeMember || request.requestedRole !== "owner") && owners.some((owner) => owner.userId === request.targetUserId) && owners.length < 2) throw new Error("Фирмата трябва да има собственик.");
     await tx.update(organizationMembers).set(request.removeMember ? { status: "disabled", permissions: [], allProjects: false } : request.requestedRole === "owner" ? { role: "owner", permissions: [], allProjects: false } : { role: request.requestedRole!, permissions: [...PRESETS[request.requestedRole === "field" ? "field" : "office"].permissions], allProjects: true })
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, request.targetUserId), eq(organizationMembers.status, "active")));
     await tx.update(ownerRoleRequests).set({ status: "approved", approvedBy: context.userId, resolvedAt: new Date() }).where(eq(ownerRoleRequests.id, request.id));

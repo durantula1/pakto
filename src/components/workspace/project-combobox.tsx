@@ -111,7 +111,7 @@ export function ProjectCombobox({
       >
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"
-          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !loaded ? "Търся…" : activeOnly ? "Няма намерени активни обекти." : "Няма намерени обекти."}</p>}
+          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !loaded ? "Търсене…" : activeOnly ? "Няма намерени активни обекти." : "Няма намерени обекти."}</p>}
         >
           {(item: ProjectOption) => <ListBoxItem
             id={item.id}

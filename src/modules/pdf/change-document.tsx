@@ -194,7 +194,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
     {decision ? (
       <View style={styles.decision} wrap={false}>
         <Text style={styles.heading}>Решение на клиента</Text>
-        <Text>{decision.decision === "approved" ? "Одобрено" : decision.decision === "declined" ? "Отказано" : "Поискана корекция"} от {decision.typedName} на {dateTimeFormat.format(decision.createdAt)}.</Text>
+        <Text>{decision.decision === "approved" ? "Одобрено" : decision.decision === "declined" ? "Отказано" : "Поискана промяна"} от {decision.typedName} на {dateTimeFormat.format(decision.createdAt)}.</Text>
         {decision.verifiedEmail ? <Text style={{ color: muted }}>Потвърдено с еднократен код, изпратен до {decision.verifiedEmail}{decision.ip ? `, IP ${decision.ip}` : ""}.</Text> : null}
         {decision.signature ? (
           <View style={styles.signature}>

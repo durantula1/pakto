@@ -119,14 +119,14 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const workOptions = [
     ...inForce.map((offer) => ({ value: `offer:${offer.id}`, label: several ? offerLabel(offer) : `Оферта · ${offer.title}` })),
     ...state.changes.map((change) => ({ value: `change:${change.id}`, label: `Промяна · ${change.title}${several && codeOf(change.baselineOfferId) ? ` (${codeOf(change.baselineOfferId)})` : ""}` })),
-    { value: "project", label: "Целия обект (без оферта)" },
+    { value: "project", label: "Целият обект (без оферта)" },
   ];
   const defaultWork = view.offer?.inForce ? `offer:${view.offer.id}` : workOptions[0]!.value;
   const stageWork = (item: ProjectState["milestones"][number]) => item.changeOrderId ? `change:${item.changeOrderId}` : item.offerId ? `offer:${item.offerId}` : "project";
   // Money can go to any offer the client has seen or approved; a single one is filled in.
   const moneyOffers = state.offers.filter((offer) => offer.status !== "canceled" && offer.status !== "declined" && offer.status !== "draft");
   const offerOptions = moneyOffers.length > 1
-    ? [...moneyOffers.map((offer) => ({ value: offer.id, label: offerLabel(offer) })), { value: "none", label: "Без оферта (целия обект)" }]
+    ? [...moneyOffers.map((offer) => ({ value: offer.id, label: offerLabel(offer) })), { value: "none", label: "Без оферта (за целия обект)" }]
     : moneyOffers.map((offer) => ({ value: offer.id, label: offerLabel(offer) }));
   const assignOptions = inForce.map((offer) => ({ value: offer.id, label: offerLabel(offer) }));
   const stageChoices = state.milestones.map((item) => ({ value: item.id, label: `${item.title} · ${formatDay(item.dueOn)}${several && codeOf(item.offerId) ? ` · ${codeOf(item.offerId)}` : ""}`, offerId: item.offerId }));

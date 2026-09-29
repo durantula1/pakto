@@ -106,7 +106,7 @@ export function useUploadStagedFiles(createdId: string | undefined, files: File[
           toast.error(error instanceof Error ? error.message : `„${file.name}“ не беше качен.`);
         }
       }
-      if (failed) toast.error(`${failed} от ${files.length} файла не се качиха. Добави ги отново от документа.`);
+      if (failed) toast.error(`${failed} от ${files.length} файла не се качиха. Добави ги отново от страницата на офертата.`);
       const href = `/app/offers/${createdId}?notice=${notice}`;
       startNavigationProgress(href);
       router.push(href);

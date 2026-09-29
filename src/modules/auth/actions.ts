@@ -95,7 +95,7 @@ export async function requestPasswordResetAction(
     redirectTo: `${NEXT_PUBLIC_APP_URL}/auth/callback?next=/update-password`,
   });
   if (error) return { error: "Имейлът за възстановяване не беше изпратен." };
-  return { message: "Ако профилът съществува, изпратихме връзка за нова парола." };
+  return { message: "Ако профилът съществува, изпратихме линк за нова парола." };
 }
 
 export async function updatePasswordAction(
@@ -106,6 +106,6 @@ export async function updatePasswordAction(
   if (!password.success) return { error: password.error.issues[0]?.message };
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: password.data });
-  if (error) return { error: "Паролата не беше променена. Отвори връзката отново." };
+  if (error) return { error: "Паролата не беше променена. Отвори линка отново." };
   redirect("/app");
 }

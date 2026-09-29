@@ -31,7 +31,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
       .toSorted((left, right) => (left.responseDueAt?.getTime() ?? Infinity) - (right.responseDueAt?.getTime() ?? Infinity))
       .map((item) => ({
         key: item.id,
-        kind: item.kind === "offer" ? "Нова оферта" : "Промяна в цената",
+        kind: item.kind === "offer" ? "Нова оферта" : "Промяна по офертата",
         tone: "decide" as const,
         title: item.title,
         detail: <>{project.name} · {stepAmount(item.kind, cents(item.total), item.currency)}</>,

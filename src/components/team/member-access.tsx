@@ -67,7 +67,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
 
   const roleName = preset ? PRESETS[preset].label : "По избор";
   const scopeText = allProjects ? "Всички обекти" : selected.length === 1 ? "1 обект" : `${selected.length} обекта`;
-  const saveLabel = pending ? "Запазвам…" : "Запази правата";
+  const saveLabel = pending ? "Запазване…" : "Запази правата";
 
   return <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
     <form
@@ -145,7 +145,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
     {dirty ? <div className="sticky bottom-20 z-20 -mx-4 flex items-center gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
       <p className="min-w-0 flex-1 text-sm text-muted-foreground">Незапазени промени</p>
       <Button type="button" variant="ghost" isDisabled={pending} onPress={reset}>Отказ</Button>
-      <Button type="submit" form={FORM_ID} isDisabled={pending}>{pending ? "Запазвам…" : "Запази"}</Button>
+      <Button type="submit" form={FORM_ID} isDisabled={pending}>{pending ? "Запазване…" : "Запази"}</Button>
     </div> : null}
   </div>;
 }

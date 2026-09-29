@@ -6,7 +6,7 @@ import { formatCents } from "@/modules/projects/state";
 
 export type PortalStep = {
   key: string;
-  /** What kind of thing waits, in words: "Оферта", "Промяна в цената", "Приемане на работа". */
+  /** What kind of thing waits, in words: "Оферта", "Промяна по офертата", "Приемане на работа". */
   kind: string;
   tone: "decide" | "accept";
   title: string;

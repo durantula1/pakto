@@ -26,7 +26,7 @@ function failure(error: unknown): { ok: false; error: string } {
 async function requireEditableDraft(changeOrderId: string) {
   const context = await requireTenantContext();
   const draft = await getDraftRevision(context.organizationId, changeOrderId);
-  if (!draft) throw new Error("Документът не е намерен.");
+  if (!draft) throw new Error("Не намерихме тази оферта или промяна.");
   await requireProjectCapability(context, draft.projectId, draft.documentKind === "offer" ? "offer" : "draft");
   if (draft.status !== "draft") throw new Error("Файлове се добавят само към чернова. Създай нова версия.");
   return { context, draft };

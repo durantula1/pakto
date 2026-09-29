@@ -35,7 +35,7 @@ export async function addNoteAction(_: NoteState, formData: FormData): Promise<N
     if (changeOrderId) {
       const [document] = await getDatabase().select({ id: changeOrders.id }).from(changeOrders)
         .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.projectId, parsed.data.projectId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
-      if (!document) return { error: "Документът не е намерен." };
+      if (!document) return { error: "Не намерихме тази оферта или промяна." };
     }
     await getDatabase().insert(internalNotes).values({ organizationId: context.organizationId, projectId: parsed.data.projectId, changeOrderId, authorId: context.userId, body: parsed.data.body });
     refresh(parsed.data.projectId, changeOrderId);
