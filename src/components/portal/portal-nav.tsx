@@ -28,7 +28,7 @@ export function PortalNav({ variant, badge }: { variant: "top" | "bottom"; badge
     return (
       <>
         {sections.map((section) => (
-          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground", active === section.id && "bg-muted text-foreground")}>
+          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground", active === section.id && "bg-sidebar text-sidebar-foreground hover:bg-sidebar hover:text-sidebar-foreground")}>
             <section.icon className="size-4" /> {section.label}
             {section.id === "questions" ? badge : null}
           </Link>
@@ -36,17 +36,19 @@ export function PortalNav({ variant, badge }: { variant: "top" | "bottom"; badge
       </>
     );
   }
+  // Phones: a floating navy pill; the current place opens into a light pill with its name, the others are icons.
   return (
-    <div className="mx-auto grid max-w-md grid-cols-3">
-      {sections.map((section) => (
-        <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground", active === section.id && "font-semibold text-foreground")}>
-          <span className={cn("relative flex h-7 w-14 items-center justify-center rounded-full", active === section.id && "bg-primary/20")}>
-            <section.icon className="size-5" />
-            {section.id === "questions" && badge ? <span className="absolute -top-1 right-1">{badge}</span> : null}
-          </span>
-          {section.label}
-        </Link>
-      ))}
+    <div className="flex items-center justify-between gap-1">
+      {sections.map((section) => {
+        const current = active === section.id;
+        return (
+          <Link key={section.id} href={section.href} aria-current={current ? "page" : undefined} className={cn("relative flex h-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all", current ? "flex-1 bg-sidebar-foreground px-4 text-sidebar" : "w-14 text-sidebar-foreground/75 hover:text-sidebar-foreground")}>
+            <section.icon className="size-5 shrink-0" aria-hidden="true" />
+            <span className={current ? undefined : "sr-only"}>{section.label}</span>
+            {section.id === "questions" && badge ? <span className="absolute top-1.5 right-2">{badge}</span> : null}
+          </Link>
+        );
+      })}
     </div>
   );
 }

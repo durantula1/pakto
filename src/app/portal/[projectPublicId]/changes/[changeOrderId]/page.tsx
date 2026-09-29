@@ -1,18 +1,21 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, ChevronDown, Clock3, Download, History } from "lucide-react";
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { DecisionDone } from "@/components/portal/decision-done";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { maskEmail } from "@/lib/email/send";
 import { Badge } from "@/components/ui/badge";
+import { dueText } from "@/components/portal/action-card";
+import { OfferTabs, type OfferTab } from "@/components/portal/offer-tabs";
+import { QuestionsDialog } from "@/components/portal/project-questions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
 import { DocumentBody } from "@/components/change-orders/document-body";
 import { documentName, scheduleLabel, vatLabel } from "@/modules/change-orders/labels";
-import { ClientStatusBadge, clientStatusLabels } from "@/components/portal/client-status";
+import { clientStatusLabels } from "@/components/portal/client-status";
 import { cents, formatCents } from "@/modules/projects/state";
 import { cn } from "@/lib/utils";
 import { discountLabel } from "@/modules/change-orders/pricing";
@@ -52,10 +55,25 @@ const eventLabels: Record<string, string> = {
   acceptance_issues: "Изпратени забележки по работата",
 };
 
-const dayFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", timeZone: "Europe/Sofia" });
+const tabs: OfferTab[] = ["work", "payments", "document"];
 
-function daysUntil(date: Date) {
-  return Math.ceil((date.getTime() - new Date().getTime()) / 86_400_000);
+type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode };
+const statusStyles: Record<Status["tone"], { className: string; icon: typeof Info }> = {
+  success: { className: "bg-tile-mint text-tile-mint-foreground", icon: CheckCircle2 },
+  info: { className: "bg-tile-blue text-tile-blue-foreground", icon: Info },
+  warn: { className: "bg-tile-sand text-tile-sand-foreground", icon: TriangleAlert },
+  muted: { className: "bg-tile-stone text-tile-stone-foreground", icon: Ban },
+};
+
+/** Where the document stands, in one sentence under its title: replaces a badge, a notice and a "decision recorded" card. */
+function StatusLine({ status }: { status: Status }) {
+  const { className, icon: Icon } = statusStyles[status.tone];
+  return (
+    <p role="status" className={cn("mt-4 flex items-start gap-3 rounded-3xl p-2 pr-4 text-sm leading-6", className)}>
+      <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-card/80"><Icon className="size-4" /></span>
+      <span className="self-center">{status.text}</span>
+    </p>
+  );
 }
 
 export default async function PortalChangePage({
@@ -77,7 +95,6 @@ export default async function PortalChangePage({
     await markRevisionViewed(session, change, staffPreview).catch(() => false);
     if (unreadAnswers) await markThreadRead({ projectId: session.projectId }, "client");
   });
-  const daysLeft = change.responseDueAt ? daysUntil(change.responseDueAt) : null;
   const attachments = data.attachments;
   const money = formatAmount;
   const isOffer = change.documentKind === "offer";
@@ -96,7 +113,7 @@ export default async function PortalChangePage({
 
   const details = (
     <>
-      <DocumentBody document={{ ...change, lineItems: data.lineItems, schedule: data.schedule, paymentTerms: data.paymentTerms, absorbedChanges: data.absorbedChanges }} brand={{ name: data.project.organizationName, logo: data.logo }} />
+      <DocumentBody compact={awaitingDecision} document={{ ...change, lineItems: data.lineItems, schedule: data.schedule, paymentTerms: data.paymentTerms, absorbedChanges: data.absorbedChanges }} brand={{ name: data.project.organizationName, logo: data.logo }} />
       {attachments.length ? (
         <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и файлове към тази версия. Отворете ги, за да ги видите в пълен размер." />
       ) : null}
@@ -138,37 +155,23 @@ export default async function PortalChangePage({
         </>
       )}
     </Card>
-  ) : (
-    <Card>
-      <CardContent className="flex items-start gap-3">
-        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
-        <div>
-          <p className="font-medium">
-            {data.decision ? "Решението е записано" : change.status === "superseded" ? "Очаква се обновена версия" : "Тази версия не очаква решение"}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {data.decision
-              ? `${data.decision.typedName} · ${dateTime(data.decision.createdAt)}${data.decision.verifiedEmail ? ` · потвърдено с код до ${maskEmail(data.decision.verifiedEmail)}` : ""}`
-              : data.session.contactRole === "approver"
-                ? "Статус: " + (clientStatusLabels[change.status] ?? change.status)
-                : "Решението взима човекът, когото фирмата е посочила да одобрява."}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  ) : null;
 
+  const versions = data.revisions.filter((revision) => revision.frozenAt);
   const history = (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <History className="size-4" /> История
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {data.revisions.some((revision) => revision.frozenAt) ? (
+    <details className="group rounded-3xl bg-card [&>summary::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-2 pr-2 pl-3 text-sm font-medium">
+        <span className="inline-flex items-center gap-2.5">
+          <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground"><History className="size-4" /></span>
+          Версии и история
+          {versions.length > 1 ? <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{versions.length} версии</span> : null}
+        </span>
+        <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted"><ChevronDown className="size-4 transition-transform group-open:rotate-180" /></span>
+      </summary>
+      <div className="space-y-4 border-t border-dashed p-4">
+        {versions.length ? (
           <div className="flex flex-wrap gap-2 border-b pb-4">
-            {data.revisions.filter((revision) => revision.frozenAt).map((revision) => (
+            {versions.map((revision) => (
               <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/5">
                 <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {revision.currency}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
               </DownloadLink>
@@ -188,162 +191,190 @@ export default async function PortalChangePage({
             </li>
           ))}
         </ol>
-      </CardContent>
-    </Card>
+      </div>
+    </details>
   );
 
-  // One notice above the document, the most important one: gone, then being revised, then which version is in force.
-  const thisOne = isOffer ? "офертата" : "промяната";
-  const notice = change.status === "canceled"
-    ? { warn: false, title: isOffer ? "Офертата е анулирана" : "Промяната е анулирана", body: "Фирмата я анулира и тя вече не чака решение." }
-    : change.status === "expired"
-      ? { warn: true, title: `Срокът на ${thisOne} изтече`, body: `Свържете се с ${data.project.organizationName}, ако все още се интересувате. Фирмата може да я изпрати отново с нов срок.` }
-      : change.status === "superseded"
-        ? { warn: true, title: `Фирмата обновява ${isOffer ? "тази оферта" : "тази промяна"}`, body: `Версия ${change.revisionNumber} е оттеглена за корекция. Ще получите имейл, когато новата версия е готова за решение.` }
-        : inForce
-          ? {
-            warn: false,
-            title: `В сила е одобрената версия ${inForce.revisionNumber} · ${formatCents(cents(inForce.total), inForce.currency)}`,
-            body: ["sent", "viewed"].includes(change.status)
-              ? `Ако одобрите версия ${change.revisionNumber}, тя заменя версия ${inForce.revisionNumber}. Ако я откажете, остава версия ${inForce.revisionNumber}.`
-              : `Версия ${change.revisionNumber} не е одобрена, затова договореното по версия ${inForce.revisionNumber} не се променя.`,
-          }
-          : null;
+  const waiting = ["sent", "viewed"].includes(change.status);
+  const decidedOn = data.decision ? `${dateTime(data.decision.createdAt, "long")} · ${data.decision.typedName}` : "";
+  const stillInForce = inForce ? ` В сила остава одобрената версия ${inForce.revisionNumber} · ${formatCents(cents(inForce.total), inForce.currency)}.` : "";
+  const status: Status | null = awaitingDecision
+    ? null
+    : change.status === "canceled"
+      ? { tone: "muted", text: `${isOffer ? "Офертата е анулирана" : "Промяната е анулирана"} от фирмата и вече не чака решение.` }
+      : change.status === "expired"
+        ? { tone: "warn", text: `Срокът за решение изтече. Свържете се с ${data.project.organizationName}, ако все още се интересувате: фирмата може да я изпрати отново.${stillInForce}` }
+        : change.status === "superseded"
+          ? { tone: "info", text: `Фирмата обновява ${isOffer ? "тази оферта" : "тази промяна"}. Ще получите имейл, когато новата версия е готова за решение.${stillInForce}` }
+          : waiting
+            ? { tone: "info", text: projectActive ? "Чака решението на одобряващия, посочен от фирмата." : "Обектът е приключен и тази версия вече не чака решение." }
+            : data.decision?.decision === "approved"
+              ? { tone: "success", text: <>Одобрихте на {decidedOn}{data.decision.verifiedEmail ? <span className="opacity-80"> · потвърдено с код до {maskEmail(data.decision.verifiedEmail)}</span> : null}</> }
+              : data.decision?.decision === "declined"
+                ? { tone: "muted", text: `Отказахте на ${decidedOn}.${stillInForce}` }
+                : data.decision?.decision === "changes_requested"
+                  ? { tone: "info", text: `Поискахте промяна на ${decidedOn}. Фирмата подготвя нова версия.${stillInForce}` }
+                  : { tone: "info", text: clientStatusLabels[change.status] ?? change.status };
 
   // A change waiting for the client shows what the price of its offer becomes.
-  const waiting = ["sent", "viewed"].includes(change.status);
   const parentContract = parentOffer?.inForce ? parentOffer.contractMinor : null;
   const changeMinor = cents(change.total);
   const priceBefore = !isOffer && waiting && parentContract !== null && changeMinor !== 0n ? parentContract : null;
   const summary = (
-    <section className="overflow-hidden rounded-2xl border bg-card">
-      <div className="flex flex-col gap-1.5 border-b p-5">
+    <section className="relative isolate overflow-hidden rounded-3xl bg-sidebar p-2 text-sidebar-foreground">
+      <svg aria-hidden="true" viewBox="0 0 200 200" className="pointer-events-none absolute -top-16 -right-16 -z-10 size-56 text-white/[0.06]">
+        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="18" />
+        <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" strokeWidth="2" />
+      </svg>
+      <div className="flex flex-col gap-1.5 p-4">
+        {change.responseDueAt ? (
+          <p className="mb-3 inline-flex items-center gap-1.5 self-start rounded-full bg-primary px-3 py-1 text-xs font-semibold text-sidebar">
+            <Clock3 className="size-3.5 shrink-0" aria-hidden="true" /> {dueText(change.responseDueAt)}
+          </p>
+        ) : null}
         {priceBefore !== null ? (
           <>
-            <p className="text-sm text-muted-foreground">Цената на {parentOffer ? documentName("offer", parentOffer.sequenceNumber).toLowerCase() : "офертата"} става</p>
+            <p className="text-sm text-sidebar-foreground/75">Цената на {parentOffer ? documentName("offer", parentOffer.sequenceNumber).toLowerCase() : "офертата"} става</p>
             <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <span className="text-muted-foreground tabular-nums line-through">{formatCents(priceBefore, change.currency)}</span>
-              <span className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(priceBefore + changeMinor, change.currency)}</span>
+              <span className="text-sidebar-foreground/60 tabular-nums line-through">{formatCents(priceBefore, change.currency)}</span>
+              <span className="text-4xl font-semibold tracking-tight text-white tabular-nums">{formatCents(priceBefore + changeMinor, change.currency)}</span>
               <Badge variant={changeMinor > 0n ? "danger-soft" : "success-soft"} className="h-6 px-2.5 text-sm">{changeMinor < 0n ? "−" : "+"}{formatCents(changeMinor < 0n ? -changeMinor : changeMinor, change.currency)}</Badge>
             </p>
           </>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
-            <p className="text-3xl font-semibold tracking-tight tabular-nums">{formatCents(changeMinor, change.currency)}</p>
-            {!isOffer && changeMinor === 0n ? <p className="text-sm text-muted-foreground">Цената на обекта не се променя.</p> : null}
+            <p className="text-sm text-sidebar-foreground/75">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
+            <p className="text-4xl font-semibold tracking-tight text-white tabular-nums">{formatCents(changeMinor, change.currency)}</p>
+            {!isOffer && changeMinor === 0n ? <p className="text-sm text-sidebar-foreground/75">Цената на обекта не се променя.</p> : null}
           </>
         )}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-sidebar-foreground/65">
           {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${formatCents(cents(change.discountAmount), change.currency)} · ` : ""}{Number(change.taxRate) ? `С ${vatLabel(change.taxRate)} · без ДДС ${formatCents(cents(change.subtotal), change.currency)}` : "Не се начислява ДДС"}
         </p>
       </div>
-      <div className="grid grid-cols-2 divide-x">
-        <div className="flex flex-col gap-0.5 px-5 py-3">
-          <span className="text-xs text-muted-foreground">{isOffer ? "Срок" : "Срок на работата"}</span>
-          <span className="font-semibold">{scheduleLabel(change.documentKind, change.scheduleImpactType, change.scheduleImpactDays, change.agreedDeadline)}</span>
-        </div>
-        <div className="flex flex-col gap-0.5 px-5 py-3">
-          {waiting && change.responseDueAt ? (
-            <>
-              <span className="text-xs text-muted-foreground">Отговорете до</span>
-              <span className={cn("font-semibold", daysLeft !== null && daysLeft <= 2 && "text-destructive")}>{dayFormat.format(change.responseDueAt)}{daysLeft !== null && daysLeft <= 2 ? (daysLeft <= 1 ? " · под 24 часа" : ` · ${daysLeft} дни`) : ""}</span>
-            </>
-          ) : (
-            <>
-              <span className="text-xs text-muted-foreground">Изпратена</span>
-              <span className="font-semibold">{change.frozenAt ? dayFormat.format(change.frozenAt) : "—"}</span>
-            </>
-          )}
-        </div>
-      </div>
+      <p className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.07] px-4 py-3 text-sm">
+        <span className="inline-flex items-center gap-2 text-sidebar-foreground/75"><CalendarDays className="size-4" aria-hidden="true" />{isOffer ? "Срок" : "Срок на работата"}</span>
+        <span className="text-right font-semibold text-white">{scheduleLabel(change.documentKind, change.scheduleImpactType, change.scheduleImpactDays, change.agreedDeadline)}</span>
+      </p>
+      {inForce ? (
+        <p className="px-4 pt-3 pb-2 text-xs leading-5 text-sidebar-foreground/70">
+          Сега е в сила версия {inForce.revisionNumber} · {formatCents(cents(inForce.total), inForce.currency)}. Ако одобрите версия {change.revisionNumber}, тя я заменя. Ако я откажете, остава версия {inForce.revisionNumber}.
+        </p>
+      ) : null}
     </section>
   );
 
-  return (
-    <>
-      <div className="flex flex-col gap-3">
-        <Link href={`/portal/${projectPublicId}`} className="inline-flex items-center gap-1 self-start text-sm font-medium text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-4" /> {data.project.name}
+  const diff = data.diff ? (
+    <details open className="group rounded-3xl bg-tile-coral/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2">
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sidebar"><Sparkles className="size-4" /></span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="font-semibold">Какво е новото спрямо {inForce ? `версия ${inForce.revisionNumber}` : "предишната версия"}</span>
+          {data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
+        </span>
+        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-card/80"><ChevronDown className="size-4 transition-transform group-open:rotate-180" /></span>
+      </summary>
+      <ul className="m-1 mt-0 list-disc space-y-1 rounded-2xl bg-card py-3 pr-4 pl-8 text-muted-foreground">
+        {data.diff.changes.map((line) => <li key={line} className="break-words">{line}</li>)}
+        {!data.diff.changes.length ? <li>{data.diff.totalBefore === data.diff.totalAfter ? "Уточнени са описанието или бележките." : "Променена е само сумата."}</li> : null}
+      </ul>
+    </details>
+  ) : null;
+
+  const questions = (
+    <QuestionsDialog unread={unreadAnswers} defaultOpen={!!query.questions}>
+      <MessageThread
+        side="portal_contact"
+        messages={thread}
+        action={sendClientMessageAction}
+        hidden={{ projectPublicId, changeOrderId: change.id }}
+        title="Съобщения с фирмата"
+        topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
+        currentTopic={change.id}
+        readFor={projectPublicId}
+        unread={unreadAnswers}
+        composerNote={`Новото съобщение ще е по ${name}`}
+        placeholder="Напишете въпрос към фирмата…"
+        emptyText={`Не е ясно нещо? Попитайте ${data.project.organizationName} тук, без да отказвате или да искате промяна. Ще получите отговора и на имейла си.`}
+        composerClassName=""
+      />
+    </QuestionsDialog>
+  );
+  const initialTab = tabs.find((tab) => tab === query.tab) ?? "work";
+
+  const header = (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <Link href={`/portal/${projectPublicId}`} className="inline-flex min-w-0 items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-4 shrink-0" /> <span className="truncate">{data.project.name}</span>
         </Link>
-        <DecisionDone decision={query.decision} />
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{name}{change.revisionNumber > 1 ? ` · версия ${change.revisionNumber}` : ""}
-              {parentOffer ? <> · <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="underline underline-offset-4 hover:text-foreground">към {documentName("offer", parentOffer.sequenceNumber)}</Link></> : null}
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{change.title}</h1>
-            <div className="mt-2"><ClientStatusBadge status={change.status} /></div>
-          </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {questions}
           {change.frozenAt ? (
-            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${name} · PDF`} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border bg-card px-3 text-sm font-medium hover:bg-muted">
+            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${name} · PDF`} className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted">
               <Download className="size-4" /> PDF
             </DownloadLink>
           ) : null}
         </div>
       </div>
-      {offerState?.acceptance ? (
-        <div className="mt-4">
-          <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
-        </div>
-      ) : null}
-      {notice ? (
-        <div role="status" className={cn("mt-4 rounded-2xl border p-4 text-sm", notice.warn ? "border-amber-500/40 bg-amber-500/10" : "bg-card")}>
-          <p className="font-semibold">{notice.title}</p>
-          <p className="mt-1 leading-6 text-muted-foreground">{notice.body}</p>
-        </div>
-      ) : null}
-      {data.diff ? (
-        <details className="group mt-4 rounded-2xl border border-primary/30 bg-primary/5 text-sm [&>summary::-webkit-details-marker]:hidden">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2">
-            <span className="flex flex-col">
-              <span className="font-semibold">Какво е новото във версия {change.revisionNumber}</span>
-              {data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
-            </span>
-            <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
-          </summary>
-          <ul className="list-disc space-y-1 border-t border-primary/20 py-3 pr-4 pl-9 text-muted-foreground">
-            {data.diff.changes.map((line) => <li key={line} className="break-words">{line}</li>)}
-            {!data.diff.changes.length ? <li>{data.diff.totalBefore === data.diff.totalAfter ? "Уточнени са описанието или бележките." : "Променена е само сумата."}</li> : null}
-          </ul>
-        </details>
-      ) : null}
-      <div className="mt-5">
-        <PortalDocumentLayout
-          amount={formatCents(cents(change.total), change.currency)}
-          aboveBottomNav={!!session.clientId && session.unlocked}
-          details={details}
-          decision={decision}
-          history={history}
-          summary={summary}
-          pending={awaitingDecision}
-          work={agreement ? (
-            <>
-              <PortalSchedule view={agreement} />
-              <PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived"} />
-            </>
-          ) : undefined}
-          unreadAnswers={unreadAnswers}
-          questionsOpen={!!query.questions}
-          questions={
-            <MessageThread
-              side="portal_contact"
-              messages={thread}
-              action={sendClientMessageAction}
-              hidden={{ projectPublicId, changeOrderId: change.id }}
-              title="Съобщения с фирмата"
-              topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
-              currentTopic={change.id}
-              readFor={projectPublicId}
-              unread={unreadAnswers}
-              composerNote={`Новото съобщение ще е по ${name}`}
-              placeholder="Напишете въпрос към фирмата…"
-              emptyText={`Не е ясно нещо? Попитайте ${data.project.organizationName} тук, без да отказвате или да искате промяна. Ще получите отговора и на имейла си.`}
-              composerClassName="sticky bottom-0 lg:static"
-            />
-          }
-        />
+      <DecisionDone decision={query.decision} />
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-1.5 text-sm">
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 font-medium", isOffer ? "bg-tile-blue text-tile-blue-foreground" : "bg-tile-lilac text-tile-lilac-foreground")}>
+            <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-card/80">{isOffer ? <FileText className="size-3.5" /> : <FilePlus2 className="size-3.5" />}</span>
+            {name}
+          </span>
+          {change.revisionNumber > 1 ? <span className="rounded-full bg-card px-3 py-1 text-muted-foreground">версия {change.revisionNumber}</span> : null}
+          {parentOffer ? <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="rounded-full bg-card px-3 py-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">към {documentName("offer", parentOffer.sequenceNumber)}</Link> : null}
+          {!awaitingDecision ? <span className="rounded-full bg-card px-3 py-1 font-semibold tabular-nums">{formatCents(changeMinor, change.currency)}</span> : null}
+        </p>
+        <h1 className="mt-3 text-[2.25rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">{change.title}</h1>
+        {status ? <StatusLine status={status} /> : null}
       </div>
-    </>
+    </div>
+  );
+
+  // A. Waiting for the client's decision: one path from top to bottom, the decision beside it or in the phone bar.
+  if (awaitingDecision) return (
+    <div className="flex flex-col gap-5">
+      {header}
+      <PortalDocumentLayout
+        amount={formatCents(cents(change.total), change.currency)}
+        aboveBottomNav={!!session.clientId && session.unlocked}
+        summary={summary}
+        decision={decision}
+        details={<>{diff}{details}</>}
+        footer={history}
+      />
+    </div>
+  );
+
+  // B. An offer in force: the work, its payments and the approved document, one tab at a time.
+  if (agreement) return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      {header}
+      <OfferTabs
+        initial={initialTab}
+        work={
+          <>
+            {offerState?.acceptance ? (
+              <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
+            ) : null}
+            <PortalSchedule view={agreement} />
+          </>
+        }
+        payments={<PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived"} />}
+        document={<>{details}{history}</>}
+      />
+    </div>
+  );
+
+  // C. Anything else (a decided change, a declined or withdrawn offer): the document for reference.
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      {header}
+      {details}
+      {history}
+    </div>
   );
 }

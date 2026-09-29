@@ -1,4 +1,7 @@
+import { ChevronDown } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
+import { ExpandableLines } from "@/components/change-orders/expandable-lines";
 import { cn } from "@/lib/utils";
 import { formatDay, vatLabel } from "@/modules/change-orders/labels";
 import { daysLabel, scheduleDays } from "@/modules/change-orders/schedule";
@@ -8,6 +11,8 @@ import { logoBox, ptToRem, type DocumentLogo } from "@/modules/organizations/log
 import { formatAmount } from "@/lib/money";
 
 const money = formatAmount;
+/** Lines shown before a compact table folds. */
+const foldAfter = 3;
 
 export type DocumentBodyLine = {
   id: number | string;
@@ -22,9 +27,11 @@ export type DocumentBodyLine = {
  * The document as the client reads it: scope, reason, priced lines with totals, and the note for
  * the client. Staff and portal render this same component, so the team sees exactly what was sent.
  */
-export function DocumentBody({ document, brand }: {
+export function DocumentBody({ document, brand, compact = false }: {
   /** Company name and logo at the top of the document; omitted where the page header already shows them. */
   brand?: { name: string; logo: DocumentLogo | null };
+  /** For reading before a decision: a long table folds to its first lines, schedule and payment fold into one row. */
+  compact?: boolean;
   document: {
     documentKind: "offer" | "change";
     description: string;
@@ -47,26 +54,11 @@ export function DocumentBody({ document, brand }: {
   };
 }) {
   const discount = Number(document.discountAmount ?? 0);
-  return (
-    <Card>
-      <CardContent className="space-y-5">
-        {brand ? <DocumentBrand name={brand.name} logo={brand.logo} /> : null}
-        <div className="grid gap-5 sm:grid-cols-2">
-          <section className={document.reason ? undefined : "sm:col-span-2"}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {document.documentKind === "offer" ? "Какво включва" : "Какво се променя"}
-            </p>
-            <p className="mt-1.5 leading-7 whitespace-pre-line">{document.description}</p>
-          </section>
-          {document.reason ? (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Защо е необходимо</p>
-              <p className="mt-1.5 leading-7 whitespace-pre-line">{document.reason}</p>
-            </section>
-          ) : null}
-        </div>
-        {document.lineItems.length ? (
-          <section className="overflow-hidden rounded-xl border">
+  const fold = compact && document.lineItems.length > foldAfter;
+  const schedule = document.schedule?.length ? <ScheduleSection schedule={document.schedule} deadline={document.agreedDeadline ?? null} /> : null;
+  const terms = document.paymentTerms?.length ? <PaymentTermsSection terms={document.paymentTerms} total={document.total} deadline={document.agreedDeadline ?? null} /> : null;
+  const lines = (
+          <section className={cn("overflow-hidden", !fold && "rounded-xl border")}>
             <table className="w-full text-sm">
               <thead className="hidden bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground sm:table-header-group">
                 <tr>
@@ -77,8 +69,8 @@ export function DocumentBody({ document, brand }: {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {document.lineItems.map((line) => (
-                  <tr key={line.id} className="align-top">
+                {document.lineItems.map((line, index) => (
+                  <tr key={line.id} className={cn("align-top", fold && index >= foldAfter && "group-data-[expanded=false]/lines:hidden")}>
                     <td className="px-3 py-2.5">
                       <p>{line.description}</p>
                       <p className="text-xs text-muted-foreground sm:hidden">
@@ -95,7 +87,7 @@ export function DocumentBody({ document, brand }: {
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="border-t bg-muted/30 text-muted-foreground">
+              <tfoot className={cn("border-t bg-muted/30 text-muted-foreground", fold && "group-data-[expanded=false]/lines:hidden")}>
                 {discount ? <>
                   <tr>
                     <td colSpan={3} className="px-3 pt-2.5 text-right">Сума без отстъпка</td>
@@ -121,9 +113,39 @@ export function DocumentBody({ document, brand }: {
               </tfoot>
             </table>
           </section>
-        ) : null}
-        {document.schedule?.length ? <ScheduleSection schedule={document.schedule} deadline={document.agreedDeadline ?? null} /> : null}
-        {document.paymentTerms?.length ? <PaymentTermsSection terms={document.paymentTerms} total={document.total} deadline={document.agreedDeadline ?? null} /> : null}
+  );
+  const table = document.lineItems.length ? (fold ? <div className="overflow-hidden rounded-xl border"><ExpandableLines total={document.lineItems.length}>{lines}</ExpandableLines></div> : lines) : null;
+  return (
+    <Card>
+      <CardContent className="space-y-5">
+        {brand ? <DocumentBrand name={brand.name} logo={brand.logo} /> : null}
+        <div className="grid gap-5 sm:grid-cols-2">
+          <section className={document.reason ? undefined : "sm:col-span-2"}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {document.documentKind === "offer" ? "Какво включва" : "Какво се променя"}
+            </p>
+            <p className="mt-1.5 leading-7 whitespace-pre-line">{document.description}</p>
+          </section>
+          {document.reason ? (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Защо е необходимо</p>
+              <p className="mt-1.5 leading-7 whitespace-pre-line">{document.reason}</p>
+            </section>
+          ) : null}
+        </div>
+        {table}
+        {compact && (schedule || terms) ? (
+          <details className="group rounded-xl border [&>summary::-webkit-details-marker]:hidden">
+            <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2">
+              <span className="flex flex-col">
+                <span className="text-sm font-medium">{schedule && terms ? "Срок и плащане" : schedule ? "Ориентировъчен график" : "Плащане"}</span>
+                <span className="text-xs text-muted-foreground">{[document.schedule?.length ? `${document.schedule.length} ${document.schedule.length === 1 ? "етап" : "етапа"}, около ${daysLabel(scheduleDays(document.schedule))}` : null, document.paymentTerms?.length ? `${document.paymentTerms.length} ${document.paymentTerms.length === 1 ? "плащане" : "плащания"}` : null].filter(Boolean).join(" · ")}</span>
+              </span>
+              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="space-y-5 border-t p-3">{schedule}{terms}</div>
+          </details>
+        ) : <>{schedule}{terms}</>}
         {document.absorbedChanges?.length ? (
           <section className="rounded-xl border border-dashed p-3 text-sm">
             <p className="font-medium">Тази версия включва одобрените промени</p>

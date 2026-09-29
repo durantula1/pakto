@@ -23,6 +23,35 @@ export function ProjectQuestions({ projectPublicId, organizationName, messages, 
   /** `light` on the page background, `dark` inside the navy header. */
   tone?: "dark" | "light";
 }) {
+  return (
+    <QuestionsDialog unread={unread} defaultOpen={defaultOpen} tone={tone}>
+      <MessageThread
+        side="portal_contact"
+        title="Съобщения с фирмата"
+        messages={messages}
+        action={sendProjectQuestionAction}
+        hidden={{ projectPublicId }}
+        topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
+        readFor={projectPublicId}
+        unread={unread}
+        placeholder="Напр. кога идвате утре?"
+        emptyText={`Питайте ${organizationName} за обекта: кога идват, какво да подготвите, достъп. Въпрос за конкретна оферта можете да зададете и от нейната страница, ще дойде тук.`}
+        composerClassName=""
+      />
+    </QuestionsDialog>
+  );
+}
+
+/**
+ * The "Попитайте фирмата" button and the chat it opens; `children` is the thread (the whole project's,
+ * or one offer's). "?questions=1" in the URL keeps it open across refreshes and links from emails.
+ */
+export function QuestionsDialog({ unread, defaultOpen = false, tone = "light", children }: {
+  unread: number;
+  defaultOpen?: boolean;
+  tone?: "dark" | "light";
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -40,26 +69,12 @@ export function ProjectQuestions({ projectPublicId, organizationName, messages, 
   }
   return (
     <DialogTrigger isOpen={hydrated && open} onOpenChange={toggle}>
-      <Button type="button" variant="outline" size="sm" className={tone === "dark" ? "border-sidebar-border bg-white/5 text-sidebar-foreground hover:bg-white/10" : "h-10 rounded-xl bg-card px-3"}>
+      <Button type="button" variant="outline" size="sm" className={tone === "dark" ? "border-sidebar-border bg-white/5 text-sidebar-foreground hover:bg-white/10" : "h-10 rounded-full border-transparent bg-card px-4"}>
         <MessageCircle data-icon="inline-start" />
-        Попитайте фирмата
+        {tone === "light" ? <><span className="sm:hidden">Питайте</span><span className="hidden sm:inline">Попитайте фирмата</span></> : "Попитайте фирмата"}
         {unread ? <span aria-label={`${unread} нов отговор`} className="rounded-full bg-primary px-1.5 text-2xs text-primary-foreground">{unread}</span> : null}
       </Button>
-      <Dialog className="p-0 sm:max-w-lg">
-        <MessageThread
-          side="portal_contact"
-          title="Съобщения с фирмата"
-          messages={messages}
-          action={sendProjectQuestionAction}
-          hidden={{ projectPublicId }}
-          topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
-          readFor={projectPublicId}
-          unread={unread}
-          placeholder="Напр. кога идвате утре?"
-          emptyText={`Питайте ${organizationName} за обекта: кога идват, какво да подготвите, достъп. Въпрос за конкретна оферта можете да зададете и от нейната страница, ще дойде тук.`}
-          composerClassName=""
-        />
-      </Dialog>
+      <Dialog className="p-0 sm:max-w-lg">{children}</Dialog>
     </DialogTrigger>
   );
 }

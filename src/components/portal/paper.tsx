@@ -11,19 +11,19 @@ import { cn } from "@/lib/utils";
 /** A block that waits for the client, with a document-like header strip ("ЧАКА ТЕ · 2 … 26 септември"). */
 export function Slip({ label, meta, id, className, children }: { label: ReactNode; meta?: ReactNode; id?: string; className?: string; children: ReactNode }) {
   return (
-    <section id={id} className={cn("scroll-mt-6 overflow-hidden rounded-2xl border border-primary/40 bg-card", className)}>
-      <header className="flex items-baseline justify-between gap-3 border-b border-dashed border-primary/30 bg-primary/5 px-4 py-2 font-mono text-xs tracking-wide text-primary uppercase">
+    <section id={id} className={cn("scroll-mt-6 overflow-hidden rounded-3xl bg-card shadow-[inset_0_0_0_2px_color-mix(in_srgb,var(--primary)_45%,transparent)]", className)}>
+      <header className="flex items-baseline justify-between gap-3 bg-tile-coral px-5 py-3 text-sm font-semibold text-tile-coral-foreground">
         <span>{label}</span>
-        {meta ? <span className="normal-case">{meta}</span> : null}
+        {meta ? <span className="font-normal">{meta}</span> : null}
       </header>
       {children}
     </section>
   );
 }
 
-/** Small mono group label above a list ("ЧАКАТ РЕШЕНИЕ"). */
+/** A group heading above a list ("Платежен план"). */
 export function PaperLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <h2 className={cn("font-mono text-xs tracking-wide text-muted-foreground uppercase", className)}>{children}</h2>;
+  return <h2 className={cn("px-1 text-base font-semibold", className)}>{children}</h2>;
 }
 
 /** The dotted run between a label and its amount. */
@@ -42,7 +42,7 @@ export function BillLine({ code, label, amount, strong = false, muted = false, c
 }) {
   return (
     <div className={cn("flex items-baseline text-sm", strong && "text-base font-semibold", muted && "text-muted-foreground", className)}>
-      {code ? <span className="mr-2 shrink-0 font-mono text-xs text-muted-foreground">{code}</span> : null}
+      {code ? <span className="mr-2 shrink-0 text-xs text-muted-foreground tabular-nums">{code}</span> : null}
       <span className="min-w-0 truncate">{label}</span>
       <Leader />
       <span className="shrink-0 tabular-nums">{amount}</span>

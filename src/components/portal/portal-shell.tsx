@@ -61,13 +61,15 @@ export function PortalShell({ organizationName, logoPath, nav, unread = 0, child
           {nav ? <div className="sm:hidden"><PortalProfileMenu /></div> : null}
         </div>
       </header>
-      <main className={cn("mx-auto max-w-6xl px-4 py-5 sm:py-8", nav && "pb-24 sm:pb-8")}>
+      <main className={cn("mx-auto max-w-6xl px-4 py-5 sm:py-8", nav && "pb-28 sm:pb-8")}>
         {children}
         <p className="mt-10 flex items-center justify-center gap-1.5 text-center text-xs leading-5 text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0" /> Линкът е личен, не го препращайте · Pakto</p>
       </main>
       {nav ? (
-        <nav aria-label="Портал" className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] sm:hidden">
-          <PortalNav variant="bottom" badge={badge} />
+        <nav aria-label="Портал" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+          <div className="pointer-events-auto mx-auto max-w-sm rounded-full bg-sidebar p-1.5 shadow-[0_0.75rem_2rem_-0.75rem_rgb(16_43_56/0.55)]">
+            <PortalNav variant="bottom" badge={badge} />
+          </div>
         </nav>
       ) : null}
     </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { MapPin, MessageCircle } from "lucide-react";
+import { ArrowUpRight, MapPin, MessageCircle } from "lucide-react";
 
 import { UnlockProjectsCard } from "@/components/portal/client-projects-bar";
 import { PortalSteps, stepAmount, type PortalStep } from "@/components/portal/action-card";
@@ -35,7 +35,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
         tone: "decide" as const,
         title: item.title,
         detail: <>{project.name} · {stepAmount(item.kind, cents(item.total), item.currency)}</>,
-        due: item.responseDueAt ? formatShortDay(item.responseDueAt) : null,
+        due: item.responseDueAt,
         href: `/portal/${project.publicId}/changes/${item.id}`,
         action: "Прегледайте и решете",
       })),
@@ -55,15 +55,15 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
 
   return (
     <>
-      <div className="mx-auto flex max-w-3xl flex-col gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Здравейте, {firstName}</h1>
+      <div className="mx-auto flex max-w-3xl flex-col gap-5">
+        <h1 className="text-[2.5rem] leading-[1.05] font-semibold tracking-tight sm:text-5xl sm:leading-[1.05]">Здравейте,<br />{firstName}</h1>
 
         <DecisionDone decision={query.decision} />
 
-        {steps.length ? <h2 className="mt-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Чака от вас</h2> : null}
+        {steps.length ? <h2 className="mt-2 px-1 text-xl font-semibold tracking-tight">Чака от вас</h2> : null}
         <PortalSteps steps={steps} calm={!decisionMade} />
 
-        <h2 className="mt-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Вашите обекти</h2>
+        <h2 className="mt-4 px-1 text-xl font-semibold tracking-tight">Вашите обекти</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {cards.map(({ project, card }) => {
             const done = project.archived || project.status !== "active";
@@ -72,10 +72,10 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
             const completed = card.stagesCompleted;
             const next = card.nextStage;
             return (
-              <Link key={project.publicId} href={`/portal/${project.publicId}`} className={`group flex flex-col gap-3 rounded-2xl border bg-card p-4 transition-colors hover:border-primary/60 ${done ? "opacity-75" : ""}`}>
+              <Link key={project.publicId} href={`/portal/${project.publicId}`} className={`group flex flex-col gap-4 rounded-3xl bg-card p-5 transition-shadow hover:shadow-[0_0.75rem_2rem_-1rem_rgb(16_43_56/0.35)] ${done ? "opacity-75" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-col gap-1">
-                    <p className="text-[1.0625rem] font-semibold">{project.name}</p>
+                    <p className="text-xl leading-tight font-semibold tracking-tight">{project.name}</p>
                     <p className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-3.5 shrink-0" /> <span className="truncate">{project.siteAddress}</span></p>
                   </div>
                   {pending ? <Badge variant="danger-soft" className="h-6 gap-1.5 px-2.5"><span className="size-1.5 rounded-full bg-destructive" />Чака решение</Badge>
@@ -85,26 +85,29 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                 {card.stagesTotal > 0 && !done ? (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">Работа</span><span className="font-semibold">{completed} от {card.stagesTotal} {card.stagesTotal === 1 ? "етап" : "етапа"}</span></div>
-                    <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-                      <div className="h-full rounded-full bg-brand-green" style={{ width: `${Math.round((completed / card.stagesTotal) * 100)}%` }} />
+                    <div className="h-2 overflow-hidden rounded-full bg-foreground/10" aria-hidden="true">
+                      <div className="h-full rounded-full bg-foreground" style={{ width: `${Math.round((completed / card.stagesTotal) * 100)}%` }} />
                     </div>
                   </div>
                 ) : null}
-                {done ? <p className="rounded-xl bg-muted px-3 py-2.5 text-sm text-muted-foreground">Обектът е приключен. Всичко остава тук за справка.</p> : (
+                {done ? <p className="rounded-2xl bg-tile-stone px-3.5 py-3 text-sm text-tile-stone-foreground">Обектът е приключен. Всичко остава тук за справка.</p> : (
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-0.5 rounded-xl bg-tile-blue px-3 py-2.5 text-tile-blue-foreground">
+                    <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-mint px-3.5 py-3 text-tile-mint-foreground">
                       <span className="text-xs">Следва</span>
                       {next ? <><span className="truncate text-sm font-semibold">{next.title}</span><span className="text-xs">до {formatShortDay(next.dueOn)}</span></>
                         : <span className="text-sm">{card.stagesTotal ? "Всички етапи са готови" : "Фирмата още не е добавила график"}</span>}
                     </div>
-                    <div className="flex flex-col gap-0.5 rounded-xl bg-tile-sand px-3 py-2.5 text-tile-sand-foreground">
+                    <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-sand px-3.5 py-3 text-tile-sand-foreground">
                       <span className="text-xs">Остава за плащане</span>
                       {card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
                         : <span className="text-sm">Още няма одобрена оферта</span>}
                     </div>
                   </div>
                 )}
-                {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : null}
+                <div className="flex items-center justify-between gap-3">
+                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете обекта</span>}
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"><ArrowUpRight className="size-4" /></span>
+                </div>
               </Link>
             );
           })}
