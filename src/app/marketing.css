@@ -189,6 +189,46 @@
   box-shadow: 0 22px 45px rgb(16 43 56 / 28%);
 }
 
+/* Legal texts: calm reading rhythm, lists with the page's coral dash instead of browser bullets. */
+.mf-legal-body {
+  display: grid;
+  gap: 1rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #29444f;
+}
+
+.mf-legal-body ul {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.mf-legal-body li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.mf-legal-body li::before {
+  content: "";
+  position: absolute;
+  top: 0.8125rem;
+  left: 0;
+  width: 0.75rem;
+  height: 2px;
+  background: #e85f48;
+}
+
+.mf-legal-body a {
+  font-weight: 700;
+  color: #102b38;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.mf-legal-body b {
+  color: #102b38;
+}
+
 .mf-dark-grid {
   opacity: 0.38;
   background-image:

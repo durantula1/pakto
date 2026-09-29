@@ -3,8 +3,8 @@
  * changes materially; `user_consents` keeps which version each user accepted and when.
  */
 export const LEGAL_DOCUMENTS = {
-  terms: { version: "2026-09-23", href: "/terms", label: "Условия за ползване" },
-  privacy: { version: "2026-09-23", href: "/privacy", label: "Политика за поверителност" },
+  terms: { version: "2026-09-29", href: "/terms", label: "Условия за ползване" },
+  privacy: { version: "2026-09-29", href: "/privacy", label: "Политика за поверителност" },
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_DOCUMENTS;

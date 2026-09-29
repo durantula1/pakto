@@ -18,8 +18,6 @@ import {
   useSpring,
 } from "motion/react";
 
-import { LEGAL_DOCUMENTS } from "@/lib/legal";
-
 import { AudienceSplit } from "./audience-split";
 import { Faq } from "./faq";
 import { PlatformTour } from "./platform-tour";
@@ -27,40 +25,17 @@ import { ProcessVideo } from "./process-video";
 import { ProofStrip } from "./proof-strip";
 import { MobileCtaBar } from "./mobile-cta-bar";
 import { HeroSeal } from "./hero-seal";
+import { SiteFooter } from "./site-chrome";
 import { HeroReveal, Reveal } from "./reveal";
 import { SecuritySection } from "./security-section";
 import { UpdatesSection } from "./updates-section";
 import { applyAuthHint } from "@/lib/auth/session-hint";
-import { productDefinition } from "@/lib/seo/site";
 
 // The landing page is static (cached, back/forward-cacheable). Both signed-in and visitor buttons
 // are in the HTML; `authHintScript` (run before paint by the root layout) sets <html data-auth>, and CSS
 // shows one set, so a reload never flashes the wrong buttons.
 const loadMotionFeatures = () =>
   import("./motion-features").then((module) => module.default);
-
-const footerColumns = [
-  {
-    title: "Продукт",
-    links: [
-      { href: "#workflow", label: "Как работи" },
-      { href: "#product", label: "Функции" },
-      { href: "#security", label: "Сигурност" },
-      { href: "/faq", label: "Въпроси" },
-    ],
-  },
-  {
-    title: "Pakto",
-    links: [
-      { href: "/sign-in", label: "Вход" },
-      { href: "/contact", label: "Връзка с нас" },
-      ...Object.values(LEGAL_DOCUMENTS).map(({ href, label }) => ({
-        href,
-        label,
-      })),
-    ],
-  },
-];
 
 export function LandingExperience() {
   // The root layout's inline script runs once per page load; after a client navigation to "/"
@@ -294,67 +269,7 @@ export function LandingExperience() {
             </div>
           </section>
 
-          <footer className="bg-[#102b38] px-[6vw] pb-8 pt-16 text-[#d9e7e4] lg:pt-24">
-            <div className="mx-auto grid max-w-[93.75rem] gap-14 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-24">
-              <div className="max-w-[40rem]">
-                <Link
-                  href="/"
-                  className="group inline-flex items-center gap-2.5"
-                  aria-label="Pakto"
-                >
-                  <Image
-                    src="/pakto-mark.svg"
-                    alt=""
-                    width={36}
-                    height={36}
-                    className="size-9 rounded-[0.625rem] ring-1 ring-white/15 transition-transform group-hover:-rotate-6"
-                  />
-                  <span className="text-[0.9375rem] font-black tracking-[-0.04em] text-[#fbf7ec]">
-                    Pakto
-                  </span>
-                </Link>
-                {/* Where the name comes from. */}
-                <p className="mt-10 font-serif text-3xl leading-tight tracking-[-0.02em] text-[#fbf7ec] sm:text-4xl">
-                  <i>Pactum</i> — договорка между две страни.
-                </p>
-                <p className="mt-4 max-w-md text-base leading-7 text-[#9db5b6]">
-                  Римляните са знаели, че договорката само на думи трудно се
-                  доказва. Pakto я записва.
-                </p>
-              </div>
-
-              <nav
-                aria-label="Връзки във футъра"
-                className="grid grid-cols-2 gap-x-16 gap-y-10 self-end"
-              >
-                {footerColumns.map((column) => (
-                  <div key={column.title} className="min-w-0">
-                    <p className="text-sm font-bold text-[#fbf7ec]">
-                      {column.title}
-                    </p>
-                    <ul className="mt-3 space-y-1 text-sm text-[#9db5b6]">
-                      {column.links.map((link) => (
-                        <li key={link.href}>
-                          <Link
-                            href={link.href}
-                            className="inline-block py-1 transition-colors hover:text-[#ff765f]"
-                          >
-                            {link.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </nav>
-            </div>
-
-            {/* The product definition stays on the page: the meta description repeats it word for word. */}
-            <div className="mx-auto mt-16 flex max-w-[93.75rem] flex-col gap-4 border-t border-white/10 pt-6 text-xs leading-5 text-[#7f9a9c] lg:mt-24 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
-              <p className="max-w-2xl">{productDefinition}</p>
-              <p className="shrink-0">© 2026 Pakto · София</p>
-            </div>
-          </footer>
+          <SiteFooter />
 
           <MobileCtaBar heroId="hero-cta" finalId="beta" />
         </main>

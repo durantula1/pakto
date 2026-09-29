@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import "../marketing.css";
 
 import { faqSections } from "@/components/marketing/faq-content";
 import { FaqItem } from "@/components/marketing/faq-item";
 import { AuthHint } from "@/components/marketing/auth-hint";
-import { LEGAL_DOCUMENTS } from "@/lib/legal";
+import { SiteFooter, SubpageHeader } from "@/components/marketing/site-chrome";
 import { siteUrl } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
@@ -47,56 +46,18 @@ export default function FaqPage() {
       <main className="marketing-page min-h-screen bg-[#f4efe4] text-[#102b38]">
         <div className="mf-grain" aria-hidden="true" />
 
-        <header className="mf-nav sticky top-0 z-50 flex items-center justify-between px-[5vw] py-5">
-          <Link
-            href="/"
-            className="group flex items-center gap-2.5"
-            aria-label="Pakto, към началото"
-          >
-            <Image
-              src="/pakto-mark.svg"
-              alt=""
-              width={36}
-              height={36}
-              className="size-9 transition-transform group-hover:-rotate-6"
-            />
-            <span className="text-[0.9375rem] font-black tracking-[-0.04em]">
-              Pakto
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="hidden items-center gap-2 px-3 py-2 font-mono text-[0.5625rem] font-bold tracking-[0.09em] sm:flex"
-            >
-              <ArrowLeft className="size-3.5" /> НАЧАЛО
-            </Link>
-            <Link
-              href="/app"
-              className="mf-when-in flex items-center gap-2 border border-[#102b38]/50 bg-[#ff765f] px-3.5 py-2.5 font-mono text-[0.5625rem] font-bold tracking-[0.09em]"
-            >
-              КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-3.5" />
-            </Link>
-            <Link
-              href="/sign-up"
-              prefetch={false}
-              className="mf-when-out flex items-center gap-2 border border-[#102b38]/50 bg-[#f4efe4]/70 px-3.5 py-2.5 font-mono text-[0.5625rem] font-bold tracking-[0.09em] transition-colors hover:bg-[#ff765f]"
-            >
-              ЗАПОЧНИ <ArrowUpRight className="size-3.5" />
-            </Link>
-          </div>
-        </header>
+        <SubpageHeader />
 
         <div className="px-[6vw] pb-[12vh] pt-14 lg:pt-20">
           <div className="mx-auto grid max-w-[93.75rem] gap-12 lg:grid-cols-[0.75fr_1.25fr]">
             <div className="lg:sticky lg:top-32 lg:self-start">
               <p className="mf-kicker">ЧЗВ</p>
               <h1 className="mf-section-title mt-8">
-                КАК
+                Как
                 <br />
                 <i>работи.</i>
               </h1>
-              <p className="mt-8 max-w-sm text-[0.9375rem] leading-7 text-[#49626b]">
+              <p className="mt-6 max-w-sm text-base leading-7 text-[#49626b]">
                 Отговори на въпросите, които фирмите задават най-често, преди да
                 започнат.
               </p>
@@ -108,7 +69,7 @@ export default function FaqPage() {
                   <a
                     key={section.id}
                     href={`#${section.id}`}
-                    className="border border-[#102b38]/25 px-3 py-2 font-mono text-[0.625rem] font-bold tracking-[0.1em] uppercase transition-colors hover:bg-[#ff765f]"
+                    className="border border-[#102b38]/25 px-3 py-2 text-sm font-bold transition-colors hover:bg-[#ff765f]"
                   >
                     {section.title}
                   </a>
@@ -161,21 +122,7 @@ export default function FaqPage() {
           </div>
         </div>
 
-        <footer className="flex flex-wrap gap-x-8 gap-y-2 bg-[#102b38] px-[6vw] py-8 font-mono text-[0.5rem] tracking-[0.14em] text-[#9db5b6]">
-          <span>© 2026 PAKTO</span>
-          <Link href="/" className="transition-colors hover:text-[#ff765f]">
-            НАЧАЛО
-          </Link>
-          {Object.values(LEGAL_DOCUMENTS).map((document) => (
-            <Link
-              key={document.href}
-              href={document.href}
-              className="uppercase transition-colors hover:text-[#ff765f]"
-            >
-              {document.label}
-            </Link>
-          ))}
-        </footer>
+        <SiteFooter />
       </main>
     </>
   );
