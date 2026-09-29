@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { PortalShell } from "@/components/portal/portal-shell";
 import { DownloadTray } from "@/components/workspace/download-tray";
-import { clientUnreadQuestions } from "@/modules/change-portal/navigation";
 import { getPortalSession } from "@/modules/change-portal/session";
 
 export const metadata: Metadata = {
@@ -16,9 +15,8 @@ export default async function PortalProjectLayout({ children, params }: LayoutPr
   const session = await getPortalSession(projectPublicId);
   // The whole frame only for a client session the code has opened; a bare link stays on its project.
   const nav = !!session?.clientId && session.unlocked;
-  const unread = nav && session.clientId ? clientUnreadQuestions(session.clientId) : 0;
   return (
-    <PortalShell organizationName={session?.organizationName} logoPath={session?.organizationLogoPath} nav={nav} unread={unread}>
+    <PortalShell organizationName={session?.organizationName} logoPath={session?.organizationLogoPath} nav={nav}>
       {children}
       <DownloadTray />
     </PortalShell>

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { getDatabase } from "@/db";
@@ -128,7 +128,8 @@ export async function clientProjectCards(organizationId: string, projectIds: str
     }).from(documentMessages)
       .where(and(
         inArray(documentMessages.projectId, projectIds),
-        isNull(documentMessages.changeOrderId),
+        // Answers on the client's offers; the project-wide chat is gone.
+        isNotNull(documentMessages.changeOrderId),
         eq(documentMessages.authorType, "staff"),
         isNull(documentMessages.readByClientAt),
       ))

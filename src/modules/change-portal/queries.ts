@@ -136,7 +136,7 @@ async function loadPortalProject(session: PortalSession, options: { page?: numbe
   const page = options.page ?? 1;
   const db = getDatabase();
   // One parallel round after the session.
-  const [pending, decided, decidedTotal, state, claims, questions, unreadQuestions] = await Promise.all([
+  const [pending, decided, decidedTotal, state, claims] = await Promise.all([
     db.select(portalDocumentColumns)
       .from(changeOrders)
       .innerJoin(changeOrderRevisions, latestClientRevision)
@@ -156,10 +156,8 @@ async function loadPortalProject(session: PortalSession, options: { page?: numbe
       .then((rows) => rows[0]?.total ?? 0),
     getProjectState(session.organizationId, session.projectId),
     listPortalClaims(session.projectId),
-    listThread({ projectId: session.projectId }),
-    unreadCount({ projectId: session.projectId }, "client"),
   ]);
-  return { project, session, pending, decided, decidedTotal, page, pageSize, state: state ? clientView(state) : null, claims, questions, unreadQuestions };
+  return { project, session, pending, decided, decidedTotal, page, pageSize, state: state ? clientView(state) : null, claims };
 }
 
 
@@ -224,9 +222,9 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
       .orderBy(asc(timelineEvents.createdAt), asc(timelineEvents.id)),
     getProjectState(session.organizationId, session.projectId),
     listPortalClaims(session.projectId),
-    // One conversation per project: the offer page shows the whole project chat.
-    listThread({ projectId: session.projectId }),
-    unreadCount({ projectId: session.projectId }, "client"),
+    // Only this offer's questions and answers; used after the check below that the offer is in this project.
+    listThread(changeOrderId),
+    unreadCount(changeOrderId, "client"),
   ]);
   if (!change) return null;
   if (pastDue([change])) return { expired: true as const, data: null };

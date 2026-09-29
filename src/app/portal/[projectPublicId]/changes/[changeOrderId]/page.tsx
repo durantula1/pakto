@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Ban, MessageCircleQuestion, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { DecisionDone } from "@/components/portal/decision-done";
@@ -10,7 +10,7 @@ import { maskEmail } from "@/lib/email/send";
 import { Badge } from "@/components/ui/badge";
 import { dueText } from "@/components/portal/action-card";
 import { OfferTabs, type OfferTab } from "@/components/portal/offer-tabs";
-import { QuestionsDialog } from "@/components/portal/project-questions";
+import { OfferQuestions } from "@/components/portal/offer-questions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
 import { DocumentBody } from "@/components/change-orders/document-body";
@@ -21,8 +21,6 @@ import { cn } from "@/lib/utils";
 import { discountLabel } from "@/modules/change-orders/pricing";
 import { getPortalChange } from "@/modules/change-portal/queries";
 import { isStaffPreview, markRevisionViewed } from "@/modules/change-portal/viewed";
-import { MessageThread } from "@/components/messages/message-thread";
-import { sendClientMessageAction } from "@/modules/messages/actions";
 import { markThreadRead } from "@/modules/messages/queries";
 import { after } from "next/server";
 import { DownloadLink } from "@/components/workspace/download-tray";
@@ -93,7 +91,7 @@ export default async function PortalChangePage({
   const staffPreview = change.status === "sent" ? isStaffPreview(session) : Promise.resolve(false);
   after(async () => {
     await markRevisionViewed(session, change, staffPreview).catch(() => false);
-    if (unreadAnswers) await markThreadRead({ projectId: session.projectId }, "client");
+    if (unreadAnswers) await markThreadRead(change.id, "client");
   });
   const attachments = data.attachments;
   const money = formatAmount;
@@ -281,26 +279,22 @@ export default async function PortalChangePage({
     </details>
   ) : null;
 
+  const canAsk = data.project.status !== "archived";
   const questions = (
-    <QuestionsDialog unread={unreadAnswers} defaultOpen={!!query.questions}>
-      <MessageThread
-        side="portal_contact"
-        messages={thread}
-        action={sendClientMessageAction}
-        hidden={{ projectPublicId, changeOrderId: change.id }}
-        title="Съобщения с фирмата"
-        topicHref={`/portal/${projectPublicId}/changes/{id}?questions=1`}
-        currentTopic={change.id}
-        readFor={projectPublicId}
-        unread={unreadAnswers}
-        composerNote={`Новото съобщение ще е по ${name}`}
-        placeholder="Напишете въпрос към фирмата…"
-        emptyText={`Не е ясно нещо? Попитайте ${data.project.organizationName} тук, без да отказвате или да искате промяна. Ще получите отговора и на имейла си.`}
-        composerClassName=""
-      />
-    </QuestionsDialog>
+    <OfferQuestions
+      messages={thread}
+      projectPublicId={projectPublicId}
+      changeOrderId={change.id}
+      organizationName={data.project.organizationName}
+      revisionNumber={change.revisionNumber}
+      waiting={awaitingDecision}
+      canAsk={canAsk}
+    />
   );
-  const initialTab = tabs.find((tab) => tab === query.tab) ?? "work";
+  // Old "?questions=1" links from emails open the tab the questions live in.
+  const initialTab = tabs.find((tab) => tab === query.tab) ?? (query.questions ? "document" : "work");
+  // The questions sit in the document tab once the offer is in force; a link there switches to it.
+  const questionsHref = agreement && !awaitingDecision ? "?tab=document#questions" : "#questions";
 
   const header = (
     <div className="flex flex-col gap-3">
@@ -309,7 +303,12 @@ export default async function PortalChangePage({
           <ArrowLeft className="size-4 shrink-0" /> <span className="truncate">{data.project.name}</span>
         </Link>
         <div className="flex shrink-0 items-center gap-2">
-          {questions}
+          {thread.length || canAsk ? (
+            <Link href={questionsHref} className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted">
+              <MessageCircleQuestion className="size-4" /> Въпроси
+              {unreadAnswers ? <span aria-label={`${unreadAnswers} нов отговор`} className="rounded-full bg-primary px-1.5 text-2xs font-semibold text-primary-foreground">{unreadAnswers}</span> : null}
+            </Link>
+          ) : null}
           {change.frozenAt ? (
             <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${name} · PDF`} className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted">
               <Download className="size-4" /> PDF
@@ -344,7 +343,8 @@ export default async function PortalChangePage({
         summary={summary}
         decision={decision}
         details={<>{diff}{details}</>}
-        footer={history}
+        footer={<>{questions}{history}</>}
+        asideNote={canAsk ? <a href="#questions" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Имате въпрос? Задайте го под офертата, без да решавате.</a> : null}
       />
     </div>
   );
@@ -354,6 +354,7 @@ export default async function PortalChangePage({
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       {header}
       <OfferTabs
+        key={initialTab}
         initial={initialTab}
         work={
           <>
@@ -364,7 +365,7 @@ export default async function PortalChangePage({
           </>
         }
         payments={<PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived"} />}
-        document={<>{details}{history}</>}
+        document={<>{details}{questions}{history}</>}
       />
     </div>
   );
@@ -374,6 +375,7 @@ export default async function PortalChangePage({
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       {header}
       {details}
+      {questions}
       {history}
     </div>
   );

@@ -1,14 +1,13 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Eye, FileText, SendHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { markProjectQuestionsReadAction, type MessageState } from "@/modules/messages/actions";
+import type { MessageState } from "@/modules/messages/actions";
 import { cn } from "@/lib/utils";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 
@@ -21,7 +20,7 @@ const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "short", timeStyl
  * own messages sit on the right. A message about an offer carries its label, linked to the offer.
  * The composer stays at the bottom, above the phone keyboard.
  */
-export function MessageThread({ side, messages, action, hidden, placeholder, emptyText, title, topicHref, currentTopic, composerNote, readFor, unread = 0, composerClassName = "sticky bottom-20 lg:static" }: {
+export function MessageThread({ side, messages, action, hidden, placeholder, emptyText, title, topicHref, currentTopic, composerNote, composerClassName = "sticky bottom-20 lg:static" }: {
   side: "staff" | "portal_contact";
   messages: Message[];
   action: (state: MessageState, formData: FormData) => Promise<MessageState>;
@@ -35,10 +34,6 @@ export function MessageThread({ side, messages, action, hidden, placeholder, emp
   currentTopic?: string;
   /** Above the composer, e.g. which offer a new message will be about. */
   composerNote?: string;
-  /** Portal: the project's public id. While the chat is on screen, the company's answers are marked read. */
-  readFor?: string;
-  /** Company answers the client has not read yet. */
-  unread?: number;
   /** The workspace has a bottom tab bar on phones; the portal does not. */
   composerClassName?: string;
 }) {
@@ -49,7 +44,6 @@ export function MessageThread({ side, messages, action, hidden, placeholder, emp
     if (state.error) toast.error(state.error);
     if (state.ok) formRef.current?.reset();
   }, [state]);
-  useMarkRead(readFor, unread);
   // Scroll the list itself to the newest message; scrollIntoView would also move the page or dialog.
   useEffect(() => { const list = listRef.current; if (list) list.scrollTop = list.scrollHeight; }, [messages.length]);
 
@@ -99,24 +93,4 @@ export function MessageThread({ side, messages, action, hidden, placeholder, emp
       </form>
     </section>
   );
-}
-
-/**
- * The chat is on screen with unread answers (opened from a link, or an answer came in while open):
- * mark them read and refresh, so the badges on the button and in the header go out. A hidden tab waits
- * until it is seen.
- */
-function useMarkRead(projectPublicId: string | undefined, unread: number) {
-  const router = useRouter();
-  useEffect(() => {
-    if (!projectPublicId || !unread) return;
-    const mark = () => {
-      if (document.visibilityState !== "visible") return;
-      document.removeEventListener("visibilitychange", mark);
-      startTransition(async () => { await markProjectQuestionsReadAction(projectPublicId); router.refresh(); });
-    };
-    mark();
-    document.addEventListener("visibilitychange", mark);
-    return () => document.removeEventListener("visibilitychange", mark);
-  }, [projectPublicId, unread, router]);
 }

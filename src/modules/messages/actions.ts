@@ -82,15 +82,17 @@ async function emailClientAnswer(document: { id: string | null; organizationId: 
     .where(lastAsker ? and(eq(projectContacts.id, lastAsker.contactId), isNull(projectContacts.removedAt)) : and(eq(projectContacts.projectId, document.projectId), eq(projectContacts.portalRole, "approver"), eq(projectContacts.isPrimary, true), isNull(projectContacts.removedAt)))
     .limit(1);
   if (!contact?.email) return;
-  const link = await getActivePortalLink(document.projectId, contact.id);
-  if (!link) return;
+  const access = await getActivePortalLink(document.projectId, contact.id);
+  if (!access) return;
+  // An answer on an offer opens that offer's questions; the fragment survives the access redirect.
+  const link = document.id ? `${access}?offer=${document.id}#questions` : access;
   const [organization] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, document.organizationId)).limit(1);
   const from = organization?.name ?? "Фирмата";
   await sendEmail({
     to: contact.email,
     subject: `${from} Ви отговори за „${document.title}“`,
-    text: `Здравейте, ${contact.name}!\n\n${from} Ви отговори:\n\n${text}\n\nВижте разговора: ${link}`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(from)} Ви отговори за „${escapeHtml(document.title)}“:</p><blockquote style="margin:12px 0;padding:12px 16px;border-left:3px solid #f07c62;background:#f7f5f0;white-space:pre-line">${escapeHtml(text)}</blockquote><p style="margin-top:20px"><a href="${link}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Вижте разговора</a></p></div>`,
+    text: `Здравейте, ${contact.name}!\n\n${from} Ви отговори:\n\n${text}\n\nВижте отговора: ${link}`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(from)} Ви отговори за „${escapeHtml(document.title)}“:</p><blockquote style="margin:12px 0;padding:12px 16px;border-left:3px solid #f07c62;background:#f7f5f0;white-space:pre-line">${escapeHtml(text)}</blockquote><p style="margin-top:20px"><a href="${link}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Вижте отговора</a></p></div>`,
   });
 }
 
@@ -98,34 +100,6 @@ async function tooManyProjectRecent(projectId: string, authorId: string) {
   const [row] = await getDatabase().select({ total: count() }).from(documentMessages)
     .where(and(eq(documentMessages.projectId, projectId), eq(documentMessages.authorId, authorId), gt(documentMessages.createdAt, new Date(Date.now() - 3_600_000))));
   return (row?.total ?? 0) >= HOURLY_LIMIT;
-}
-
-/** The client opened the project chat: the company's answers are read, so the badges go out. */
-export async function markProjectQuestionsReadAction(projectPublicId: string): Promise<void> {
-  if (!z.uuid().safeParse(projectPublicId).success) return;
-  const session = await getPortalSession(projectPublicId);
-  // A staff member previewing the portal has not read anything for the client.
-  if (!session || await isOrganizationStaff(session.organizationId)) return;
-  await markThreadRead({ projectId: session.projectId }, "client");
-  revalidatePath("/portal", "layout");
-}
-
-/** A question in the project chat, not about one offer ("кога идвате?"). */
-export async function sendProjectQuestionAction(_: MessageState, formData: FormData): Promise<MessageState> {
-  const parsed = z.object({ projectPublicId: z.uuid(), body }).safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
-  const session = await getPortalSession(parsed.data.projectPublicId);
-  if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
-  if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
-  if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да пишеш като клиент." };
-  if (await tooManyProjectRecent(session.projectId, session.contactId)) return { error: "Изпратихте много съобщения за кратко време. Опитайте отново след малко." };
-  await getDatabase().transaction(async (tx) => {
-    await tx.insert(documentMessages).values({ organizationId: session.organizationId, projectId: session.projectId, authorType: "portal_contact", authorId: session.contactId, body: parsed.data.body });
-    await notifyProjectStaff(tx, { organizationId: session.organizationId, projectId: session.projectId, eventType: "client_message", title: `${session.contactName} пита за обекта`, body: parsed.data.body, href: `/app/projects/${session.projectId}?tab=questions` });
-  });
-  revalidatePath(`/portal/${parsed.data.projectPublicId}`, "layout");
-  revalidatePath(`/app/projects/${session.projectId}`);
-  return { ok: Date.now() };
 }
 
 /** The team's message in the project chat; the client gets it by email. */

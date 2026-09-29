@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
 
 import { Wordmark } from "@/components/brand/wordmark";
@@ -13,29 +12,20 @@ function initials(name: string) {
   return name.split(/\s+/).filter((word) => /^\p{L}/u.test(word) && !/^(ЕООД|ООД|ЕТ|АД|ЕАД)$/i.test(word)).slice(0, 2).map((word) => word[0]!.toUpperCase()).join("") || name[0]!.toUpperCase();
 }
 
-async function UnreadCount({ value }: { value: number | Promise<number> }) {
-  const count = await value;
-  if (!count) return null;
-  return <span className="grid h-4.5 min-w-4.5 place-items-center rounded-full bg-primary px-1 text-2xs font-semibold text-primary-foreground">{count}<span className="sr-only"> нови</span></span>;
-}
-
 /**
  * The client portal frame: the company the client works with on top (its logo, else its initials),
  * and for a client session the three places a client goes to, in the top bar on desktop and at the
  * bottom on phones. Pakto only signs the footer.
  */
-export function PortalShell({ organizationName, logoPath, nav, unread = 0, children }: {
+export function PortalShell({ organizationName, logoPath, nav, children }: {
   organizationName?: string | null;
   /** The company's logo leads the frame; Pakto only signs the footer. */
   logoPath?: string | null;
-  /** A client-wide session: "Начало", "Съобщения", "Оферти" and the profile menu. */
+  /** A client-wide session: "Начало", "Оферти" and the profile menu. */
   nav: boolean;
-  /** New answers from the company, on "Съобщения"; a promise streams in without holding the frame. */
-  unread?: number | Promise<number>;
   children: React.ReactNode;
 }) {
   const logoUrl = logoPath ? logoPublicUrl(logoPath) : null;
-  const badge = <Suspense fallback={null}><UnreadCount value={unread} /></Suspense>;
   return (
     <div className="min-h-dvh bg-background text-foreground">
       {organizationName ? <PortalLiveRefresh /> : null}
@@ -54,7 +44,7 @@ export function PortalShell({ organizationName, logoPath, nav, unread = 0, child
           </div>
           {nav ? (
             <nav aria-label="Портал" className="hidden items-center gap-1 sm:flex">
-              <PortalNav variant="top" badge={badge} />
+              <PortalNav variant="top" />
               <span className="ml-2"><PortalProfileMenu /></span>
             </nav>
           ) : null}
@@ -68,7 +58,7 @@ export function PortalShell({ organizationName, logoPath, nav, unread = 0, child
       {nav ? (
         <nav aria-label="Портал" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
           <div className="pointer-events-auto mx-auto max-w-sm rounded-full bg-sidebar p-1.5 shadow-[0_0.75rem_2rem_-0.75rem_rgb(16_43_56/0.55)]">
-            <PortalNav variant="bottom" badge={badge} />
+            <PortalNav variant="bottom" />
           </div>
         </nav>
       ) : null}

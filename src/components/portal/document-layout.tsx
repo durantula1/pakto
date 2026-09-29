@@ -32,14 +32,17 @@ export function PortalDocumentLayout({
   decision,
   summary,
   footer,
+  asideNote,
   amount,
   aboveBottomNav = false,
 }: {
   details: React.ReactNode;
   decision: React.ReactNode;
   summary: React.ReactNode;
-  /** Quiet extras under the document, e.g. versions and history. */
+  /** Quiet extras under the document, e.g. questions, versions and history. */
   footer?: React.ReactNode;
+  /** Under the decision beside the document on desktop, e.g. a link to the questions. */
+  asideNote?: React.ReactNode;
   /** Shown in the phone bar, e.g. "2 340,00 EUR". */
   amount: string;
   /** The portal's bottom navigation is on screen, so the phone bar sits above it. */
@@ -63,6 +66,7 @@ export function PortalDocumentLayout({
       <aside className="hidden flex-col gap-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:flex">
         {summary}
         {decision}
+        {asideNote ? <p className="px-2">{asideNote}</p> : null}
       </aside>
 
       <SheetTrigger isOpen={sheetOpen} onOpenChange={setSheetOpen}>

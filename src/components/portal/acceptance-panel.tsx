@@ -44,7 +44,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
     <section id="acceptance" className="rounded-xl border bg-card px-4 py-3 text-sm">
       <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-tile-sand-foreground" /> Забележките ви са изпратени на {organizationName}</p>
       <Quote tone="warning" className="mt-1 text-muted-foreground">{acceptance.note}</Quote>
-      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Можете да ги обсъдите в „Съобщения“, докато и двете страни са удовлетворени. След това тя ще поиска приемане отново.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Ако искате да ги обсъдите, задайте въпрос в „Въпроси по тази оферта“ (таб „Офертата“). След това тя ще поиска приемане отново.</p>
     </section>
   );
 

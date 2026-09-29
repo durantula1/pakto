@@ -30,10 +30,7 @@ import {
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { ClientProjectsBar } from "@/components/portal/client-projects-bar";
 import { clientNavigation } from "@/modules/change-portal/session";
-import { ProjectQuestions } from "@/components/portal/project-questions";
 import { maskEmail } from "@/lib/email/send";
-import { markThreadRead } from "@/modules/messages/queries";
-import { after } from "next/server";
 import { scopeView } from "@/modules/projects/scope";
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", {
@@ -58,10 +55,6 @@ export default async function PortalProjectPage({
       pageHref(path, {}, "page", lastPage(data.decidedTotal, data.pageSize)),
     );
   const state = data.state;
-  const thread = data.questions;
-  const unread = data.unreadQuestions;
-  if (unread && query.questions)
-    after(() => markThreadRead({ projectId: state.project.id }, "client"));
   const navigation = await clientNavigation(data.session);
   const isApprover = data.session.contactRole === "approver";
   const verified = !!data.session.contactEmailVerifiedAt;
@@ -149,28 +142,14 @@ export default async function PortalProjectPage({
   // Waiting documents lead the page while the project is active; afterwards they are only history.
   const history = active ? decided : [...pending, ...decided];
   const historyTotal = data.decidedTotal + (active ? 0 : pending.length);
-  const questions =
-    data.project.status !== "archived" ? (
-      <ProjectQuestions
-        projectPublicId={projectPublicId}
-        organizationName={data.project.organizationName}
-        messages={thread}
-        unread={unread}
-        defaultOpen={!!query.questions}
-        tone="light"
-      />
-    ) : null;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="inline-flex min-w-0 items-center gap-1.5 rounded-full bg-card px-3 py-2 text-sm text-muted-foreground">
-            <MapPin className="size-4 shrink-0 text-primary" />
-            <span className="truncate">{data.project.siteAddress}</span>
-          </p>
-          <div className="shrink-0">{questions}</div>
-        </div>
+        <p className="inline-flex max-w-full min-w-0 items-center gap-1.5 self-start rounded-full bg-card px-3 py-2 text-sm text-muted-foreground">
+          <MapPin className="size-4 shrink-0 text-primary" />
+          <span className="truncate">{data.project.siteAddress}</span>
+        </p>
         <h1 className="max-w-[18ch] text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
           {data.project.name}
         </h1>

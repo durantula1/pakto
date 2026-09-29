@@ -18,7 +18,7 @@ import {
 type Decision = "approved" | "changes_requested" | "declined";
 
 const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: string }[] = [
-  { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Фирмата ще изпрати нова версия" },
+  { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Тази версия се затваря и фирмата изпраща нова" },
   { id: "declined", icon: XCircle, title: "Отказвам", hint: "Фирмата няма да прави тази работа" },
 ];
 
@@ -181,6 +181,9 @@ export function PortalDecisionForm({
                   </Radio>
                 ))}
               </RadioGroup>
+              <p className="rounded-xl bg-tile-blue/60 px-3.5 py-2.5 text-sm leading-6 text-tile-blue-foreground">
+                Само имате въпрос? Затворете това и го задайте в „Въпроси по тази оферта“. Офертата продължава да чака решението ви.
+              </p>
               <label className="flex flex-col gap-2">
                 <span className="text-sm font-medium">
                   {decision === "changes_requested" ? "Какво да се промени" : "Причина"}{" "}
