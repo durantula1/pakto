@@ -8,7 +8,7 @@ import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAccountDeletionPlan } from "@/modules/account/queries";
 
-export const DELETED_USER_NAME = "Изтрит потребител";
+const DELETED_USER_NAME = "Изтрит потребител";
 
 /**
  * Deletes accounts whose grace period is over. The profile row stays, anonymized, because

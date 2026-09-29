@@ -12,7 +12,7 @@ import { addDays, daysBetween, daysLabel, SCHEDULE_MAX_LINES, type ScheduleLine 
 export type ScheduleRow = { key: string; title: string; days: string; lineKey?: string };
 
 let nextKey = 0;
-export const blankScheduleRow = (): ScheduleRow => ({ key: `stage-${++nextKey}`, title: "", days: "" });
+const blankScheduleRow = (): ScheduleRow => ({ key: `stage-${++nextKey}`, title: "", days: "" });
 export const scheduleRowsFrom = (lines: ScheduleLine[]): ScheduleRow[] => lines.map((line) => ({ key: `stage-${++nextKey}`, title: line.title, days: String(line.durationDays), lineKey: line.lineKey }));
 
 /** What the form sends: named rows only, each at least one day. Unnamed rows are drafts and are dropped. */

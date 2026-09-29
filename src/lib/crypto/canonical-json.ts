@@ -51,7 +51,7 @@ function normalize(value: unknown): CanonicalJson {
   throw new TypeError(`Unsupported canonical JSON value: ${typeof value}`);
 }
 
-export function canonicalStringify(value: unknown): string {
+function canonicalStringify(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 

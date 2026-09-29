@@ -26,7 +26,7 @@ export function FilterBar({ children, className }: { children: React.ReactNode; 
 export type FilterFieldShape = { label: string; className: string };
 
 /** `FilterBar` with real labels and placeholder inputs; list the fields with the same labels and widths. */
-export function FilterBarSkeleton({ fields, className }: { fields: FilterFieldShape[]; className?: string }) {
+function FilterBarSkeleton({ fields, className }: { fields: FilterFieldShape[]; className?: string }) {
   return <div className={cn(filterBarClassName, className)}>
     {fields.map((field) => <Field key={field.label} className={field.className}>
       <FieldLabel>{field.label}</FieldLabel>

@@ -27,7 +27,7 @@ export function PaperLabel({ children, className }: { children: ReactNode; class
 }
 
 /** The dotted run between a label and its amount. */
-export function Leader({ className }: { className?: string }) {
+function Leader({ className }: { className?: string }) {
   return <span aria-hidden="true" className={cn("mx-2 min-w-4 flex-1 -translate-y-1 border-b border-dotted border-foreground/25", className)} />;
 }
 

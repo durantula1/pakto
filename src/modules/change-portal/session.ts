@@ -21,7 +21,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const PORTAL_COOKIE = "sitechange_portal";
 /** One cookie per organization for a client-wide session (docs/clients-plan.md, 6). */
-export const CLIENT_COOKIE_PREFIX = `${PORTAL_COOKIE}_c_`;
+const CLIENT_COOKIE_PREFIX = `${PORTAL_COOKIE}_c_`;
 export const clientCookieName = (organizationId: string) => `${CLIENT_COOKIE_PREFIX}${organizationId}`;
 /** A client session also ends after this long without a visit, since it opens several projects. */
 export const CLIENT_IDLE_MS = 30 * 24 * 60 * 60 * 1000;

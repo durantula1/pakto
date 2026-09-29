@@ -82,7 +82,7 @@ function portalDocumentScope(projectId: string, statuses: readonly (typeof clien
  * The project as the client sees it: no drafts, and stages and installments only once the offer
  * they belong to is approved (project-level ones once any offer is).
  */
-export function clientView(state: ProjectState): ProjectState {
+function clientView(state: ProjectState): ProjectState {
   const offers = state.offers.filter((offer) => offer.clientVisible && offer.status !== "draft");
   const inForce = new Set(state.offersInForce.map((offer) => offer.id));
   const visible = (offerId: string | null) => (offerId ? inForce.has(offerId) : inForce.size > 0);
@@ -164,7 +164,7 @@ async function loadPortalProject(session: PortalSession, options: { page?: numbe
 
 
 /** The client's own "I paid" reports: pending ones, and rejections of the last 30 days with the company's answer. */
-export async function listPortalClaims(projectId: string) {
+async function listPortalClaims(projectId: string) {
   return getDatabase()
     .select({ id: paymentClaims.id, amount: paymentClaims.amount, currency: paymentClaims.currency, paidOn: paymentClaims.paidOn, status: paymentClaims.status, response: paymentClaims.response, installmentId: paymentClaims.installmentId, offerId: paymentClaims.offerId })
     .from(paymentClaims)

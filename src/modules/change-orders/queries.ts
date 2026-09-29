@@ -150,7 +150,7 @@ export async function listApprovedOffers(
 }
 
 /** Timeline events shown per page on the document screen. */
-export const TIMELINE_PAGE_SIZE = 30;
+const TIMELINE_PAGE_SIZE = 30;
 
 type ChangeOrderHead = { projectId: string; revisionId: number; contactId: string | null; documentKind: "offer" | "change"; approvedRevisionId: number | null };
 

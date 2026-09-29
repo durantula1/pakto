@@ -17,7 +17,7 @@ const clock = new Intl.DateTimeFormat("bg-BG", { hour: "2-digit", minute: "2-dig
 const shortDate = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "numeric", timeZone: "Europe/Sofia" });
 
 /** "Днес", "Вчера" or "По-рано", in Sofia time. */
-export function notificationDay(createdAt: string, now = new Date()) {
+function notificationDay(createdAt: string, now = new Date()) {
   const day = sofiaDay.format(new Date(createdAt));
   if (day === sofiaDay.format(now)) return "Днес";
   if (day === sofiaDay.format(new Date(now.getTime() - 86_400_000))) return "Вчера";
@@ -25,7 +25,7 @@ export function notificationDay(createdAt: string, now = new Date()) {
 }
 
 /** "преди 12 мин", "преди 3 ч", then the time for today and yesterday, else the date. */
-export function notificationTime(createdAt: string, now = new Date()) {
+function notificationTime(createdAt: string, now = new Date()) {
   const date = new Date(createdAt);
   const minutes = Math.floor((now.getTime() - date.getTime()) / 60_000);
   if (minutes < 1) return "сега";
@@ -45,7 +45,7 @@ export function groupByDay<T extends { createdAt: string }>(items: T[], now = ne
   return groups;
 }
 
-export function NotificationIconBadge({ icon, className }: { icon: NotificationIcon; className?: string }) {
+function NotificationIconBadge({ icon, className }: { icon: NotificationIcon; className?: string }) {
   const { icon: Icon, tone } = icons[icon];
   return <span aria-hidden="true" className={cn("grid size-9 shrink-0 place-items-center rounded-full", tone, className)}><Icon className="size-4" /></span>;
 }

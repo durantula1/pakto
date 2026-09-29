@@ -140,7 +140,7 @@ export function DocumentBody({ document, brand }: {
 }
 
 /** An offer's indicative schedule: stages and durations, without dates, and clearly not a commitment. */
-export function ScheduleSection({ schedule, deadline }: { schedule: Array<{ id?: number | string; title: string; durationDays: number }>; deadline: string | null }) {
+function ScheduleSection({ schedule, deadline }: { schedule: Array<{ id?: number | string; title: string; durationDays: number }>; deadline: string | null }) {
   return (
     <section>
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ориентировъчен график</p>
@@ -164,7 +164,7 @@ export function ScheduleSection({ schedule, deadline }: { schedule: Array<{ id?:
  * It is drawn at the same size as in the PDF (see logoBox); on a dark theme it sits on white, because
  * most logos are drawn for paper.
  */
-export function DocumentBrand({ name, logo }: { name: string; logo: DocumentLogo | null }) {
+function DocumentBrand({ name, logo }: { name: string; logo: DocumentLogo | null }) {
   const box = logo?.dimensions ? logoBox(logo.dimensions, logo.size) : null;
   return (
     <div className="flex min-h-10 items-center justify-between gap-4 border-b pb-4">
@@ -194,7 +194,7 @@ function termWhen(term: PaymentTermView, deadline: string | null) {
 }
 
 /** The offer's payment terms: share, amount and when each is due. */
-export function PaymentTermsSection({ terms, total, deadline }: { terms: PaymentTermView[]; total: string; deadline: string | null }) {
+function PaymentTermsSection({ terms, total, deadline }: { terms: PaymentTermView[]; total: string; deadline: string | null }) {
   const totalMinor = BigInt(Math.round(Number(total) * 100));
   const amounts = termAmounts(totalMinor, terms);
   return (

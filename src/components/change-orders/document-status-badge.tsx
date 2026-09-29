@@ -1,6 +1,6 @@
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 
-export const documentStatusLabels: Record<string, string> = {
+const documentStatusLabels: Record<string, string> = {
   draft: "Чернова",
   sent: "Изпратена",
   viewed: "Прегледана",
@@ -17,7 +17,7 @@ export const documentStatusLabels: Record<string, string> = {
  * With the client: sent (blue), then viewed (sand, a decision is near). Closed: approved (mint),
  * declined (coral), and stone for what is no longer active. `offerStatusTones` follows the same scheme.
  */
-export const documentStatusTones: Record<string, BadgeVariant> = {
+const documentStatusTones: Record<string, BadgeVariant> = {
   draft: "draft",
   sent: "info-soft",
   viewed: "warning-soft",

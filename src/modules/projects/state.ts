@@ -31,7 +31,7 @@ export function formatCents(value: bigint, currency: string) {
 }
 
 /** How many of the latest receipts `getProjectState` returns; totals always cover every receipt. */
-export const PROJECT_RECEIPTS_LIMIT = 20;
+const PROJECT_RECEIPTS_LIMIT = 20;
 
 /**
  * The deadline in force: whichever approved document (the offer version or a change) was approved

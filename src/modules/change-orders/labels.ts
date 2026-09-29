@@ -6,7 +6,7 @@ export function documentCode(
   return `${prefix}-${String(sequenceNumber).padStart(3, "0")}`;
 }
 
-export function documentNoun(kind: "offer" | "change") {
+function documentNoun(kind: "offer" | "change") {
   return kind === "offer" ? "Оферта" : "Промяна";
 }
 

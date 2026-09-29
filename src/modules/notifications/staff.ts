@@ -12,7 +12,7 @@ import { emailEvents, type EmailEventType } from "@/modules/notifications/events
 type Executor = Pick<ReturnType<typeof getDatabase>, "select" | "insert">;
 
 /** Active members who follow a project: owners, members with access to all projects, and the project's own members. */
-export async function projectStaffIds(db: Executor, organizationId: string, projectId: string) {
+async function projectStaffIds(db: Executor, organizationId: string, projectId: string) {
   const members = await db.select({ userId: organizationMembers.userId }).from(organizationMembers)
     .leftJoin(projectMembers, and(eq(projectMembers.userId, organizationMembers.userId), eq(projectMembers.projectId, projectId)))
     .where(and(eq(organizationMembers.organizationId, organizationId), eq(organizationMembers.status, "active"), or(eq(organizationMembers.role, "owner"), eq(organizationMembers.allProjects, true), eq(projectMembers.projectId, projectId))));

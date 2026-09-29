@@ -13,7 +13,7 @@ pnpm dev            # next dev on :3000 (also the "dev" entry in .claude/launch.
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint .
 pnpm build          # next build --webpack
-pnpm format         # prettier --write . (tailwind class sorting plugin)
+pnpm format         # prettier --write . (default Prettier settings, no config file)
 pnpm db:generate    # drizzle-kit generate from src/db/schema/index.ts
 pnpm video:studio   # Remotion Studio for the landing video (video/, its own pnpm package)
 pnpm video:render   # re-render public/video/*.mp4 + posters (phone + desktop clips); do it after portal/email UI changes

@@ -20,9 +20,9 @@ export const paymentLabels: Record<string, string> = { deposit: "Капаро", 
 export const methodLabels: Record<string, string> = { cash: "В брой", bank: "Банков превод", card: "Карта", other: "Друго" };
 
 
-export const overviewCardTitles = { stages: "Етапи", payments: "Плащания", documents: "Оферти" };
+const overviewCardTitles = { stages: "Етапи", payments: "Плащания", documents: "Оферти" };
 const pendingLabels = { offer: "Оферта", change: "Промяна" } as const;
-export const overviewGridClassName = "grid gap-4 lg:grid-cols-2";
+const overviewGridClassName = "grid gap-4 lg:grid-cols-2";
 
 const linkClassName = "text-sm font-medium text-primary underline-offset-4 hover:underline";
 const rowClassName = "flex min-h-8 items-center justify-between gap-3 border-t pt-2 first:border-t-0 first:pt-0";

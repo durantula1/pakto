@@ -80,16 +80,3 @@ export function glide(frame: number, start: number, duration: number) {
     easing: easeInOut,
   });
 }
-
-/** A value that eases from one keyed frame to the next: [[frame, value], …]. */
-export function keyed(
-  frame: number,
-  keys: readonly (readonly [number, number])[],
-) {
-  return interpolate(
-    frame,
-    keys.map(([at]) => at),
-    keys.map(([, value]) => value),
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: easeInOut },
-  );
-}

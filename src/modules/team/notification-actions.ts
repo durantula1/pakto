@@ -8,14 +8,6 @@ import { getDatabase } from "@/db";
 import { staffNotifications } from "@/db/schema";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 
-export async function markNotificationReadAction(formData: FormData) {
-  const id = z.uuid().parse(formData.get("notificationId"));
-  const context = await requireTenantContext();
-  await getDatabase().update(staffNotifications).set({ readAt: new Date() })
-    .where(and(eq(staffNotifications.id, id), eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.userId, context.userId), isNull(staffNotifications.readAt)));
-  revalidatePath("/app", "layout");
-}
-
 /** Flips one notice between read and unread from the inbox row. */
 export async function toggleNotificationReadAction(formData: FormData) {
   const input = z.object({ notificationId: z.uuid(), read: z.enum(["1", "0"]) }).parse(Object.fromEntries(formData));

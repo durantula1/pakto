@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 /** The units picked most often on site; anything else goes in the free-text field. */
-export const COMMON_UNITS = ["бр.", "м²", "м", "м³", "ч.", "ден", "кг", "т", "л", "к-т"] as const;
+const COMMON_UNITS = ["бр.", "м²", "м", "м³", "ч.", "ден", "кг", "т", "л", "к-т"] as const;
 
 const aliases: Record<string, string> = { м2: "м²", "кв.м": "м²", "кв. м": "м²", м3: "м³", "куб.м": "м³", "куб. м": "м³", бр: "бр.", ч: "ч.", час: "ч.", кт: "к-т", комплект: "к-т" };
 
