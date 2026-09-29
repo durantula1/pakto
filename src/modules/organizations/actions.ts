@@ -60,6 +60,19 @@ export async function updateOrganizationAction(formData: FormData) {
   revalidatePath("/app", "layout");
 }
 
+export async function updateOrganizationPhoneAction(formData: FormData) {
+  const phone = z.string().trim().max(30, "Най-много 30 символа.")
+    .refine((value) => !value || (value.match(/\d/g)?.length ?? 0) >= 6, "Въведи телефон с поне 6 цифри.")
+    .safeParse(formData.get("phone") ?? "");
+  if (!phone.success) return { error: phone.error.issues[0]?.message };
+  const context = await requireTenantContext();
+  requireRole(context, ["owner"]);
+  await getDatabase().update(organizations).set({ phone: phone.data || null, updatedAt: new Date() }).where(eq(organizations.id, context.organizationId));
+  revalidatePath("/app", "layout");
+  // The portal reads the phone with the client's session.
+  revalidatePath("/portal", "layout");
+}
+
 export async function updateDefaultTaxRateAction(formData: FormData) {
   const rate = z.enum(["20", "9", "0"], { error: "Избери ставка." }).safeParse(formData.get("taxRate"));
   if (!rate.success) return { error: rate.error.issues[0]?.message };

@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Ban, MessageCircleQuestion, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, Sparkles, TriangleAlert } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
 import { DecisionDone } from "@/components/portal/decision-done";
@@ -109,11 +109,18 @@ export default async function PortalChangePage({
   const dateTime = (value: Date, dateStyle: "long" | "medium" = "medium") =>
     new Intl.DateTimeFormat("bg-BG", { dateStyle, timeStyle: "short" }).format(value);
 
+  const pdfHref = `/api/changes/${change.id}/pdf?revision=${change.revisionId}`;
   const details = (
     <>
       <DocumentBody compact={awaitingDecision} document={{ ...change, lineItems: data.lineItems, schedule: data.schedule, paymentTerms: data.paymentTerms, absorbedChanges: data.absorbedChanges }} brand={{ name: data.project.organizationName, logo: data.logo }} />
       {attachments.length ? (
         <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и файлове към тази версия. Отворете ги, за да ги видите в пълен размер." />
+      ) : null}
+      {change.frozenAt ? (
+        <DownloadLink href={pdfHref} label={`${name} · PDF`} className="flex min-h-13 items-center justify-between gap-3 rounded-full bg-card py-2 pr-2 pl-4 text-sm font-medium sm:hidden">
+          <span className="inline-flex items-center gap-2.5"><Download className="size-4" /> Изтеглете {isOffer ? "офертата" : "промяната"} като PDF</span>
+          <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">версия {change.revisionNumber}</span>
+        </DownloadLink>
       ) : null}
     </>
   );
@@ -293,8 +300,6 @@ export default async function PortalChangePage({
   );
   // Old "?questions=1" links from emails open the tab the questions live in.
   const initialTab = tabs.find((tab) => tab === query.tab) ?? (query.questions ? "document" : "work");
-  // The questions sit in the document tab once the offer is in force; a link there switches to it.
-  const questionsHref = agreement && !awaitingDecision ? "?tab=document#questions" : "#questions";
 
   const header = (
     <div className="flex flex-col gap-3">
@@ -303,14 +308,9 @@ export default async function PortalChangePage({
           <ArrowLeft className="size-4 shrink-0" /> <span className="truncate">{data.project.name}</span>
         </Link>
         <div className="flex shrink-0 items-center gap-2">
-          {thread.length || canAsk ? (
-            <Link href={questionsHref} className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted">
-              <MessageCircleQuestion className="size-4" /> Въпроси
-              {unreadAnswers ? <span aria-label={`${unreadAnswers} нов отговор`} className="rounded-full bg-primary px-1.5 text-2xs font-semibold text-primary-foreground">{unreadAnswers}</span> : null}
-            </Link>
-          ) : null}
+          {/* On phones the PDF sits under the document, where it is read; here it only fits beside the back link. */}
           {change.frozenAt ? (
-            <DownloadLink href={`/api/changes/${change.id}/pdf?revision=${change.revisionId}`} label={`${name} · PDF`} className="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted">
+            <DownloadLink href={pdfHref} label={`${name} · PDF`} className="hidden h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted sm:inline-flex">
               <Download className="size-4" /> PDF
             </DownloadLink>
           ) : null}

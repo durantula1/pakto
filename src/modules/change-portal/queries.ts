@@ -106,6 +106,7 @@ function portalProjectHeader(session: PortalSession) {
     organizationName: session.organizationName,
     organizationLogoPath: session.organizationLogoPath,
     organizationLogoSize: session.organizationLogoSize,
+    organizationPhone: session.organizationPhone,
     currency: session.organizationCurrency,
   };
 }

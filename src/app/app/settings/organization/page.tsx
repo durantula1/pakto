@@ -8,7 +8,7 @@ import { SettingsGroup, SettingsRow } from "@/components/settings/settings-group
 import { Input } from "@/components/ui/input";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { updateDefaultTaxRateAction, updateOfferValidityAction, updateOrganizationAction } from "@/modules/organizations/actions";
+import { updateDefaultTaxRateAction, updateOfferValidityAction, updateOrganizationAction, updateOrganizationPhoneAction } from "@/modules/organizations/actions";
 import { getOrganizationSettings } from "@/modules/organizations/queries";
 
 export const metadata: Metadata = { title: "Фирма · Настройки" };
@@ -25,6 +25,12 @@ export default async function OrganizationSettingsPage() {
       <SettingsRow label="Име на фирмата" description="В портала, в имейлите до клиента и в PDF." htmlFor="organization-name">
         <AutoSaveForm action={updateOrganizationAction} className="flex w-full flex-wrap items-center gap-2">
           <Input id="organization-name" name="name" defaultValue={organization.name} required minLength={2} maxLength={120} className="h-9 @xl:max-w-sm" />
+          <AutoSaveStatus />
+        </AutoSaveForm>
+      </SettingsRow>
+      <SettingsRow label="Телефон на фирмата" description="По желание. Клиентите го виждат в портала като бутони „Обадете се“ и Viber." htmlFor="organization-phone">
+        <AutoSaveForm action={updateOrganizationPhoneAction} className="flex w-full flex-wrap items-center gap-2">
+          <Input id="organization-phone" name="phone" type="tel" defaultValue={organization.phone ?? ""} maxLength={30} autoComplete="tel" placeholder="+359 888 123 456" className="h-9 @xl:max-w-sm" />
           <AutoSaveStatus />
         </AutoSaveForm>
       </SettingsRow>

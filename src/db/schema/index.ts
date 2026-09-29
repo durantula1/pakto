@@ -179,6 +179,8 @@ export const organizations = appSchema.table(
     /** small | medium | large; see logoBox() in src/modules/organizations/logo-box.ts. */
     logoSize: text("logo_size", { enum: ["small", "medium", "large"] }).notNull().default("medium"),
     brandColor: text("brand_color"),
+    /** The company's public phone; the client portal offers it as call and Viber buttons. */
+    phone: text("phone"),
     defaultCurrency: char("default_currency", { length: 3 })
       .notNull()
       .default("EUR"),

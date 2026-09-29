@@ -29,6 +29,7 @@ import {
 } from "@/components/projects/project-overview";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { ClientProjectsBar } from "@/components/portal/client-projects-bar";
+import { CompanyContact } from "@/components/portal/company-contact";
 import { clientNavigation } from "@/modules/change-portal/session";
 import { maskEmail } from "@/lib/email/send";
 import { scopeView } from "@/modules/projects/scope";
@@ -153,6 +154,12 @@ export default async function PortalProjectPage({
         <h1 className="max-w-[18ch] text-[2.5rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
           {data.project.name}
         </h1>
+        {data.project.status !== "archived" ? (
+          <CompanyContact
+            phone={data.project.organizationPhone}
+            organizationName={data.project.organizationName}
+          />
+        ) : null}
         {navigation && !navigation.unlocked ? (
           <ClientProjectsBar
             projectPublicId={projectPublicId}

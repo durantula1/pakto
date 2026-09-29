@@ -44,6 +44,7 @@ const sessionFields = {
   organizationName: organizations.name,
   organizationLogoPath: organizations.logoStoragePath,
   organizationLogoSize: organizations.logoSize,
+  organizationPhone: organizations.phone,
   organizationCurrency: organizations.defaultCurrency,
   contactId: projectContacts.id,
   contactName: projectContacts.name,
