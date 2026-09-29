@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Hover upgrades a partial prefetch to the full dynamic payload, so the click paints from cache.
     dynamicOnHover: true,
+    // CSS arrives inside the HTML, so the first paint does not wait for a stylesheet round trip
+    // (Lighthouse mobile: FCP 1.5 s → see docs). Costs ~30 KB on each full page load; client-side
+    // navigations do not re-download it.
+    inlineCss: true,
     // "Връзка с нас" sends up to 10 MB of screenshots in one action (plus multipart overhead);
     // the proxy buffers the same body, so both limits move together.
     serverActions: { bodySizeLimit: "12mb" },
