@@ -29,6 +29,7 @@ import { SiteFooter } from "./site-chrome";
 import { HeroReveal, Reveal } from "./reveal";
 import { SecuritySection } from "./security-section";
 import { UpdatesSection } from "./updates-section";
+import { VersionScene } from "./version-scene";
 import { applyAuthHint } from "@/lib/auth/session-hint";
 
 // The landing page is static (cached, back/forward-cacheable). Both signed-in and visitor buttons
@@ -194,6 +195,8 @@ export function LandingExperience() {
           </section>
 
           <ProofStrip />
+
+          <VersionScene />
 
           <ProcessVideo />
 

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Lock, Mail, PenLine } from "lucide-react";
+import { Mail, PenLine } from "lucide-react";
 
 /** The versions of one change order: the first was sent back with a change request. */
 const versions = [
@@ -46,6 +46,38 @@ const marks = {
 /** Delay for one beat of the choreography, in milliseconds. */
 const at = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
+/** Lucide's lock, drawn stroke by stroke (`pathLength` 1 gives CSS a length to animate) when the version seals. */
+function DrawnLock({ style }: { style: CSSProperties }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="absolute size-3.5"
+    >
+      <path
+        d="M7 11V7a5 5 0 0 1 10 0v4"
+        pathLength="1"
+        className="mf-seal-draw mf-seal-anim"
+        style={{ ...style, animationDelay: "1850ms" }}
+      />
+      <rect
+        width="18"
+        height="11"
+        x="3"
+        y="11"
+        rx="2"
+        pathLength="1"
+        className="mf-seal-draw mf-seal-anim"
+        style={{ ...style, animationDelay: "2050ms" }}
+      />
+    </svg>
+  );
+}
+
 /**
  * Hero visual: version 2 of one change order, showing what changed since version 1. The client's
  * "yes" with a code lands on the card, it locks and gets an ink stamp. The markup is the final state;
@@ -88,10 +120,7 @@ export function HeroSeal() {
                   className="mf-seal-out mf-seal-anim absolute size-3.5"
                   style={at(1850)}
                 />
-                <Lock
-                  className="mf-seal-in mf-seal-anim absolute size-3.5"
-                  style={at(1850)}
-                />
+                <DrawnLock style={at(1850)} />
               </span>
               ПР-042
             </p>
@@ -126,7 +155,10 @@ export function HeroSeal() {
                 style={current ? at(450) : undefined}
               >
                 {version > 1 ? (
-                  <span className="h-px w-3 bg-[#102b38]/20 sm:w-5" />
+                  <span
+                    className="mf-seal-line mf-seal-anim h-px w-3 bg-[#102b38]/20 sm:w-5"
+                    style={at(600)}
+                  />
                 ) : null}
                 <span
                   className={`rounded-md px-2 py-1 font-mono demo-text-10 ${

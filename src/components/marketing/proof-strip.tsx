@@ -69,11 +69,41 @@ export function ProofStrip() {
               <span className="text-xl font-black leading-tight tracking-[-0.03em]">
                 „{change}“
               </span>
-              <span className="mt-auto flex items-center gap-2 font-mono text-sm">
-                <b>{amount}</b>
-                <span className="rounded-full bg-[#102b38] px-2.5 py-0.5 text-xs font-bold text-[#bceba8]">
-                  одобрено с код ✓
+              {/* A plain "agreed" line with a check that draws itself, and the price on the right. */}
+              <span className="mt-auto flex items-center justify-between gap-3 border-t border-dashed border-[#102b38]/30 pt-3">
+                <span className="flex items-center gap-1.5 text-[0.8125rem] font-bold">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-4 shrink-0"
+                  >
+                    <m.circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true, amount: 0.8 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    />
+                    <m.path
+                      d="m7.5 12.5 3 3 6-6.5"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true, amount: 0.8 }}
+                      transition={{ duration: 0.35, delay: 0.7 }}
+                    />
+                  </svg>
+                  договорено преди работата
                 </span>
+                <b className="font-mono text-base font-black tabular-nums">
+                  {amount}
+                </b>
               </span>
             </li>
           ))}

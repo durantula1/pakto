@@ -62,14 +62,13 @@
   letter-spacing: 0.1em;
 }
 
+/* Flat paper, like the sections around it; the grid below is the only texture. */
 .mf-hero {
-  background:
-    radial-gradient(circle at 77% 32%, rgb(255 255 255 / 55%), transparent 24%),
-    linear-gradient(118deg, #f4efe4 12%, #fbf9f1 54%, #b9dfe1 100%);
+  background: #f4efe4;
 }
 
 .mf-hero-grid {
-  opacity: 0.42;
+  opacity: 0.6;
   background-image:
     linear-gradient(rgb(16 43 56 / 7%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(16 43 56 / 7%) 1px, transparent 1px);
@@ -235,7 +234,6 @@
     linear-gradient(rgb(198 223 223 / 8%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(198 223 223 / 8%) 1px, transparent 1px);
   background-size: clamp(4.5rem, 8vw, 7.875rem) clamp(4.5rem, 8vw, 7.875rem);
-  transform: rotate(-8deg) scale(1.25);
 }
 
 .mf-section-title {
@@ -271,9 +269,7 @@
 }
 
 .mf-security {
-  background:
-    radial-gradient(circle at 18% 30%, rgb(255 118 95 / 14%), transparent 34%),
-    #102b38;
+  background: #102b38;
 }
 
 .mf-cta-title {
@@ -440,6 +436,22 @@
   animation-timing-function: var(--mf-ease-in-out);
 }
 
+/* Strokes that draw themselves: the path's own `pathLength="1"` makes 1 the whole outline. */
+.mf-seal-draw {
+  stroke-dasharray: 1;
+  animation-name: mf-seal-draw;
+  animation-duration: 380ms;
+  animation-timing-function: var(--mf-ease-out);
+}
+
+/* The line between two versions grows from the older one. */
+.mf-seal-line {
+  transform-origin: left;
+  animation-name: mf-seal-line;
+  animation-duration: 320ms;
+  animation-timing-function: var(--mf-ease-out);
+}
+
 .mf-seal-hash {
   animation-name: mf-seal-type;
   animation-duration: 520ms;
@@ -499,6 +511,18 @@
   }
 }
 
+@keyframes mf-seal-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes mf-seal-line {
+  from {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes mf-seal-type {
   from {
     clip-path: inset(0 100% 0 0);
@@ -540,4 +564,224 @@
 html:not([data-auth="in"]) .mf-when-in,
 html[data-auth="in"] .mf-when-out {
   display: none !important;
+}
+
+/*
+ * Line art (security-art.tsx). Outlines start undrawn and draw once the SVG is on screen
+ * (`data-in`); `--d` is each stroke's delay. After that a slow loop keeps them alive.
+ */
+.mf-art [data-draw] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.mf-art[data-in="true"] [data-draw] {
+  animation: mf-art-draw 900ms var(--mf-ease-out) var(--d, 0ms) forwards;
+}
+
+/* Rings are arcs: they grow out to their own gap pattern (`--da`) instead of a full outline. */
+.mf-art [data-ring] {
+  stroke-dasharray: 0 1;
+}
+
+.mf-art[data-in="true"] [data-ring] {
+  animation: mf-art-ring 1100ms var(--mf-ease-out) var(--d, 0ms) forwards;
+}
+
+.mf-art-bob,
+.mf-art-old,
+.mf-art-turn-a,
+.mf-art-turn-b {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mf-art[data-in="true"] .mf-art-bob {
+  animation: mf-art-bob 4.5s ease-in-out 1.6s infinite;
+}
+
+.mf-art[data-in="true"] .mf-art-old {
+  animation: mf-art-cut 7s ease-in-out 2.4s infinite;
+}
+
+.mf-art .mf-art-cut {
+  opacity: 0;
+}
+
+.mf-art[data-in="true"] .mf-art-cut {
+  animation: mf-art-slash 7s ease-in-out 2.4s infinite;
+}
+
+.mf-art[data-in="true"] .mf-art-turn-a {
+  animation: mf-art-turn 46s linear infinite;
+}
+
+.mf-art[data-in="true"] .mf-art-turn-b {
+  animation: mf-art-turn 62s linear infinite reverse;
+}
+
+.mf-art .mf-art-fill {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+
+.mf-art[data-in="true"] .mf-art-fill {
+  animation: mf-art-fill 9s ease-in-out infinite;
+}
+
+.mf-art .mf-art-scan {
+  opacity: 0;
+}
+
+.mf-art[data-in="true"] .mf-art-scan {
+  animation: mf-art-scan 5s ease-in-out 3s infinite;
+}
+
+@keyframes mf-art-fill {
+  0%,
+  4% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  10%,
+  86% {
+    opacity: 1;
+    transform: none;
+  }
+  94%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mf-art-scan {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  12% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(74px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(74px);
+  }
+}
+
+.mf-art .mf-art-text {
+  opacity: 0;
+}
+
+.mf-art[data-in="true"] .mf-art-text {
+  animation: mf-art-fade 700ms ease-out var(--d, 0ms) forwards;
+}
+
+@keyframes mf-art-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+/* The closing seal of the hero drawing lands like a stamp once the code has been entered. */
+.mf-art .mf-art-seal {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: mf-art-stamp 420ms cubic-bezier(0.55, 0, 1, 0.45) 5.4s forwards;
+}
+
+@keyframes mf-art-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.7) rotate(-16deg);
+  }
+  to {
+    opacity: 0.9;
+    transform: rotate(-7deg);
+  }
+}
+
+@keyframes mf-art-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes mf-art-ring {
+  to {
+    stroke-dasharray: var(--da);
+  }
+}
+
+@keyframes mf-art-bob {
+  50% {
+    transform: translateY(-0.4rem);
+  }
+}
+
+/* The old link slips away from the new one, waits, then is drawn back in for the next round. */
+@keyframes mf-art-cut {
+  0%,
+  35% {
+    transform: none;
+    opacity: 1;
+  }
+  50%,
+  85% {
+    transform: translateX(-0.9rem) rotate(-6deg);
+    opacity: 0.3;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes mf-art-slash {
+  0%,
+  38% {
+    opacity: 0;
+  }
+  50%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mf-art-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-art * {
+    animation: none !important;
+  }
+
+  .mf-art [data-draw] {
+    stroke-dashoffset: 0;
+  }
+
+  .mf-art .mf-art-fill,
+  .mf-art .mf-art-text {
+    opacity: 1;
+  }
+
+  .mf-art .mf-art-seal {
+    opacity: 0.9;
+    transform: rotate(-7deg);
+  }
+
+  .mf-art [data-ring] {
+    stroke-dasharray: var(--da);
+  }
 }
