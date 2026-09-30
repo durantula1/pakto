@@ -17,12 +17,14 @@ function initials(name: string) {
  * and for a client session the three places a client goes to, in the top bar on desktop and at the
  * bottom on phones. Pakto only signs the footer.
  */
-export function PortalShell({ organizationName, logoPath, nav, children }: {
+export function PortalShell({ organizationName, logoPath, nav, signedIn = false, children }: {
   organizationName?: string | null;
   /** The company's logo leads the frame; Pakto only signs the footer. */
   logoPath?: string | null;
   /** A client-wide session: "Начало", "Оферти" and the profile menu. */
   nav: boolean;
+  /** A device session without the client-wide frame: only "Изход" and help, so a shared phone can be signed out. */
+  signedIn?: boolean;
   children: React.ReactNode;
 }) {
   const logoUrl = logoPath ? logoPublicUrl(logoPath) : null;
@@ -48,7 +50,7 @@ export function PortalShell({ organizationName, logoPath, nav, children }: {
               <span className="ml-2"><PortalProfileMenu /></span>
             </nav>
           ) : null}
-          {nav ? <div className="sm:hidden"><PortalProfileMenu /></div> : null}
+          {nav ? <div className="sm:hidden"><PortalProfileMenu /></div> : signedIn ? <PortalProfileMenu /> : null}
         </div>
       </header>
       <main className={cn("mx-auto max-w-6xl px-4 py-5 sm:py-8", nav && "pb-28 sm:pb-8")}>

@@ -12,7 +12,7 @@ import { getAccountDeletionPlan, getLeaveBlocker, listUserConsents } from "@/mod
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
 
-export const metadata: Metadata = { title: "Данни и акаунт · Настройки" };
+export const metadata: Metadata = { title: "Данни и профил · Настройки" };
 
 export default async function PrivacySettingsPage() {
   const context = await requireTenantContext();

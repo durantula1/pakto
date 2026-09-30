@@ -263,7 +263,7 @@ export default async function PortalChangePage({
       </p>
       {inForce ? (
         <p className="px-4 pt-3 pb-2 text-xs leading-5 text-sidebar-foreground/70">
-          Сега е в сила версия {inForce.revisionNumber} · {formatCents(cents(inForce.total), inForce.currency)}. Ако одобрите версия {change.revisionNumber}, тя я заменя. Ако я откажете, остава версия {inForce.revisionNumber}.
+          Сега е в сила версия {inForce.revisionNumber} · {formatCents(cents(inForce.total), inForce.currency)}. Ако одобрите версия {change.revisionNumber}, тя я заменя. Ако я откажете, остава версия {inForce.revisionNumber}. Сумите са на самите версии, без одобрените след тях промени.
         </p>
       ) : null}
     </section>
@@ -296,6 +296,7 @@ export default async function PortalChangePage({
       revisionNumber={change.revisionNumber}
       waiting={awaitingDecision}
       canAsk={canAsk}
+      isChange={change.documentKind === "change"}
     />
   );
   // Old "?questions=1" links from emails open the tab the questions live in.

@@ -66,6 +66,8 @@ export function Stepper({
         size={compact ? 4 : 8}
         aria-label={label}
         className={`h-full min-w-[4ch] flex-1 border-0 bg-transparent text-right tabular-nums shadow-none focus-visible:ring-0 ${compact ? "px-1 text-sm" : "min-w-[8ch] px-3 text-base"}`}
+        // A number field starts selected, so typing replaces the "0" instead of landing next to it.
+        onFocus={(event) => event.currentTarget.select()}
         onInput={(event) => {
           const input = event.currentTarget;
           const value = Number(input.value);

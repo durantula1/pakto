@@ -6,6 +6,7 @@ import { OverlayTriggerStateContext } from "react-aria-components";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
 export function ActionForm({ action, success, children, className, redirects = false, onSuccess }: {
   action: (formData: FormData) => Promise<unknown>;
@@ -16,7 +17,11 @@ export function ActionForm({ action, success, children, className, redirects = f
   className?: string;
   redirects?: boolean;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  // One object per failure, so the typed values come back once per failed submit and not on every render.
+  const [failure, setFailure] = useState<{ error: string } | null>(null);
+  const error = failure?.error ?? null;
+  const setError = (message: string | null) => setFailure(message ? { error: message } : null);
+  const formRef = useKeepFormValues(failure);
   // Set inside the form's transition, so it commits together with the refreshed page: the toast and
   // the closing dialog appear when the new row is already on screen, not seconds before it.
   const [succeeded, setSucceeded] = useState(0);
@@ -51,7 +56,7 @@ export function ActionForm({ action, success, children, className, redirects = f
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [succeeded]);
 
-  return <form action={submit} className={className}>
+  return <form noValidate ref={formRef} action={submit} className={className}>
     {children}
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
   </form>;

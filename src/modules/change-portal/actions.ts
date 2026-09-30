@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { and, desc, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import {
@@ -32,7 +33,8 @@ import { checkOtp, consumeOtp, issueOtp } from "@/modules/change-portal/verifica
 import { getPdfDocumentMeta, renderChangePdf } from "@/modules/pdf/render";
 import { notifyProjectStaff, notifyUsers } from "@/modules/notifications/staff";
 import { parseSignature, removeSignature, storeSignature } from "@/modules/change-portal/signature";
-import { applyApprovedOffer } from "@/modules/change-orders/approval";
+import { applyApprovedChange, applyApprovedOffer } from "@/modules/change-orders/approval";
+import { sofiaToday } from "@/modules/finance/queries";
 import { formatAmount } from "@/lib/money";
 
 const decisionSchema = z.object({
@@ -243,6 +245,10 @@ async function submitDecision(
     if (data.decision === "approved" && revision.documentKind === "offer") {
       await applyApprovedOffer(transaction, { organizationId: session.organizationId, projectId: session.projectId, offerId: revision.changeOrderId, revisionId: revision.id, approvedAt: new Date() });
     }
+    if (data.decision === "approved" && revision.documentKind === "change") {
+      const [baseline] = await transaction.select({ offerId: changeOrders.baselineOfferId }).from(changeOrders).where(eq(changeOrders.id, revision.changeOrderId)).limit(1);
+      if (baseline?.offerId) await applyApprovedChange(transaction, { organizationId: session.organizationId, projectId: session.projectId, changeOrderId: revision.changeOrderId, offerId: baseline.offerId, revisionId: revision.id, approvedAt: new Date() });
+    }
     await transaction.insert(timelineEvents).values({
       organizationId: session.organizationId,
       projectId: session.projectId,
@@ -392,7 +398,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
     offerId: z.union([z.literal(""), z.uuid()]).optional(),
     amount: z.coerce.number().positive("Въведете сумата.").max(999999999),
     method: z.enum(["cash", "bank", "card", "other"]),
-    paidOn: z.iso.date("Изберете дата."),
+    paidOn: z.iso.date("Изберете дата.").refine((day) => day <= sofiaToday(), "Датата на плащането не може да е в бъдещето."),
     note: z.string().trim().max(500).optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };

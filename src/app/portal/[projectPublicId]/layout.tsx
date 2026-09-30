@@ -16,7 +16,7 @@ export default async function PortalProjectLayout({ children, params }: LayoutPr
   // The whole frame only for a client session the code has opened; a bare link stays on its project.
   const nav = !!session?.clientId && session.unlocked;
   return (
-    <PortalShell organizationName={session?.organizationName} logoPath={session?.organizationLogoPath} nav={nav}>
+    <PortalShell organizationName={session?.organizationName} logoPath={session?.organizationLogoPath} nav={nav} signedIn={!!session}>
       {children}
       <DownloadTray />
     </PortalShell>

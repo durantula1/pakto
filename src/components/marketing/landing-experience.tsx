@@ -251,7 +251,7 @@ export function LandingExperience() {
                 </h2>
                 <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-base leading-7">
-                    Регистрираш фирмата, създаваш проект и пращаш първата оферта
+                    Регистрираш фирмата, създаваш обект и пращаш първата оферта
                     още днес. Клиентът одобрява от телефона с код.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">

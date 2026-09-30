@@ -3,6 +3,7 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import {
@@ -16,6 +17,7 @@ import { formatDay } from "@/modules/change-orders/labels";
 import { emailClient } from "@/modules/notifications/client";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { formatAmount } from "@/lib/money";
+import { sofiaToday } from "@/modules/finance/queries";
 
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 type Executor = Pick<Transaction, "select">;
@@ -26,6 +28,8 @@ const paymentKind = z.enum(["deposit", "progress", "final", "other"]);
 const paymentMethod = z.enum(["cash", "bank", "card", "other"]);
 const methodLabels: Record<string, string> = { cash: "в брой", bank: "банков превод", card: "карта", other: "друго" };
 const money = z.coerce.number().positive("Сумата трябва да е над 0.").max(999999999).transform((value) => value.toFixed(2));
+/** A payment already received: any past day (a forgotten one is recorded late), never a future one. */
+const receivedDay = z.iso.date("Избери дата.").refine((day) => day <= sofiaToday(), "Датата на плащането не може да е в бъдещето.");
 
 function refresh(projectId: string) {
   revalidatePath(`/app/projects/${projectId}`);
@@ -294,11 +298,11 @@ async function receiptOffer(db: Executor, organizationId: string, projectId: str
 
 function emailReceipt(projectId: string, input: { amount: string; currency: string; receivedOn: string; method: string; corrected?: boolean }) {
   emailClient(projectId, {
-    subject: input.corrected ? `Коригирано плащане: ${input.amount} ${input.currency}` : `Записано плащане: ${input.amount} ${input.currency}`,
+    subject: input.corrected ? `Коригирано плащане: ${formatAmount(input.amount)} ${input.currency}` : `Записано плащане: ${formatAmount(input.amount)} ${input.currency}`,
     intro: input.corrected
       ? "Фирмата коригира записано плащане. Вярната сума вече е в портала."
       : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
-    facts: [["Сума", `${input.amount} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин", methodLabels[input.method] ?? input.method]],
+    facts: [["Сума", `${formatAmount(input.amount)} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин", methodLabels[input.method] ?? input.method]],
     cta: "Вижте плащанията",
     outro: "Ако нещо не е вярно, натиснете „Не е вярно?“ до плащането в портала.",
   });
@@ -308,7 +312,7 @@ export async function recordReceiptAction(formData: FormData): Promise<ActionRes
   return attempt(async () => {
     const data = z.object({
       projectId: uuid, installmentId: optionalUuid, offerId: optionalUuid, kind: paymentKind, amount: money, method: paymentMethod,
-      receivedOn: z.iso.date("Избери дата."), note: z.string().trim().max(500).optional(),
+      receivedOn: receivedDay, note: z.string().trim().max(500).optional(),
     }).parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
@@ -414,7 +418,7 @@ export async function resolvePaymentDisputeAction(formData: FormData): Promise<A
 /** Confirms a client's "I paid": records the receipt the client reported (the company may fix the amount or date). */
 export async function confirmPaymentClaimAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
-    const data = z.object({ projectId: uuid, claimId: uuid, amount: money, receivedOn: z.iso.date("Избери дата."), kind: paymentKind }).parse(Object.fromEntries(formData));
+    const data = z.object({ projectId: uuid, claimId: uuid, amount: money, receivedOn: receivedDay, kind: paymentKind }).parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });

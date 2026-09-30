@@ -60,11 +60,12 @@ export function PortalDecisionForm({
   const [comment, setComment] = useState("");
   const [consent, setConsent] = useState(false);
   const [wait, setWait] = useState(0);
+  const [localError, setLocalError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const otpId = codeState.otpId && codeFor === decision ? codeState.otpId : null;
-  const error = otpId ? submitState.error : codeState.error;
+  const error = otpId ? submitState.error : localError ?? codeState.error;
   const busy = requesting || submitting;
-  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(total))} ${currency}`;
+  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(total)).replace("-", "−")} ${currency}`;
   const approving = decision === "approved";
 
   // A new code arrived: count down before offering another one.
@@ -100,10 +101,18 @@ export function PortalDecisionForm({
       // snaps back to the option it mounted with, so "Отказвам" turned into "Искам промяна".
       onSubmit={otpId ? undefined : (event) => {
         event.preventDefault();
+        // Checked here, not with the browser's own bubbles, which speak the browser's language.
+        const missing = typedName.trim().length < 2 ? "Напишете името си."
+          : decision === "changes_requested" && !comment.trim() ? "Напишете какво да се промени."
+          : approving && !consent ? "Отбележете, че одобрявате офертата."
+          : null;
+        setLocalError(missing);
+        if (missing) return;
         const formData = new FormData(event.currentTarget);
         setCodeFor(decision);
         startTransition(() => requestCode(formData));
       }}
+      noValidate
       className="flex flex-col gap-5"
     >
       <input type="hidden" name="projectPublicId" value={projectPublicId} />

@@ -32,7 +32,7 @@ export default async function NewOfferPage({
   if (!can(member, "offers.edit")) return <PageShell><PageHeader page="newOffer" back={{ href: "/app/offers", label: "Назад" }} /><EmptyState illustration={false} title="Нямаш право да създаваш оферти." /></PageShell>;
   const [anyProjects, defaultProject, organization, catalog, templates, template, copy] = await Promise.all([
     hasProjects(context),
-    getProjectOption(context, typeof projectId === "string" ? projectId : undefined),
+    getProjectOption(context, typeof projectId === "string" ? projectId : undefined, { activeOnly: true }),
     getDatabase()
       .select({ defaultTaxRate: organizations.defaultTaxRate })
       .from(organizations)

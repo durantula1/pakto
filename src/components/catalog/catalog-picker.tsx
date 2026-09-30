@@ -11,7 +11,7 @@ import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger }
 
 export type CatalogPick = { id: string; name: string; unit: string | null; unitPrice: string; category: string | null };
 
-const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
 
 /** "From catalog" button: a bottom sheet with search; tapping an item adds it as a line and keeps the sheet open for more. */
 export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: CatalogPick[]; onPick: (item: CatalogPick) => void; currency?: string }) {

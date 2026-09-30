@@ -12,6 +12,7 @@ import type { ProjectOption } from "@/components/workspace/project-combobox";
 import { PRESETS, type PresetKey } from "@/lib/authz/permissions";
 import { cn } from "@/lib/utils";
 import { createTeamInviteAction, type InviteState } from "@/modules/team/actions";
+import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
 export function InviteForm({ allowOwnerInvite }: { allowOwnerInvite: boolean }) {
   const [round, setRound] = useState(0);
@@ -20,6 +21,7 @@ export function InviteForm({ allowOwnerInvite }: { allowOwnerInvite: boolean }) 
 
 function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: boolean; onReset: () => void }) {
   const [state, action, pending] = useActionState<InviteState, FormData>(createTeamInviteAction, {});
+  const formRef = useKeepFormValues(state);
   const [email, setEmail] = useState("");
   const [preset, setPreset] = useState<PresetKey | "owner">("field");
   const [allProjects, setAllProjects] = useState(false);
@@ -49,7 +51,7 @@ function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: bool
     ...(allowOwnerInvite ? [{ key: "owner" as const, label: "Собственик", description: "Пълен достъп, включително екип и настройки." }] : []),
   ];
 
-  return <form action={action} className="flex flex-col gap-5 px-4 pb-8">
+  return <form noValidate ref={formRef} action={action} className="flex flex-col gap-5 px-4 pb-8">
     <Field><FieldLabel htmlFor="invite-email">Имейл</FieldLabel><Input id="invite-email" type="email" name="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ivan@firma.bg" /></Field>
     <input type="hidden" name="preset" value={preset} />
     <div className="flex flex-col gap-2">

@@ -18,6 +18,7 @@ import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { disableTeamMemberAction, requestOwnerChangeAction } from "@/modules/team/actions";
 import { getTeamMember } from "@/modules/team/queries";
+import { orForbidden } from "@/lib/authz/page-access";
 
 const joinedFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", year: "numeric" });
 
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: PageProps<"/app/team/[userId]
 
 export default async function TeamMemberPage({ params }: PageProps<"/app/team/[userId]">) {
   const [{ userId }, context] = await Promise.all([params, requireTenantContext()]);
-  await requireOwner(context);
+  await orForbidden(requireOwner(context));
   const member = await getTeamMember(context.organizationId, userId);
   if (!member) notFound();
   const name = member.displayName ?? member.email ?? "Член на екипа";

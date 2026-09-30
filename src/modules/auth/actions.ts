@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
+import { safeNextPath } from "@/lib/auth/next-path";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { recordLegalConsent } from "@/modules/account/mutations";
 import { createClient } from "@/lib/supabase/server";
@@ -10,6 +12,10 @@ import { createClient } from "@/lib/supabase/server";
 export type AuthActionState = {
   error?: string;
   message?: string;
+  /** Sign-in with the right password on an email not confirmed yet: the form offers a new link. */
+  unconfirmedEmail?: string;
+  /** Sign-up answered; the form links to sign-in and password reset for someone who already has a profile. */
+  signedUp?: boolean;
 };
 
 const credentialsSchema = z.object({
@@ -28,12 +34,16 @@ export async function signInAction(
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  // Supabase answers "not confirmed" only after the password matched, so this tells nothing to a stranger.
+  if (error?.code === "email_not_confirmed") {
+    return { error: "Първо потвърди имейла си. Линкът е в писмото от регистрацията.", unconfirmedEmail: parsed.data.email };
+  }
   if (error) {
     return { error: "Имейлът или паролата не са правилни." };
   }
 
   const next = formData.get("next");
-  redirect(typeof next === "string" && /^\/join\/[A-Za-z0-9._-]+$/.test(next) ? next : "/app");
+  redirect(safeNextPath(next));
 }
 
 export async function signUpAction(
@@ -53,7 +63,7 @@ export async function signUpAction(
   const { NEXT_PUBLIC_APP_URL } = getPublicEnvironment();
   const supabase = await createClient();
   const next = formData.get("next");
-  const safeNext = typeof next === "string" && /^\/join\/[A-Za-z0-9._-]+$/.test(next) ? next : "/app";
+  const safeNext = safeNextPath(next);
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -64,6 +74,9 @@ export async function signUpAction(
   });
 
   if (error) {
+    console.error("[sign-up]", error.code, error.message);
+    if (error.code === "over_email_send_rate_limit" || error.status === 429) return { error: "Твърде много опити за кратко време. Изчакай няколко минути и опитай пак." };
+    if (error.code === "weak_password") return { error: "Паролата е твърде слаба. Избери по-дълга, по-трудна за познаване парола." };
     return { error: "Регистрацията не беше завършена. Опитай отново." };
   }
 
@@ -72,9 +85,31 @@ export async function signUpAction(
 
   if (data.session) redirect(safeNext);
 
+  // The same answer for a new and a registered email, so the form does not reveal who has a profile.
   return {
-    message: "Провери имейла си, за да потвърдиш регистрацията.",
+    message: "Ако имейлът е нов, изпратихме линк за потвърждение. Провери и папката за спам.",
+    signedUp: true,
   };
+}
+
+export async function resendConfirmationAction(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const email = z.email("Въведи валиден имейл адрес.").safeParse(formData.get("email"));
+  if (!email.success) return { error: email.error.issues[0]?.message };
+  const { NEXT_PUBLIC_APP_URL } = getPublicEnvironment();
+  const supabase = await createClient();
+  // An invited member goes back to the invitation (not to a new company), anyone else to the page they opened.
+  const next = formData.get("next");
+  const safeNext = safeNextPath(next);
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: email.data,
+    options: { emailRedirectTo: `${NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(safeNext)}` },
+  });
+  if (error) return { error: "Линкът не беше изпратен. Опитай отново след минута." };
+  return { message: "Изпратихме нов линк. Провери и папката за спам." };
 }
 
 export async function signOutAction() {

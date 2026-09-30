@@ -7,6 +7,7 @@ import "../marketing.css";
 import { faqSections } from "@/components/marketing/faq-content";
 import { FaqItem } from "@/components/marketing/faq-item";
 import { AuthHint } from "@/components/marketing/auth-hint";
+import { SectionNav } from "@/components/marketing/section-nav";
 import { SiteFooter, SubpageHeader } from "@/components/marketing/site-chrome";
 import { siteUrl } from "@/lib/seo/site";
 
@@ -61,20 +62,14 @@ export default function FaqPage() {
                 Отговори на въпросите, които фирмите задават най-често, преди да
                 започнат.
               </p>
-              <nav
-                aria-label="Теми"
-                className="mt-8 flex flex-wrap gap-2 lg:flex-col lg:items-start"
-              >
-                {faqSections.map((section) => (
-                  <a
-                    key={section.id}
-                    href={`#${section.id}`}
-                    className="border border-[#102b38]/25 px-3 py-2 text-sm font-bold transition-colors hover:bg-[#ff765f]"
-                  >
-                    {section.title}
-                  </a>
-                ))}
-              </nav>
+              <SectionNav
+                label="Теми"
+                variant="chips"
+                items={faqSections.map(({ id, title }) => ({
+                  id,
+                  label: title,
+                }))}
+              />
             </div>
 
             <div className="flex flex-col gap-14">

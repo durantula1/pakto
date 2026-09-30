@@ -14,8 +14,9 @@ import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { archiveCatalogItemAction, importCatalogAction, saveCatalogItemAction, type CatalogState } from "@/modules/catalog/actions";
 import type { CatalogPick } from "@/components/catalog/catalog-picker";
 import { UnitField } from "@/components/catalog/unit-field";
+import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
-const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
 
 export function CatalogManager({ items, canEdit, currency = "EUR" }: { items: CatalogPick[]; canEdit: boolean; currency?: string }) {
   const [query, setQuery] = useState("");
@@ -113,19 +114,20 @@ export function CatalogManagerSkeleton({ rows = 6 }: { rows?: number }) {
 }
 
 function ItemSheet({ item, onClose, currency }: { item: CatalogPick | null; onClose: () => void; currency: string }) {
-  const [, save, saving] = useActionState<CatalogState, FormData>(async (previous, formData) => {
+  const [saveState, save, saving] = useActionState<CatalogState, FormData>(async (previous, formData) => {
     const result = await saveCatalogItemAction(previous, formData);
     if (result.error) toast.error(result.error);
     else { toast.success(item ? "Промените са запазени" : "Добавено в каталога"); onClose(); }
     return result;
   }, {});
+  const keepRef = useKeepFormValues(saveState);
   return (
       <SheetContent isOpen onOpenChange={(open) => { if (!open) onClose(); }} side="bottom" className="mx-auto w-full max-w-lg rounded-t-2xl">
         <SheetHeader>
           <SheetTitle>{item ? "Редакция" : "Нова услуга или материал"}</SheetTitle>
           <SheetDescription>Цената е начална: в офертата можеш да я смениш.</SheetDescription>
         </SheetHeader>
-        <form action={save} className="grid gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <form noValidate ref={keepRef} action={save} className="grid gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <input type="hidden" name="id" value={item?.id ?? ""} />
           <label className="text-sm font-medium">Име
             <Input name="name" required minLength={2} maxLength={300} defaultValue={item?.name ?? ""} autoFocus placeholder="напр. Шпакловка стени" className="mt-1.5 h-11 text-base sm:text-sm" />
@@ -146,11 +148,12 @@ function ItemSheet({ item, onClose, currency }: { item: CatalogPick | null; onCl
 function ImportSheet() {
   const [open, setOpen] = useState(false);
   const textRef = useRef<HTMLTextAreaElement>(null);
-  const [state, run, importing] = useActionState<CatalogState, FormData>(importCatalogAction, {});
-  useEffect(() => {
-    if (state.error) toast.error(state.error);
-    if (state.imported) toast.success(`Импортирани в каталога: ${state.imported}`);
-  }, [state]);
+  const [state, run, importing] = useActionState<CatalogState, FormData>(async (previous, formData) => {
+    const result = await importCatalogAction(previous, formData);
+    if (result.imported) { toast.success(`Импортирани в каталога: ${result.imported}`); setOpen(false); }
+    return result;
+  }, {});
+  const keepRef = useKeepFormValues(state);
   return (
     <SheetTrigger isOpen={open} onOpenChange={setOpen}>
       <Button type="button" variant="outline" className="h-11 gap-1.5 bg-card"><FileUp className="size-4" /> Импорт</Button>
@@ -159,12 +162,13 @@ function ImportSheet() {
           <SheetTitle>Импорт от таблица</SheetTitle>
           <SheetDescription>По един ред за всяка услуга или материал: <span className="font-mono">име; мярка; цена; категория</span>. Работи и с копиране от Excel. Съществуващо име само обновява цената.</SheetDescription>
         </SheetHeader>
-        <form action={run} className="grid gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <form ref={keepRef} noValidate action={run} className="grid gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Textarea ref={textRef} name="csv" rows={6} placeholder={"Шпакловка стени; м²; 12; Довършителни\nМонтаж на контакт; бр.; 15; Електро"} className="font-mono text-sm" />
           <label className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed text-sm text-muted-foreground hover:bg-muted">
             <FileUp className="size-4" /> Или избери CSV файл
             <input type="file" accept=".csv,.txt,text/csv,text/plain" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (file && textRef.current) textRef.current.value = await file.text(); }} />
           </label>
+          {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
           <Button type="submit" isDisabled={importing} className="h-11">{importing ? "Импортиране…" : "Импортирай"}</Button>
         </form>
       </SheetContent>

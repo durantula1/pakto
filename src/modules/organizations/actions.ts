@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { createClient } from "@/lib/supabase/server";
 import { bootstrapOrganization } from "@/modules/organizations/mutations";
@@ -89,6 +90,23 @@ export async function updateOfferValidityAction(formData: FormData) {
   requireRole(context, ["owner"]);
   await getDatabase().update(organizations).set({ offerValidityDays: days.data, updatedAt: new Date() }).where(eq(organizations.id, context.organizationId));
   revalidatePath("/app", "layout");
+}
+
+/** Which automatic emails the company's clients get (0 turns a reminder off). */
+export async function updateClientRemindersAction(formData: FormData) {
+  const parsed = z.object({
+    nudge: z.coerce.number().int().min(0, "Избери от списъка.").max(14, "Най-много 14 дни."),
+    warning: z.coerce.number().int().min(0, "Избери от списъка.").max(7, "Най-много 7 дни."),
+    digest: z.enum(["on", "off"], "Избери от списъка."),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const context = await requireTenantContext();
+  requireRole(context, ["owner"]);
+  await getDatabase().update(organizations).set({
+    clientNudgeAfterDays: parsed.data.nudge, clientExpiryWarningDays: parsed.data.warning,
+    clientScheduleDigestEnabled: parsed.data.digest === "on", updatedAt: new Date(),
+  }).where(eq(organizations.id, context.organizationId));
+  revalidatePath("/app/settings/organization");
 }
 
 type LogoResult<T> = ({ ok: true } & T) | { ok: false; error: string };

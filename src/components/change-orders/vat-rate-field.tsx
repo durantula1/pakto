@@ -34,6 +34,7 @@ export function VatRateField({
               type="radio"
               name={name}
               value={option.value}
+              aria-label={option.label}
               className="sr-only"
               {...(current !== undefined
                 ? { checked: current === option.value, onChange: () => onChange?.(option.value) }

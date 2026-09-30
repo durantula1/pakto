@@ -15,6 +15,8 @@ import {
   NextInstallment,
   WorkTile,
   currentStage,
+  nextInstallment,
+  today,
 } from "@/components/portal/project-tiles";
 import { getPortalProject } from "@/modules/change-portal/queries";
 import {
@@ -128,6 +130,8 @@ export default async function PortalProjectPage({
   const all = scopeView(state, "all");
   const stage = all.hasAgreement ? currentStage(all) : undefined;
   const canAct = data.project.status !== "archived";
+  const dueInstallment = canAct ? nextInstallment(all) : undefined;
+  const paymentDue = Boolean(dueInstallment && dueInstallment.dueOn <= today());
   const disputed =
     query.payment === "disputed" &&
     state.receipts.some((item) => item.disputed);
@@ -181,6 +185,7 @@ export default async function PortalProjectPage({
       {/* 1. Does anything wait for me? */}
       <PortalSteps
         steps={steps}
+        calmTitle={paymentDue ? "Следва плащане" : undefined}
         calm={
           active ? (
             <span>
@@ -192,7 +197,7 @@ export default async function PortalProjectPage({
                   „{stage.title}“ до {formatShortDay(stage.dueOn)}.{" "}
                 </>
               ) : null}
-              Когато фирмата изпрати нова оферта или промяна, ще получите имейл.
+              {paymentDue ? "Вноска, която е дължима, е отворена по-долу: можеш да отбележиш „Платих“." : "Когато фирмата изпрати нова оферта или промяна, ще получите имейл."}
             </span>
           ) : null
         }
@@ -202,7 +207,7 @@ export default async function PortalProjectPage({
       {all.hasAgreement ? (
         <div id="payments" className="scroll-mt-20">
           <ProjectGlance
-            initial={query.payment ? "money" : null}
+            initial={query.payment || paymentDue ? "money" : null}
             work={<WorkTile view={all} />}
             money={<MoneyTile view={all} claims={data.claims} />}
             workPanel={<PortalSchedule view={all} foldDone />}

@@ -22,7 +22,18 @@ export async function sendEmail(message: { to: string; subject: string; text: st
     // Inline (cid:) rather than a hosted URL: shows without "load images" and without a public address.
     attachments: [...(message.attachments ?? []), { filename: "pakto.png", content: Buffer.from(PAKTO_LOGO_PNG_BASE64, "base64"), contentId: LOGO_CONTENT_ID }],
   });
-  if (error) throw new Error(`Имейлът не беше изпратен: ${error.message}`);
+  if (error) {
+    // The provider's own text is English and technical: log it, show a Bulgarian reason.
+    console.error("[email]", error.name, error.message);
+    throw new Error(`Имейлът не беше изпратен: ${emailFailureReason(error)}`);
+  }
+}
+
+function emailFailureReason(error: { name?: string; message: string }) {
+  if (/testing emails|verify a domain|own email address/i.test(error.message)) return "имейл услугата още е в тестов режим и праща само до един адрес.";
+  if (/rate|too many|quota/i.test(`${error.name} ${error.message}`)) return "твърде много писма за кратко време. Опитай след малко.";
+  if (/invalid.*(email|address|to)|not a valid/i.test(error.message)) return "адресът изглежда невалиден.";
+  return "доставчикът на имейли върна грешка. Опитай отново след малко.";
 }
 
 /** Every email gets the same frame: the Pakto logo on top, the message in a white card, a short footer. Tables and inline styles, because email clients ignore most CSS. */

@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getServerEnvironment } from "@/lib/env/server";

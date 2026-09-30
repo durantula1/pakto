@@ -241,7 +241,7 @@ export function DocumentStatusCard({
               {inForce.agreedDeadline ? ` · срок ${formatDay(inForce.agreedDeadline)}` : ""}
             </p>
             <p className="mt-1 text-muted-foreground">
-              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава обектът се води по версия {inForce.revisionNumber}.
+              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава обектът се води по версия {inForce.revisionNumber}. Сумата е на самата версия; одобрените след нея промени са отделно.
             </p>
           </div>
         ) : null}

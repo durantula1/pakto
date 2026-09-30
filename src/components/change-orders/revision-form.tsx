@@ -152,7 +152,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
         <div className="flex min-w-0 flex-col gap-4">
-          <form id={formId} action={action} onSubmit={validate} className="flex flex-col gap-4">
+          <form noValidate id={formId} action={action} onSubmit={validate} className="flex flex-col gap-4">
             <input type="hidden" name="changeOrderId" value={initial.id} />
             <input type="hidden" name="lines" value={JSON.stringify(payload)} />
             {isOffer ? <>
@@ -208,7 +208,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               {isOffer ? (
                 <Field>
                   <FieldLabel htmlFor={`${formId}-deadline`}>Договорен краен срок</FieldLabel>
-                  <DatePicker id={`${formId}-deadline`} name="agreedDeadline" required value={deadline} onChange={setDeadline} aria-label="Договорен краен срок" />
+                  <DatePicker id={`${formId}-deadline`} name="agreedDeadline" required min="today" value={deadline} onChange={setDeadline} aria-label="Договорен краен срок" />
                 </Field>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -223,7 +223,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                   {scheduleType === "days" ? (
                     <Field>
                       <FieldLabel htmlFor={`${formId}-new-deadline`}>Нов договорен краен срок</FieldLabel>
-                      <DatePicker id={`${formId}-new-deadline`} name="agreedDeadline" required value={deadline} onChange={setDeadline} aria-label="Нов договорен краен срок" />
+                      <DatePicker id={`${formId}-new-deadline`} name="agreedDeadline" required min="today" value={deadline} onChange={setDeadline} aria-label="Нов договорен краен срок" />
                     </Field>
                   ) : <input type="hidden" name="agreedDeadline" value="" />}
                 </div>

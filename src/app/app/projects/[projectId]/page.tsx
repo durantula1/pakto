@@ -47,6 +47,7 @@ import { offerLabel, parseOfferScope, scopeView, type OfferScope } from "@/modul
 import { cn } from "@/lib/utils";
 import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, projectStatusLabels, projectTabLabels } from "./project-skeleton";
 import { formatAmount } from "@/lib/money";
+import { orForbidden } from "@/lib/authz/page-access";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
@@ -69,7 +70,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
   const [member, project, offersTotal, state, disputes, contacts, claims] = await Promise.all([
-    requireProjectCapability(context, projectId, "view"),
+    orForbidden(requireProjectCapability(context, projectId, "view")),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
     getProjectState(context.organizationId, projectId),
@@ -183,7 +184,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       {!active ? (
         <p role="status" className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
           <Lock className="size-4 shrink-0 text-muted-foreground" />
-          <span>{project.status === "archived" ? "Обектът е в архива и е само за четене." : `Обектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt)}` : ""}. Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
+          <span>{project.status === "archived" ? "Обектът е в архива и е само за четене." : `Обектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt).replace(/\.$/, "")}` : ""}. Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
         </p>
       ) : null}
       <div className={projectStatsClassName}>

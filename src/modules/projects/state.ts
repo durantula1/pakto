@@ -27,7 +27,7 @@ export function cents(value: string | null | undefined) {
 }
 
 export function formatCents(value: bigint, currency: string) {
-  return `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value) / 100)} ${currency}`;
+  return `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(value) / 100)} ${currency}`;
 }
 
 /** How many of the latest receipts `getProjectState` returns; totals always cover every receipt. */

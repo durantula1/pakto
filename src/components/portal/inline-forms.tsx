@@ -63,7 +63,7 @@ export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, install
           {offerId ? <input type="hidden" name="offerId" value={offerId} /> : null}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-[8rem_10rem_minmax(0,1fr)]">
             <Input aria-label="Сума в EUR" id={`claim-amount-${key}`} type="number" name="amount" min="0.01" step="0.01" defaultValue={amount} placeholder="Сума, EUR" required autoFocus className="tabular-nums" />
-            <DatePicker id={`claim-date-${key}`} name="paidOn" defaultValue={today()} required aria-label="Дата на плащане" />
+            <DatePicker id={`claim-date-${key}`} name="paidOn" defaultValue={today()} required max="today" aria-label="Дата на плащане" />
             <FilterSelect name="method" value="bank" options={methodOptions} className="col-span-2 sm:col-span-1" />
           </div>
           <div className="flex flex-wrap items-center gap-2">

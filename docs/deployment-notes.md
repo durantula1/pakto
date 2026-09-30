@@ -57,6 +57,18 @@
   ```
 - `client_max_body_size 20m;`: подписът се праща в server action (до ~400 KB). Прикачените файлове отиват директно в Supabase, но лимитът трябва да е с резерв. Формата `/contact` праща до 3 снимки по 5 MB (общо до 10 MB) в server action, затова лимитът не бива да пада под 12m.
 - Server Actions: ако домейнът зад proxy е различен, провери `experimental.serverActions.allowedOrigins` в `next.config.ts`.
+- **HSTS се слага тук**, не в Next.js, защото https свършва в nginx. `X-Frame-Options`, `nosniff` и `Referrer-Policy` вече идват от `next.config.ts` за всички страници:
+  ```nginx
+  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+  ```
+  Първо провери, че всички поддомейни са на https; `includeSubDomains` не се връща лесно назад.
+- **Лимити срещу злоупотреби** (приложението има свои само за кодовете, съобщенията, линковете и `/contact`). В `http {}`:
+  ```nginx
+  limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
+  limit_req_zone $binary_remote_addr zone=portal:10m rate=30r/m;
+  ```
+  и в `server {}` `location` блокове за `/sign-in`, `/sign-up`, `/forgot-password` (`zone=auth burst=5 nodelay`) и `/access/` (`zone=portal burst=10 nodelay`). Server Actions минават като POST към същия път, така че лимитът ги хваща.
+- Пред VPS-а е добре да има Cloudflare (безплатният план спира обемни атаки). Тогава реалният IP на клиента идва в `CF-Connecting-IP`: nginx трябва да го приеме само от IP адресите на Cloudflare (`set_real_ip_from` + `real_ip_header CF-Connecting-IP`), иначе в доказателството за решението ще е IP-то на Cloudflare.
 
 ---
 
@@ -86,6 +98,7 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
   - Site URL = новият `NEXT_PUBLIC_APP_URL`.
   - Redirect URLs: добави `https://<домейн>/auth/callback`. Ползва се при регистрация, забравена парола и смяна на имейл.
 - Имейл шаблоните на Supabase Auth, ако са персонализирани, да сочат към новия домейн.
+- **Authentication → Rate Limits**: провери и запиши тук стойностите за вход, регистрация, имейли и OTP по IP. Входът разчита на тях срещу отгатване на пароли; приложението няма свой лимит за паролите. „Изпрати линка пак“ при вход също минава през лимита за имейли на Supabase.
 - Storage buckets (вече създадени с миграции, нищо ръчно):
   - `change-attachments`: private, снимки и PDF към оферти;
   - `decision-signatures`: private, подписи на клиенти (добавен на 24.09.2026);
@@ -119,6 +132,8 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
 ---
 
 ## Дневник на промените в този файл
+
+- **29.09.2026**: хедъри за сигурност на всички страници (`next.config.ts`); HSTS, лимити в nginx и Cloudflare описани в раздел 3; проверка на лимитите в Supabase Auth (раздел 5). Без нови env, cron или bucket.
 
 - **28.09.2026**: форма „Връзка с нас“ (`/contact`). Нова env `SUPPORT_EMAIL`: адресът, на който идват запитванията (**задължително се настройва при миграцията**). Server actions и proxy приемат до 12 MB заради снимките. Няма нови таблици, cron и buckets.
 

@@ -166,12 +166,13 @@ export async function searchProjectOptions(context: TenantContext, query: string
     .limit(limit);
 }
 
-export async function getProjectOption(context: TenantContext, projectId: string | undefined) {
+/** `activeOnly`: a completed or archived project is not offered for new work. */
+export async function getProjectOption(context: TenantContext, projectId: string | undefined, { activeOnly = false } = {}) {
   if (!projectId || !/^[0-9a-f-]{36}$/i.test(projectId)) return null;
   const [project] = await getDatabase()
     .select({ id: projects.id, name: projects.name, siteAddress: projects.siteAddress })
     .from(projects)
-    .where(and(visibleProjectFilter(context), eq(projects.id, projectId)))
+    .where(and(visibleProjectFilter(context), eq(projects.id, projectId), activeOnly ? eq(projects.status, "active") : undefined))
     .limit(1);
   return project ?? null;
 }

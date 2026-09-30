@@ -99,3 +99,64 @@ export async function applyApprovedOffer(tx: Transaction, input: { organizationI
   }));
   await tx.insert(timelineEvents).values({ organizationId: input.organizationId, projectId: input.projectId, changeOrderId: input.offerId, revisionId: input.revisionId, actorType: "system", eventType: "payment_plan_created", visibility: "client", metadata: { count: terms.length } });
 }
+
+/**
+ * An approved change moves the money the client still owes, so the plan follows it: a credit comes
+ * off the unpaid installments starting from the last, an increase goes to the last unpaid one (or
+ * becomes a new installment when everything is settled). Installments with a receipt or a claim
+ * are never touched.
+ */
+export async function applyApprovedChange(tx: Transaction, input: { organizationId: string; projectId: string; changeOrderId: string; offerId: string; revisionId: number; approvedAt: Date }) {
+  const [revision] = await tx.select({ total: changeOrderRevisions.total, currency: changeOrderRevisions.currency, title: changeOrderRevisions.title, createdBy: changeOrderRevisions.createdBy })
+    .from(changeOrderRevisions).where(eq(changeOrderRevisions.id, input.revisionId)).limit(1);
+  if (!revision) return;
+  const delta = cents(revision.total);
+  if (delta === 0n) return;
+
+  const rows = await tx.select({
+    id: paymentInstallments.id,
+    amount: paymentInstallments.amount,
+    dueOn: paymentInstallments.dueOn,
+    touched: sql<boolean>`exists (select 1 from app.project_receipts r where r.installment_id = app.payment_installments.id) or exists (select 1 from app.payment_claims c where c.installment_id = app.payment_installments.id)`,
+  }).from(paymentInstallments)
+    .where(and(eq(paymentInstallments.projectId, input.projectId), eq(paymentInstallments.offerId, input.offerId)))
+    .orderBy(asc(paymentInstallments.dueOn), asc(paymentInstallments.createdAt));
+  const open = rows.filter((row) => !row.touched);
+  if (!rows.length) return; // no plan yet: nothing to adjust
+
+  let left = delta;
+  if (delta > 0n) {
+    const last = open[open.length - 1];
+    if (last) {
+      await tx.update(paymentInstallments).set({ amount: fromCents(cents(last.amount) + delta), updatedAt: new Date() }).where(eq(paymentInstallments.id, last.id));
+      left = 0n;
+    } else {
+      await tx.insert(paymentInstallments).values({
+        organizationId: input.organizationId, projectId: input.projectId, offerId: input.offerId, kind: "other",
+        title: `По „${revision.title}“`, amount: fromCents(delta), currency: revision.currency,
+        dueOn: rows[rows.length - 1]!.dueOn > sofiaDay.format(input.approvedAt) ? rows[rows.length - 1]!.dueOn : sofiaDay.format(input.approvedAt),
+        createdBy: revision.createdBy,
+      });
+      left = 0n;
+    }
+  } else {
+    for (const row of [...open].reverse()) {
+      if (left === 0n) break;
+      const amount = cents(row.amount);
+      const take = -left < amount ? -left : amount;
+      if (take === amount) await tx.delete(paymentInstallments).where(eq(paymentInstallments.id, row.id));
+      else await tx.update(paymentInstallments).set({ amount: fromCents(amount - take), updatedAt: new Date() }).where(eq(paymentInstallments.id, row.id));
+      left += take;
+    }
+  }
+
+  await tx.insert(timelineEvents).values({ organizationId: input.organizationId, projectId: input.projectId, changeOrderId: input.changeOrderId, revisionId: input.revisionId, actorType: "system", eventType: "payment_plan_adjusted", visibility: "client", metadata: { delta: fromCents(delta), unassigned: fromCents(left) } });
+  if (left !== 0n) {
+    await notifyProjectStaff(tx, {
+      organizationId: input.organizationId, projectId: input.projectId, eventType: "payment_plan_review",
+      title: "Провери платежния план",
+      body: "Одобреното намаление е по-голямо от неплатените вноски. Останалата част е вече платена и не е върната автоматично.",
+      href: `/app/projects/${input.projectId}?tab=payments`,
+    });
+  }
+}

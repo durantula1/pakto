@@ -4,6 +4,7 @@ import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import {
@@ -47,6 +48,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
     const email = z.email("Невалиден имейл.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
     const preset = z.enum(["field", "office", "owner"]).parse(formData.get("preset"));
     const scope = preset === "owner" ? { allProjects: false, projectIds: [] } : await projectScope(context.organizationId, formData);
+    if (preset !== "owner" && !scope.allProjects && !scope.projectIds.length) return { error: "Избери поне един обект или „Всички обекти“." };
     const db = getDatabase();
     if (preset === "owner") {
       const owners = await db.select({ userId: organizationMembers.userId }).from(organizationMembers)
@@ -85,7 +87,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
 
 async function sendInviteEmail(input: { to: string; link: string; organizationName: string; inviterName: string | null; roleLabel: string; expiresAt: Date }) {
   const who = input.inviterName ? `${input.inviterName} от ${input.organizationName}` : input.organizationName;
-  const until = input.expiresAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" });
+  const until = input.expiresAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }).replace(/\.$/, "");
   await sendEmail({
     to: input.to,
     subject: `${input.organizationName} те кани в Pakto`,

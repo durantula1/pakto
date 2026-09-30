@@ -16,6 +16,7 @@ import { listRevisionAttachments } from "@/modules/change-orders/attachment-data
 import { documentCode } from "@/modules/change-orders/labels";
 import { getChangeOrder, getChangeOrderTitle, listAbsorbableChanges } from "@/modules/change-orders/queries";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
+import { orForbidden } from "@/lib/authz/page-access";
 
 export async function generateMetadata({ params }: PageProps<"/app/offers/[changeOrderId]/edit">): Promise<Metadata> {
   const [{ changeOrderId }, context] = await Promise.all([params, requireTenantContext()]);
@@ -32,7 +33,7 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
   const path = `/app/offers/${change.id}`;
   // The access check runs with the reads; nothing is rendered unless it passes.
   const [member, attachments, catalog, absorbable] = await Promise.all([
-    requireProjectCapability(context, change.projectId, "view"),
+    orForbidden(requireProjectCapability(context, change.projectId, "view")),
     listRevisionAttachments(change.revisionId),
     isOffer ? listCatalog(context.organizationId) : Promise.resolve([]),
     isOffer ? listAbsorbableChanges(context.organizationId, change.id) : Promise.resolve([]),

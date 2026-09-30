@@ -42,7 +42,7 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, vari
   const links = [
     { id: "/app/settings", label: "Профил и вход", icon: CircleUserRound },
     { id: "/app/settings/notifications", label: "Известия", icon: Bell },
-    { id: "/app/settings/privacy", label: "Данни и акаунт", icon: ShieldCheck },
+    { id: "/app/settings/privacy", label: "Данни и профил", icon: ShieldCheck },
     ...(owner ? [{ id: "/app/settings/organization", label: "Фирма", icon: Building2 }] : []),
   ];
 

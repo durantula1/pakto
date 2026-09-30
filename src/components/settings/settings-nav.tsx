@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const personal = [
   { href: "/app/settings", label: "Профил и вход", icon: CircleUserRound },
   { href: "/app/settings/notifications", label: "Известия", icon: Bell },
-  { href: "/app/settings/privacy", label: "Данни и акаунт", icon: ShieldCheck },
+  { href: "/app/settings/privacy", label: "Данни и профил", icon: ShieldCheck },
 ];
 const company = [{ href: "/app/settings/organization", label: "Фирма", icon: Building2 }];
 

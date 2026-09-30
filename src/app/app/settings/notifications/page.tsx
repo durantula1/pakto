@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AutoSaveForm, AutoSaveStatus, SettingsSwitch } from "@/components/settings/auto-save-form";
 import { SettingsGroup } from "@/components/settings/settings-group";
 import { SwitchGroupToggle } from "@/components/settings/switch-group-toggle";
+import { can } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { emailEventGroups } from "@/modules/notifications/events";
 import { updateNotificationPreferencesAction } from "@/modules/notifications/preference-actions";
@@ -12,7 +13,9 @@ export const metadata: Metadata = { title: "Известия · Настройк
 
 export default async function NotificationSettingsPage() {
   const context = await requireTenantContext();
-  const preferences = await getEmailPreferences(context.userId, context.organizationId);
+  const seesPayments = can(context, "payments.record") || can(context, "finance.view");
+  // Someone who cannot see payments is not offered emails about them.
+  const preferences = (await getEmailPreferences(context.userId, context.organizationId)).filter((preference) => seesPayments || !preference.eventType.startsWith("payment_"));
   const groups = (Object.keys(emailEventGroups) as (keyof typeof emailEventGroups)[])
     .map((key) => ({ key, ...emailEventGroups[key], items: preferences.filter((preference) => preference.group === key) }));
 

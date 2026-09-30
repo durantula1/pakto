@@ -159,7 +159,7 @@ export function AuthStage() {
             code="ПР-001"
             kicker="Промяна"
             title="Спрямо офертата"
-            rows={[{ name: "Допълнение", meta: "+2 дни", amount: "+320" }]}
+            rows={[{ name: "Допълнителна работа", meta: "+2 дни", amount: "+320" }]}
             total="+320 EUR"
             approved
             transform="translate(-50%, -50%) translate3d(3rem, -1rem, 5rem) rotateZ(8deg)"

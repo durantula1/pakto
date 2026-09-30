@@ -5,6 +5,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import { organizationMembers, organizations, profiles, projectMembers, projects, staffNotifications } from "@/db/schema";
@@ -168,7 +169,7 @@ export async function acceptLegalDocumentsAction(): Promise<ActionResult> {
 }
 
 async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyName: string | null) {
-  const date = deleteOn.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" });
+  const date = deleteOn.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }).replace(/\.$/, "");
   const link = `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/sign-in`;
   const what = companyName ? `Профилът ти и фирмата „${companyName}“ с всички обекти, оферти и плащания ще бъдат изтрити` : "Профилът ще бъде изтрит";
   await sendEmail({

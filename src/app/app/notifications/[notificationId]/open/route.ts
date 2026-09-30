@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
 import { openNotification } from "@/modules/notifications/queries";

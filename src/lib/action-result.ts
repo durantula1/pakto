@@ -1,6 +1,9 @@
 import "server-only";
 
 import { unstable_rethrow } from "next/navigation";
+import { z } from "zod";
+
+import "@/lib/zod-messages";
 
 export type ActionResult = { error?: string };
 
@@ -15,6 +18,8 @@ export async function attempt(run: () => Promise<unknown>, fallback: string): Pr
     return {};
   } catch (cause) {
     unstable_rethrow(cause);
+    // A form-validation failure shows the first rule's own message, not zod's JSON dump.
+    if (cause instanceof z.ZodError) return { error: cause.issues[0]?.message ?? fallback };
     return { error: cause instanceof Error ? cause.message : fallback };
   }
 }

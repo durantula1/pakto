@@ -21,7 +21,7 @@ export default async function NewChangePage({
   ]);
   const [anyProjects, defaultProject, organization] = await Promise.all([
     hasProjects(context),
-    getProjectOption(context, typeof projectId === "string" ? projectId : undefined),
+    getProjectOption(context, typeof projectId === "string" ? projectId : undefined, { activeOnly: true }),
     getDatabase()
       .select({ defaultTaxRate: organizations.defaultTaxRate })
       .from(organizations)

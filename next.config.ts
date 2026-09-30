@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   experimental: {
+    authInterrupts: true,
     // Hover upgrades a partial prefetch to the full dynamic payload, so the click paints from cache.
     dynamicOnHover: true,
     // CSS arrives inside the HTML, so the first paint does not wait for a stylesheet round trip
@@ -36,6 +37,14 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Every page: no framing by other sites (clickjacking), no MIME sniffing, no full URLs to other
+    // sites. HSTS is set by nginx on the VPS (docs/deployment-notes.md), where https ends.
+    const siteHeaders = [
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+    ];
+    // Later entries win for the same header, so the portal keeps its stricter values.
     const portalHeaders = [
       { key: "Cache-Control", value: "private, no-store, max-age=0" },
       { key: "Referrer-Policy", value: "no-referrer" },
@@ -43,6 +52,7 @@ const nextConfig: NextConfig = {
       { key: "X-Content-Type-Options", value: "nosniff" },
     ];
     return [
+      { source: "/:path*", headers: siteHeaders },
       { source: "/portal/:path*", headers: portalHeaders },
       { source: "/access/:path*", headers: portalHeaders },
     ];

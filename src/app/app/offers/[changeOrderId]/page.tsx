@@ -36,6 +36,7 @@ import { loadSignature } from "@/modules/change-portal/signature";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
 import { changesCardTitle, documentAreas, documentLayoutClassName, documentTabLabels } from "./document-skeleton";
 import { formatAmount } from "@/lib/money";
+import { orForbidden } from "@/lib/authz/page-access";
 
 const CHANGES_PAGE_SIZE = 10;
 
@@ -52,7 +53,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const change = await getChangeOrder(context.organizationId, changeOrderId, {
     eventsBefore,
     extra: (head) => Promise.all([
-      requireProjectCapability(context, head.projectId, "view"),
+      orForbidden(requireProjectCapability(context, head.projectId, "view")),
       head.contactId ? getActivePortalLink(head.projectId, head.contactId) : Promise.resolve(null),
       head.documentKind === "offer" ? countChangeOrders({ context, baselineOfferId: changeOrderId, documentKind: "change" }) : Promise.resolve(0),
       listRevisionAttachments(head.revisionId),

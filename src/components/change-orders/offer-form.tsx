@@ -38,6 +38,40 @@ export type OfferFormInitial = {
   paymentTerms?: Array<{ title: string; percent: number; dueTrigger: "on_approval" | "on_stage" | "on_completion" | "on_date"; dueOn?: string | null; stage?: number | null }>;
 };
 
+/** The unsent form kept in this browser, so a lost session or a closed tab does not lose the work. */
+type OfferDraft = {
+  v: 1;
+  project: ProjectOption | null;
+  title: string;
+  description: string;
+  lines: Line[];
+  deadline: string;
+  scheduleRows: ScheduleRow[];
+  termRows: TermRow[];
+  taxRateValue: string;
+  discountType: "" | DiscountType;
+  discountValue: string;
+};
+
+function readDraft(key: string): OfferDraft | null {
+  try {
+    const saved = window.localStorage.getItem(key);
+    const draft = saved ? (JSON.parse(saved) as OfferDraft) : null;
+    return draft?.v === 1 ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(key: string, draft: OfferDraft | null) {
+  try {
+    if (draft) window.localStorage.setItem(key, JSON.stringify(draft));
+    else window.localStorage.removeItem(key);
+  } catch {
+    // Private windows and full storage: the form still works, it just is not kept.
+  }
+}
+
 export function OfferForm({
   defaultProject,
   defaultTaxRate,
@@ -91,6 +125,54 @@ export function OfferForm({
 
   const payload = linesPayload(lines);
 
+  // A template or a duplicated offer fills the form itself; only a blank form picks up a draft.
+  const draftKey = `pakto:offer-draft:v1:${defaultProject?.id ?? "new"}`;
+  const [restored, setRestored] = useState(false);
+  // Remounts the uncontrolled fields (project, discount) after a draft is restored.
+  const [formKey, setFormKey] = useState(0);
+  useEffect(() => {
+    if (initial) return;
+    const frame = window.requestAnimationFrame(() => {
+      const draft = readDraft(draftKey);
+      if (!draft) return;
+      setProject(draft.project ?? defaultProject ?? null);
+      setTitle(draft.title);
+      setDescription(draft.description);
+      if (draft.lines.length) setLines(draft.lines);
+      setDeadline(draft.deadline);
+      setScheduleRows(draft.scheduleRows);
+      setTermRows(draft.termRows);
+      setTaxRateValue(draft.taxRateValue);
+      setDiscountType(draft.discountType);
+      setDiscountValue(draft.discountValue);
+      setFormKey((key) => key + 1);
+      setRestored(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+    // Once per mount: the key and the prefill do not change while the form is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const touched = !!(title.trim() || description.trim() || deadline || lines.some((line) => line.description.trim() || line.unitPrice));
+  useEffect(() => {
+    if (!touched) return;
+    const timer = window.setTimeout(() => writeDraft(draftKey, {
+      v: 1, project, title, description, lines, deadline, scheduleRows, termRows, taxRateValue, discountType, discountValue,
+    }), 400);
+    return () => window.clearTimeout(timer);
+    // `state.error`: a failed save writes the draft again after the submit cleared it.
+  }, [draftKey, touched, project, title, description, lines, deadline, scheduleRows, termRows, taxRateValue, discountType, discountValue, state.error]);
+
+  function submit(formData: FormData) {
+    writeDraft(draftKey, null);
+    action(formData);
+  }
+
+  function discardDraft() {
+    writeDraft(draftKey, null);
+    window.location.reload();
+  }
+
   function openPreview() {
     if (!projectId) return setLocalError("Избери обект.");
     if (title.trim().length < 3) return setLocalError("Добави кратко заглавие.");
@@ -117,6 +199,10 @@ export function OfferForm({
   return (
     <div>
       {initial ? <p className="mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">Попълнено от <span className="font-semibold">{initial.source}</span>. Провери обекта, цените и срока, преди да продължиш.</p> : null}
+      {restored ? <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+        <p>Върнахме незавършената оферта от този браузър.</p>
+        <Button type="button" variant="ghost" className="h-8 px-2" onPress={discardDraft}>Започни отначало</Button>
+      </div> : null}
       <ol className="mb-4 flex items-center gap-2 text-sm">
         <li className={step === "edit" ? "font-semibold" : "text-muted-foreground"}>
           1. Оферта
@@ -141,6 +227,7 @@ export function OfferForm({
                   Обект
                 </label>
                 <ProjectCombobox
+                  key={formKey}
                   id="projectId"
                   defaultValue={project}
                   placeholder="Избери обект"
@@ -177,11 +264,11 @@ export function OfferForm({
 
           <section className="grid gap-4 rounded-2xl border bg-card p-4 md:grid-cols-2 md:gap-6">
             <VatRateField value={taxRateValue} onChange={setTaxRateValue} />
-            <DiscountField defaultType={discountType} defaultValue={discountValue} onChange={(type, value) => { setDiscountType(type); setDiscountValue(value); }} />
+            <DiscountField key={formKey} defaultType={discountType} defaultValue={discountValue} onChange={(type, value) => { setDiscountType(type); setDiscountValue(value); }} />
           </section>
 
           <label className="block rounded-2xl border bg-card p-4 text-sm font-medium">Договорен краен срок
-            <div className="mt-2"><DatePicker aria-label="Договорен краен срок" required value={deadline} onChange={setDeadline} /></div>
+            <div className="mt-2"><DatePicker aria-label="Договорен краен срок" required min="today" value={deadline} onChange={setDeadline} /></div>
           </label>
 
           <section className="rounded-2xl border bg-card p-4">
@@ -224,14 +311,14 @@ export function OfferForm({
             </div>
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">
-            {deadline ? `Срок до ${deadline}` : "Посочи договорен краен срок"}
+            {deadline ? `Срок до ${deadline.split("-").reverse().join(".")}` : "Посочи договорен краен срок"}
           </p>
         </aside>
       </div>
       ) : null}
 
       {step === "preview" ? (
-        <form action={action}>
+        <form noValidate action={submit}>
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="description" value={description} />

@@ -194,6 +194,11 @@ export const organizations = appSchema.table(
       .default("20.00"),
     portalSessionDays: integer("portal_session_days").notNull().default(30),
     offerValidityDays: integer("offer_validity_days").notNull().default(14),
+    /** Days of silence before the client gets a reminder; 0 = never. */
+    clientNudgeAfterDays: integer("client_nudge_after_days").notNull().default(3),
+    /** Days before an offer expires that the client is warned; 0 = never. */
+    clientExpiryWarningDays: integer("client_expiry_warning_days").notNull().default(2),
+    clientScheduleDigestEnabled: boolean("client_schedule_digest_enabled").notNull().default(true),
     stepUpThreshold: numeric("step_up_threshold", {
       precision: 14,
       scale: 2,

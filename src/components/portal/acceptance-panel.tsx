@@ -36,7 +36,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
     <p id="acceptance" className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-card px-4 py-3 text-sm">
       <Check className="size-4 shrink-0 text-tile-mint-foreground" />
       <span className="font-semibold">Работата е приета</span>
-      <span className="text-muted-foreground">· подписано от {acceptance.typedName} на {dateTime.format(acceptance.createdAt)}</span>
+      <span className="text-muted-foreground">· приета от {acceptance.typedName} на {dateTime.format(acceptance.createdAt)}</span>
     </p>
   );
 
@@ -84,10 +84,10 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
                   maxLength={160}
                   autoComplete="name"
                   placeholder={signerName}
-                  aria-label="Вашето име като подпис"
+                  aria-label="Вашето име"
                   className="w-full border-0 border-b-2 border-dashed border-foreground/30 bg-transparent px-0.5 pb-1 text-lg italic outline-none placeholder:text-muted-foreground/50 focus:border-solid focus:border-primary"
                 />
-                <span className="mt-1 block text-xs text-muted-foreground">Име и фамилия · важи като подпис</span>
+                <span className="mt-1 block text-xs text-muted-foreground">Име и фамилия · потвърждава приемането</span>
               </label>
               <ActionSubmit className="h-11 shrink-0 px-5 sm:mb-5"><Check className="size-4" /> Приемам</ActionSubmit>
             </div>

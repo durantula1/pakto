@@ -14,7 +14,7 @@ const ALL = "all";
  * Client picker that searches on the server by name, email or phone. Posts the id through `name`
  * when set; `allLabel` adds an "all clients" entry for list filters.
  */
-export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, className, inputClassName, onChange }: {
+export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, className, inputClassName, onChange, excludeProjectId }: {
   name?: string;
   id?: string;
   defaultValue?: ClientOption | null;
@@ -23,6 +23,8 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
   className?: string;
   inputClassName?: string;
   onChange?: (client: ClientOption | null) => void;
+  /** Leaves out clients who already follow this project. */
+  excludeProjectId?: string;
 }) {
   const [selected, setSelected] = useState<ClientOption | null>(defaultValue ?? null);
   const selectedLabel = selected?.name ?? allLabel ?? "";
@@ -38,13 +40,13 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
     const current = ++request.current;
     const timer = setTimeout(() => {
       setLoading(true);
-      searchClientsAction(term)
+      searchClientsAction(term, excludeProjectId)
         .then((rows) => { if (current === request.current) setOptions(rows); })
         .catch(() => { if (current === request.current) setOptions([]); })
         .finally(() => { if (current === request.current) setLoading(false); });
     }, term ? 250 : 0);
     return () => clearTimeout(timer);
-  }, [term, activated]);
+  }, [term, activated, excludeProjectId]);
 
   const items: ClientOption[] = [
     ...(allLabel ? [{ id: ALL, name: allLabel, email: null, phone: null, projects: -1 }] : []),

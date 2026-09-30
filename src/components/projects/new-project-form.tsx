@@ -37,11 +37,11 @@ export function NewProjectForm({ defaultClient = null }: { defaultClient?: Clien
 
       <div className="border-t pt-5">
         <p className="font-medium">Клиент, който одобрява</p>
-        <p className="text-sm text-muted-foreground">Получава защитен линк към офертите, без да създава акаунт.</p>
+        <p className="text-sm text-muted-foreground">Получава защитен линк към офертите, без да създава профил.</p>
       </div>
       <div role="radiogroup" aria-label="Клиент" className={segmentGroupClassName}>
-        <label className={segmentClassName}><input type="radio" name="clientMode" value="new" checked={mode === "new"} onChange={() => setMode("new")} className="sr-only" />Нов клиент</label>
-        <label className={segmentClassName}><input type="radio" name="clientMode" value="existing" checked={mode === "existing"} onChange={() => setMode("existing")} className="sr-only" />Съществуващ клиент</label>
+        <label className={segmentClassName}><input type="radio" name="clientMode" value="new" checked={mode === "new"} onChange={() => setMode("new")} aria-label="Нов клиент" className="sr-only" />Нов клиент</label>
+        <label className={segmentClassName}><input type="radio" name="clientMode" value="existing" checked={mode === "existing"} onChange={() => setMode("existing")} aria-label="Съществуващ клиент" className="sr-only" />Съществуващ клиент</label>
       </div>
       {mode === "existing" ? (
         <Field>

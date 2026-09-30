@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, desc, eq, isNotNull, isNull, lt, max, sql } from "drizzle-orm";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import {
@@ -29,7 +30,8 @@ import { hashCanonicalJson } from "@/lib/crypto/canonical-json";
 import { createStablePortalToken } from "@/lib/crypto/portal-token";
 import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
-import { getProjectState } from "@/modules/projects/state";
+import { cents, formatCents, getProjectState, type OfferState, type ProjectState } from "@/modules/projects/state";
+import { sofiaToday } from "@/modules/finance/queries";
 import { summarizeRevisionDiff, type RevisionDiff } from "@/modules/change-orders/revision-diff";
 import { money, priceOffer, type Discount } from "@/modules/change-orders/pricing";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
@@ -74,7 +76,7 @@ const offerSchema = z.object({
   discountType: z.union([z.literal(""), z.enum(["percent", "amount"])]).optional(),
   discountValue: z.union([z.literal(""), z.coerce.number().min(0).max(999999999)]).optional(),
   scheduleImpactType: z.literal("none").default("none"),
-  agreedDeadline: z.iso.date(),
+  agreedDeadline: z.iso.date("Избери краен срок."),
   lines: z
     .string()
     .transform((value, context) => {
@@ -141,6 +143,22 @@ function parseDiscount(data: { discountType?: "" | "percent" | "amount"; discoun
 
 function discountColumns(discount: Discount, amount: number) {
   return { discountType: discount?.type ?? null, discountValue: discount ? discount.value.toFixed(2) : null, discountAmount: amount.toFixed(2) };
+}
+
+/**
+ * A credit cannot take an offer below zero: at most what is agreed in force, less the other
+ * credits that already wait for the client. Returns the error to show, or null.
+ */
+function creditOverLimit(offer: OfferState | undefined, pending: ProjectState["pendingDocuments"], creditTotal: number, exceptChangeOrderId?: string) {
+  if (!offer?.inForce || creditTotal >= 0) return null;
+  const waiting = pending
+    .filter((item) => item.kind === "change" && item.baselineOfferId === offer.id && item.id !== exceptChangeOrderId)
+    .map((item) => cents(item.total))
+    .reduce((sum, total) => sum + (total < 0n ? total : 0n), 0n);
+  const available = offer.contractMinor + waiting;
+  if (cents(creditTotal.toFixed(2)) + available >= 0n) return null;
+  const limit = formatCents(available > 0n ? available : 0n, offer.currency);
+  return waiting ? `Намалението е по-голямо от договореното, заедно с другите чакащи намаления. Най-много: ${limit} с ДДС.` : `Намалението е по-голямо от договореното. Най-много: ${limit} с ДДС.`;
 }
 
 function deadlineDelta(current: string | null, next: string | null | undefined) {
@@ -220,6 +238,8 @@ export async function createChangeOrderAction(
   const taxAmount = money(authoritativeSubtotal * (data.taxRate / 100));
   const unsignedTotal = money(authoritativeSubtotal + taxAmount);
   const total = data.changeKind === "credit" ? -unsignedTotal : unsignedTotal;
+  const overLimit = creditOverLimit(offerState, projectState!.pendingDocuments, total);
+  if (overLimit) return { error: overLimit };
 
   const changeOrderId = await database.transaction(async (transaction) => {
     await transaction.execute(
@@ -473,8 +493,9 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   if (document.documentKind === "offer" && (!data.agreedDeadline || !data.lines.length)) return { error: "Офертата изисква краен срок и поне една услуга или материал." };
   if (document.documentKind === "change" && data.scheduleImpactType === "days" && !data.agreedDeadline) return { error: "Посочи нов краен срок." };
   let scheduleDays: number | null = null;
+  const projectState = document.documentKind === "change" ? await getProjectState(context.organizationId, document.projectId) : null;
+  const baseline = projectState?.offers.find((offer) => offer.id === document.baselineOfferId);
   if (document.documentKind === "change" && data.scheduleImpactType === "days") {
-    const baseline = (await getProjectState(context.organizationId, document.projectId))?.offers.find((offer) => offer.id === document.baselineOfferId);
     try { scheduleDays = deadlineDelta(baseline?.deadline ?? null, data.agreedDeadline); }
     catch (error) { return { error: error instanceof Error ? error.message : "Невалиден срок." }; }
   }
@@ -485,6 +506,8 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   const subtotal = document.documentKind === "offer" ? offerPrice.subtotal : data.changeKind === "no_cost" || data.changeKind === "schedule_only" ? 0 : money(data.subtotal);
   const taxAmount = money(subtotal * data.taxRate / 100);
   const total = document.documentKind === "change" && data.changeKind === "credit" ? -money(subtotal + taxAmount) : money(subtotal + taxAmount);
+  const overLimit = projectState ? creditOverLimit(baseline, projectState.pendingDocuments, total, data.changeOrderId) : null;
+  if (overLimit) return { error: overLimit };
   await db.transaction(async (tx) => {
     const [current] = await tx.select({ id: changeOrderRevisions.id, status: changeOrderRevisions.status, revisionNumber: changeOrderRevisions.revisionNumber, currency: changeOrderRevisions.currency })
       .from(changeOrders).innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
@@ -534,11 +557,49 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
 
 const sendSchema = z.object({ changeOrderId: z.uuid() });
 
-export async function sendChangeOrderAction(formData: FormData) {
+export async function sendChangeOrderAction(formData: FormData): Promise<ActionResult> {
   const { changeOrderId } = sendSchema.parse(Object.fromEntries(formData));
-  const context = await requireTenantContext();
-  const email = await sendCurrentRevision(context, changeOrderId);
+  let email: SentEmail = "sent";
+  const result = await attempt(async () => {
+    const context = await requireTenantContext();
+    email = await sendCurrentRevision(context, changeOrderId);
+  }, "Не беше изпратено. Опитай отново.");
+  if (result.error) return result;
   redirect(`/app/offers/${changeOrderId}?notice=${sentNotice[email]}`);
+}
+
+/**
+ * What a draft needs before the client sees it, besides what the form already checks: dates that
+ * are not past yet (a draft can wait for days) and a credit that still fits the offer.
+ */
+async function assertSendable(organizationId: string, changeOrderId: string) {
+  const database = getDatabase();
+  const [revision] = await database.select({
+    id: changeOrderRevisions.id,
+    projectId: changeOrders.projectId,
+    documentKind: changeOrders.documentKind,
+    baselineOfferId: changeOrders.baselineOfferId,
+    agreedDeadline: changeOrderRevisions.agreedDeadline,
+    scheduleImpactType: changeOrderRevisions.scheduleImpactType,
+    total: changeOrderRevisions.total,
+  }).from(changeOrders)
+    .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
+    .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, organizationId), eq(changeOrderRevisions.status, "draft")))
+    .limit(1);
+  if (!revision) return;
+  const today = sofiaToday();
+  const setsDeadline = revision.documentKind === "offer" || revision.scheduleImpactType === "days";
+  if (setsDeadline && revision.agreedDeadline && revision.agreedDeadline < today) throw new Error("Крайният срок е минал. Избери нова дата.");
+  const terms = await database.select({ title: changeOrderPaymentTerms.title, dueOn: changeOrderPaymentTerms.dueOn })
+    .from(changeOrderPaymentTerms)
+    .where(and(eq(changeOrderPaymentTerms.revisionId, revision.id), eq(changeOrderPaymentTerms.dueTrigger, "on_date")));
+  const past = terms.find((term) => term.dueOn && term.dueOn < today);
+  if (past) throw new Error(`Датата на плащане „${past.title}“ е минала. Избери нова дата.`);
+  if (revision.documentKind === "change" && Number(revision.total) < 0) {
+    const state = await getProjectState(organizationId, revision.projectId);
+    const overLimit = state ? creditOverLimit(state.offers.find((offer) => offer.id === revision.baselineOfferId), state.pendingDocuments, Number(revision.total), changeOrderId) : null;
+    if (overLimit) throw new Error(overLimit);
+  }
 }
 
 type SentEmail = "sent" | "no-email" | "failed";
@@ -554,6 +615,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
   if (!target) throw new Error("Не намерихме тази оферта или промяна.");
   await requireProjectCapability(context, target.projectId, "send");
   await requireActiveProject(context.organizationId, target.projectId);
+  await assertSendable(context.organizationId, changeOrderId);
   const { projectId, ...sent } = await database.transaction(
     async (transaction) => {
       const [change] = await transaction

@@ -91,7 +91,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
                   <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectGroup>{triggers.map((trigger) => <SelectItem key={trigger} id={trigger}>{paymentTriggerLabels[trigger]}</SelectItem>)}</SelectGroup></SelectContent>
                 </Select>
-                {item.dueTrigger === "on_date" ? <DatePicker aria-label={`Дата на плащане ${index + 1}`} value={item.dueOn} onChange={(value) => update(item.key, { dueOn: value })} /> : null}
+                {item.dueTrigger === "on_date" ? <DatePicker aria-label={`Дата на плащане ${index + 1}`} min="today" value={item.dueOn} onChange={(value) => update(item.key, { dueOn: value })} /> : null}
                 {item.dueTrigger === "on_stage" ? (
                   <Select aria-label={`Етап за плащане ${index + 1}`} selectedKey={item.stage || null} onSelectionChange={(key) => update(item.key, { stage: String(key) })} placeholder="Избери етап">
                     <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>

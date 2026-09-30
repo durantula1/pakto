@@ -111,7 +111,8 @@ export async function getClient(context: TenantContext, clientId: string) {
 export type ClientOption = { id: string; name: string; email: string | null; phone: string | null; projects: number };
 
 /** For "Съществуващ клиент" when creating a project: clients the caller already works with. */
-export async function searchClientOptions(context: TenantContext, query: string): Promise<ClientOption[]> {
+/** `excludeProjectId`: leaves out clients who already follow that project. */
+export async function searchClientOptions(context: TenantContext, query: string, excludeProjectId?: string): Promise<ClientOption[]> {
   const term = query.trim().slice(0, 100);
   const db = getDatabase();
   return db
@@ -124,7 +125,12 @@ export async function searchClientOptions(context: TenantContext, query: string)
     })
     .from(clients)
     .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
-    .where(clientFilters(context, { query: term || undefined }))
+    .where(and(
+      clientFilters(context, { query: term || undefined }),
+      excludeProjectId && /^[0-9a-f-]{36}$/i.test(excludeProjectId)
+        ? sql`not exists (select 1 from app.project_contacts pc where pc.client_id = ${clients.id} and pc.project_id = ${excludeProjectId}::uuid and pc.removed_at is null)`
+        : undefined,
+    ))
     .groupBy(clients.id)
     .orderBy(desc(sql`max(${projects.updatedAt})`))
     .limit(20);

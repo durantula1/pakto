@@ -22,6 +22,7 @@ import { lastPage, PAGE_SIZE, pageHref, pageOffset, parsePage } from "@/lib/pagi
 import { approveOwnerChangeAction, revokeTeamInviteAction } from "@/modules/team/actions";
 import { countTeamMembers, getTeamCounters, listPendingOwnerRequests, listPendingTeamInvites, listTeamMembers } from "@/modules/team/queries";
 import { memberColumns, membersLabel, searchLabel } from "./team-sections";
+import { orForbidden } from "@/lib/authz/page-access";
 
 const roles: Record<string, string> = { owner: "Собственик", office: "Офис", field: "Терен", admin: "Администратор" };
 
@@ -29,7 +30,7 @@ export const metadata: Metadata = { title: "Екип" };
 
 export default async function TeamPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; page?: string }> }) {
   const context = await requireTenantContext();
-  await requireOwner(context);
+  await orForbidden(requireOwner(context));
   const query = await searchParams;
   const term = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
   const status = query.status === "all" || query.status === "disabled" ? query.status : "active";

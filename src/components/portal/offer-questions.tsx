@@ -17,7 +17,7 @@ const dateTime = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "shor
  * record, each marked with the version it was about, oldest first. Not a chat: no bubbles, no live
  * typing; a question never changes the offer's status (docs/chat-narrowing-plan.md, part 2).
  */
-export function OfferQuestions({ messages, projectPublicId, changeOrderId, organizationName, revisionNumber, waiting, canAsk }: {
+export function OfferQuestions({ messages, projectPublicId, changeOrderId, organizationName, revisionNumber, waiting, canAsk, isChange = false }: {
   messages: ThreadMessage[];
   projectPublicId: string;
   changeOrderId: string;
@@ -28,6 +28,8 @@ export function OfferQuestions({ messages, projectPublicId, changeOrderId, organ
   waiting: boolean;
   /** Asking is open (the project is not archived). */
   canAsk: boolean;
+  /** A change to an offer, not an offer: the words follow. */
+  isChange?: boolean;
 }) {
   const [state, send, sending] = useActionState(sendClientMessageAction, {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,12 +48,12 @@ export function OfferQuestions({ messages, projectPublicId, changeOrderId, organ
         <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-tile-blue text-tile-blue-foreground"><MessageCircleQuestion className="size-5" /></span>
         <div className="min-w-0 flex-1">
           <h2 id="questions-title" className="flex flex-wrap items-center gap-2 font-semibold">
-            Въпроси по тази оферта
+            {isChange ? "Въпроси по тази промяна" : "Въпроси по тази оферта"}
             {fresh ? <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">{fresh === 1 ? "1 нов отговор" : `${fresh} нови отговора`}</span> : null}
           </h2>
           <p className="text-sm text-muted-foreground">
             {waiting
-              ? "Нещо не е ясно? Питайте. Офертата продължава да чака решението ви."
+              ? `Нещо не е ясно? Питайте. ${isChange ? "Промяната" : "Офертата"} продължава да чака решението ви.`
               : messages.length ? "Въпросите и отговорите остават тук, до версията, за която се отнасят." : "Нещо не е ясно? Питайте тук. Въпросът и отговорът остават към тази версия."}
           </p>
         </div>

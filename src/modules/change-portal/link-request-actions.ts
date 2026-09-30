@@ -3,6 +3,7 @@
 import { and, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { after } from "next/server";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
 import { organizations, portalGrants, projectContacts, projects, timelineEvents } from "@/db/schema";

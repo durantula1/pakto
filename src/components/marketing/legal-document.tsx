@@ -6,6 +6,8 @@ import {
   type LegalDocument as LegalDocumentKey,
 } from "@/lib/legal";
 
+import { SectionNav } from "./section-nav";
+
 export type LegalSection = { id: string; title: string; body: React.ReactNode };
 
 const versionDate = new Intl.DateTimeFormat("bg-BG", {
@@ -59,24 +61,11 @@ export function LegalDocument({
             </time>
           </p>
 
-          <nav aria-label="Съдържание" className="mt-10 hidden lg:block">
-            <p className="text-sm font-bold">Съдържание</p>
-            <ol className="mt-3 border-l border-[#102b38]/15">
-              {sections.map((section, index) => (
-                <li key={section.id}>
-                  <a
-                    href={`#${section.id}`}
-                    className="flex gap-3 py-1.5 pl-4 text-sm text-[#46636e] transition-colors hover:text-[#102b38]"
-                  >
-                    <span className="font-mono text-xs leading-5 text-[#e85f48]">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    {section.title}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
+          <SectionNav
+            label="Съдържание"
+            variant="list"
+            items={sections.map(({ id, title }) => ({ id, label: title }))}
+          />
 
           <Link
             href={other.href}

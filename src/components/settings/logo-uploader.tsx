@@ -215,7 +215,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
             <div className="grid grid-cols-3 gap-0.5 rounded-lg bg-muted p-0.5">
               {LOGO_SIZES.map((option) => (
                 <label key={option} className="flex h-7 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium text-muted-foreground transition has-checked:bg-background has-checked:text-foreground has-checked:shadow-sm has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
-                  <input type="radio" name="logoSize" value={option} checked={size === option} onChange={() => changeSize(option)} className="sr-only" />
+                  <input type="radio" name="logoSize" value={option} aria-label={logoSizeLabels[option]} checked={size === option} onChange={() => changeSize(option)} className="sr-only" />
                   {logoSizeLabels[option]}
                 </label>
               ))}

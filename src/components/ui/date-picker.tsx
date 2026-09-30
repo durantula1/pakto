@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { parseDate, type DateValue } from "@internationalized/date";
+import { parseDate, today, type DateValue } from "@internationalized/date";
 import { CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,12 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium" }).format(new Date(year, month - 1, day));
 }
 
+/** "today" is the Bulgarian day, as the server checks it. */
+function bound(value: string | undefined) {
+  if (!value) return undefined;
+  return value === "today" ? today("Europe/Sofia") : parseDate(value);
+}
+
 export function DatePicker({
   name,
   id,
@@ -20,6 +26,8 @@ export function DatePicker({
   defaultValue = "",
   onChange,
   required,
+  min,
+  max,
   "aria-label": ariaLabel,
 }: {
   name?: string;
@@ -28,6 +36,10 @@ export function DatePicker({
   defaultValue?: string;
   onChange?: (value: string) => void;
   required?: boolean;
+  /** Earliest day that can be picked: an ISO date or "today". Earlier days are greyed out. */
+  min?: string;
+  /** Latest day that can be picked: an ISO date or "today". */
+  max?: string;
   "aria-label"?: string;
 }) {
   const [internal, setInternal] = useState(defaultValue);
@@ -51,7 +63,7 @@ export function DatePicker({
           {current ? formatDate(current) : "Избери дата"}
         </Button>
         <Popover className="w-auto p-0">
-          <Calendar aria-label={ariaLabel ?? "Дата"} value={selected} onChange={commit} />
+          <Calendar aria-label={ariaLabel ?? "Дата"} value={selected} onChange={commit} minValue={bound(min)} maxValue={bound(max)} />
         </Popover>
       </PopoverTrigger>
     </>

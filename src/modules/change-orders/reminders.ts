@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gt, inArray, isNull, lt, lte } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { changeOrderRevisions, changeOrders, organizations, projectContacts, projects, timelineEvents } from "@/db/schema";
@@ -9,12 +9,6 @@ import { getActivePortalLink } from "@/modules/change-portal/links";
 import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { emailClient, sendClientDigests } from "@/modules/notifications/client";
 import { formatAmount } from "@/lib/money";
-
-const DAY = 86_400_000;
-/** A client who has not decided this long after sending gets one gentle reminder. */
-const NUDGE_AFTER_DAYS = 3;
-/** Clients are warned this long before the offer stops being valid. */
-const WARN_BEFORE_DAYS = 2;
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
 
@@ -47,7 +41,7 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
   const url = await getActivePortalLink(document.projectId, contact.id);
   if (!url) return false;
   const kind = document.documentKind === "offer" ? "офертата" : "промяната";
-  const due = document.responseDueAt ? dateFormat.format(document.responseDueAt) : null;
+  const due = document.responseDueAt ? dateFormat.format(document.responseDueAt).replace(/\.$/, "") : null;
   const subject = reason === "expiring" && due
     ? `Напомняне: ${kind} „${document.title}“ е валидна до ${due}`
     : `Напомняне: ${kind} „${document.title}“ очаква Вашето решение`;
@@ -104,18 +98,20 @@ export async function runOfferReminders(now = new Date()) {
   result.expired = await expireOverdue(now);
   // Reminders only for active projects: nothing is sent after the work is closed.
 
-  const expiring = await pendingDocuments().where(and(open, eq(projects.status, "active"), isNull(changeOrderRevisions.expiryWarnedAt), gt(changeOrderRevisions.responseDueAt, now), lte(changeOrderRevisions.responseDueAt, new Date(now.getTime() + WARN_BEFORE_DAYS * DAY))));
+  const expiring = await pendingDocuments().where(and(open, eq(projects.status, "active"), isNull(changeOrderRevisions.expiryWarnedAt), gt(changeOrderRevisions.responseDueAt, now), gt(organizations.clientExpiryWarningDays, 0), sql`${changeOrderRevisions.responseDueAt} <= ${now.toISOString()}::timestamptz + make_interval(days => ${organizations.clientExpiryWarningDays})`));
+  const warnedNow = new Set<number>();
   for (const document of expiring) {
     const [claimed] = await db.update(changeOrderRevisions).set({ expiryWarnedAt: now })
       .where(and(eq(changeOrderRevisions.id, document.revisionId), isNull(changeOrderRevisions.expiryWarnedAt))).returning({ id: changeOrderRevisions.id });
-    if (claimed && await emailClientReminder(document, "expiring").catch(() => false)) result.warned++;
+    if (claimed && await emailClientReminder(document, "expiring").catch(() => false)) { result.warned++; warnedNow.add(document.revisionId); }
   }
 
-  const quiet = new Date(now.getTime() - NUDGE_AFTER_DAYS * DAY);
-  const stale = await pendingDocuments().where(and(open, eq(projects.status, "active"), lt(changeOrderRevisions.frozenAt, quiet), isNull(changeOrderRevisions.clientRemindedAt)));
+  const stale = await pendingDocuments().where(and(open, eq(projects.status, "active"), gt(organizations.clientNudgeAfterDays, 0), sql`${changeOrderRevisions.frozenAt} < ${now.toISOString()}::timestamptz - make_interval(days => ${organizations.clientNudgeAfterDays})`, isNull(changeOrderRevisions.clientRemindedAt)));
   for (const document of stale) {
     const [claimed] = await db.update(changeOrderRevisions).set({ clientRemindedAt: now })
       .where(and(eq(changeOrderRevisions.id, document.revisionId), isNull(changeOrderRevisions.clientRemindedAt))).returning({ id: changeOrderRevisions.id });
+    // The expiry warning already went today: one email is enough, the reminder is counted as sent.
+    if (claimed && warnedNow.has(document.revisionId)) continue;
     if (claimed && await emailClientReminder(document, "nudge").catch(() => false)) result.nudged++;
   }
 

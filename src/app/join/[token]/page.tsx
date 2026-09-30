@@ -7,6 +7,9 @@ import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { createClient } from "@/lib/supabase/server";
 import { acceptTeamInviteAction } from "@/modules/team/actions";
 import { getTeamInvite } from "@/modules/team/queries";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Покана в екип" };
 
 function Shell({ children }: { children: React.ReactNode }) {
   return <main className="grid min-h-dvh place-items-center bg-background p-4">

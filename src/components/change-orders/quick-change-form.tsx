@@ -28,6 +28,7 @@ import {
   type QuickChangeState,
 } from "@/modules/change-orders/actions";
 import { getProjectOfferOptionsAction } from "@/modules/change-orders/offer-options-actions";
+import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
 type OfferOption = {
   id: string;
@@ -60,6 +61,7 @@ export function QuickChangeForm({
     createChangeOrderAction,
     {},
   );
+  const keepRef = useKeepFormValues(state);
   const [files, setFiles] = useState<File[]>([]);
   const uploadProgress = useUploadStagedFiles(state.createdId, files, "change-created");
   const storageKey = `sitechange:draft:v2:${draftKey ?? "new"}`;
@@ -174,7 +176,7 @@ export function QuickChangeForm({
   }, [projectId, scheduleType, storageKey]);
 
   return (
-    <form id="quick-change-form" action={action} className="space-y-7">
+    <form noValidate ref={keepRef} id="quick-change-form" action={action} className="space-y-7">
       <input type="hidden" name="scheduleImpactType" value={scheduleType} />
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
@@ -313,7 +315,7 @@ export function QuickChangeForm({
         </div>
         {scheduleType === "days" && (
           <div className="mt-3 grid max-w-sm gap-2">
-            <label className="text-sm font-medium">Договорен нов краен срок<div className="mt-1"><DatePicker name="agreedDeadline" required aria-label="Договорен нов краен срок" /></div></label>
+            <label className="text-sm font-medium">Договорен нов краен срок<div className="mt-1"><DatePicker name="agreedDeadline" required min="today" aria-label="Договорен нов краен срок" /></div></label>
           </div>
         )}
       </fieldset>

@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { and, count, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
-import { changeOrderRevisions, changeOrders, documentMessages, organizations, projectContacts } from "@/db/schema";
+import { changeOrderRevisions, changeOrders, documentMessages, organizations, projectContacts, staffNotifications } from "@/db/schema";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
@@ -65,6 +66,9 @@ export async function sendStaffMessageAction(_: MessageState, formData: FormData
   await getDatabase().insert(documentMessages).values({ organizationId: context.organizationId, projectId: document.projectId, changeOrderId: document.id, revisionId: document.revisionId, authorType: "staff", authorId: context.userId, body: parsed.data.body, readByStaffAt: new Date() });
   // Answering is what clears the unread count on the Разговор tab.
   await markThreadRead(document.id, "staff");
+  // The question is answered, so it stops asking the whole team for a reply.
+  await getDatabase().update(staffNotifications).set({ readAt: new Date() })
+    .where(and(eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.eventType, "client_message"), eq(staffNotifications.href, `/app/offers/${document.id}?tab=messages`), isNull(staffNotifications.readAt)));
   after(() => emailClientAnswer(document, parsed.data.body).catch((cause) => console.error("[client-answer-email]", cause)));
   revalidatePath(`/app/offers/${document.id}`);
   revalidatePath(`/app/projects/${document.projectId}`);

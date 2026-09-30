@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/auth-form";
 import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
+import { safeNextPath } from "@/lib/auth/next-path";
+import { inviteEmailFor } from "@/lib/auth/invite-email";
 export const metadata: Metadata = { title: "Вход" };
 export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
-  const { next, account } = await searchParams;
+  const { next, account, error } = await searchParams;
+  const safeNext = safeNextPath(next, "") || undefined;
+  const defaultEmail = await inviteEmailFor(safeNext);
   return (
     <div className="w-full">
-      <p className="text-sm font-semibold text-primary">Добре дошъл отново</p>
+      <p className="text-sm font-semibold text-primary">Вход в профила</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
         Вход
       </h1>
@@ -14,7 +18,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         Продължи към работното си пространство.
       </p>
       {account === "deletion-scheduled" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Профилът ще бъде изтрит след {ACCOUNT_DELETION_GRACE_DAYS} дни. Ако се откажеш, влез отново преди това и отмени изтриването.</p> : null}
-      <AuthForm mode="sign-in" next={typeof next === "string" && /^\/join\/[A-Za-z0-9._-]+$/.test(next) ? next : undefined} />
+      {error === "confirmation" ? <p role="alert" className="mb-6 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">Линкът за потвърждение е изтекъл или вече е използван. Ако профилът ти вече е потвърден, просто влез. Ако не е, опитай да влезеш и ще ти предложим нов линк.</p> : null}
+      <AuthForm mode="sign-in" next={safeNext} defaultEmail={defaultEmail} />
     </div>
   );
 }

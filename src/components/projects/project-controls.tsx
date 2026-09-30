@@ -41,7 +41,7 @@ export function PaymentDisputesAlert({ projectId, disputes, canResolve }: { proj
     <ul className="divide-y divide-dashed">
       {disputes.map((item) => {
         const row = <>
-          <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${Number(item.amount).toFixed(2)} ${item.currency}`} />
+          <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${formatAmount(item.amount)} ${item.currency}`} />
           <Quote by="Клиентът:" tone="danger" className="mt-2">{item.reason}</Quote>
           <p className="mt-1 text-xs text-muted-foreground">{item.createdAt.toLocaleString("bg-BG", { dateStyle: "short", timeStyle: "short" })}</p>
         </>;
@@ -67,7 +67,7 @@ export function PaymentClaimsBlock({ projectId, claims, canResolve }: { projectI
             date={formatDay(claim.paidOn)}
             title={claim.installmentTitle ? `За „${claim.installmentTitle}“` : claim.offerLabel ?? "Плащане"}
             sub={`${claim.contactName} · ${methodLabels[claim.method] ?? claim.method}`}
-            amount={`${Number(claim.amount).toFixed(2)} ${claim.currency}`}
+            amount={`${formatAmount(claim.amount)} ${claim.currency}`}
           />
           {claim.note ? <Quote by="Бележка:" className="mt-2">{claim.note}</Quote> : null}
         </>;
@@ -111,7 +111,7 @@ export function RecordPaymentDialog({ projectId, offerOptions, installments, rem
         <input type="hidden" name="projectId" value={projectId} />
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value="deposit" options={paymentKinds} /></Field>
         <PaymentAmountField remaining={remaining} />
-        <Field><FieldLabel htmlFor="receipt-date">Дата</FieldLabel><DatePicker id="receipt-date" name="receivedOn" defaultValue={today()} required aria-label="Дата на получаване" /></Field>
+        <Field><FieldLabel htmlFor="receipt-date">Дата</FieldLabel><DatePicker id="receipt-date" name="receivedOn" defaultValue={today()} required max="today" aria-label="Дата на получаване" /></Field>
         <Field><FieldLabel>Метод</FieldLabel><FilterSelect name="method" value="bank" options={methods} /></Field>
         {installments.length ? <Field className="sm:col-span-2"><FieldLabel>За вноска</FieldLabel><FilterSelect name="installmentId" value="none" options={installmentOptions} /></Field> : null}
         <OfferField options={offerOptions} hint={installments.length ? "Ако е избрана вноска, плащането отива към нейната оферта." : undefined} />

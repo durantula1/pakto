@@ -1,7 +1,7 @@
 import "server-only";
 
 import { after } from "next/server";
-import { and, asc, eq, gt, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { organizations, projectContacts, projects, timelineEvents } from "@/db/schema";
@@ -78,8 +78,10 @@ export async function sendClientDigests(now = new Date()) {
   const rows = await db.select({ projectId: timelineEvents.projectId, eventType: timelineEvents.eventType, metadata: timelineEvents.metadata, createdAt: timelineEvents.createdAt })
     .from(timelineEvents)
     .innerJoin(projects, eq(projects.id, timelineEvents.projectId))
+    .innerJoin(organizations, eq(organizations.id, projects.organizationId))
     .where(and(
       eq(projects.status, "active"),
+      eq(organizations.clientScheduleDigestEnabled, true),
       eq(timelineEvents.visibility, "client"),
       eq(timelineEvents.actorType, "staff"),
       inArray(timelineEvents.eventType, [...digestEvents]),
@@ -114,7 +116,7 @@ export async function sendClientDigests(now = new Date()) {
     for (const reader of group) {
       // Claimed first, so a second run of the job does not send the same news again.
       const [claimed] = await db.update(projects).set({ clientDigestAt: now })
-        .where(and(eq(projects.id, reader.projectId), sql`${projects.clientDigestAt} is distinct from ${now}`)).returning({ id: projects.id });
+        .where(and(eq(projects.id, reader.projectId), or(isNull(projects.clientDigestAt), ne(projects.clientDigestAt, now)))).returning({ id: projects.id });
       if (!claimed) continue;
       const url = await getActivePortalLink(reader.projectId, reader.contactId);
       if (url) sections.push({ name: reader.projectName, lines: byProject.get(reader.projectId) ?? [], url });

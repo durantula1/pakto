@@ -50,7 +50,7 @@ export function ClaimRow({ row, projectId, claim }: { row: ReactNode; projectId:
           <input type="hidden" name="claimId" value={claim.id} />
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-[8rem_10rem_minmax(0,12rem)]">
             <Input aria-label="Получена сума" type="number" name="amount" min="0.01" step="0.01" defaultValue={Number(claim.amount).toFixed(2)} required className="tabular-nums" />
-            <DatePicker id={`claim-date-${claim.id}`} name="receivedOn" defaultValue={claim.paidOn} required aria-label="Дата на получаване" />
+            <DatePicker id={`claim-date-${claim.id}`} name="receivedOn" defaultValue={claim.paidOn} required max="today" aria-label="Дата на получаване" />
             <FilterSelect name="kind" value="progress" options={paymentKinds} className="col-span-2 sm:col-span-1" />
           </div>
           <div className="flex flex-wrap items-center gap-2">

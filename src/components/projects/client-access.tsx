@@ -67,12 +67,12 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
             <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
               <p className="text-sm font-medium">Нов наблюдател</p>
               <div role="radiogroup" aria-label="Наблюдател" className={segmentGroupClassName}>
-                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "new"} onChange={() => setViewerMode("new")} className="sr-only" />Нов човек</label>
-                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "existing"} onChange={() => setViewerMode("existing")} className="sr-only" />От клиентите</label>
+                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "new"} onChange={() => setViewerMode("new")} aria-label="Нов човек" className="sr-only" />Нов човек</label>
+                <label className={segmentClassName}><input type="radio" name="viewerMode" checked={viewerMode === "existing"} onChange={() => setViewerMode("existing")} aria-label="От клиентите" className="sr-only" />От клиентите</label>
               </div>
             </div>
             {viewerMode === "existing" ? (
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="viewer-client">Клиент</FieldLabel><ClientCombobox name="clientId" id="viewer-client" isRequired /></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="viewer-client">Клиент</FieldLabel><ClientCombobox name="clientId" id="viewer-client" isRequired excludeProjectId={projectId} /></Field>
             ) : (
               <>
                 <Field><FieldLabel htmlFor="viewer-name">Име</FieldLabel><Input id="viewer-name" name="name" required minLength={2} maxLength={160} autoFocus /></Field>

@@ -6,7 +6,8 @@ import { formatDay, formatShortDay } from "@/modules/change-orders/labels";
 import type { ScopeView } from "@/modules/projects/scope";
 import { formatCents } from "@/modules/projects/state";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
+export const today = () => sofiaDay.format(new Date());
 
 /** The stage the work is on: the first one not finished. */
 export function currentStage(view: ScopeView) {
@@ -14,7 +15,7 @@ export function currentStage(view: ScopeView) {
 }
 
 /** The first installment with money still due, while anything is left to pay. */
-function nextInstallment(view: ScopeView) {
+export function nextInstallment(view: ScopeView) {
   return view.remainingMinor > 0n ? view.installments.find((item) => item.remainingMinor > 0n) : undefined;
 }
 

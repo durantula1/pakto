@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "@/lib/zod-messages";
 
 /**
  * Payment terms of an offer version: which share of the total is due when. They are part of what the

@@ -63,13 +63,13 @@ export function SupportForm({ knownEmail, page }: { knownEmail: string | null; p
   }
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} noValidate className="space-y-4">
       <fieldset className="space-y-1.5">
         <legend className="mb-1.5 text-sm font-medium">За какво пишете?</legend>
         <div className={segmentGroupClassName}>
           {Object.entries(supportKinds).map(([value, label]) => (
             <label key={value} className={segmentClassName}>
-              <input type="radio" name="kind" value={value} checked={kind === value} onChange={() => setKind(value)} className="sr-only" />
+              <input type="radio" name="kind" value={value} aria-label={label} checked={kind === value} onChange={() => setKind(value)} className="sr-only" />
               {label}
             </label>
           ))}

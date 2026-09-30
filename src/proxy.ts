@@ -63,7 +63,8 @@ export async function proxy(request: NextRequest) {
 
   if ((pathname.startsWith("/app") || pathname.startsWith("/onboarding")) && !claims) {
     const loginUrl = new URL("/sign-in", request.url);
-    loginUrl.searchParams.set("next", pathname);
+    // With the query, so a link like "/app/offers/new?projectId=…" opens the same form after sign-in.
+    loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
     return redirectWithSession(loginUrl);
   }
 

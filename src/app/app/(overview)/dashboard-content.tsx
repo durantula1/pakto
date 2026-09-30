@@ -6,6 +6,7 @@ import { DocumentStatusBadge } from "@/components/change-orders/document-status-
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/workspace/data-table";
 import { EmptyState } from "@/components/workspace/page/page-shell";
 import { StatCard, StatCardSkeleton } from "@/components/workspace/stat-card";
+import { can } from "@/lib/authz/permissions";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { documentCode } from "@/modules/change-orders/labels";
 import { listChangeOrders } from "@/modules/change-orders/queries";
@@ -70,7 +71,12 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
         ],
       }))}
       />
-    </section> : <EmptyState title="Още няма оферти" description="Започни с оферта към обект." />}
+    </section> : <EmptyState title="Още няма оферти" description={can(context, "offers.edit") || can(context, "projects.create") ? "Започни с обект и клиент, после направи оферта към него." : "Когато ти възложат обект, ще го видиш тук."}>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {can(context, "projects.create") ? <Link href="/app/projects/new" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Нов обект</Link> : null}
+        {can(context, "offers.edit") ? <Link href="/app/offers/new" className="inline-flex h-9 items-center rounded-lg border px-4 text-sm font-medium">Нова оферта</Link> : null}
+      </div>
+    </EmptyState>}
   </>;
 }
 

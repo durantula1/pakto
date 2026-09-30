@@ -26,7 +26,7 @@ export function blankLine(key: string = crypto.randomUUID()): Line {
 }
 
 export function formatMoney(value: number) {
-  return new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  return new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(value);
 }
 
 /** Lines as numbers with their totals; the same rounding the server stores. */

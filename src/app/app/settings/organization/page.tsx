@@ -8,14 +8,15 @@ import { SettingsGroup, SettingsRow } from "@/components/settings/settings-group
 import { Input } from "@/components/ui/input";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { updateDefaultTaxRateAction, updateOfferValidityAction, updateOrganizationAction, updateOrganizationPhoneAction } from "@/modules/organizations/actions";
+import { updateDefaultTaxRateAction, updateClientRemindersAction, updateOfferValidityAction, updateOrganizationAction, updateOrganizationPhoneAction } from "@/modules/organizations/actions";
 import { getOrganizationSettings } from "@/modules/organizations/queries";
+import { orForbidden } from "@/lib/authz/page-access";
 
 export const metadata: Metadata = { title: "Фирма · Настройки" };
 
 export default async function OrganizationSettingsPage() {
   const context = await requireTenantContext();
-  await requireOwner(context);
+  await orForbidden(requireOwner(context));
   const organization = await getOrganizationSettings(context.organizationId);
   if (!organization) return null;
 
@@ -44,7 +45,7 @@ export default async function OrganizationSettingsPage() {
           <AutoSaveStatus />
         </AutoSaveForm>
       </SettingsRow>
-      <SettingsRow label="Валидност на офертите" description="Клиентът вижда до кога важи цената. Два дни преди края получава напомняне." htmlFor="offer-validity">
+      <SettingsRow label="Валидност на офертите" description="Клиентът вижда до кога важи цената. След края офертата изтича." htmlFor="offer-validity">
         <AutoSaveForm action={updateOfferValidityAction} className="flex w-full flex-wrap items-center gap-2">
           <div className="flex h-9 items-center overflow-hidden rounded-lg border border-input bg-transparent focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
             <input id="offer-validity" name="offerValidityDays" type="number" inputMode="numeric" min={1} max={180} defaultValue={organization.offerValidityDays} required className="h-full w-16 bg-transparent px-2.5 text-right tabular-nums outline-none" />
@@ -53,6 +54,28 @@ export default async function OrganizationSettingsPage() {
           <AutoSaveStatus />
         </AutoSaveForm>
       </SettingsRow>
+    </SettingsGroup>
+
+    <SettingsGroup title="Автоматични писма към клиента" description="Пращат се сутрин, само по активни обекти. Ръчното „Напомни на клиента“ винаги е налично.">
+      <AutoSaveForm action={updateClientRemindersAction} className="flex w-full flex-col">
+        <SettingsRow label="Напомняне, когато клиентът мълчи" description="Едно писмо, ако не е решил толкова дни след изпращането." htmlFor="nudge">
+          <select id="nudge" name="nudge" defaultValue={organization.clientNudgeAfterDays} className="h-9 rounded-lg border border-input bg-transparent px-2.5">
+            {[[0, "Изключено"], [1, "След 1 ден"], [2, "След 2 дни"], [3, "След 3 дни"], [5, "След 5 дни"], [7, "След 7 дни"], [10, "След 10 дни"], [14, "След 14 дни"]].map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </SettingsRow>
+        <SettingsRow label="Предупреждение преди изтичане" description="Едно писмо преди да изтече срокът на офертата." htmlFor="warning">
+          <select id="warning" name="warning" defaultValue={organization.clientExpiryWarningDays} className="h-9 rounded-lg border border-input bg-transparent px-2.5">
+            {[[0, "Изключено"], [1, "1 ден преди"], [2, "2 дни преди"], [3, "3 дни преди"], [5, "5 дни преди"], [7, "7 дни преди"]].map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </SettingsRow>
+        <SettingsRow label="Писмо за промени в графика" description="Едно писмо на ден, когато етапите се променят." htmlFor="digest">
+          <select id="digest" name="digest" defaultValue={organization.clientScheduleDigestEnabled ? "on" : "off"} className="h-9 rounded-lg border border-input bg-transparent px-2.5">
+            <option value="on">Включено</option>
+            <option value="off">Изключено</option>
+          </select>
+          <AutoSaveStatus />
+        </SettingsRow>
+      </AutoSaveForm>
     </SettingsGroup>
 
     <SettingsGroup title="Данни">
