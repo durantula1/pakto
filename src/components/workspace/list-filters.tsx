@@ -108,7 +108,7 @@ export function ListPaginationSkeleton({ density = "default" }: { density?: Pagi
   </div>;
 }
 
-export function ListPagination({ path, params, page, total, pageSize = PAGE_SIZE, pageParam = "page", density = "default" }: {
+export function ListPagination({ path, params, page, total, pageSize = PAGE_SIZE, pageParam = "page", density = "default", onSelect }: {
   path: string;
   params: Record<string, string | undefined>;
   page: number;
@@ -117,6 +117,8 @@ export function ListPagination({ path, params, page, total, pageSize = PAGE_SIZE
   /** Search param holding the page number; set it when one screen has several paginated lists. */
   pageParam?: string;
   density?: PaginationDensity;
+  /** Client lists that load a page in place: called instead of navigating (modified clicks still open the link). */
+  onSelect?: (page: number) => void;
 }) {
   if (total === 0) return null;
   const styles = paginationStyles[density];
@@ -125,19 +127,24 @@ export function ListPagination({ path, params, page, total, pageSize = PAGE_SIZE
   const from = (current - 1) * pageSize + 1;
   const to = Math.min(current * pageSize, total);
   const href = (target: number) => pageHref(path, params, pageParam, target);
+  const select = (target: number) => onSelect ? (event: React.MouseEvent) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    onSelect(target);
+  } : undefined;
   const numbers = [...new Set([1, pages, current - 1, current, current + 1].filter((item) => item >= 1 && item <= pages))].sort((left, right) => left - right);
   return <nav aria-label="Страници" className={styles.frame}>
     <p className="text-muted-foreground">{density === "compact" ? "Показани " : null}{from}–{to} от {total}</p>
     <div className="flex items-center gap-1">
-      {current > 1 ? <Link className={cn(styles.step, "hover:bg-muted")} href={href(current - 1)}>{styles.previous}</Link> : <span className={cn(styles.step, "text-muted-foreground")}>{styles.previous}</span>}
+      {current > 1 ? <Link scroll={false} data-no-progress={onSelect ? "" : undefined} onClick={select(current - 1)} className={cn(styles.step, "hover:bg-muted")} href={href(current - 1)}>{styles.previous}</Link> : <span className={cn(styles.step, "text-muted-foreground")}>{styles.previous}</span>}
       {numbers.map((number, index) => {
         const previous = numbers[index - 1];
         return <span key={number} className="flex items-center gap-1">
           {previous && number - previous > 1 ? <span className="px-1 text-muted-foreground">…</span> : null}
-          <Link href={href(number)} aria-current={number === current ? "page" : undefined} className={cn(styles.number, number === current ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>{number}</Link>
+          <Link scroll={false} data-no-progress={onSelect ? "" : undefined} onClick={select(number)} href={href(number)} aria-current={number === current ? "page" : undefined} className={cn(styles.number, number === current ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted")}>{number}</Link>
         </span>;
       })}
-      {current < pages ? <Link className={cn(styles.step, "hover:bg-muted")} href={href(current + 1)}>{styles.next}</Link> : <span className={cn(styles.step, "text-muted-foreground")}>{styles.next}</span>}
+      {current < pages ? <Link scroll={false} data-no-progress={onSelect ? "" : undefined} onClick={select(current + 1)} className={cn(styles.step, "hover:bg-muted")} href={href(current + 1)}>{styles.next}</Link> : <span className={cn(styles.step, "text-muted-foreground")}>{styles.next}</span>}
     </div>
   </nav>;
 }

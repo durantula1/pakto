@@ -62,6 +62,8 @@ function onDocumentClick(event: MouseEvent) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const anchor = (event.target as Element | null)?.closest?.("a[href]");
   if (!(anchor instanceof HTMLAnchorElement)) return;
+  // Links that load their content in place (paginated tables) are not navigations.
+  if (anchor.hasAttribute("data-no-progress")) return;
   if (anchor.hasAttribute("download") || (anchor.target && anchor.target !== "_self")) return;
   // Route handlers (PDF, exports) are file downloads, not page navigations.
   if (new URL(anchor.href).pathname.startsWith("/api/")) return;

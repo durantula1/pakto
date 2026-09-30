@@ -18,27 +18,26 @@ import { DetailTabs } from "@/components/workspace/detail-tabs";
 import { DocumentBody } from "@/components/change-orders/document-body";
 import { DocumentFacts, DocumentStatusCard } from "@/components/change-orders/document-status-rail";
 import { DocumentTimeline } from "@/components/change-orders/document-timeline";
-import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/workspace/data-table";
+import { DataTableSkeleton } from "@/components/workspace/data-table";
 import { DetailHeader } from "@/components/workspace/detail-header";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { PageShell } from "@/components/workspace/page/page-shell";
-import { ListPagination } from "@/components/workspace/list-filters";
-import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
+import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { can } from "@/lib/authz/permissions";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { listRevisionAttachments } from "@/modules/change-orders/attachment-data";
 import { documentCode } from "@/modules/change-orders/labels";
-import { lastPage, pageHref, pageOffset, parsePage } from "@/lib/pagination";
-import { countChangeOrders, getChangeOrder, getChangeOrderTitle, listChangeOrders } from "@/modules/change-orders/queries";
+import { pageHref, parsePage } from "@/lib/pagination";
+import { countChangeOrders, getChangeOrder, getChangeOrderTitle } from "@/modules/change-orders/queries";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { changeHasStage } from "@/modules/projects/queries";
 import { loadSignature } from "@/modules/change-portal/signature";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
+import { OfferChangesTable, offerChangeColumns } from "./offer-changes-table";
+import { loadOfferChangesPage } from "@/modules/change-orders/changes-page-actions";
 import { changesCardTitle, documentAreas, documentLayoutClassName, documentTabLabels } from "./document-skeleton";
-import { formatAmount } from "@/lib/money";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const CHANGES_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/offers/[changeOrderId]">): Promise<Metadata> {
   const [{ changeOrderId }, context] = await Promise.all([params, requireTenantContext()]);
@@ -139,7 +138,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
                   <CardContent>
                     {offerChangesTotal ? (
                       <Suspense key={changesPage} fallback={<DataTableSkeleton label={changesCardTitle} columns={offerChangeColumns} rows={Math.min(offerChangesTotal, 3)} />}>
-                        <OfferChanges context={context} offerId={change.id} path={path} total={offerChangesTotal} page={changesPage} />
+                        <OfferChanges offerId={change.id} path={path} page={changesPage} />
                       </Suspense>
                     ) : <EmptyResult title="Още няма промени по тази оферта." />}
                   </CardContent>
@@ -204,25 +203,8 @@ function MessageThreadSkeleton() {
   );
 }
 
-const offerChangeColumns: DataTableColumn[] = [{ id: "code", header: "Код" }, { id: "title", header: "Промяна", mobile: "primary", skeleton: "stack" }, { id: "status", header: "Статус", skeleton: "badge" }, { id: "total", header: "Сума", className: "text-right" }];
-
-async function OfferChanges({ context, offerId, path, total, page }: { context: TenantContext; offerId: string; path: string; total: number; page: number }) {
-  // A page past the end (an old link) shows the last page instead of an empty table.
-  const current = Math.min(page, lastPage(total, CHANGES_PAGE_SIZE));
-  const rows = await listChangeOrders({ context, baselineOfferId: offerId, documentKind: "change", limit: CHANGES_PAGE_SIZE, offset: pageOffset(current, CHANGES_PAGE_SIZE) });
-  return <DataTable
-    label={changesCardTitle}
-    columns={offerChangeColumns}
-    rows={rows.map((item) => ({
-      id: item.id,
-      href: `/app/offers/${item.id}`,
-      cells: [
-        <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode("change", item.sequenceNumber)}</span>,
-        <div key="title"><p className="font-medium">{item.title}</p><p className="text-sm text-muted-foreground">версия {item.revisionNumber}</p></div>,
-        <DocumentStatusBadge key="status" status={item.revisionStatus} />,
-        <span key="total" className="font-semibold tabular-nums">{formatAmount(item.total ?? 0)} {item.currency}</span>,
-      ],
-    }))}
-    footer={<ListPagination path={path} params={{}} page={current} total={total} pageSize={CHANGES_PAGE_SIZE} pageParam="changesPage" />}
-  />;
+async function OfferChanges({ offerId, path, page }: { offerId: string; path: string; page: number }) {
+  const initial = await loadOfferChangesPage(offerId, page);
+  if (!initial) return null;
+  return <OfferChangesTable label={changesCardTitle} offerId={offerId} path={path} initial={initial} />;
 }

@@ -63,3 +63,6 @@ export const vatRateOptions = [
   { value: "9", label: "ДДС 9%" },
   { value: "0", label: "Без ДДС" },
 ] as const;
+
+/** Rows per page in the changes table under an offer. */
+export const OFFER_CHANGES_PAGE_SIZE = 10;

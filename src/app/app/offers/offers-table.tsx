@@ -15,6 +15,7 @@ const label = "Всички оферти";
 const columns: DataTableColumn[] = [
   { id: "code", header: "Код" },
   { id: "title", header: "Оферта", skeleton: "stack" },
+  { id: "client", header: "Клиент" },
   { id: "status", header: "Статус", skeleton: "badge" },
   { id: "changes", header: "Промени" },
   { id: "total", header: "Сума", className: "text-right" },
@@ -43,6 +44,7 @@ export async function OffersTable({ filters, page, searchState }: {
         cells: [
           <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode("offer", offer.sequenceNumber)}</span>,
           <div key="title"><p className="font-medium">{offer.title}</p><p className="text-sm text-muted-foreground">{offer.projectName} · версия {offer.revisionNumber}</p></div>,
+          offer.clientName ? <span key="client">{offer.clientName}</span> : <span key="client" className="text-muted-foreground">—</span>,
           <DocumentStatusBadge key="status" status={offer.revisionStatus} />,
           changeCount?.total ? <span key="changes" className="inline-flex items-center gap-2 whitespace-nowrap"><span className="tabular-nums">{changeCount.total}</span>{changeCount.pending ? <Badge variant="sent">{changeCount.pending} {changeCount.pending === 1 ? "чака решение" : "чакат решение"}</Badge> : null}</span> : <span key="changes" className="text-muted-foreground">—</span>,
           <span key="total" className="font-semibold">{formatAmount(offer.total ?? 0)} {offer.currency}</span>,
