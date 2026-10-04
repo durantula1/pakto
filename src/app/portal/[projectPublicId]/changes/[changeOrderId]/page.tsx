@@ -27,7 +27,9 @@ import { DownloadLink } from "@/components/workspace/download-tray";
 import { AcceptancePanel } from "@/components/portal/acceptance-panel";
 import { PortalPayments, PortalSchedule } from "@/components/projects/project-overview";
 import { scopeView } from "@/modules/projects/scope";
+import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
 import { formatAmount } from "@/lib/money";
+import { MotionDetails } from "@/components/ui/motion-details";
 
 const eventLabels: Record<string, string> = {
   revision_sent: "Изпратена за решение",
@@ -106,8 +108,15 @@ export default async function PortalChangePage({
   const offerState = isOffer ? data.state?.offers.find((offer) => offer.id === change.id) ?? null : null;
   const parentOffer = !isOffer && change.baselineOfferId ? data.state?.offers.find((offer) => offer.id === change.baselineOfferId) ?? null : null;
   const agreement = offerState?.inForce && data.state ? scopeView(data.state, change.id) : null;
+  // A newer version of an approved offer: what is agreed now (the version in force plus its approved changes,
+  // the same sum as "Плащания") against what approving this version makes it (it plus the changes it leaves out).
+  const withChanges = !!inForce && !!offerState?.changes.length;
+  const keptChanges = inForce && offerState ? offerState.changes.filter((item) => !data.absorbedChanges.some((absorbed) => absorbed.id === item.id)) : [];
+  const agreedNowMinor = inForce ? (offerState?.inForce ? offerState.contractMinor : cents(inForce.total)) : 0n;
+  const agreedAfterMinor = cents(change.total) + keptChanges.reduce((sum, item) => sum + cents(item.total), 0n);
+  const inForceLabel = inForce ? `версия ${inForce.revisionNumber}${withChanges ? " с одобрените промени" : ""} · ${formatCents(agreedNowMinor, inForce.currency)}` : "";
   const dateTime = (value: Date, dateStyle: "long" | "medium" = "medium") =>
-    new Intl.DateTimeFormat("bg-BG", { dateStyle, timeStyle: "short" }).format(value);
+    new Intl.DateTimeFormat("bg-BG", { dateStyle, timeStyle: "short", timeZone: "Europe/Sofia" }).format(value);
 
   const pdfHref = `/api/changes/${change.id}/pdf?revision=${change.revisionId}`;
   const details = (
@@ -164,14 +173,14 @@ export default async function PortalChangePage({
 
   const versions = data.revisions.filter((revision) => revision.frozenAt);
   const history = (
-    <details className="group rounded-3xl bg-card [&>summary::-webkit-details-marker]:hidden">
+    <MotionDetails className="group rounded-3xl bg-card [&>summary::-webkit-details-marker]:hidden">
       <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 py-2 pr-2 pl-3 text-sm font-medium">
         <span className="inline-flex items-center gap-2.5">
           <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground"><History className="size-4" /></span>
           Версии и история
           {versions.length > 1 ? <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{versions.length} версии</span> : null}
         </span>
-        <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted"><ChevronDown className="size-4 transition-transform group-open:rotate-180" /></span>
+        <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
       </summary>
       <div className="space-y-4 border-t border-dashed p-4">
         {versions.length ? (
@@ -197,12 +206,12 @@ export default async function PortalChangePage({
           ))}
         </ol>
       </div>
-    </details>
+    </MotionDetails>
   );
 
   const waiting = ["sent", "viewed"].includes(change.status);
   const decidedOn = data.decision ? `${dateTime(data.decision.createdAt, "long")} · ${data.decision.typedName}` : "";
-  const stillInForce = inForce ? ` В сила остава одобрената версия ${inForce.revisionNumber} · ${formatCents(cents(inForce.total), inForce.currency)}.` : "";
+  const stillInForce = inForce ? ` В сила остава ${inForceLabel}.` : "";
   const status: Status | null = awaitingDecision
     ? null
     : change.status === "canceled"
@@ -263,27 +272,29 @@ export default async function PortalChangePage({
       </p>
       {inForce ? (
         <p className="px-4 pt-3 pb-2 text-xs leading-5 text-sidebar-foreground/70">
-          Сега е в сила версия {inForce.revisionNumber} · {formatCents(cents(inForce.total), inForce.currency)}. Ако одобрите версия {change.revisionNumber}, тя я заменя. Ако я откажете, остава версия {inForce.revisionNumber}. Сумите са на самите версии, без одобрените след тях промени.
+          Сега е в сила {inForceLabel}. Ако одобрите версия {change.revisionNumber}, договореното става {formatCents(agreedAfterMinor, change.currency)}{keptChanges.length ? " заедно с одобрените промени, които не са включени в нея" : ""}. Ако я откажете, остава както е сега.
         </p>
       ) : null}
     </section>
   );
 
   const diff = data.diff ? (
-    <details open className="group rounded-3xl bg-tile-coral/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
+    <MotionDetails defaultOpen={awaitingDecision} className="group rounded-3xl bg-tile-coral/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
       <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 px-3 py-2">
         <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sidebar"><FileDiff className="size-4" /></span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="font-semibold">Какво е новото спрямо {inForce ? `версия ${inForce.revisionNumber}` : "предишната версия"}</span>
-          {data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
+          <span className="font-semibold">Какво е новото спрямо версия {data.diff.fromRevision}</span>
+          {withChanges
+            ? agreedNowMinor !== agreedAfterMinor ? <span className="text-muted-foreground tabular-nums">Договорено {formatCents(agreedNowMinor, change.currency)} → <span className="font-medium text-foreground">{formatCents(agreedAfterMinor, change.currency)}</span></span> : null
+            : data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
         </span>
-        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-card/80"><ChevronDown className="size-4 transition-transform group-open:rotate-180" /></span>
+        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-card/80"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
       </summary>
       <ul className="m-1 mt-0 list-disc space-y-1 rounded-2xl bg-card py-3 pr-4 pl-8 text-muted-foreground">
         {data.diff.changes.map((line) => <li key={line} className="break-words">{line}</li>)}
         {!data.diff.changes.length ? <li>{data.diff.totalBefore === data.diff.totalAfter ? "Уточнени са описанието или бележките." : "Променена е само сумата."}</li> : null}
       </ul>
-    </details>
+    </MotionDetails>
   ) : null;
 
   const canAsk = data.project.status !== "archived";
@@ -300,7 +311,9 @@ export default async function PortalChangePage({
     />
   );
   // Old "?questions=1" links from emails open the tab the questions live in.
-  const initialTab = tabs.find((tab) => tab === query.tab) ?? (query.questions ? "document" : "work");
+  // The work tab leads once there is work to show; until then the client lands on what they approved.
+  const hasWork = !!agreement && (agreement.milestones.length > 0 || !!offerState?.acceptance);
+  const initialTab = tabs.find((tab) => tab === query.tab) ?? (query.questions || !hasWork ? "document" : "work");
 
   const header = (
     <div className="flex flex-col gap-3">
@@ -326,7 +339,9 @@ export default async function PortalChangePage({
           </span>
           {change.revisionNumber > 1 ? <span className="rounded-full bg-card px-3 py-1 text-muted-foreground">версия {change.revisionNumber}</span> : null}
           {parentOffer ? <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="rounded-full bg-card px-3 py-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">към {documentName("offer", parentOffer.sequenceNumber)}</Link> : null}
-          {!awaitingDecision ? <span className="rounded-full bg-card px-3 py-1 font-semibold tabular-nums">{formatCents(changeMinor, change.currency)}</span> : null}
+          {!awaitingDecision ? <span className="rounded-full bg-card px-3 py-1 font-semibold tabular-nums">{!isOffer && changeMinor === 0n ? "без промяна в цената" : formatCents(changeMinor, change.currency)}</span> : null}
+          {/* The same word as on the project page, so the client recognises the offer. */}
+          {offerState?.inForce ? <Badge variant={offerStatusTones[offerState.status]}>{offerStatusLabels[offerState.status]}</Badge> : null}
         </p>
         <h1 className="mt-3 text-[2.25rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">{change.title}</h1>
         {status ? <StatusLine status={status} /> : null}
@@ -365,8 +380,8 @@ export default async function PortalChangePage({
             <PortalSchedule view={agreement} />
           </>
         }
-        payments={<PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived"} />}
-        document={<>{details}{questions}{history}</>}
+        payments={<PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived" && data.session.contactRole === "approver"} />}
+        document={<>{diff}{details}{questions}{history}</>}
       />
     </div>
   );

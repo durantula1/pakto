@@ -13,14 +13,14 @@ import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { DetailHeader } from "@/components/workspace/detail-header";
 import { FilterSelect } from "@/components/workspace/filter-select";
 import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
-import { roleLabel } from "@/lib/authz/permissions";
+import { PRESETS, roleLabel } from "@/lib/authz/permissions";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { disableTeamMemberAction, requestOwnerChangeAction } from "@/modules/team/actions";
 import { getTeamMember } from "@/modules/team/queries";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const joinedFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", year: "numeric" });
+const joinedFormat = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 
 export async function generateMetadata({ params }: PageProps<"/app/team/[userId]">): Promise<Metadata> {
   const [{ userId }, context] = await Promise.all([params, requireTenantContext()]);
@@ -68,7 +68,7 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
             {isSelf ? <p className="text-sm text-muted-foreground">Това е твоят профил. Ролята на собственик се сменя от друг собственик.</p> : (
               <ActionForm action={requestOwnerChangeAction} success="Предложението е изпратено" className="flex flex-col gap-3">
                 <input type="hidden" name="targetUserId" value={member.userId} />
-                <Field><FieldLabel>Нова роля</FieldLabel><FilterSelect name="requestedRole" value="office" options={[{ value: "office", label: "Офис" }, { value: "remove", label: "Премахване от екипа" }]} /></Field>
+                <Field><FieldLabel>Нова роля</FieldLabel><FilterSelect name="requestedRole" value="office" options={[{ value: "office", label: PRESETS.office.label }, { value: "remove", label: "Премахване от екипа" }]} /></Field>
                 <ActionSubmit variant="outline">Предложи промяна</ActionSubmit>
               </ActionForm>
             )}

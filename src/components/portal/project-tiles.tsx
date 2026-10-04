@@ -113,7 +113,7 @@ export function NextInstallment({ view, claims, portalPublicId, canAct }: { view
   return (
     <section aria-label="Следваща вноска" className="rounded-2xl bg-card px-5 py-3.5 shadow-[0_0.25rem_1rem_-0.5rem_rgb(16_43_56/0.25)]">
       {canAct && !claimed ? (
-        <ClaimPaymentRow row={row} trigger="Платих" portalPublicId={portalPublicId} offerId={next.offerId} installmentId={next.id} amount={(Number(next.remainingMinor) / 100).toFixed(2)} triggerClassName="h-11 px-4 text-sm" />
+        <ClaimPaymentRow row={row} trigger="Платих" portalPublicId={portalPublicId} offerId={next.offerId} installmentId={next.id} amount={(Number(next.remainingMinor < view.remainingMinor || view.remainingMinor <= 0n ? next.remainingMinor : view.remainingMinor) / 100).toFixed(2)} triggerClassName="h-11 px-4 text-sm" />
       ) : row}
     </section>
   );

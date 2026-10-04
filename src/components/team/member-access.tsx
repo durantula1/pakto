@@ -3,7 +3,9 @@
 import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { ProjectScope } from "@/components/team/project-scope";
+import { Check, ChevronDown, Minus } from "lucide-react";
+
+import { ProjectScope, Segmented } from "@/components/team/project-scope";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ProjectOption } from "@/components/workspace/project-combobox";
@@ -22,9 +24,9 @@ function sameAccess(a: Access, b: Access) {
 }
 
 /**
- * A non-owner's rights: role, permission matrix and project scope on the left, a sticky summary
- * with the save button on the right (a bar above the bottom navigation on phones), so unsaved
- * changes are always visible. `children` go under the summary and must not contain the form.
+ * A non-owner's rights: role and project scope in one card on top, then the permissions, folded to
+ * their names while a role template is in use. Saving sits in a sticky panel on the right (a bar
+ * above the bottom navigation on phones). `children` go under it and must not contain the form.
  */
 export function MemberAccess({ userId, initialPermissions, initialAllProjects, initialProjects, children }: {
   userId: string;
@@ -41,7 +43,10 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
   const [selected, setSelected] = useState<ProjectOption[]>(initialProjects);
   const [submitted, setSubmitted] = useState<Access | null>(null);
   const [handled, setHandled] = useState<MemberAccessState>(state);
-  const preset = presetOf(permissions);
+  // "По избор" is chosen explicitly too, so the rights open even before one of them changes.
+  const [custom, setCustom] = useState(false);
+  const preset = custom ? null : presetOf(permissions);
+  const [open, setOpen] = useState(!preset);
   const dirty = !sameAccess({ permissions, allProjects, projects: selected }, saved);
 
   // What was submitted becomes the new baseline once the server confirms it.
@@ -59,14 +64,26 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
     setPermissions(saved.permissions);
     setAllProjects(saved.allProjects);
     setSelected(saved.projects);
+    setCustom(false);
+  }
+
+  function choose(role: PresetKey | "custom") {
+    if (role === "custom") {
+      setCustom(true);
+      setOpen(true);
+      return;
+    }
+    setCustom(false);
+    setPermissions([...PRESETS[role].permissions]);
   }
 
   function toggle(key: Permission, checked: boolean) {
     setPermissions((current) => checked ? [...current, key] : current.filter((item) => item !== key));
   }
 
-  const roleName = preset ? PRESETS[preset].label : "По избор";
-  const scopeText = allProjects ? "Всички обекти" : selected.length === 1 ? "1 обект" : `${selected.length} обекта`;
+  const allItems = PERMISSION_GROUPS.flatMap((group) => group.items);
+  const granted = allItems.filter((item) => permissions.includes(item.key));
+  const denied = allItems.filter((item) => !permissions.includes(item.key));
   const saveLabel = pending ? "Запазване…" : "Запази правата";
 
   return <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
@@ -79,17 +96,41 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
       <input type="hidden" name="userId" value={userId} />
       {permissions.map((key) => <input key={key} type="hidden" name="permissions" value={key} />)}
 
-      <Section title="Роля" description="Шаблонът попълва правата. После можеш да променяш отделни права.">
-        <div role="radiogroup" aria-label="Роля" className="grid gap-2 sm:grid-cols-3">
-          {(Object.keys(PRESETS) as PresetKey[]).map((key) => (
-            <RoleOption key={key} checked={preset === key} label={PRESETS[key].label} description={PRESETS[key].description} onSelect={() => setPermissions([...PRESETS[key].permissions])} />
-          ))}
-          <RoleOption checked={!preset} label="По избор" description="Отделни права, избрани ръчно по-долу." />
+      <Section title="Роля и обекти">
+        <div className="-my-4 divide-y">
+          <SettingRow label="Роля">
+            <Segmented
+              label="Роля"
+              value={preset ?? "custom"}
+              onChange={choose}
+              options={[...(Object.keys(PRESETS) as PresetKey[]).map((key) => ({ value: key, label: PRESETS[key].label })), { value: "custom" as const, label: "По избор" }]}
+            />
+            <p className="text-sm text-muted-foreground">{preset ? PRESETS[preset].description : "Отделни права, избрани ръчно по-долу."}</p>
+          </SettingRow>
+          <SettingRow label="Обекти">
+            <ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} />
+          </SettingRow>
         </div>
       </Section>
 
-      <Section title="Права" description="Какво може да прави в обектите, до които има достъп.">
-        <div className="-m-4 divide-y">
+      <section className="overflow-hidden rounded-2xl border bg-card">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="member-permissions"
+          onClick={() => setOpen(!open)}
+          className="flex w-full items-center gap-3 border-b px-4 py-3 text-left hover:bg-muted/50"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Права · {permissions.length} от {PERMISSION_KEYS.length}</span>
+            <span className="block text-xs text-muted-foreground">Какво може да прави в обектите, до които има достъп.</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
+            {open ? "Скрий" : "Промени права"}
+            <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
+          </span>
+        </button>
+        {open ? <div id="member-permissions" className="divide-y">
           {PERMISSION_GROUPS.map((group) => {
             const checkedCount = group.items.filter((item) => permissions.includes(item.key)).length;
             return <div key={group.label}>
@@ -116,27 +157,18 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
               </ul>
             </div>;
           })}
-        </div>
-      </Section>
-
-      <Section title="Обекти" description="Правата важат само за обектите, до които има достъп.">
-        <ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} />
-      </Section>
+        </div> : <dl id="member-permissions" className="flex flex-col gap-3 p-4 text-sm">
+          <PermissionNames label="Може" icon={<Check className="size-3.5" />} items={granted.map((item) => item.label)} empty="Няма включени права." />
+          {denied.length ? <PermissionNames label="Не може" muted icon={<Minus className="size-3.5" />} items={denied.map((item) => item.label)} /> : null}
+        </dl>}
+      </section>
     </form>
 
     <div className="flex flex-col gap-4 lg:sticky lg:top-20">
-      <aside aria-label="Обобщение и запазване" className="flex flex-col gap-4 rounded-2xl border bg-card p-4">
-        <h2 className="text-sm font-semibold">Обобщение</h2>
-        <dl className="space-y-2 text-sm">
-          <SummaryRow label="Роля" value={roleName} />
-          <SummaryRow label="Права" value={`${permissions.length} от ${PERMISSION_KEYS.length}`} />
-          <SummaryRow label="Обекти" value={scopeText} />
-        </dl>
-        <div className="hidden flex-col gap-2 border-t pt-4 lg:flex">
-          <DirtyNote dirty={dirty} />
-          <Button type="submit" form={FORM_ID} size="lg" isDisabled={pending || !dirty}>{saveLabel}</Button>
-          {dirty ? <Button type="button" variant="ghost" size="lg" isDisabled={pending} onPress={reset}>Отказ</Button> : null}
-        </div>
+      <aside aria-label="Запазване" className="hidden flex-col gap-2 rounded-2xl border bg-card p-4 lg:flex">
+        <DirtyNote dirty={dirty} />
+        <Button type="submit" form={FORM_ID} size="lg" isDisabled={pending || !dirty}>{saveLabel}</Button>
+        {dirty ? <Button type="button" variant="ghost" size="lg" isDisabled={pending} onPress={reset}>Отказ</Button> : null}
       </aside>
       {children}
     </div>
@@ -162,33 +194,29 @@ function Section({ title, description, children }: { title: string; description?
   );
 }
 
-/** Without `onSelect` the option only reflects state: "custom" is reached by editing single rights. */
-function RoleOption({ checked, label, description, onSelect }: { checked: boolean; label: string; description: string; onSelect?: () => void }) {
+/** Label on the left from `sm` up, stacked above the control on phones. */
+function SettingRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={checked}
-      aria-disabled={!onSelect || undefined}
-      onClick={onSelect}
-      className={cn(
-        "flex flex-col items-start rounded-xl border bg-card p-3 text-left transition-colors",
-        onSelect ? "hover:border-primary/50" : "cursor-default",
-        checked && "border-primary bg-primary/5 ring-2 ring-primary/30",
-        !onSelect && !checked && "border-dashed text-muted-foreground",
-      )}
-    >
-      <span className="font-semibold">{label}</span>
-      <span className="text-sm text-muted-foreground">{description}</span>
-    </button>
+    <div className="grid gap-2 py-4 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-4">
+      <h3 className="text-sm font-medium sm:pt-2">{label}</h3>
+      <div className="flex min-w-0 flex-col gap-2">{children}</div>
+    </div>
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+function PermissionNames({ label, icon, items, empty, muted = false }: { label: string; icon: ReactNode; items: string[]; empty?: string; muted?: boolean }) {
   return (
-    <div className="flex justify-between gap-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium tabular-nums">{value}</dd>
+    <div className="grid gap-1.5 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-4">
+      <dt className="text-muted-foreground sm:pt-1">{label}</dt>
+      <dd>
+        {items.length ? <ul className="flex flex-wrap gap-1.5">
+          {items.map((item) => (
+            <li key={item} className={cn("flex items-center gap-1 rounded-md px-2 py-1", muted ? "bg-muted text-muted-foreground" : "bg-primary/10 font-medium")}>
+              {icon}{item}
+            </li>
+          ))}
+        </ul> : <span className="text-muted-foreground">{empty}</span>}
+      </dd>
     </div>
   );
 }

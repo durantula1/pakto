@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { sendChangeOrderAction } from "@/modules/change-orders/actions";
 import { discountLabel } from "@/modules/change-orders/pricing";
 import {
+  documentStatusStepLabels,
   formatDay,
   scheduleLabel,
   totalLabel,
@@ -27,6 +28,7 @@ import {
 import type { getChangeOrder } from "@/modules/change-orders/queries";
 import { remindClientAction } from "@/modules/change-orders/reminder-actions";
 import { formatAmount } from "@/lib/money";
+import { cents, formatCents } from "@/modules/projects/state";
 
 type Document = NonNullable<Awaited<ReturnType<typeof getChangeOrder>>>;
 
@@ -34,12 +36,14 @@ const dateTime = (value: Date) =>
   new Intl.DateTimeFormat("bg-BG", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Europe/Sofia",
   }).format(value);
 /** `23.09, 16:09`; the year only when it is not the current one. Keeps the status band on one line. */
 const shortDateTime = (value: Date) => {
-  const sameYear = value.getFullYear() === new Date().getFullYear();
-  const day = new Intl.DateTimeFormat("bg-BG", { day: "2-digit", month: "2-digit", ...(sameYear ? {} : { year: "numeric" }) }).format(value).replace(/\s?г\.$/, "");
-  const time = new Intl.DateTimeFormat("bg-BG", { hour: "2-digit", minute: "2-digit" }).format(value);
+  const year = (date: Date) => new Intl.DateTimeFormat("en", { year: "numeric", timeZone: "Europe/Sofia" }).format(date);
+  const sameYear = year(value) === year(new Date());
+  const day = new Intl.DateTimeFormat("bg-BG", { day: "2-digit", month: "2-digit", timeZone: "Europe/Sofia", ...(sameYear ? {} : { year: "numeric" }) }).format(value).replace(/\s?г\.$/, "");
+  const time = new Intl.DateTimeFormat("bg-BG", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Sofia" }).format(value);
   return `${day}, ${time}`;
 };
 const money = formatAmount;
@@ -123,6 +127,7 @@ export function DocumentStatusCard({
   canEdit,
   canDraftChange,
   addStageHref = null,
+  inForceChanges = [],
 }: {
   change: Document;
   path: string;
@@ -132,6 +137,8 @@ export function DocumentStatusCard({
   canDraftChange: boolean;
   /** For an approved change nobody has scheduled yet: opens the stage dialog on the project. */
   addStageHref?: string | null;
+  /** Totals of the approved changes that count on top of the version in force (not yet in a newer version). */
+  inForceChanges?: string[];
 }) {
   const status = change.revisionStatus;
   const awaiting = status === "sent" || status === "viewed";
@@ -210,6 +217,9 @@ export function DocumentStatusCard({
     change.approvedRevisionId && change.approvedRevisionId !== change.revisionId
       ? change.revisions.find((revision) => revision.id === change.approvedRevisionId)
       : undefined;
+  // What is agreed now, the same sum as "Плащания": the version in force plus its approved changes.
+  const inForceChangesMinor = inForceChanges.reduce((sum, total) => sum + cents(total), 0n);
+  const inForceMinor = inForce ? cents(inForce.total) + inForceChangesMinor : 0n;
 
   return (
     <Card size="sm">
@@ -237,11 +247,16 @@ export function DocumentStatusCard({
         {inForce ? (
           <div role="status" className="rounded-lg bg-muted p-3 text-sm">
             <p className="font-medium">
-              В сила е одобрената версия {inForce.revisionNumber} · {money(inForce.total)} {inForce.currency}
+              В сила е версия {inForce.revisionNumber}{inForceChanges.length ? " с одобрените промени" : ""} · {formatCents(inForceMinor, inForce.currency)}
               {inForce.agreedDeadline ? ` · срок ${formatDay(inForce.agreedDeadline)}` : ""}
             </p>
+            {inForceChanges.length ? (
+              <p className="mt-1 text-muted-foreground tabular-nums">
+                Версия {inForce.revisionNumber}: {money(inForce.total)} {inForce.currency} · {inForceChanges.length === 1 ? "1 одобрена промяна" : `${inForceChanges.length} одобрени промени`}: {formatCents(inForceChangesMinor, inForce.currency).replace(/^-/, "−")}
+              </p>
+            ) : null}
             <p className="mt-1 text-muted-foreground">
-              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава обектът се води по версия {inForce.revisionNumber}. Сумата е на самата версия; одобрените след нея промени са отделно.
+              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава обектът се води по версия {inForce.revisionNumber}{inForceChanges.length ? " и одобрените промени" : ""}.
             </p>
           </div>
         ) : null}
@@ -249,17 +264,17 @@ export function DocumentStatusCard({
           <div className="min-w-0 flex-1">
             <ol className="lg:flex">
               <Step
-                label="Чернова"
+                label={documentStatusStepLabels[0]}
                 detail={shortDateTime(change.createdAt)}
                 state={status === "draft" ? "current" : "done"}
               />
               <Step
-                label="Изпратена на клиента"
+                label={documentStatusStepLabels[1]}
                 detail={change.frozenAt ? shortDateTime(change.frozenAt) : undefined}
                 state={change.frozenAt ? "done" : "pending"}
               />
               <Step
-                label="Отворена от клиента"
+                label={documentStatusStepLabels[2]}
                 detail={
                   change.viewedAt
                     ? shortDateTime(change.viewedAt)
@@ -282,7 +297,7 @@ export function DocumentStatusCard({
                     ? (decisionLabels[decision.decision] ?? "Решение")
                     : status === "expired"
                       ? "Изтекла без решение"
-                      : "Решение на клиента"
+                      : documentStatusStepLabels[3]
                 }
                 detail={
                   decision

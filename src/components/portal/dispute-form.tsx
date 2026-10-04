@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { disputeDecisionAction, type DecisionState } from "@/modules/change-portal/actions";
 
 export function PortalDisputeForm({ token }: { token: string }) {
-  const [state, action, pending] = useActionState<DecisionState, FormData>(disputeDecisionAction, {});
+  const [state, action, pending] = useActionState<DecisionState, FormData>(offlineSafe(disputeDecisionAction), {});
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="token" value={token} />

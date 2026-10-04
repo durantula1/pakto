@@ -8,6 +8,12 @@ import { cn } from "@/lib/utils";
 
 type Status = { state: "idle" | "saving" | "saved" } | { state: "error"; message: string };
 const StatusContext = createContext<Status>({ state: "idle" });
+const SaveContext = createContext<() => void>(() => {});
+
+/** For fields that are not native inputs (the select): ask the surrounding form to save after their value is in the DOM. */
+export function useAutoSave() {
+  return useContext(SaveContext);
+}
 
 const serialize = (form: HTMLFormElement) => new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
 const savesOnChange = (target: EventTarget) =>
@@ -72,15 +78,21 @@ export function AutoSaveForm({ action, children, className }: {
 
   return (
     <StatusContext.Provider value={status}>
+      <SaveContext.Provider value={() => void save()}>
       <form
         ref={form}
         className={className}
         onChange={(event) => { if (savesOnChange(event.target)) void save(); }}
         onBlur={(event) => { if (!savesOnChange(event.target)) void save(); }}
+        onKeyDown={(event) => {
+          // A form with two text fields and no submit button never submits on Enter by itself.
+          if (event.key === "Enter" && event.target instanceof HTMLInputElement && !savesOnChange(event.target)) { event.preventDefault(); void save(); }
+        }}
         onSubmit={(event) => { event.preventDefault(); void save(); }}
       >
         {children}
       </form>
+      </SaveContext.Provider>
     </StatusContext.Provider>
   );
 }

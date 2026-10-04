@@ -131,7 +131,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
           <ol className="divide-y rounded-xl border bg-card">
             {history.events.map((event) => (
               <li key={event.id} className="flex items-baseline justify-between gap-3 px-4 py-2.5 text-sm">
-                <span className="min-w-0"><span className="font-medium">{eventLabels[event.eventType] ?? event.eventType}</span> <span className="text-muted-foreground">· {projectName.get(event.projectId) ?? ""}</span></span>
+                <span className="min-w-0 break-words"><span className="font-medium">{eventLabels[event.eventType] ?? event.eventType}</span> <span className="text-muted-foreground">· {projectName.get(event.projectId) ?? ""}</span></span>
                 <span className="shrink-0 text-xs text-muted-foreground">{dateTime.format(event.createdAt)}</span>
               </li>
             ))}

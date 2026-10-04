@@ -93,13 +93,15 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                 {done ? <p className="rounded-2xl bg-tile-stone px-3.5 py-3 text-sm text-tile-stone-foreground">Обектът е приключен. Всичко остава тук за справка.</p> : (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-mint px-3.5 py-3 text-tile-mint-foreground">
-                      <span className="text-xs">Следва</span>
+                      {/* "Следва" only above a stage; with none left or none yet it is just the work. */}
+                      <span className="text-xs">{next ? "Следва" : "Работа"}</span>
                       {next ? <><span className="truncate text-sm font-semibold">{next.title}</span><span className="text-xs">до {formatShortDay(next.dueOn)}</span></>
                         : <span className="text-sm">{card.stagesTotal ? "Всички етапи са готови" : "Фирмата още не е добавила график"}</span>}
                     </div>
                     <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-sand px-3.5 py-3 text-tile-sand-foreground">
-                      <span className="text-xs">Остава за плащане</span>
-                      {card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
+                      <span className="text-xs">{card.contractMinor > 0n && card.remainingMinor <= 0n ? "Плащания" : "Остава за плащане"}</span>
+                      {card.contractMinor > 0n && card.remainingMinor <= 0n ? <><span className="text-sm font-semibold">Изплатено</span><span className="text-xs tabular-nums">{formatCents(card.contractMinor, card.currency)}</span></>
+                        : card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
                         : <span className="text-sm">Още няма одобрена оферта</span>}
                     </div>
                   </div>

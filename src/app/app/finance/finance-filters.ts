@@ -1,6 +1,6 @@
 /** Filter options and toolbar widths, shared by the page, the client toolbar and its skeleton. */
 
-export const kindOptions = [{ value: "all", label: "Всички видове" }, { value: "deposit", label: "Капаро" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
+export const kindOptions = [{ value: "all", label: "Всички видове" }, { value: "deposit", label: "Аванс" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 export const methodOptions = [{ value: "all", label: "Всички методи" }, { value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
 
 /** Widths of the toolbar controls; the skeleton draws placeholders of the same size. */

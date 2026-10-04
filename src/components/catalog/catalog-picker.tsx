@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { groupByCategory } from "@/modules/catalog/categories";
 
 export type CatalogPick = { id: string; name: string; unit: string | null; unitPrice: string; category: string | null };
 
@@ -21,9 +22,7 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
   const groups = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("bg-BG");
     const matches = needle ? items.filter((item) => `${item.name} ${item.category ?? ""}`.toLocaleLowerCase("bg-BG").includes(needle)) : items;
-    const byCategory = new Map<string, CatalogPick[]>();
-    for (const item of matches) byCategory.set(item.category ?? "Без категория", [...(byCategory.get(item.category ?? "Без категория") ?? []), item]);
-    return [...byCategory.entries()];
+    return groupByCategory(matches);
   }, [items, query]);
 
   return (
@@ -50,9 +49,9 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
             />
           ) : !groups.length ? (
             <EmptyResult title={`Нищо не съвпада с „${query}“.`} />
-          ) : groups.map(([category, list]) => (
-            <section key={category} className="mb-4">
-              <p className="sticky top-0 bg-popover py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{category}</p>
+          ) : groups.map(({ key, name, items: list }) => (
+            <section key={key} className="mb-4">
+              <p className="sticky top-0 bg-popover py-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{name}</p>
               <ul className="flex flex-col gap-1">
                 {list.map((item) => (
                   <li key={item.id}>

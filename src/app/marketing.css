@@ -31,6 +31,33 @@
   backdrop-filter: blur(18px) saturate(135%);
 }
 
+/* Liquid glass: a translucent, strongly blurred pill with a bright rim and a soft inner highlight. */
+.mf-glass {
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 55%),
+    rgb(244 239 228 / 28%) 60%,
+    rgb(255 255 255 / 42%)
+  );
+  border: 1px solid rgb(255 255 255 / 60%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 85%),
+    inset 0 -1px 0 rgb(16 43 56 / 6%),
+    0 10px 30px -8px rgb(16 43 56 / 22%),
+    0 2px 6px rgb(16 43 56 / 8%);
+  backdrop-filter: blur(22px) saturate(180%) brightness(1.04);
+}
+
+.mf-glass a {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+.mf-glass nav a:hover {
+  color: #e85f48;
+}
+
 .mf-nav a {
   transition:
     color 180ms ease,
@@ -240,19 +267,10 @@
   font-size: clamp(2.6rem, 4.8vw, 5rem);
 }
 
-.mf-proof-quote {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.6rem, 6vw, 6.4rem);
-  font-style: italic;
-  font-weight: 600;
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-}
-
-/* The strike is a background line (drawn by proof-strip.tsx), so it can grow across wrapped lines. */
-.mf-proof-quote s {
+/* The strike is a background line (drawn by problem-section.tsx), so it can grow across wrapped lines. */
+.mf-strike {
   text-decoration: none;
-  background: linear-gradient(#102b38, #102b38) no-repeat 0 58% / 100% 0.08em;
+  background: linear-gradient(#102b38, #102b38) no-repeat 0 58% / 100% 0.1em;
 }
 
 .mf-tour-nav {
@@ -316,10 +334,6 @@
 
   .mf-cta-title {
     font-size: clamp(2.8rem, 13vw, 5rem);
-  }
-
-  .mf-proof-quote {
-    font-size: clamp(2.4rem, 11vw, 4rem);
   }
 
   .mf-tour-nav {
@@ -564,224 +578,4 @@
 html:not([data-auth="in"]) .mf-when-in,
 html[data-auth="in"] .mf-when-out {
   display: none !important;
-}
-
-/*
- * Line art (security-art.tsx). Outlines start undrawn and draw once the SVG is on screen
- * (`data-in`); `--d` is each stroke's delay. After that a slow loop keeps them alive.
- */
-.mf-art [data-draw] {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-
-.mf-art[data-in="true"] [data-draw] {
-  animation: mf-art-draw 900ms var(--mf-ease-out) var(--d, 0ms) forwards;
-}
-
-/* Rings are arcs: they grow out to their own gap pattern (`--da`) instead of a full outline. */
-.mf-art [data-ring] {
-  stroke-dasharray: 0 1;
-}
-
-.mf-art[data-in="true"] [data-ring] {
-  animation: mf-art-ring 1100ms var(--mf-ease-out) var(--d, 0ms) forwards;
-}
-
-.mf-art-bob,
-.mf-art-old,
-.mf-art-turn-a,
-.mf-art-turn-b {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.mf-art[data-in="true"] .mf-art-bob {
-  animation: mf-art-bob 4.5s ease-in-out 1.6s infinite;
-}
-
-.mf-art[data-in="true"] .mf-art-old {
-  animation: mf-art-cut 7s ease-in-out 2.4s infinite;
-}
-
-.mf-art .mf-art-cut {
-  opacity: 0;
-}
-
-.mf-art[data-in="true"] .mf-art-cut {
-  animation: mf-art-slash 7s ease-in-out 2.4s infinite;
-}
-
-.mf-art[data-in="true"] .mf-art-turn-a {
-  animation: mf-art-turn 46s linear infinite;
-}
-
-.mf-art[data-in="true"] .mf-art-turn-b {
-  animation: mf-art-turn 62s linear infinite reverse;
-}
-
-.mf-art .mf-art-fill {
-  transform-box: fill-box;
-  transform-origin: center;
-  opacity: 0;
-}
-
-.mf-art[data-in="true"] .mf-art-fill {
-  animation: mf-art-fill 9s ease-in-out infinite;
-}
-
-.mf-art .mf-art-scan {
-  opacity: 0;
-}
-
-.mf-art[data-in="true"] .mf-art-scan {
-  animation: mf-art-scan 5s ease-in-out 3s infinite;
-}
-
-@keyframes mf-art-fill {
-  0%,
-  4% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  10%,
-  86% {
-    opacity: 1;
-    transform: none;
-  }
-  94%,
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes mf-art-scan {
-  0% {
-    opacity: 0;
-    transform: translateY(0);
-  }
-  12% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-    transform: translateY(74px);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(74px);
-  }
-}
-
-.mf-art .mf-art-text {
-  opacity: 0;
-}
-
-.mf-art[data-in="true"] .mf-art-text {
-  animation: mf-art-fade 700ms ease-out var(--d, 0ms) forwards;
-}
-
-@keyframes mf-art-fade {
-  to {
-    opacity: 1;
-  }
-}
-
-/* The closing seal of the hero drawing lands like a stamp once the code has been entered. */
-.mf-art .mf-art-seal {
-  transform-box: fill-box;
-  transform-origin: center;
-  opacity: 0;
-  animation: mf-art-stamp 420ms cubic-bezier(0.55, 0, 1, 0.45) 5.4s forwards;
-}
-
-@keyframes mf-art-stamp {
-  from {
-    opacity: 0;
-    transform: scale(1.7) rotate(-16deg);
-  }
-  to {
-    opacity: 0.9;
-    transform: rotate(-7deg);
-  }
-}
-
-@keyframes mf-art-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes mf-art-ring {
-  to {
-    stroke-dasharray: var(--da);
-  }
-}
-
-@keyframes mf-art-bob {
-  50% {
-    transform: translateY(-0.4rem);
-  }
-}
-
-/* The old link slips away from the new one, waits, then is drawn back in for the next round. */
-@keyframes mf-art-cut {
-  0%,
-  35% {
-    transform: none;
-    opacity: 1;
-  }
-  50%,
-  85% {
-    transform: translateX(-0.9rem) rotate(-6deg);
-    opacity: 0.3;
-  }
-  100% {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-@keyframes mf-art-slash {
-  0%,
-  38% {
-    opacity: 0;
-  }
-  50%,
-  85% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes mf-art-turn {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mf-art * {
-    animation: none !important;
-  }
-
-  .mf-art [data-draw] {
-    stroke-dashoffset: 0;
-  }
-
-  .mf-art .mf-art-fill,
-  .mf-art .mf-art-text {
-    opacity: 1;
-  }
-
-  .mf-art .mf-art-seal {
-    opacity: 0.9;
-    transform: rotate(-7deg);
-  }
-
-  .mf-art [data-ring] {
-    stroke-dasharray: var(--da);
-  }
 }

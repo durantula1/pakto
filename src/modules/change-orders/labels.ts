@@ -58,6 +58,9 @@ export function totalLabel(taxRate: string | number, prefix = "Обща цена
   return Number(taxRate) ? `${prefix} с ДДС` : `${prefix} (не се начислява ДДС)`;
 }
 
+/** The four steps on a document that is still waiting. A decision replaces the last label. */
+export const documentStatusStepLabels = ["Чернова", "Изпратена на клиента", "Отворена от клиента", "Решение на клиента"] as const;
+
 export const vatRateOptions = [
   { value: "20", label: "ДДС 20%" },
   { value: "9", label: "ДДС 9%" },

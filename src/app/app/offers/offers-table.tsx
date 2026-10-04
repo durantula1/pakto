@@ -42,7 +42,7 @@ export async function OffersTable({ filters, page, searchState }: {
         id: offer.id,
         href: `/app/offers/${offer.id}`,
         cells: [
-          <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode("offer", offer.sequenceNumber)}</span>,
+          <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode(offer.documentKind, offer.sequenceNumber)}</span>,
           <div key="title"><p className="font-medium">{offer.title}</p><p className="text-sm text-muted-foreground">{offer.projectName} · версия {offer.revisionNumber}</p></div>,
           offer.clientName ? <span key="client">{offer.clientName}</span> : <span key="client" className="text-muted-foreground">—</span>,
           <DocumentStatusBadge key="status" status={offer.revisionStatus} />,

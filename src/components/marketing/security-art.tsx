@@ -1,46 +1,14 @@
 "use client";
 
-import { useRef, type CSSProperties, type ReactNode } from "react";
-import { useInView, useReducedMotion } from "motion/react";
+import type { CSSProperties } from "react";
+
+import { Art, at } from "@/components/brand/line-art";
 
 /**
- * Line illustrations for the security tiles. Each one is a single stroked SVG that draws itself once
- * it is on screen (`data-draw` paths get `pathLength="1"`, so CSS can animate the whole outline),
- * then keeps one quiet loop going: a slab that floats, a link that is cut, rings that turn. The
- * CSS is in marketing.css ("Line art"); reduced motion shows the finished drawing without a loop.
+ * Line illustrations for the security tiles, on the dark security section: a slab that floats, a
+ * link that is cut, rings that turn. The frame and the draw-on CSS are shared (brand/line-art).
  */
-function Art({
-  label,
-  children,
-  large = false,
-}: {
-  label: string;
-  children: ReactNode;
-  large?: boolean;
-}) {
-  const ref = useRef<SVGSVGElement>(null);
-  const seen = useInView(ref, { once: true, amount: 0.5 });
-  const reduce = useReducedMotion();
-
-  return (
-    <svg
-      ref={ref}
-      viewBox="0 0 200 150"
-      fill="none"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      role="img"
-      aria-label={label}
-      data-in={seen || reduce ? "true" : "false"}
-      className={`mf-art mx-auto block w-full ${large ? "max-w-[26rem]" : "max-w-[20rem]"}`}
-    >
-      {children}
-    </svg>
-  );
-}
-
-const at = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+const large = "mx-auto max-w-[26rem]";
 
 /** A slab in isometric view: top face, then the two visible sides. `y` is the top corner. */
 function Slab({ y, className }: { y: number; className?: string }) {
@@ -212,7 +180,7 @@ export function SealArt() {
 /** "Запис на всяко решение": a sheet with the change written out, a signature, a hash tag, and a scan line checking it. */
 export function RecordArt() {
   return (
-    <Art label="Документ с подпис и отпечатък, който се проверява" large>
+    <Art label="Документ с подпис и отпечатък, който се проверява" className={large}>
       <g stroke="#b8ecda">
         <path
           d="M64 12h52l26 26v94a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z"
@@ -275,7 +243,7 @@ export function RecordArt() {
 /** "Код за всяко решение": a message with a code, six cells that fill, then a confirmation. */
 export function CodeArt() {
   return (
-    <Art label="Съобщение с код и шест клетки, които се попълват" large>
+    <Art label="Съобщение с код и шест клетки, които се попълват" className={large}>
       <g stroke="#b8ecda">
         <rect
           x="70"

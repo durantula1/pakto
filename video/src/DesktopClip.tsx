@@ -207,7 +207,7 @@ export function DesktopClip({ layout }: { layout: Layout }) {
         background={<Desk width={WORLD.width} height={WORLD.height} />}
       >
         <BrowserWindow
-          url="pakto.bg/app/offers/pr-042"
+          url="pakto.eu/app/offers/pr-042"
           width={FIRM.w}
           height={FIRM.h}
           style={{
@@ -246,7 +246,7 @@ export function DesktopClip({ layout }: { layout: Layout }) {
           </Screen>
         </BrowserWindow>
         <BrowserWindow
-          url="pakto.bg/portal/kuhnya-lozenets"
+          url="pakto.eu/portal/kuhnya-lozenets"
           width={CLIENT.w}
           height={CLIENT.h}
           style={{

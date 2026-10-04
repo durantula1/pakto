@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
     // Every page: no framing by other sites (clickjacking), no MIME sniffing, no full URLs to other
     // sites. HSTS is set by nginx on the VPS (docs/deployment-notes.md), where https ends.
     const siteHeaders = [
-      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      { key: "X-Frame-Options", value: "DENY" },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
     ];

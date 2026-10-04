@@ -30,8 +30,9 @@ function fromCents(value: bigint) {
  * What an approved offer version sets in motion, inside the transaction that records the decision:
  *  - the approved changes it includes stop adding to the price;
  *  - its payment terms become the offer's installments. Installments made from an earlier version's
- *    terms are replaced while nothing was paid against them; once something was, the plan is left
- *    alone and the team is asked to adjust it by hand.
+ *    terms are replaced while nothing was paid or claimed against them. Those with a receipt or a claim
+ *    stay as they are, and the new terms without one share what is left of the new price. Only when
+ *    more is already booked than the new price does the team have to sort it out by hand.
  */
 export async function applyApprovedOffer(tx: Transaction, input: { organizationId: string; projectId: string; offerId: string; revisionId: number; approvedAt: Date }) {
   const [revision] = await tx.select({ total: changeOrderRevisions.total, currency: changeOrderRevisions.currency, deadline: changeOrderRevisions.agreedDeadline, revisionNumber: changeOrderRevisions.revisionNumber, createdBy: changeOrderRevisions.createdBy })
@@ -58,46 +59,87 @@ export async function applyApprovedOffer(tx: Transaction, input: { organizationI
   // Installments made from earlier terms of this offer, and whether money or a claim already points at them.
   const previous = await tx.select({
     id: paymentInstallments.id,
+    amount: paymentInstallments.amount,
+    termId: paymentInstallments.termId,
     // Fully qualified: in a single-table select Drizzle writes a bare "id", which here would be the receipt's.
     touched: sql<boolean>`exists (select 1 from app.project_receipts r where r.installment_id = app.payment_installments.id) or exists (select 1 from app.payment_claims c where c.installment_id = app.payment_installments.id)`,
   }).from(paymentInstallments)
     .where(and(eq(paymentInstallments.projectId, input.projectId), eq(paymentInstallments.offerId, input.offerId), isNotNull(paymentInstallments.termId)));
-  if (previous.some((row) => row.touched)) {
+  const locked = previous.filter((row) => row.touched);
+  // What the client owes is this version plus the approved changes it did not take in; those keep adding to the price.
+  const [carried] = await tx.select({ sum: sql<string>`coalesce(sum(${changeOrderRevisions.total}), 0)::text` }).from(changeOrders)
+    .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
+    .where(and(eq(changeOrders.baselineOfferId, input.offerId), eq(changeOrders.documentKind, "change"), isNull(changeOrders.absorbedByRevisionId), isNull(changeOrders.archivedAt)));
+  // Installments the team added by hand stay as they are and count toward the price like any other.
+  const [manual] = await tx.select({ sum: sql<string>`coalesce(sum(${paymentInstallments.amount}), 0)::text` }).from(paymentInstallments)
+    .where(and(eq(paymentInstallments.projectId, input.projectId), eq(paymentInstallments.offerId, input.offerId), isNull(paymentInstallments.termId)));
+  const total = cents(revision.total) + cents(carried?.sum);
+  const manualSum = cents(manual?.sum);
+
+  // Which new terms the locked installments already stand for: the same schedule line, else the same position.
+  const covered = new Set<number>();
+  let lockedSum = 0n;
+  if (locked.length) {
+    const oldTerms = await tx.select({ id: changeOrderPaymentTerms.id, position: changeOrderPaymentTerms.position, lineKey: changeOrderPaymentTerms.scheduleLineKey })
+      .from(changeOrderPaymentTerms).where(inArray(changeOrderPaymentTerms.id, locked.map((row) => row.termId!)));
+    for (const row of locked) {
+      lockedSum += cents(row.amount);
+      const old = oldTerms.find((term) => term.id === row.termId);
+      const match = terms.find((term) => !covered.has(term.id) && ((old?.lineKey && term.scheduleLineKey === old.lineKey) || (!old?.lineKey && term.position === old?.position)))
+        ?? terms.find((term) => !covered.has(term.id) && term.position === old?.position);
+      if (match) covered.add(match.id);
+    }
+  }
+  // More is already booked than the new price: nothing can be spread, a person decides.
+  if (total - lockedSum - manualSum < 0n) {
     await notifyProjectStaff(tx, {
-      organizationId: input.organizationId, projectId: input.projectId, eventType: "payment_plan_review",
+      organizationId: input.organizationId, projectId: input.projectId, eventType: "payment_plan_review", permission: "payments.record",
       title: "Провери платежния план",
-      body: `Клиентът одобри версия ${revision.revisionNumber} с нови условия за плащане. По стария план вече има плащания, затова вноските не са сменени автоматично.`,
+      body: `Клиентът одобри версия ${revision.revisionNumber}. Платените и ръчно добавените вноски вече надхвърлят новата цена, затова планът не е сменен автоматично.`,
       href: `/app/projects/${input.projectId}?tab=payments`,
     });
     return;
   }
-  if (previous.length) await tx.delete(paymentInstallments).where(inArray(paymentInstallments.id, previous.map((row) => row.id)));
 
+  // Untouched installments of the old plan give way to the new terms; the locked ones stay exactly as they are.
+  const stale = previous.filter((row) => !row.touched);
+  if (stale.length) await tx.delete(paymentInstallments).where(inArray(paymentInstallments.id, stale.map((row) => row.id)));
+
+  const open = terms.map((term, index) => ({ term, index })).filter(({ term }) => !covered.has(term.id));
+  const remaining = total - lockedSum - manualSum;
   const stages = await tx.select({ id: projectMilestones.id, dueOn: projectMilestones.dueOn, lineKey: projectMilestones.scheduleLineKey }).from(projectMilestones)
     .where(and(eq(projectMilestones.projectId, input.projectId), eq(projectMilestones.offerId, input.offerId), isNotNull(projectMilestones.scheduleLineKey)));
   const today = sofiaDay.format(input.approvedAt);
   const fallback = revision.deadline ?? today;
-  const amounts = termAmounts(cents(revision.total), terms.map((term) => ({ percent: Number(term.percent) })));
-  await tx.insert(paymentInstallments).values(terms.map((term, index) => {
-    const stage = term.scheduleLineKey ? stages.find((item) => item.lineKey === term.scheduleLineKey) : undefined;
-    const trigger = term.dueTrigger as PaymentTermTrigger;
-    const dueOn = trigger === "on_approval" ? today : trigger === "on_date" ? term.dueOn ?? fallback : trigger === "on_stage" ? stage?.dueOn ?? fallback : fallback;
-    return {
-      organizationId: input.organizationId,
-      projectId: input.projectId,
-      offerId: input.offerId,
-      termId: term.id,
-      milestoneId: stage?.id ?? null,
-      kind: termPaymentKind(trigger, index, terms.length),
-      title: term.title,
-      amount: fromCents(amounts[index]!),
-      currency: revision.currency,
-      dueOn,
-      // Made by the system from the approved terms; attributed to whoever wrote that version.
-      createdBy: revision.createdBy,
-    };
-  }));
-  await tx.insert(timelineEvents).values({ organizationId: input.organizationId, projectId: input.projectId, changeOrderId: input.offerId, revisionId: input.revisionId, actorType: "system", eventType: "payment_plan_created", visibility: "client", metadata: { count: terms.length } });
+  const base = { organizationId: input.organizationId, projectId: input.projectId, offerId: input.offerId, currency: revision.currency, createdBy: revision.createdBy };
+
+  if (open.length) {
+    // The open terms share what is left in the ratio of their own percentages.
+    const percentSum = open.reduce((sum, { term }) => sum + Number(term.percent), 0);
+    const amounts = termAmounts(remaining, open.map(({ term }) => ({ percent: percentSum > 0 ? (Number(term.percent) * 100) / percentSum : 100 / open.length })));
+    await tx.insert(paymentInstallments).values(open.map(({ term, index }, position) => {
+      const stage = term.scheduleLineKey ? stages.find((item) => item.lineKey === term.scheduleLineKey) : undefined;
+      const trigger = term.dueTrigger as PaymentTermTrigger;
+      const dueOn = trigger === "on_approval" ? today : trigger === "on_date" ? term.dueOn ?? fallback : trigger === "on_stage" ? stage?.dueOn ?? fallback : fallback;
+      return {
+        ...base,
+        termId: term.id,
+        milestoneId: stage?.id ?? null,
+        kind: termPaymentKind(trigger, index, terms.length),
+        title: term.title,
+        amount: fromCents(amounts[position]!),
+        dueOn,
+      };
+    }));
+  } else if (remaining > 0n) {
+    // Every term has a paid or claimed installment, but the price is higher than what they add up to.
+    await tx.insert(paymentInstallments).values({ ...base, kind: "other", title: `Остатък по версия ${revision.revisionNumber}`, amount: fromCents(remaining), dueOn: fallback });
+  }
+  await tx.insert(timelineEvents).values({
+    organizationId: input.organizationId, projectId: input.projectId, changeOrderId: input.offerId, revisionId: input.revisionId, actorType: "system",
+    eventType: locked.length ? "payment_plan_adjusted" : "payment_plan_created", visibility: "client",
+    metadata: locked.length ? { rebuilt: true, kept: locked.length, remaining: fromCents(remaining) } : { count: terms.length },
+  });
 }
 
 /**
@@ -153,7 +195,7 @@ export async function applyApprovedChange(tx: Transaction, input: { organization
   await tx.insert(timelineEvents).values({ organizationId: input.organizationId, projectId: input.projectId, changeOrderId: input.changeOrderId, revisionId: input.revisionId, actorType: "system", eventType: "payment_plan_adjusted", visibility: "client", metadata: { delta: fromCents(delta), unassigned: fromCents(left) } });
   if (left !== 0n) {
     await notifyProjectStaff(tx, {
-      organizationId: input.organizationId, projectId: input.projectId, eventType: "payment_plan_review",
+      organizationId: input.organizationId, projectId: input.projectId, eventType: "payment_plan_review", permission: "payments.record",
       title: "Провери платежния план",
       body: "Одобреното намаление е по-голямо от неплатените вноски. Останалата част е вече платена и не е върната автоматично.",
       href: `/app/projects/${input.projectId}?tab=payments`,

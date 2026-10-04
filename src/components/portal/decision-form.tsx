@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 import { Radio, RadioGroup } from "react-aria-components";
 import { ArrowLeft, MailCheck, MessageSquareText, XCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -53,8 +54,8 @@ export function PortalDecisionForm({
 }) {
   const intent = useDecisionIntent();
   const [decision, setDecision] = useState<Decision>(intent ?? "approved");
-  const [codeState, requestCode, requesting] = useActionState<DecisionState, FormData>(requestDecisionCodeAction, {});
-  const [submitState, submit, submitting] = useActionState<DecisionState, FormData>(submitPortalDecisionAction, {});
+  const [codeState, requestCode, requesting] = useActionState<DecisionState, FormData>(offlineSafe(requestDecisionCodeAction), {});
+  const [submitState, submit, submitting] = useActionState<DecisionState, FormData>(offlineSafe(submitPortalDecisionAction), {});
   const [codeFor, setCodeFor] = useState<string | null>(null);
   const [typedName, setTypedName] = useState(defaultName ?? "");
   const [comment, setComment] = useState("");

@@ -15,7 +15,7 @@ import { FilterSelect } from "@/components/workspace/filter-select";
 import { FilterBar, ListPagination, SearchField } from "@/components/workspace/list-filters";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
-import { PERMISSION_KEYS, can, roleLabel } from "@/lib/authz/permissions";
+import { PERMISSION_KEYS, PRESETS, can, roleLabel } from "@/lib/authz/permissions";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { lastPage, PAGE_SIZE, pageHref, pageOffset, parsePage } from "@/lib/pagination";
@@ -24,7 +24,7 @@ import { countTeamMembers, getTeamCounters, listPendingOwnerRequests, listPendin
 import { memberColumns, membersLabel, searchLabel } from "./team-sections";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const roles: Record<string, string> = { owner: "Собственик", office: "Офис", field: "Терен", admin: "Администратор" };
+const roles: Record<string, string> = { owner: "Собственик", office: PRESETS.office.label, field: PRESETS.field.label, admin: "Администратор" };
 
 export const metadata: Metadata = { title: "Екип" };
 
@@ -85,7 +85,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                   <span className="text-xs tabular-nums text-muted-foreground">{granted}/{PERMISSION_KEYS.length}</span>
                 </div>,
                 <Badge key="status" variant={member.status === "active" ? "approved" : "outline"}>{member.status === "active" ? "Активен" : "Без достъп"}</Badge>,
-                <span key="joined" className="whitespace-nowrap text-muted-foreground">{member.joinedAt.toLocaleDateString("bg-BG")}</span>,
+                <span key="joined" className="whitespace-nowrap text-muted-foreground">{member.joinedAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" })}</span>,
               ],
             };
           })}
@@ -102,7 +102,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               invite.email,
               roleLabel(invite),
               invite.role === "owner" || invite.allProjects ? "Всички" : invite.projectIds.length ? String(invite.projectIds.length) : "Няма",
-              invite.expiresAt.toLocaleDateString("bg-BG"),
+              invite.expiresAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }),
               <ConfirmDialog key={invite.id} trigger={<Button type="button" variant="destructive" size="sm">Отмени поканата</Button>} title="Да отменя ли поканата?" description={`Линкът в поканата за ${invite.email} спира да работи. Можеш да поканиш човека отново.`} confirmLabel="Отмени поканата" action={revokeTeamInviteAction} fields={{ inviteId: invite.id }} success="Поканата е отменена" />,
             ],
           }))}

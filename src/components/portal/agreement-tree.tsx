@@ -53,7 +53,7 @@ export function AgreementTree({ state, portalPublicId }: { state: ProjectState; 
                           <span className="text-xs text-muted-foreground">{documentName("change", change.sequenceNumber)}</span>
                           <span className="line-clamp-2 text-sm leading-snug font-medium">{change.title}</span>
                         </span>
-                        <span className="shrink-0 text-sm font-medium tabular-nums">{signed(minor, offer.currency)}</span>
+                        <span className={cn("shrink-0 text-sm tabular-nums", minor === 0n ? "text-muted-foreground" : "font-medium")}>{minor === 0n ? "без промяна в цената" : signed(minor, offer.currency)}</span>
                         <Arrow small />
                       </Link>
                     </li>

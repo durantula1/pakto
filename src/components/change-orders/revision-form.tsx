@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 import Link from "next/link";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
@@ -84,7 +85,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   const [scheduleRows, setScheduleRows] = useState<ScheduleRow[]>(() => scheduleRowsFrom(initial.schedule ?? []));
   const [termRows, setTermRows] = useState<TermRow[]>(() => termRowsFrom(initial.paymentTerms ?? []));
   const [absorbed, setAbsorbed] = useState<string[]>(() => (initial.absorbedChangeIds ?? []).filter((id) => absorbable.some((change) => change.id === id)));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = sofiaTodayIso();
   const [localError, setLocalError] = useState("");
   const error = localError || state.error;
   useEffect(() => { if (state.error) toast.error(state.error); }, [state.error]);

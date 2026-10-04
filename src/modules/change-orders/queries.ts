@@ -24,13 +24,16 @@ import type { TenantContext } from "@/lib/authz/tenant-context";
 import { documentLogo } from "@/modules/organizations/logo";
 import { expireOverdue } from "@/modules/change-orders/reminders";
 
+/** `waiting` is the dashboard's "awaiting decision": sent to the client, seen or not. */
+export type ChangeOrderStatusFilter = "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested" | "waiting";
+
 export async function listChangeOrders(input: {
   context: TenantContext;
   projectId?: string;
   baselineOfferId?: string;
   documentKind?: "offer" | "change";
   query?: string;
-  status?: "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested";
+  status?: ChangeOrderStatusFilter;
   limit: number;
   offset?: number;
 }) {
@@ -71,7 +74,7 @@ function changeOrderFilters(input: {
   baselineOfferId?: string;
   documentKind?: "offer" | "change";
   query?: string;
-  status?: "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested";
+  status?: ChangeOrderStatusFilter;
 }) {
   const db = getDatabase();
   return and(
@@ -81,7 +84,7 @@ function changeOrderFilters(input: {
     input.projectId ? eq(changeOrders.projectId, input.projectId) : undefined,
     input.baselineOfferId ? eq(changeOrders.baselineOfferId, input.baselineOfferId) : undefined,
     input.documentKind ? eq(changeOrders.documentKind, input.documentKind) : undefined,
-    input.status ? eq(changeOrderRevisions.status, input.status) : undefined,
+    input.status === "waiting" ? inArray(changeOrderRevisions.status, ["sent", "viewed"]) : input.status ? eq(changeOrderRevisions.status, input.status) : undefined,
     input.query ? or(ilike(changeOrderRevisions.title, `%${input.query}%`), ilike(projects.name, `%${input.query}%`)) : undefined,
     isNull(changeOrders.archivedAt),
   );
@@ -93,7 +96,7 @@ export async function countChangeOrders(input: {
   baselineOfferId?: string;
   documentKind?: "offer" | "change";
   query?: string;
-  status?: "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested";
+  status?: ChangeOrderStatusFilter;
 }) {
   const [row] = await getDatabase().select({ total: sql<number>`count(*)::int` })
     .from(changeOrders)
@@ -130,6 +133,7 @@ export async function listApprovedOffers(
       projectId: changeOrders.projectId,
       sequenceNumber: changeOrders.sequenceNumber,
       title: changeOrderRevisions.title,
+      taxRate: changeOrderRevisions.taxRate,
     })
     .from(changeOrders)
     // Titled as approved: a newer version under negotiation may still change.

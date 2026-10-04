@@ -33,18 +33,18 @@ export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label
     ],
   },
   {
-    label: "Пари",
+    label: "Финанси",
     items: [
       { key: "payments.record", label: "Записва плащания", description: "Отбелязва получени суми и корекции." },
-      { key: "finance.view", label: "Финанси", description: "Секция „Плащания“ и месечната справка." },
+      { key: "finance.view", label: "Вижда финансите", description: "Секция „Плащания“ и месечната справка." },
     ],
   },
 ];
 
 export const PRESETS = {
-  field: { label: "Терен", description: "Подготвя промени и отчита етапи.", permissions: ["changes.draft", "milestones.manage"] },
+  field: { label: "Специалист", description: "Подготвя промени и отчита етапи.", permissions: ["changes.draft", "milestones.manage"] },
   office: {
-    label: "Офис",
+    label: "Координатор",
     description: "Оферти, изпращане към клиента, финанси.",
     permissions: PERMISSION_KEYS.filter((key) => key !== "payments.record"),
   },

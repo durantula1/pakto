@@ -1,20 +1,28 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
-import { LoaderCircle } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { LEGAL_DOCUMENTS } from "@/lib/legal";
 import { resendConfirmationAction, signInAction, signUpAction } from "@/modules/auth/actions";
 
 export function AuthForm({ mode, next, defaultEmail }: { mode: "sign-in" | "sign-up"; next?: string; /** The address a team invitation was sent to. */ defaultEmail?: string }) {
   const action = mode === "sign-in" ? signInAction : signUpAction;
   const [state, formAction, pending] = useActionState(action, {});
+  const [showPassword, setShowPassword] = useState(false);
   return <>
     <form noValidate action={formAction} className="space-y-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {mode === "sign-up" && <label className="block text-sm font-medium">Име<input name="displayName" required autoComplete="name" className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>}
       <label className="block text-sm font-medium">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>
-      <label className="block text-sm font-medium">Парола<input name="password" type="password" required minLength={8} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>
+      <label className="block text-sm font-medium">Парола
+        <span className="relative mt-1.5 block">
+          <input name="password" type={showPassword ? "text" : "password"} required minLength={8} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} className="h-10 w-full rounded-xl border bg-background pl-3 pr-11 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" />
+          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Скрий паролата" : "Покажи паролата"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted-foreground hover:text-foreground">
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </span>
+      </label>
       {mode === "sign-up" && <label className="flex items-start gap-2.5 text-sm text-muted-foreground"><input name="acceptLegal" type="checkbox" required className="mt-0.5 size-4 shrink-0 accent-primary" /><span>Приемам <Link href={LEGAL_DOCUMENTS.terms.href} target="_blank" className="font-medium text-foreground underline underline-offset-4">Условията за ползване</Link> и <Link href={LEGAL_DOCUMENTS.privacy.href} target="_blank" className="font-medium text-foreground underline underline-offset-4">Политиката за поверителност</Link>.</span></label>}
       {mode === "sign-in" && <div className="-mt-2 text-right"><Link href="/forgot-password" className="text-xs font-medium text-muted-foreground hover:text-foreground">Забравена парола?</Link></div>}
       {state.error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">{state.error}</p>}

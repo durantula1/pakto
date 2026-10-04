@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
@@ -9,6 +9,7 @@ import { getDatabase } from "@/db";
 import { catalogItems, changeOrderLineItems, changeOrderRevisions, changeOrders, offerTemplates } from "@/db/schema";
 import { requirePermission, requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
+import { canonicalCategory, categoryKey } from "@/modules/catalog/categories";
 
 export type CatalogState = { error?: string; ok?: number; imported?: number };
 
@@ -26,6 +27,13 @@ async function catalogEditor() {
   return context;
 }
 
+/** Category names in use, so saves and imports reuse their spelling. */
+async function usedCategories(organizationId: string) {
+  const rows = await getDatabase().selectDistinct({ category: catalogItems.category }).from(catalogItems)
+    .where(and(eq(catalogItems.organizationId, organizationId), isNull(catalogItems.archivedAt)));
+  return rows.map((row) => row.category);
+}
+
 function done() {
   revalidatePath("/app/catalog");
   revalidatePath("/app/offers/new");
@@ -36,7 +44,7 @@ export async function saveCatalogItemAction(_: CatalogState, formData: FormData)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   try {
     const context = await catalogEditor();
-    const values = { name: parsed.data.name, unit: parsed.data.unit || null, unitPrice: parsed.data.unitPrice.toFixed(2), category: parsed.data.category || null };
+    const values = { name: parsed.data.name, unit: parsed.data.unit || null, unitPrice: parsed.data.unitPrice.toFixed(2), category: canonicalCategory(parsed.data.category, await usedCategories(context.organizationId)) };
     if (parsed.data.id) {
       await getDatabase().update(catalogItems).set({ ...values, updatedAt: new Date() })
         .where(and(eq(catalogItems.id, parsed.data.id), eq(catalogItems.organizationId, context.organizationId)));
@@ -65,6 +73,28 @@ export async function archiveCatalogItemAction(formData: FormData) {
   }
 }
 
+/** Renames a category on every active item; a name that already exists merges the two. */
+export async function renameCatalogCategoryAction(formData: FormData): Promise<CatalogState & { merged?: boolean }> {
+  const parsed = z.object({ from: z.string().trim().min(1), to: z.string().trim().min(1, "Въведи име на категорията.").max(80) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  try {
+    const context = await catalogEditor();
+    const fromKey = categoryKey(parsed.data.from);
+    const rows = await getDatabase().select({ id: catalogItems.id, category: catalogItems.category }).from(catalogItems)
+      .where(and(eq(catalogItems.organizationId, context.organizationId), isNull(catalogItems.archivedAt)));
+    const ids = rows.filter((row) => categoryKey(row.category) === fromKey).map((row) => row.id);
+    if (!ids.length) return { error: "Категорията вече я няма." };
+    const others = rows.filter((row) => categoryKey(row.category) !== fromKey).map((row) => row.category);
+    const to = canonicalCategory(parsed.data.to, others)!;
+    await getDatabase().update(catalogItems).set({ category: to, updatedAt: new Date() })
+      .where(and(eq(catalogItems.organizationId, context.organizationId), inArray(catalogItems.id, ids)));
+    done();
+    return { ok: Date.now(), merged: others.some((name) => categoryKey(name) === categoryKey(to)) };
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Категорията не беше преименувана." };
+  }
+}
+
 /** One item per line: `име; мярка; цена; категория`. Comma or tab also work as separators; a header row is skipped. */
 export async function importCatalogAction(_: CatalogState, formData: FormData): Promise<CatalogState> {
   const text = String(formData.get("csv") ?? "");
@@ -85,9 +115,12 @@ export async function importCatalogAction(_: CatalogState, formData: FormData): 
   if (!rows.length) return { error: "Няма валидни редове." };
   try {
     const context = await catalogEditor();
+    const categories = await usedCategories(context.organizationId);
     await getDatabase().transaction(async (tx) => {
       for (const row of rows) {
-        const values = { name: row.name, unit: row.unit || null, unitPrice: row.unitPrice.toFixed(2), category: row.category || null };
+        const category = canonicalCategory(row.category, categories);
+        if (category) categories.push(category);
+        const values = { name: row.name, unit: row.unit || null, unitPrice: row.unitPrice.toFixed(2), category };
         const [existing] = await tx.select({ id: catalogItems.id }).from(catalogItems)
           .where(and(eq(catalogItems.organizationId, context.organizationId), isNull(catalogItems.archivedAt), sql`lower(${catalogItems.name}) = lower(${row.name})`)).limit(1);
         if (existing) await tx.update(catalogItems).set({ ...values, updatedAt: new Date() }).where(eq(catalogItems.id, existing.id));

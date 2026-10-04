@@ -607,6 +607,33 @@ type SentEmail = "sent" | "no-email" | "failed";
 /** The notice the document page shows after sending, so a missing email is never silent. */
 const sentNotice: Record<SentEmail, string> = { sent: "sent", "no-email": "sent-no-email", failed: "sent-email-failed" };
 
+/**
+ * The client sees offers and changes numbered without gaps, so a document takes the next number
+ * among the sent ones when it is first sent. A draft created earlier but sent later swaps numbers
+ * with the unsent draft that held it; the number is not part of the content hash.
+ */
+async function numberOnFirstSend(transaction: Transaction, change: { id: string; projectId: string; documentKind: "offer" | "change" }) {
+  await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${change.projectId}))`);
+  const rows = await transaction
+    .select({
+      id: changeOrders.id,
+      sequenceNumber: changeOrders.sequenceNumber,
+      // Spelled out: in a single-table select Drizzle renders the column as a bare "id", which here would mean r.id.
+      sent: sql<boolean>`exists (select 1 from app.change_order_revisions r where r.change_order_id = app.change_orders.id and r.frozen_at is not null)`,
+    })
+    .from(changeOrders)
+    .where(and(eq(changeOrders.projectId, change.projectId), eq(changeOrders.documentKind, change.documentKind)));
+  const self = rows.find((row) => row.id === change.id);
+  if (!self || self.sent) return;
+  const target = Math.max(0, ...rows.filter((row) => row.sent).map((row) => row.sequenceNumber)) + 1;
+  // Only ever moves down: an older draft below the sent ones keeps its number and fills its gap.
+  if (self.sequenceNumber <= target) return;
+  const holder = rows.find((row) => row.sequenceNumber === target);
+  await transaction.update(changeOrders).set({ sequenceNumber: -target }).where(eq(changeOrders.id, self.id));
+  if (holder) await transaction.update(changeOrders).set({ sequenceNumber: self.sequenceNumber }).where(eq(changeOrders.id, holder.id));
+  await transaction.update(changeOrders).set({ sequenceNumber: target }).where(eq(changeOrders.id, self.id));
+}
+
 /** Freezes the current draft, sends it to the client's portal and emails them the link. */
 async function sendCurrentRevision(context: TenantContext, changeOrderId: string): Promise<SentEmail> {
   const database = getDatabase();
@@ -737,6 +764,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
         ...(absorbedChanges.length ? { absorbedChanges } : {}),
       });
       if (revision.status === "draft") {
+        await numberOnFirstSend(transaction, { id: change.id, projectId: change.projectId, documentKind: change.documentKind });
         await transaction
           .update(changeOrderRevisions)
           .set({ status: "sent", frozenAt: now, contentHash, responseDueAt, logoStoragePath: change.logoStoragePath })

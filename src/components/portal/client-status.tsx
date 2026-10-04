@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 export const clientStatusLabels: Record<string, string> = {
   sent: "Чака вашето решение",
   viewed: "Чака вашето решение",
-  approved: "Одобрихте",
-  declined: "Отказахте",
-  changes_requested: "Поискахте промяна",
+  approved: "Одобрена",
+  declined: "Отказана",
+  changes_requested: "Поискана промяна",
   superseded: "Фирмата подготвя нова версия",
   expired: "Срокът изтече",
   canceled: "Анулирана от фирмата",
@@ -20,6 +20,13 @@ const tones: Record<string, "success-soft" | "info-soft" | "danger-soft" | "seco
   changes_requested: "info-soft",
   superseded: "info-soft",
 };
+
+const dots = { "success-soft": "bg-tile-mint-foreground", "info-soft": "bg-tile-blue-foreground", "danger-soft": "bg-tile-coral-foreground", secondary: "bg-muted-foreground/60" } as const;
+
+/** A dot in the same colour as the status badge, for a row that already shows the badge. */
+export function clientStatusDotClassName(status: string) {
+  return dots[tones[status] ?? "secondary"];
+}
 
 export function ClientStatusBadge({ status, className }: { status: string; className?: string }) {
   return <Badge variant={tones[status] ?? "secondary"} className={className}>{clientStatusLabels[status] ?? status}</Badge>;

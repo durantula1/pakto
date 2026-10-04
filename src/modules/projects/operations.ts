@@ -8,7 +8,7 @@ import "@/lib/zod-messages";
 import { getDatabase } from "@/db";
 import {
   changeOrderPaymentTerms, changeOrderRevisions, changeOrderScheduleItems, changeOrders, offerAcceptances, paymentClaims, paymentDisputes,
-  paymentInstallments, projectMilestones, projectReceipts, timelineEvents,
+  paymentInstallments, projectMilestones, projectReceipts, staffNotifications, timelineEvents,
 } from "@/db/schema";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireProjectCapability } from "@/lib/authz/project-access";
@@ -257,10 +257,19 @@ export async function editInstallmentAction(formData: FormData): Promise<ActionR
     const db = getDatabase();
     const offerId = await offerOf(db, context.organizationId, data.projectId, data.offerId);
     const milestoneId = await checkedStage(db, data.projectId, data.milestoneId, offerId);
-    const [row] = await db.update(paymentInstallments).set({ offerId, milestoneId, kind: data.kind, title: data.title, amount: data.amount, dueOn: data.dueOn, updatedAt: new Date() })
-      .where(and(eq(paymentInstallments.id, data.installmentId), eq(paymentInstallments.projectId, data.projectId), eq(paymentInstallments.organizationId, context.organizationId)))
-      .returning({ id: paymentInstallments.id });
-    if (!row) throw new Error("Вноската не е намерена.");
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${data.projectId}))`);
+      const [current] = await tx.select({ offerId: paymentInstallments.offerId }).from(paymentInstallments)
+        .where(and(eq(paymentInstallments.id, data.installmentId), eq(paymentInstallments.projectId, data.projectId), eq(paymentInstallments.organizationId, context.organizationId))).for("update").limit(1);
+      if (!current) throw new Error("Вноската не е намерена.");
+      // What was paid or claimed stays tied to this installment and its offer.
+      const [received] = await tx.select({ sum: sql<string>`coalesce(sum(${projectReceipts.amount}), 0)::text`, count: sql<number>`count(*)::int` }).from(projectReceipts).where(eq(projectReceipts.installmentId, data.installmentId));
+      const [claims] = await tx.select({ count: sql<number>`count(*)::int` }).from(paymentClaims).where(and(eq(paymentClaims.installmentId, data.installmentId), eq(paymentClaims.status, "pending")));
+      if (((received?.count ?? 0) > 0 || (claims?.count ?? 0) > 0) && offerId !== current.offerId) throw new Error("По тази вноска има плащане. Не може да я преместиш към друга оферта.");
+      if ((received?.count ?? 0) > 0 && Number(data.amount) < Number(received?.sum ?? 0)) throw new Error(`По тази вноска са получени ${formatAmount(received?.sum ?? 0)} EUR. Сумата ѝ не може да е по-малка.`);
+      await tx.update(paymentInstallments).set({ offerId, milestoneId, kind: data.kind, title: data.title, amount: data.amount, dueOn: data.dueOn, updatedAt: new Date() })
+        .where(eq(paymentInstallments.id, data.installmentId));
+    });
     refresh(data.projectId);
   }, "Вноската не беше записана.");
 }
@@ -320,6 +329,15 @@ export async function recordReceiptAction(formData: FormData): Promise<ActionRes
     const db = getDatabase();
     const offerId = await receiptOffer(db, context.organizationId, data.projectId, data.installmentId, data.offerId);
     await db.transaction(async (tx) => {
+      // The same person sending the same payment twice within a minute is a double click, not two payments.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${data.projectId}))`);
+      const [twin] = await tx.select({ id: projectReceipts.id }).from(projectReceipts).where(and(
+        eq(projectReceipts.projectId, data.projectId), eq(projectReceipts.createdBy, context.userId), eq(projectReceipts.amount, data.amount),
+        eq(projectReceipts.receivedOn, data.receivedOn), eq(projectReceipts.method, data.method), isNull(projectReceipts.correctionOfId),
+        data.installmentId ? eq(projectReceipts.installmentId, data.installmentId) : isNull(projectReceipts.installmentId),
+        sql`${projectReceipts.createdAt} > now() - interval '1 minute'`,
+      )).limit(1);
+      if (twin) throw new Error("Това плащане вече е записано преди малко.");
       const [receipt] = await tx.insert(projectReceipts).values({ organizationId: context.organizationId, projectId: data.projectId, offerId, installmentId: data.installmentId, kind: data.kind, amount: data.amount, currency: "EUR", method: data.method, receivedOn: data.receivedOn, note: data.note || null, createdBy: context.userId }).returning({ id: projectReceipts.id });
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, changeOrderId: offerId, actorType: "staff", actorId: context.userId, eventType: "payment_received", visibility: "client", metadata: { receiptId: receipt!.id, amount: data.amount, currency: "EUR", receivedOn: data.receivedOn } });
     });
@@ -330,7 +348,8 @@ export async function recordReceiptAction(formData: FormData): Promise<ActionRes
 
 export async function correctReceiptAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
-    const data = z.object({ projectId: uuid, receiptId: uuid, amount: money, reason: z.string().trim().min(3, "Напиши причина.").max(500) }).parse(Object.fromEntries(formData));
+    // 0 is allowed: a payment recorded by mistake is cancelled with the reversal alone.
+    const data = z.object({ projectId: uuid, receiptId: uuid, amount: z.coerce.number().min(0, "Сумата не може да е отрицателна.").max(999999999).transform((value) => value.toFixed(2)), reason: z.string().trim().min(3, "Напиши причина.").max(500) }).parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
@@ -342,7 +361,7 @@ export async function correctReceiptAction(formData: FormData): Promise<ActionRe
       const common = { organizationId: context.organizationId, projectId: data.projectId, offerId: receipt.offerId, correctionOfId: data.receiptId, installmentId: receipt.installmentId, kind: receipt.kind, currency: receipt.currency, method: receipt.method, receivedOn: receipt.receivedOn, createdBy: context.userId };
       await tx.insert(projectReceipts).values([
         { ...common, amount: (-Number(receipt.amount)).toFixed(2), note: `Сторно: ${data.reason}` },
-        { ...common, amount: data.amount, note: `Корекция: ${data.reason}` },
+        ...(Number(data.amount) > 0 ? [{ ...common, amount: data.amount, note: `Корекция: ${data.reason}` }] : []),
       ]);
       await tx.update(paymentDisputes).set({ status: "resolved", resolution: `Плащането е коригирано: ${data.reason}`, resolvedAt: new Date(), resolvedBy: context.userId })
         .where(and(eq(paymentDisputes.receiptId, data.receiptId), eq(paymentDisputes.status, "open")));
@@ -403,6 +422,9 @@ export async function resolvePaymentDisputeAction(formData: FormData): Promise<A
         .returning({ id: paymentDisputes.id, receiptId: paymentDisputes.receiptId });
       if (!dispute) throw new Error("Спорът не е намерен.");
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, actorType: "staff", actorId: context.userId, eventType: "payment_dispute_resolved", visibility: "client", metadata: { receiptId: dispute.receiptId, resolution } });
+      // Answered, so it stops asking the team for a reply.
+      await tx.update(staffNotifications).set({ readAt: new Date() })
+        .where(and(eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.eventType, "payment_disputed"), sql`${staffNotifications.href} like ${`%#dispute-${disputeId}`}`, isNull(staffNotifications.readAt)));
     });
     emailClient(projectId, {
       subject: "Фирмата отговори на оспорено плащане",
@@ -478,6 +500,9 @@ export async function requestAcceptanceAction(formData: FormData): Promise<Actio
       if (latest?.kind === "requested") throw new Error("Приемането вече чака клиента.");
       await tx.insert(offerAcceptances).values({ organizationId: context.organizationId, projectId, offerId, kind: "requested", note: note || null, actorType: "staff", actorId: context.userId });
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: offerId, actorType: "staff", actorId: context.userId, eventType: "acceptance_requested", visibility: "client", metadata: { note: note || null } });
+      // The client's remarks are answered by asking for a new review.
+      await tx.update(staffNotifications).set({ readAt: new Date() })
+        .where(and(eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.projectId, projectId), eq(staffNotifications.eventType, "acceptance_issues"), isNull(staffNotifications.readAt)));
       return offer.title;
     });
     emailClient(projectId, {

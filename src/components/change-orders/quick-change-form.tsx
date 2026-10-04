@@ -35,6 +35,8 @@ type OfferOption = {
   projectId: string;
   sequenceNumber: number;
   title: string | null;
+  /** VAT of the approved offer; a change starts with the same rate. */
+  taxRate: string;
 };
 
 const scheduleOptions = [
@@ -75,6 +77,7 @@ export function QuickChangeForm({
   const [offers, setOffers] = useState<OfferOption[]>(defaultOffers);
   const [loadingOffers, setLoadingOffers] = useState(false);
   const offersRequest = useRef(0);
+  const [vat, setVat] = useState<string | null>(null);
   const [scheduleType, setScheduleType] = useState("none");
   const [showMore, setShowMore] = useState(false);
   const visibleOffers = loadingOffers
@@ -216,6 +219,7 @@ export function QuickChangeForm({
             isDisabled={!visibleOffers.length}
             // Preselected when opened from an offer, or when the project has just one.
             defaultSelectedKey={visibleOffers.find((offer) => offer.id === defaultOfferId)?.id ?? (visibleOffers.length === 1 ? visibleOffers[0]!.id : undefined)}
+            onSelectionChange={(key) => { const picked = visibleOffers.find((offer) => offer.id === key); if (picked) setVat(String(Number(picked.taxRate))); }}
             className="w-full"
           >
             <SelectTrigger id="baselineOfferId" className="h-12 text-base">
@@ -352,7 +356,7 @@ export function QuickChangeForm({
         </section>
       )}
       <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
-        <VatRateField defaultValue={defaultTaxRate} />
+        <VatRateField value={vat ?? String(Number(visibleOffers.find((offer) => offer.id === defaultOfferId)?.taxRate ?? (visibleOffers.length === 1 ? visibleOffers[0]!.taxRate : defaultTaxRate)))} onChange={setVat} />
       </section>
       <StagedAttachments files={files} onChange={setFiles} />
       {files.length ? <input type="hidden" name="hasAttachments" value="1" /> : null}

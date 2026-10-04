@@ -13,7 +13,7 @@ import { DownloadLink, useDownloading } from "@/components/workspace/download-tr
 import { cn } from "@/lib/utils";
 import type { AccountDeletionPlan, Blocker } from "@/modules/account/queries";
 import {
-  cancelAccountDeletionAction, changeEmailAction, changePasswordAction, leaveOrganizationAction, requestAccountDeletionAction, signOutEverywhereAction,
+  acceptLegalDocumentsAction, cancelAccountDeletionAction, changeEmailAction, changePasswordAction, leaveOrganizationAction, requestAccountDeletionAction, signOutEverywhereAction,
 } from "@/modules/account/actions";
 
 /** Explains why the button above is disabled and links to the fix, when there is one. */
@@ -141,6 +141,21 @@ export function DeletionPendingBanner({ deleteOn, companyName }: { deleteOn: str
       </p>
       <ActionForm action={cancelAccountDeletionAction} success="Изтриването е отменено" className="shrink-0">
         <ActionSubmit variant="outline" className="h-10">Отмени изтриването</ActionSubmit>
+      </ActionForm>
+    </div>
+  );
+}
+
+/** Shown on every workspace page until the current terms and privacy policy are accepted (accounts made without the sign-up form, or after a new version). */
+export function ConsentBanner() {
+  return (
+    <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm">
+        <span className="font-semibold">Потвърди текущите условия.</span>{" "}
+        <span className="text-muted-foreground">Прочети <a href="/terms" target="_blank" className="underline underline-offset-4">Условията за ползване</a> и <a href="/privacy" target="_blank" className="underline underline-offset-4">Политиката за поверителност</a> и ги приеми, за да продължиш спокойно.</span>
+      </p>
+      <ActionForm action={acceptLegalDocumentsAction} success="Записахме съгласието ти" className="shrink-0">
+        <ActionSubmit className="h-10">Приемам</ActionSubmit>
       </ActionForm>
     </div>
   );

@@ -33,15 +33,15 @@ export function PortalNav({ variant }: { variant: "top" | "bottom" }) {
       </>
     );
   }
-  // Phones: a floating navy pill; the current place opens into a light pill with its name, the others are icons.
+  // Phones: a floating navy pill with both places named; the current one is the light half.
   return (
-    <div className="flex items-center justify-between gap-1">
+    <div className="grid grid-cols-2 items-center gap-1">
       {sections.map((section) => {
         const current = active === section.id;
         return (
-          <Link key={section.id} href={section.href} aria-current={current ? "page" : undefined} className={cn("relative flex h-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all", current ? "flex-1 bg-sidebar-foreground px-4 text-sidebar" : "w-14 text-sidebar-foreground/75 hover:text-sidebar-foreground")}>
+          <Link key={section.id} href={section.href} aria-current={current ? "page" : undefined} className={cn("relative flex h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors", current ? "bg-sidebar-foreground text-sidebar" : "text-sidebar-foreground/75 hover:text-sidebar-foreground")}>
             <section.icon className="size-5 shrink-0" aria-hidden="true" />
-            <span className={current ? undefined : "sr-only"}>{section.label}</span>
+            {section.label}
           </Link>
         );
       })}

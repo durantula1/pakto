@@ -1,21 +1,30 @@
 import "server-only";
 
 import { after } from "next/server";
-import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { notificationPreferences, organizationMembers, profiles, projectMembers, staffNotifications } from "@/db/schema";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
+import type { Permission } from "@/lib/authz/permissions";
 import { emailEvents, type EmailEventType } from "@/modules/notifications/events";
 
 type Executor = Pick<ReturnType<typeof getDatabase>, "select" | "insert">;
 
-/** Active members who follow a project: owners, members with access to all projects, and the project's own members. */
-async function projectStaffIds(db: Executor, organizationId: string, projectId: string) {
+/**
+ * Active members who follow a project: owners, members with access to all projects, and the project's own members.
+ * With `permission`, only owners and the members who hold it (payments go to the people who record them, NTF-04).
+ */
+export async function projectStaffIds(db: Executor, organizationId: string, projectId: string, permission?: Permission) {
+  const follows = or(eq(organizationMembers.allProjects, true), eq(projectMembers.projectId, projectId));
   const members = await db.select({ userId: organizationMembers.userId }).from(organizationMembers)
     .leftJoin(projectMembers, and(eq(projectMembers.userId, organizationMembers.userId), eq(projectMembers.projectId, projectId)))
-    .where(and(eq(organizationMembers.organizationId, organizationId), eq(organizationMembers.status, "active"), or(eq(organizationMembers.role, "owner"), eq(organizationMembers.allProjects, true), eq(projectMembers.projectId, projectId))));
+    .where(and(
+      eq(organizationMembers.organizationId, organizationId),
+      eq(organizationMembers.status, "active"),
+      or(eq(organizationMembers.role, "owner"), permission ? and(sql`${permission} = any(${organizationMembers.permissions})`, follows) : follows),
+    ));
   return [...new Set(members.map((member) => member.userId))];
 }
 
@@ -38,9 +47,9 @@ export async function notifyUsers(db: Executor, userIds: string[], input: Notice
   }
 }
 
-/** Everyone who follows the project, except the person who caused the event. */
-export async function notifyProjectStaff(db: Executor, input: Notice & { projectId: string; excludeUserId?: string }) {
-  const recipients = (await projectStaffIds(db, input.organizationId, input.projectId)).filter((userId) => userId !== input.excludeUserId);
+/** Everyone who follows the project (and holds `permission`, if given), except the person who caused the event. */
+export async function notifyProjectStaff(db: Executor, input: Notice & { projectId: string; excludeUserId?: string; permission?: Permission }) {
+  const recipients = (await projectStaffIds(db, input.organizationId, input.projectId, input.permission)).filter((userId) => userId !== input.excludeUserId);
   await notifyUsers(db, recipients, input);
 }
 

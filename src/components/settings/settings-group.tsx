@@ -18,7 +18,7 @@ export function SettingsGroup({ id, title, description, action, danger = false, 
 }) {
   return (
     <section id={id} aria-label={title} className={cn("grid scroll-mt-20 gap-2", className)}>
-      <div className="flex min-h-7 items-end justify-between gap-3 px-1">
+      <div className="flex min-h-7 flex-wrap items-end justify-between gap-x-3 gap-y-2 px-1">
         <div className="min-w-0">
           <h2 className={cn("text-sm font-semibold", danger && "text-destructive")}>{title}</h2>
           {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}

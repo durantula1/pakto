@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { TabsSkeleton } from "@/components/ui/tabs";
 
 /** `text` is a value with a button next to it (email, password); `status` is a value alone. */
 type Control = "input" | "button" | "switch" | "segmented" | "logo" | "text" | "status" | "short";
@@ -107,9 +108,12 @@ export function PrivacySettingsSkeleton() {
 export function OrganizationSettingsSkeleton() {
   return (
     <Loading>
-      <GroupSkeleton rows={["input", "logo"]} />
-      <GroupSkeleton rows={["segmented", "short"]} />
-      <GroupSkeleton rows={["button"]} description={false} />
+      <div className="flex flex-col gap-2">
+        <TabsSkeleton labels={["Фирмен профил", "Оферти", "Срокове и писма", "Данни"]} />
+        <div className="flex flex-col gap-7 pt-4">
+          <GroupSkeleton rows={["input", "input", "logo"]} />
+        </div>
+      </div>
     </Loading>
   );
 }

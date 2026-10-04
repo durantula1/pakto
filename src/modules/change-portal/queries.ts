@@ -68,7 +68,7 @@ const portalDocumentColumns = {
 };
 
 /** The client sees each document through its latest frozen revision that was ever shown to them. */
-const latestClientRevision = sql`${changeOrderRevisions.id} = (select max(r.id) from app.change_order_revisions r where r.change_order_id = ${changeOrders.id} and r.frozen_at is not null and r.status in ('sent','viewed','approved','declined','changes_requested','canceled','expired','superseded'))`;
+export const latestClientRevision = sql`${changeOrderRevisions.id} = (select max(r.id) from app.change_order_revisions r where r.change_order_id = ${changeOrders.id} and r.frozen_at is not null and r.status in ('sent','viewed','approved','declined','changes_requested','canceled','expired','superseded'))`;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const pendingStatuses = ["sent", "viewed"] as const;
 
@@ -227,11 +227,11 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
   if (pastDue([change])) return { expired: true as const, data: null };
 
   // A newer version the client has not decided on yet explains itself against the one in force,
-  // or else against the one they saw before.
+  // or else against the one they saw before; a decided one keeps saying what it changed.
   const previous = ["sent", "viewed"].includes(change.status)
     ? revisions.find((revision) => revision.id === change.approvedRevisionId && revision.revisionNumber < change.revisionNumber)
       ?? revisions.find((revision) => revision.frozenAt && revision.revisionNumber < change.revisionNumber)
-    : undefined;
+    : revisions.find((revision) => revision.frozenAt && revision.revisionNumber < change.revisionNumber);
   const isOffer = change.documentKind === "offer";
   const [decision, lineItems, schedule, terms, absorbedChanges, attachments, previousLines, previousSchedule] = await Promise.all([
     db.select().from(portalDecisions).where(eq(portalDecisions.revisionId, change.revisionId)).limit(1).then((rows) => rows[0] ?? null),
@@ -246,7 +246,7 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
   // Terms point at schedule lines by key; the schedule was read in the same round.
   const paymentTerms = withStages(terms, schedule);
   const diff = previous && previousLines && previousSchedule
-    ? summarizeRevisionDiff({ ...previous, lineItems: previousLines, schedule: previousSchedule }, { ...change, lineItems, schedule })
+    ? { ...summarizeRevisionDiff({ ...previous, lineItems: previousLines, schedule: previousSchedule }, { ...change, lineItems, schedule }), fromRevision: previous.revisionNumber }
     : null;
 
   const logo = documentLogo({ revisionLogoPath: change.logoStoragePath, organizationLogoPath: project.organizationLogoPath, size: project.organizationLogoSize });

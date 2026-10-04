@@ -65,7 +65,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
   const update = (key: string, patch: Partial<TermRow>) => setRows(rows.map((item) => (item.key === key ? { ...item, ...patch } : item)));
   const named = termsPayload(rows);
   const percent = termsPercent(named);
-  const amounts = termAmounts(BigInt(Math.round(total * 100)), rows.map((item) => ({ percent: Number(item.percent) || 0 })));
+  const amounts = termAmounts(BigInt(Number.isFinite(total) ? Math.round(total * 100) : 0), rows.map((item) => ({ percent: Number(item.percent) || 0 })));
   const triggers = (Object.keys(paymentTriggerLabels) as PaymentTermTrigger[]).filter((trigger) => trigger !== "on_stage" || stages.length);
 
   return (

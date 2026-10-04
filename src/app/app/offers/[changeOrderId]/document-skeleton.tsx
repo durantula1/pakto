@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TabsSkeleton } from "@/components/ui/tabs";
 import { DetailHeaderSkeleton } from "@/components/workspace/detail-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
+import { documentStatusStepLabels, totalLabel } from "@/modules/change-orders/labels";
 
 export const changesCardTitle = "Промени по офертата";
 export const documentTabLabels = { document: "Съдържание", messages: "Разговор", notes: "Бележки", history: "История" };
@@ -15,7 +16,7 @@ function Line({ className }: { className: string }) {
   return <div className="flex h-5 items-center"><Skeleton className={`h-3.5 ${className}`} /></div>;
 }
 
-/** Mirrors the document page on its default "Документ" tab. */
+/** Mirrors a sent offer on „Съдържание“: the usual case, still waiting for a decision. */
 export function DocumentPageSkeleton() {
   return (
     <PageShell loading>
@@ -26,8 +27,14 @@ export function DocumentPageSkeleton() {
             <CardHeader className="lg:sr-only"><CardTitle>Статус</CardTitle></CardHeader>
             <CardContent className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
               <div className="flex flex-1 flex-col gap-4 lg:flex-row">
-                {[0, 1, 2, 3].map((index) => (
-                  <div key={index} className="flex gap-3 lg:flex-1 lg:flex-col lg:gap-1.5"><Skeleton className="mt-1 size-3.5 rounded-full" /><div className="flex flex-col gap-1"><Line className="w-32" /><Skeleton className="h-3 w-24" /></div></div>
+                {documentStatusStepLabels.map((label, index) => (
+                  <div key={label} className="flex gap-3 lg:flex-1 lg:flex-col lg:gap-1.5">
+                    <Skeleton className="mt-1 size-3.5 rounded-full" />
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <p className={`text-sm ${index === documentStatusStepLabels.length - 1 ? "text-muted-foreground" : "font-medium"}`}>{label}</p>
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
                 ))}
               </div>
               <div className="flex flex-col gap-2 border-t pt-4 lg:flex-row lg:border-t-0 lg:pt-0"><Skeleton className="h-10 w-full rounded-lg lg:h-9 lg:w-44" /><Skeleton className="h-9 w-full rounded-lg lg:w-28" /><Skeleton className="h-9 w-full rounded-lg lg:w-9" /></div>
@@ -36,28 +43,60 @@ export function DocumentPageSkeleton() {
         </div>
         <div className={documentAreas.main}>
           <div className="flex flex-col gap-2">
-            {/* All four tabs: a sent document (the usual case) has the conversation and notes too, so the row does not grow on load. */}
-            <TabsSkeleton labels={Object.values(documentTabLabels)} />
+            {/* A sent offer shows the conversation. Notes appear only when some exist. */}
+            <TabsSkeleton labels={[documentTabLabels.document, documentTabLabels.messages, documentTabLabels.history]} />
             <div className="flex flex-col gap-4 pt-4">
               <Card>
-                <CardContent className="flex flex-col gap-2">
-                  <Line className="w-28" />
-                  <Line className="w-full" />
-                  <Line className="w-5/6" />
-                  <Skeleton className="mt-3 h-40 w-full rounded-xl" />
+                <CardContent className="space-y-5">
+                  <section>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Какво включва</p>
+                    <div className="mt-1.5 flex flex-col gap-2">
+                      <Line className="w-full" />
+                      <Line className="w-5/6" />
+                    </div>
+                  </section>
+                  <div className="overflow-hidden rounded-xl border">
+                    <div className="hidden grid-cols-[minmax(0,1fr)_5.5rem_5.5rem_5rem] gap-3 bg-muted/50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:grid">
+                      <span>Услуга / материал</span>
+                      <span className="text-right">Количество</span>
+                      <span className="text-right">Ед. цена</span>
+                      <span className="text-right">Сума</span>
+                    </div>
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t px-3 py-2.5 first:border-t-0 sm:border-t">
+                        <Skeleton className="h-4 w-48 max-w-full" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
         <div className={documentAreas.facts}>
-          <Card>
-            <CardContent className="flex flex-col gap-2">
-              <Line className="w-32" />
-              <Skeleton className="h-7 w-40" />
-              <Skeleton className="h-3 w-48" />
-            </CardContent>
-          </Card>
+          <div className="flex flex-col gap-4">
+            <Card>
+              <CardContent className="flex flex-col gap-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">{totalLabel(20)}</p>
+                  <Skeleton className="mt-1 h-8 w-40" />
+                  <Skeleton className="mt-1 h-3 w-48" />
+                </div>
+                <p className="flex items-center gap-2 border-t pt-3 text-sm">
+                  <span className="text-muted-foreground">Срок:</span>
+                  <Skeleton className="h-3.5 w-24" />
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Клиент и обект</CardTitle></CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-56 max-w-full" />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </PageShell>

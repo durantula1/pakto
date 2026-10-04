@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { ExpandableLines } from "@/components/change-orders/expandable-lines";
+import { MotionDetails } from "@/components/ui/motion-details";
 import { cn } from "@/lib/utils";
 import { formatDay, vatLabel } from "@/modules/change-orders/labels";
 import { daysLabel, scheduleDays } from "@/modules/change-orders/schedule";
@@ -135,16 +136,16 @@ export function DocumentBody({ document, brand, compact = false }: {
         </div>
         {table}
         {compact && (schedule || terms) ? (
-          <details className="group rounded-xl border [&>summary::-webkit-details-marker]:hidden">
+          <MotionDetails className="group rounded-xl border [&>summary::-webkit-details-marker]:hidden">
             <summary className="flex min-h-12 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 px-3 py-2">
               <span className="flex flex-col">
                 <span className="text-sm font-medium">{schedule && terms ? "Срок и плащане" : schedule ? "Ориентировъчен график" : "Плащане"}</span>
                 <span className="text-xs text-muted-foreground">{[document.schedule?.length ? `${document.schedule.length} ${document.schedule.length === 1 ? "етап" : "етапа"}, около ${daysLabel(scheduleDays(document.schedule))}` : null, document.paymentTerms?.length ? `${document.paymentTerms.length} ${document.paymentTerms.length === 1 ? "плащане" : "плащания"}` : null].filter(Boolean).join(" · ")}</span>
               </span>
-              <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+              <ChevronDown className="size-4 shrink-0 transition-transform duration-300 group-data-[state=open]:rotate-180" />
             </summary>
             <div className="space-y-5 border-t p-3">{schedule}{terms}</div>
-          </details>
+          </MotionDetails>
         ) : <>{schedule}{terms}</>}
         {document.absorbedChanges?.length ? (
           <section className="rounded-xl border border-dashed p-3 text-sm">

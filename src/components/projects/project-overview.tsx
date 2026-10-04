@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 
 import { Badge } from "@/components/ui/badge";
 import { PaidBar } from "@/components/projects/offer-cards";
@@ -9,16 +10,14 @@ import { documentName, formatDay, formatShortDay } from "@/modules/change-orders
 import type { ScopeView } from "@/modules/projects/scope";
 import { cents, formatCents, type ProjectState } from "@/modules/projects/state";
 
-const paymentLabels: Record<string, string> = { deposit: "Капаро", progress: "Междинно", final: "Окончателно", other: "Друго" };
+const paymentLabels: Record<string, string> = { deposit: "Аванс", progress: "Междинно", final: "Окончателно", other: "Друго" };
 const methodLabels: Record<string, string> = { cash: "в брой", bank: "банков превод", card: "карта", other: "друго" };
 
 /** A client's "I paid" that the company has not confirmed yet, or rejected with a reason. */
 export type PortalClaim = { id: string; amount: string; currency: string; paidOn: string; status: "pending" | "confirmed" | "rejected"; response: string | null; installmentId: string | null; offerId: string | null };
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => sofiaTodayIso();
 const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
-/** An amount without the currency, for bill lines whose currency the result line already names. */
-const plain = (minor: bigint) => formatCents(minor, "").trim();
 
 /**
  * The portal's bill, written as the calculation the client would do on paper: what was agreed, minus
@@ -30,8 +29,8 @@ export function PortalSummary({ state, view }: { state: ProjectState; view: Scop
   return (
     <section className="rounded-3xl bg-card p-5">
       <div className="space-y-2">
-        <BillLine label="Договорено" amount={plain(view.contractMinor)} />
-        <BillLine label="Платено" amount={`− ${plain(view.paidMinor)}`} muted />
+        <BillLine label="Договорено" amount={formatCents(view.contractMinor, view.currency)} />
+        <BillLine label="Платено" amount={`− ${formatCents(view.paidMinor, view.currency)}`} muted />
       </div>
       <BillLine
         className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-primary")}
@@ -139,9 +138,10 @@ function StageList({ view, now, next, name, foldDone }: {
 
 type Receipt = ProjectState["receipts"][number];
 
-function receiptLabel(receipt: Receipt) {
+/** A payment for an installment is called what the plan calls it, so "Аванс" reads the same in both lists. */
+function receiptLabel(receipt: Receipt, installments: ScopeView["installments"]) {
   if (receipt.correctionOfId) return Number(receipt.amount) < 0 ? "Отменено плащане" : "Корекция";
-  return paymentLabels[receipt.kind] ?? "Плащане";
+  return installments.find((item) => item.id === receipt.installmentId)?.title ?? paymentLabels[receipt.kind] ?? "Плащане";
 }
 
 /** One statement line: date, what, amount. */
@@ -161,14 +161,22 @@ function Entry({ date, title, sub, amount, badge, className }: { date: string; t
  * then every payment (the client's own unconfirmed ones first). Answers and disputes are quotes
  * under their line; every form opens in place.
  */
-export function PortalPayments({ view, portalPublicId, claims, canAct, showBalance = true }: {
+export function PortalPayments({ view, portalPublicId, claims, canAct, showBalance = true, claimedElsewhere }: {
   view: ScopeView;
   portalPublicId: string;
   claims: PortalClaim[];
   canAct: boolean;
   /** Off under the project's money card, which already shows the balance. */
   showBalance?: boolean;
+  /** The installment whose "Платих" already sits in the card above, so the plan does not offer it twice. */
+  claimedElsewhere?: string;
 }) {
+  // With several offers each row says which one it belongs to: "Аванс" alone could be any of them.
+  const offerOf = (offerId: string | null) => {
+    const offer = view.offers.length > 1 ? view.offers.find((item) => item.id === offerId) : undefined;
+    return offer ? documentName("offer", offer.sequenceNumber) : null;
+  };
+  const settled = view.hasAgreement && view.remainingMinor <= 0n;
   const overpaid = view.remainingMinor < 0n;
   const pendingClaims = claims.filter((claim) => claim.status === "pending");
   const rejected = claims.filter((claim) => claim.status === "rejected");
@@ -177,18 +185,19 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
     {view.hasAgreement ? <>
       <span>Платено <strong className="whitespace-nowrap tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> <span className="whitespace-nowrap text-muted-foreground">от {formatCents(view.contractMinor, view.currency)}</span></span>
       <span className={cn("font-semibold whitespace-nowrap tabular-nums", view.remainingMinor > 0n ? "text-primary" : "text-muted-foreground")}>
-        {view.remainingMinor === 0n ? "изплатено" : `${overpaid ? "надплатено" : "остава"} ${formatCents(overpaid ? -view.remainingMinor : view.remainingMinor, view.currency)}`}
+        {/* Paid in full: the bar below already says "изплатено". */}
+        {view.remainingMinor === 0n ? null : `${overpaid ? "надплатено" : "остава"} ${formatCents(overpaid ? -view.remainingMinor : view.remainingMinor, view.currency)}`}
       </span>
     </> : <span>Платено до момента <strong className="tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong></span>}
   </p>;
 
   return <div className="space-y-5">
     {showBalance ? <section className="rounded-3xl bg-card px-5 py-4">
-      {canAct ? <ClaimPaymentRow row={balance} stack trigger="Отбележете плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
+      {canAct && !settled ? <ClaimPaymentRow row={balance} stack trigger="Отбележете плащане" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} /> : balance}
       {view.hasAgreement ? <PaidBar className="mt-3" paidMinor={view.paidMinor} contractMinor={view.contractMinor} /> : (
         <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобрите офертата."}</p>
       )}
-    </section> : canAct ? <section className="rounded-3xl bg-card px-5 py-3">
+    </section> : canAct && !settled ? <section className="rounded-3xl bg-card px-5 py-3">
       <ClaimPaymentRow row={<span className="text-sm text-muted-foreground">Платили сте нещо, което не е тук?</span>} trigger="Отбележете плащане" triggerClassName="h-10 px-3 text-sm" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} />
     </section> : null}
 
@@ -202,13 +211,13 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
         const row = <Entry
           date={formatDay(item.dueOn)}
           title={item.title}
-          sub={!paid && item.receivedMinor > 0n ? `платено ${formatCents(item.receivedMinor, item.currency)}` : null}
+          sub={[offerOf(item.offerId), !paid && item.receivedMinor > 0n ? `платено ${formatCents(item.receivedMinor, item.currency)}` : null].filter(Boolean).join(" · ") || null}
           amount={formatCents(cents(item.amount), item.currency)}
           badge={paid ? <Badge variant="success-soft">Платено</Badge> : claimed ? <Badge variant="warning-soft">Чака фирмата</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
         />;
         return <li key={item.id} className="py-3">
-          {!paid && !claimed && canAct
-            ? <ClaimPaymentRow row={row} trigger="Платих" portalPublicId={portalPublicId} offerId={item.offerId} installmentId={item.id} amount={(Number(item.remainingMinor) / 100).toFixed(2)} />
+          {!paid && !claimed && canAct && item.id !== claimedElsewhere
+            ? <ClaimPaymentRow row={row} trigger="Платих" portalPublicId={portalPublicId} offerId={item.offerId} installmentId={item.id} amount={(Number(item.remainingMinor < view.remainingMinor || view.remainingMinor <= 0n ? item.remainingMinor : view.remainingMinor) / 100).toFixed(2)} />
             : row}
         </li>;
       })}</ol>
@@ -230,8 +239,8 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
         {view.receipts.map((item) => {
           const row = <Entry
             date={formatDay(item.receivedOn)}
-            title={receiptLabel(item)}
-            sub={methodLabels[item.method] ?? item.method}
+            title={receiptLabel(item, view.installments)}
+            sub={[offerOf(item.offerId), methodLabels[item.method] ?? item.method].filter(Boolean).join(" · ")}
             amount={<span className={cn(Number(item.amount) < 0 && "text-muted-foreground")}>{formatCents(cents(item.amount), item.currency)}</span>}
             badge={item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}
           />;

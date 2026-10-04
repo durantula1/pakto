@@ -10,7 +10,7 @@ const permissions = [
   { key: "milestones.manage", label: "Управлява етапи" },
   { key: "documents.send", label: "Изпраща на клиента", offAt: 4 },
   { key: "notes.view", label: "Вътрешни бележки", offAt: 2 },
-  { key: "finance.view", label: "Финанси", offAt: 1 },
+  { key: "finance.view", label: "Вижда финансите", offAt: 1 },
   { key: "payments.record", label: "Записва плащания", offAt: 1 },
   { key: "drafts.view_all", label: "Вижда чужди чернови", offAt: 3 },
 ] as const;
@@ -42,7 +42,7 @@ export function TeamDemo() {
       crumb="ЕКИП / ГЕОРГИ Д."
       title="Права на члена"
       status={
-        <StatusChip tone="info">{step >= 1 ? "НА ОБЕКТА" : "ОФИС"}</StatusChip>
+        <StatusChip tone="info">{step >= 1 ? "ПО ИЗБОР" : "КООРДИНАТОР"}</StatusChip>
       }
     >
       <div className="grid gap-3 sm:grid-cols-[1.1fr_.9fr]">

@@ -38,6 +38,9 @@ export async function signInAction(
   if (error?.code === "email_not_confirmed") {
     return { error: "Първо потвърди имейла си. Линкът е в писмото от регистрацията.", unconfirmedEmail: parsed.data.email };
   }
+  if (error?.status === 429) {
+    return { error: "Твърде много опити за кратко време. Изчакай няколко минути и опитай пак." };
+  }
   if (error) {
     return { error: "Имейлът или паролата не са правилни." };
   }

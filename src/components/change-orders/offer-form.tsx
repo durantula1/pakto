@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,7 @@ export function OfferForm({
   const schedule = schedulePayload(scheduleRows);
   const [termRows, setTermRows] = useState<TermRow[]>(() => termRowsFrom(initial?.paymentTerms ?? []));
   const paymentTerms = termsPayload(termRows);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = sofiaTodayIso();
   const [localError, setLocalError] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const uploadProgress = useUploadStagedFiles(state.createdId, files, "offer-created");

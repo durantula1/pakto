@@ -10,7 +10,7 @@ import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { FilterSelect } from "@/components/workspace/filter-select";
 import { confirmPaymentClaimAction, rejectPaymentClaimAction, resolvePaymentDisputeAction } from "@/modules/projects/operations";
 
-const paymentKinds = [{ value: "deposit", label: "Капаро" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
+const paymentKinds = [{ value: "deposit", label: "Аванс" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 
 /** A row with its answers: each button opens its form right under the row, one at a time. */
 function RowWithForms<Mode extends string>({ row, actions, form }: {
@@ -39,7 +39,7 @@ function RowWithForms<Mode extends string>({ row, actions, form }: {
  * A client's "Платих" waiting for the team. "Потвърди" records the receipt with the client's
  * amount and date filled in (fix them if the bank says otherwise); "Още не е получено" answers why.
  */
-export function ClaimRow({ row, projectId, claim }: { row: ReactNode; projectId: string; claim: { id: string; amount: string; paidOn: string } }) {
+export function ClaimRow({ row, projectId, claim }: { row: ReactNode; projectId: string; claim: { id: string; amount: string; paidOn: string; installmentKind?: string | null } }) {
   return (
     <RowWithForms<"confirm" | "reject">
       row={row}
@@ -51,7 +51,7 @@ export function ClaimRow({ row, projectId, claim }: { row: ReactNode; projectId:
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-[8rem_10rem_minmax(0,12rem)]">
             <Input aria-label="Получена сума" type="number" name="amount" min="0.01" step="0.01" defaultValue={Number(claim.amount).toFixed(2)} required className="tabular-nums" />
             <DatePicker id={`claim-date-${claim.id}`} name="receivedOn" defaultValue={claim.paidOn} required max="today" aria-label="Дата на получаване" />
-            <FilterSelect name="kind" value="progress" options={paymentKinds} className="col-span-2 sm:col-span-1" />
+            <FilterSelect name="kind" value={claim.installmentKind ?? "progress"} options={paymentKinds} className="col-span-2 sm:col-span-1" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ActionSubmit>Запиши като получено</ActionSubmit>

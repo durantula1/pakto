@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +25,7 @@ const tones = {
 
 export type StatTone = keyof typeof tones;
 
-export function StatCard({ label, value, size = "md", icon, tone = "default", hint }: {
+export function StatCard({ label, value, size = "md", icon, tone = "default", hint, href }: {
   label: ReactNode;
   value: ReactNode;
   size?: keyof typeof valueSizes;
@@ -32,10 +33,12 @@ export function StatCard({ label, value, size = "md", icon, tone = "default", hi
   tone?: StatTone;
   /** One short line under the value, e.g. "32% от договореното". */
   hint?: ReactNode;
+  /** Makes the whole card a link to the list the number counts. */
+  href?: string;
 }) {
   const toned = tone !== "default";
-  return (
-    <Card className={tones[tone]}>
+  const card = (
+    <Card className={cn(tones[tone], href && "h-full transition-shadow group-hover/stat:shadow-md")}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={cn("text-sm", toned ? "opacity-75" : "text-muted-foreground")}>{label}</p>
@@ -46,6 +49,9 @@ export function StatCard({ label, value, size = "md", icon, tone = "default", hi
       </CardContent>
     </Card>
   );
+  return href
+    ? <Link href={href} className="group/stat block rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{card}</Link>
+    : card;
 }
 
 /** Keeps the real label (it is static) and greys out only the value. */
@@ -54,7 +60,8 @@ export function StatCardSkeleton({ label, size = "md", icon, tone, hint = false 
   size?: keyof typeof valueSizes;
   icon?: ReactNode;
   tone?: StatTone;
-  hint?: boolean;
+  /** `true` greys out a hint line; `"blank"` only reserves its height, so the card does not grow when a hint arrives. */
+  hint?: boolean | "blank";
 }) {
   return <StatCard
     size={size}
@@ -62,6 +69,6 @@ export function StatCardSkeleton({ label, size = "md", icon, tone, hint = false 
     tone={tone}
     label={label ?? <span className="flex h-5 items-center"><Skeleton className="h-3.5 w-24" /></span>}
     value={<Skeleton className={cn("w-28", size === "sm" || size === "md" ? "h-5" : "h-6")} />}
-    hint={hint ? <Skeleton className="h-3 w-24" /> : undefined}
+    hint={hint === "blank" ? null : hint ? <Skeleton className="h-3 w-24" /> : undefined}
   />;
 }

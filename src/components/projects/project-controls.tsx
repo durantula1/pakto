@@ -1,4 +1,5 @@
 import { ClipboardCheck, Pencil, Plus } from "lucide-react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 
 import { BillLine, Quote, Slip } from "@/components/portal/paper";
 import { ClaimRow, DisputeRow } from "@/components/projects/inline-actions";
@@ -20,16 +21,16 @@ import type { ProjectState } from "@/modules/projects/state";
 import { formatDay } from "@/modules/change-orders/labels";
 import { formatAmount } from "@/lib/money";
 
-const paymentKinds = [{ value: "deposit", label: "Капаро" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
+const paymentKinds = [{ value: "deposit", label: "Аванс" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 const methods = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
 const methodLabels: Record<string, string> = { cash: "в брой", bank: "банков превод", card: "карта", other: "друго" };
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => sofiaTodayIso();
 
 /** "Към оферта" options: the offers in force, then the project as a whole. */
 export type OfferOption = { value: string; label: string };
 
 export type OpenDispute = { id: string; reason: string; receiptId: string; createdAt: Date; receivedOn: string; amount: string; currency: string };
-export type PendingClaim = { id: string; amount: string; currency: string; method: string; paidOn: string; note: string | null; contactName: string; offerLabel: string | null; installmentTitle: string | null; createdAt: Date };
+export type PendingClaim = { id: string; amount: string; currency: string; method: string; paidOn: string; note: string | null; contactName: string; offerLabel: string | null; installmentTitle: string | null; installmentKind?: string | null; createdAt: Date };
 
 /**
  * Open payment disputes, above the project tabs so they are seen from any tab. A staff
@@ -43,7 +44,7 @@ export function PaymentDisputesAlert({ projectId, disputes, canResolve }: { proj
         const row = <>
           <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${formatAmount(item.amount)} ${item.currency}`} />
           <Quote by="Клиентът:" tone="danger" className="mt-2">{item.reason}</Quote>
-          <p className="mt-1 text-xs text-muted-foreground">{item.createdAt.toLocaleString("bg-BG", { dateStyle: "short", timeStyle: "short" })}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{item.createdAt.toLocaleString("bg-BG", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Sofia" })}</p>
         </>;
         return <li key={item.id} id={`dispute-${item.id}`} className="scroll-mt-24 px-4 py-3 target:bg-primary/5">
           {canResolve ? <DisputeRow row={row} projectId={projectId} disputeId={item.id} /> : row}
@@ -214,13 +215,13 @@ function CorrectReceiptDialog({ projectId, receipt }: { projectId: string; recei
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Коригирай плащане</DialogTitle>
-        <DialogDescription>Записът не се изтрива. Добавяме сторно и нов запис с вярната сума, а клиентът вижда корекцията.</DialogDescription>
+        <DialogDescription>Записът не се изтрива. Добавяме сторно и нов запис с вярната сума, а клиентът вижда корекцията. Ако плащането не е получено изобщо, въведи 0.</DialogDescription>
       </DialogHeader>
       <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${formatAmount(receipt.amount)} ${receipt.currency}`} className="border-y border-dashed py-2.5" />
       <ActionForm action={correctReceiptAction} success="Плащането е коригирано" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="receiptId" value={receipt.id} />
-        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({receipt.currency})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0.01" defaultValue={formatAmount(receipt.amount)} required autoFocus /></Field>
+        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({receipt.currency})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0" defaultValue={Number(receipt.amount).toFixed(2)} required autoFocus /></Field>
         <Field><FieldLabel htmlFor={reasonId}>Причина</FieldLabel><Input id={reasonId} name="reason" required minLength={3} maxLength={500} placeholder="Напр. грешно въведена сума" /></Field>
         <div className="flex justify-end gap-2 pt-1">
           <DialogClose>Отказ</DialogClose>

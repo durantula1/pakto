@@ -199,6 +199,8 @@ export const organizations = appSchema.table(
     /** Days before an offer expires that the client is warned; 0 = never. */
     clientExpiryWarningDays: integer("client_expiry_warning_days").notNull().default(2),
     clientScheduleDigestEnabled: boolean("client_schedule_digest_enabled").notNull().default(true),
+    /** Days ahead a stage counts as "coming up" on the dashboard and in the stages list. */
+    stageWarningDays: integer("stage_warning_days").notNull().default(7),
     stepUpThreshold: numeric("step_up_threshold", {
       precision: 14,
       scale: 2,
@@ -1510,6 +1512,8 @@ export const ownerRoleRequests = appSchema.table(
     organizationId: uuid("organization_id").notNull().references(() => organizations.id),
     targetUserId: uuid("target_user_id").notNull(),
     requestedRole: memberRole("requested_role"),
+    /** The target's role when the change was proposed; approval fails when it has changed since. */
+    targetRole: memberRole("target_role"),
     removeMember: boolean("remove_member").notNull().default(false),
     requestedBy: uuid("requested_by").notNull(),
     approvedBy: uuid("approved_by"),

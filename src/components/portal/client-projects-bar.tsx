@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
@@ -20,8 +21,8 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   organizationName: string;
   navigation: { unlocked: true; others: number; projects: { publicId: string; name: string; current: boolean }[] } | { unlocked: false; others: number; maskedEmail: string };
 }) {
-  const [requestState, request, requesting] = useActionState<UnlockState, FormData>(requestUnlockCodeAction, {});
-  const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(confirmUnlockCodeAction, {});
+  const [requestState, request, requesting] = useActionState<UnlockState, FormData>(offlineSafe(requestUnlockCodeAction), {});
+  const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(offlineSafe(confirmUnlockCodeAction), {});
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -113,8 +114,8 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
  * sent to their confirmed email. Without a confirmed email it only says where to confirm it.
  */
 export function UnlockProjectsCard({ projectPublicId, hidden, maskedEmail }: { projectPublicId: string; hidden: number; maskedEmail: string | null }) {
-  const [requestState, request, requesting] = useActionState<UnlockState, FormData>(requestUnlockCodeAction, {});
-  const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(confirmUnlockCodeAction, {});
+  const [requestState, request, requesting] = useActionState<UnlockState, FormData>(offlineSafe(requestUnlockCodeAction), {});
+  const [confirmState, confirm, confirming] = useActionState<UnlockState, FormData>(offlineSafe(confirmUnlockCodeAction), {});
   const router = useRouter();
   useEffect(() => {
     if (confirmState.done || requestState.done) router.refresh();

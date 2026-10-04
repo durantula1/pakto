@@ -43,11 +43,11 @@ export const offerStatusLabels: Record<OfferDisplayStatus, string> = {
   declined: "Отказана",
   expired: "Изтекла",
   canceled: "Анулирана",
-  in_force: "В сила",
+  in_force: "Одобрена",
   in_progress: "В изпълнение",
   awaiting_acceptance: "Чака приемане",
   issues: "Има забележки",
-  accepted: "Приета",
+  accepted: "Завършена",
 };
 
 /** Same scheme as `documentStatusTones`: blue waits on the client, lilac on the team, mint and teal are agreed work. */

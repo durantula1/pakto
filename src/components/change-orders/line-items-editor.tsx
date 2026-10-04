@@ -29,11 +29,14 @@ export function formatMoney(value: number) {
   return new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(value);
 }
 
+const finite = (value: number) => (Number.isFinite(value) ? value : 0);
+
 /** Lines as numbers with their totals; the same rounding the server stores. */
 export function priceLines(lines: Line[]) {
   return lines.map((line) => {
-    const quantity = Number(line.quantity || 0);
-    const unitPrice = Number(line.unitPrice || 0);
+    // Letters typed into a number field must not reach the totals as NaN: it would crash the form.
+    const quantity = finite(Number(line.quantity || 0));
+    const unitPrice = finite(Number(line.unitPrice || 0));
     return { ...line, quantity, unitPrice, lineTotal: money(quantity * unitPrice) };
   });
 }
@@ -156,7 +159,7 @@ export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = fal
                     placeholder="0"
                     aria-label={`Единична цена ${index + 1}`}
                     className="h-8 w-full min-w-[6ch] border-0 bg-transparent text-right text-sm tabular-nums focus-visible:ring-0"
-                    onChange={(event) => updateLine(line.key, { unitPrice: event.target.value.replace(",", ".") })}
+                    onChange={(event) => updateLine(line.key, { unitPrice: event.target.value.replace(",", ".").replace(/[^\d.]/g, "") })}
                   />
                   <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currency}</span>
                 </label>

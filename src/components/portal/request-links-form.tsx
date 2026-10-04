@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { requestNewLinksAction, type LinkRequestState } from "@/modules/change-portal/link-request-actions";
 
 export function RequestLinksForm() {
-  const [state, submit, pending] = useActionState<LinkRequestState, FormData>(requestNewLinksAction, {});
+  const [state, submit, pending] = useActionState<LinkRequestState, FormData>(offlineSafe(requestNewLinksAction), {});
   if (state.sent) {
     return <p role="status" className="rounded-xl bg-muted p-4 text-sm">Ако този имейл е потвърден при някоя фирма, ще получите линковете си до няколко минути.</p>;
   }

@@ -1,3 +1,4 @@
+import { formatAmount } from "@/lib/money";
 import "server-only";
 
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
@@ -27,7 +28,7 @@ export function cents(value: string | null | undefined) {
 }
 
 export function formatCents(value: bigint, currency: string) {
-  return `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(value) / 100)} ${currency}`;
+  return `${formatAmount(Number(value) / 100)} ${currency}`;
 }
 
 /** How many of the latest receipts `getProjectState` returns; totals always cover every receipt. */
@@ -159,8 +160,24 @@ export async function getProjectState(organizationId: string, projectId: string)
 
   const installmentRows = installments.map((installment) => {
     const receivedMinor = receivedByInstallment.get(installment.id) ?? 0n;
-    return { ...installment, receivedMinor, remainingMinor: cents(installment.amount) - receivedMinor };
+    return { ...installment, receivedMinor, allocatedMinor: 0n, remainingMinor: cents(installment.amount) - receivedMinor };
   });
+  // Money recorded against the offer but not against a particular installment still pays the plan:
+  // it covers the unpaid installments in the order they fall due, so the client is never asked again for it.
+  for (const [offerId, paid] of paidByOffer) {
+    if (!offerId) continue;
+    const mine = installmentRows.filter((row) => row.offerId === offerId);
+    let loose = paid - mine.reduce((sum, row) => sum + row.receivedMinor, 0n);
+    for (const row of mine) {
+      if (loose <= 0n) break;
+      if (row.remainingMinor <= 0n) continue;
+      const take = loose < row.remainingMinor ? loose : row.remainingMinor;
+      row.allocatedMinor = take;
+      row.receivedMinor += take;
+      row.remainingMinor -= take;
+      loose -= take;
+    }
+  }
   const receiptRows = receipts.map((receipt) => ({ ...receipt, dispute: receiptDisputes.get(receipt.id) ?? null, disputed: receiptDisputes.get(receipt.id)?.status === "open" }));
 
   const offers = offerRows.map((row) => {

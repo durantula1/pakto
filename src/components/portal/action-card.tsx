@@ -50,10 +50,11 @@ export function PortalSteps({ steps, calm, calmTitle = "Не е нужно да 
   className?: string;
 }) {
   if (!steps.length) return calm ? (
-    <div className={cn("flex items-start gap-4 rounded-3xl bg-tile-mint p-5 text-tile-mint-foreground", className)}>
-      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-5" strokeWidth={2.5} /></span>
-      <span className="flex flex-col gap-0.5 text-sm leading-6">
-        <b className="text-lg leading-snug font-semibold">{calmTitle}</b>
+    // Compact on purpose: with nothing to do it is reassurance, not the page's lead.
+    <div className={cn("flex items-start gap-3 rounded-3xl bg-tile-mint px-4 py-3.5 text-tile-mint-foreground", className)}>
+      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-4" strokeWidth={2.5} /></span>
+      <span className="flex flex-col text-sm leading-5">
+        <b className="text-base leading-6 font-semibold">{calmTitle}</b>
         {calm === true ? <span>Когато фирмата изпрати нова оферта или промяна, ще получите имейл.</span> : calm}
       </span>
     </div>

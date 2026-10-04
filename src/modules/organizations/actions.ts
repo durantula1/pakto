@@ -109,6 +109,20 @@ export async function updateClientRemindersAction(formData: FormData) {
   revalidatePath("/app/settings/organization");
 }
 
+/** How many days ahead a stage counts as "coming up" on the dashboard and in the stages list. */
+export async function updateStageWarningAction(formData: FormData) {
+  const parsed = z.object({
+    days: z.coerce.number().int().min(1, "Избери от списъка.").max(30, "Най-много 30 дни."),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const context = await requireTenantContext();
+  requireRole(context, ["owner"]);
+  await getDatabase().update(organizations).set({ stageWarningDays: parsed.data.days, updatedAt: new Date() }).where(eq(organizations.id, context.organizationId));
+  revalidatePath("/app/settings/organization");
+  revalidatePath("/app");
+  revalidatePath("/app/work");
+}
+
 type LogoResult<T> = ({ ok: true } & T) | { ok: false; error: string };
 
 function logoFailure(error: unknown): { ok: false; error: string } {

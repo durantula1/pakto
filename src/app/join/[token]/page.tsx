@@ -5,6 +5,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { PERMISSION_GROUPS, can, roleLabel } from "@/lib/authz/permissions";
 import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { createClient } from "@/lib/supabase/server";
+import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { acceptTeamInviteAction } from "@/modules/team/actions";
 import { getTeamInvite } from "@/modules/team/queries";
 import type { Metadata } from "next";
@@ -68,9 +69,9 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
   }
   return <Shell>
     {summary}
-    <form action={acceptTeamInviteAction}>
+    <ActionForm action={acceptTeamInviteAction} success="Поканата е приета" redirects className="space-y-3">
       <input type="hidden" name="token" value={token} />
-      <button className={`${buttonClass} w-full bg-primary text-primary-foreground`}>Приеми поканата</button>
-    </form>
+      <ActionSubmit className="w-full">Приеми поканата</ActionSubmit>
+    </ActionForm>
   </Shell>;
 }

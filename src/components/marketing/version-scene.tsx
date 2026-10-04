@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Lock, Mail, MessageSquareText } from "lucide-react";
-import { m, useReducedMotion, useScroll, useTransform } from "motion/react";
+import {
+  m,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "motion/react";
 
 import { Reveal } from "./reveal";
 
@@ -16,93 +23,34 @@ const steps = [
   {
     kicker: "1 · ИЗПРАЩАШ",
     title: "Офертата е изпратена и се заключва.",
-    text: "Клиентът получава линк по имейл, без профил. От този момент съдържанието на версията не може да се пипа, нито от теб, нито от него.",
+    text: "Клиентът отваря линк от имейла си, без профил. От този момент версията не може да се редактира: всяка промяна е нова версия.",
   },
   {
     kicker: "2 · КЛИЕНТЪТ ИСКА ПРОМЯНА",
-    title: "Не го одобрява. Пита за друго.",
-    text: "Не „не сме се разбрали така“ след три седмици, а конкретно искане веднага, записано към същата оферта.",
+    title: "Не одобрява, а иска друго.",
+    text: "Вместо „не сме се разбрали така“ след три седмици получаваш конкретно искане още сега, записано към същата оферта.",
   },
   {
     kicker: "3 · НОВА ВЕРСИЯ",
-    title: "Не редактираш стария ред. Правиш версия 2.",
-    text: "Версия 1 остава непокътната. Клиентът вижда точно какво е добавено, махнато и променено, и колко струва това.",
+    title: "Не пипаш изпратеното. Правиш версия 2.",
+    text: "Версия 1 остава непокътната. Клиентът вижда какво е добавено, махнато и променено и колко струва това.",
   },
   {
     kicker: "4 · ОДОБРЯВА С КОД",
     title: "Едно „да“, което остава записано.",
-    text: "Клиентът одобрява с код от имейла си. Решението, часът и отпечатъкът на версията се запазват завинаги.",
+    text: "Клиентът одобрява с код от имейла си. Решението, часът и отпечатъкът на версията се запазват в историята на обекта.",
   },
 ] as const;
 
-type Row = {
-  id: string;
-  label: string;
-  qty: string;
-  sum: string;
-  was?: string;
-  kind?: "added" | "changed" | "removed";
-};
-
-const v1Rows: Row[] = [
-  {
-    id: "outlets",
-    label: "Преместване на контакти",
-    qty: "3 бр × 85 €",
-    sum: "255 €",
-  },
-  {
-    id: "fridge",
-    label: "Контакт за хладилника",
-    qty: "1 бр × 120 €",
-    sum: "120 €",
-  },
-  { id: "deadline", label: "Краен срок", qty: "10.10", sum: "10.10" },
-];
-
-const v2Rows: Row[] = [
-  {
-    id: "outlets",
-    label: "Преместване на контакти",
-    qty: "3 → 2 бр × 85 €",
-    sum: "170 €",
-    was: "255 €",
-    kind: "changed",
-  },
-  {
-    id: "oven",
-    label: "Нова линия за фурната",
-    qty: "1 бр × 150 €",
-    sum: "150 €",
-    kind: "added",
-  },
-  {
-    id: "fridge",
-    label: "Контакт за хладилника",
-    qty: "махнат по искане на клиента",
-    sum: "120 €",
-    kind: "removed",
-  },
-  {
-    id: "deadline",
-    label: "Краен срок",
-    qty: "6 дни повече за новата линия",
-    sum: "16.10",
-    was: "10.10",
-    kind: "changed",
-  },
-];
-
-const marks = {
-  added: { sign: "+", className: "bg-[#d9f3cf] text-[#16623f]" },
-  changed: { sign: "~", className: "bg-[#ffe7a8] text-[#755710]" },
-  removed: { sign: "−", className: "bg-[#102b38]/[0.06] text-[#102b38]/50" },
-} as const;
-
-// Scroll progress (0 to 1) at which each step takes over, and the range where the total counts down.
+// Scroll progress (0 to 1) at which each step takes over. The card follows the scroll continuously:
+// the rows morph from v1 to v2 between MORPH_FROM and MORPH_TO, and the stamp lands after STAMP_FROM.
 const STEP_AT = [0, 0.25, 0.5, 0.78] as const;
-const COUNT_FROM = 0.5;
-const COUNT_TO = 0.62;
+const MORPH_FROM = 0.47;
+const MORPH_TO = 0.6;
+const STAMP_FROM = 0.78;
+const STAMP_TO = 0.84;
+// Half-width of the cross-fade between two texts.
+const FADE = 0.03;
 
 function stepAt(progress: number) {
   let step = 0;
@@ -112,11 +60,262 @@ function stepAt(progress: number) {
   return step;
 }
 
+/**
+ * How visible text `index` is at scroll progress `p`, from 0 to 1: it fades in around its own start and
+ * out around the next step's start, so two texts cross-fade instead of swapping.
+ */
+function textVisibility(index: number, p: number) {
+  const fadeIn =
+    index === 0 ? 1 : clamp01((p - (STEP_AT[index] - FADE)) / (2 * FADE));
+  const fadeOut =
+    index === steps.length - 1
+      ? 0
+      : clamp01((p - (STEP_AT[index + 1] - FADE)) / (2 * FADE));
+  return fadeIn * (1 - fadeOut);
+}
+
+function clamp01(value: number) {
+  return Math.min(1, Math.max(0, value));
+}
+
+/** One of the four texts, cross-fading with its neighbours as the scroll passes the step boundaries. */
+function StepText({
+  item,
+  index,
+  progress,
+  active,
+  reduceMotion,
+}: {
+  item: (typeof steps)[number];
+  index: number;
+  progress: MotionValue<number>;
+  active: boolean;
+  reduceMotion: boolean;
+}) {
+  const opacity = useTransform(progress, (p) => textVisibility(index, p));
+  // It rises into place on the way in and lifts away on the way out.
+  const y = useTransform(progress, (p) => {
+    const fadeIn =
+      index === 0 ? 1 : clamp01((p - (STEP_AT[index] - FADE)) / (2 * FADE));
+    const fadeOut =
+      index === steps.length - 1
+        ? 0
+        : clamp01((p - (STEP_AT[index + 1] - FADE)) / (2 * FADE));
+    return `${(1 - fadeIn) * 1.25 - fadeOut * 1.25}rem`;
+  });
+
+  return (
+    <m.div
+      aria-hidden={!active}
+      style={reduceMotion ? { opacity: index === steps.length - 1 ? 1 : 0 } : { opacity, y }}
+      className="col-start-1 row-start-1"
+    >
+      <p className="font-mono text-[0.6875rem] font-bold tracking-[0.12em] text-[#b8ecda]">
+        {item.kicker}
+      </p>
+      <p className="mt-2 text-balance text-[clamp(1.5rem,3.4vw,3.25rem)] font-black leading-[1.02] tracking-[-0.04em] lg:mt-4">
+        {item.title}
+      </p>
+      <p className="mt-3 max-w-md text-sm leading-6 text-[#f4efe4]/70 lg:mt-5 lg:text-base lg:leading-7">
+        {item.text}
+      </p>
+    </m.div>
+  );
+}
+
+/** Two values stacked in one cell; `morph` 0 shows `from`, 1 shows `to`, in between they cross-fade. */
+function Cross({
+  morph,
+  from,
+  to,
+  className = "",
+}: {
+  morph: MotionValue<number>;
+  from: React.ReactNode;
+  to: React.ReactNode;
+  className?: string;
+}) {
+  const fromOpacity = useTransform(morph, (v) => 1 - v);
+  const toOpacity = useTransform(morph, (v) => v);
+  return (
+    <span className="grid min-w-0">
+      <m.span
+        style={{ gridArea: "1 / 1", opacity: fromOpacity }}
+        className={className}
+      >
+        {from}
+      </m.span>
+      <m.span
+        style={{ gridArea: "1 / 1", opacity: toOpacity }}
+        className={className}
+      >
+        {to}
+      </m.span>
+    </span>
+  );
+}
+
+const markStyles = {
+  added: "bg-[#d9f3cf] text-[#16623f]",
+  changed: "bg-[#ffe7a8] text-[#755710]",
+  removed: "bg-[#102b38]/[0.06] text-[#102b38]/50",
+} as const;
+const markSigns = { added: "+", changed: "~", removed: "−" } as const;
+
+/** The round badge at the start of a row: a plain dot in v1, a +, ~ or − once v2 is shown. */
+function Mark({
+  morph,
+  kind,
+}: {
+  morph: MotionValue<number>;
+  kind: keyof typeof markStyles;
+}) {
+  const plainOpacity = useTransform(morph, (v) => 1 - v);
+  const markOpacity = useTransform(morph, (v) => v);
+  const base =
+    "col-start-1 row-start-1 grid size-5 place-items-center rounded-md font-mono demo-text-12 font-bold";
+  return (
+    <span className="grid">
+      <m.span
+        style={{ opacity: plainOpacity }}
+        className={`${base} bg-[#102b38]/[0.05] text-[#52707d]`}
+      >
+        •
+      </m.span>
+      <m.span
+        style={{ opacity: markOpacity }}
+        className={`${base} ${markStyles[kind]}`}
+      >
+        {markSigns[kind]}
+      </m.span>
+    </span>
+  );
+}
+
+const rowClass =
+  "grid grid-cols-[auto_1fr_auto] items-center gap-x-3 py-2 sm:py-2.5";
+const sumClass = "text-right font-mono demo-text-13 tabular-nums";
+
+/** The card's rows. Everything is driven by `morph`, so v1 turns into v2 as the page scrolls. */
+function VersionRows({ morph }: { morph: MotionValue<number> }) {
+  const outletsSum = useTransform(morph, (v) => `${Math.round(255 - 85 * v)} €`);
+  const outletsWas = useTransform(morph, (v) => Math.max(0, (v - 0.3) / 0.7));
+  const fridgeStrike = useTransform(morph, (v) => `${v * 100}% 0.08em`);
+  const fridgeFade = useTransform(morph, (v) => 1 - 0.45 * v);
+  const ovenRows = useTransform(morph, (v) => `${v}fr`);
+  const ovenOpacity = useTransform(morph, (v) => Math.max(0, (v - 0.2) / 0.8));
+  const deadlineWas = useTransform(morph, (v) => Math.max(0, (v - 0.3) / 0.7));
+  const border = "border-t border-[#102b38]/[0.07] first:border-0";
+
+  return (
+    <ul>
+      <li className={border}>
+        <div className={rowClass}>
+          <Mark morph={morph} kind="changed" />
+          <div className="min-w-0">
+            <p className="truncate demo-text-13 font-bold">
+              Преместване на контакти
+            </p>
+            <p className="truncate demo-text-11 text-[#52707d]">
+              <Cross morph={morph} from="3 бр × 85 €" to="3 → 2 бр × 85 €" />
+            </p>
+          </div>
+          <p className={sumClass}>
+            <m.span>{outletsSum}</m.span>
+            <m.s
+              style={{ opacity: outletsWas }}
+              className="block demo-text-10 text-[#52707d]"
+            >
+              255 €
+            </m.s>
+          </p>
+        </div>
+      </li>
+
+      {/* v2 adds a row: it opens up (0fr to 1fr) instead of popping in. */}
+      <m.li
+        style={{ gridTemplateRows: ovenRows, opacity: ovenOpacity }}
+        className="grid"
+      >
+        <div className={`min-h-0 overflow-hidden ${border}`}>
+          <div className={rowClass}>
+            <Mark morph={morph} kind="added" />
+            <div className="min-w-0">
+              <p className="truncate demo-text-13 font-bold">
+                Нова линия за фурната
+              </p>
+              <p className="truncate demo-text-11 text-[#52707d]">
+                1 бр × 150 €
+              </p>
+            </div>
+            <p className={sumClass}>150 €</p>
+          </div>
+        </div>
+      </m.li>
+
+      <li className={border}>
+        <div className={rowClass}>
+          <Mark morph={morph} kind="removed" />
+          <div className="min-w-0">
+            <m.p
+              style={{ opacity: fridgeFade }}
+              className="truncate demo-text-13 font-bold"
+            >
+              <m.span
+                style={{ backgroundSize: fridgeStrike }}
+                className="bg-gradient-to-r from-[#52707d] to-[#52707d] bg-[length:0%_0.08em] bg-[position:0_58%] bg-no-repeat"
+              >
+                Контакт за хладилника
+              </m.span>
+            </m.p>
+            <p className="truncate demo-text-11 text-[#52707d]">
+              <Cross
+                morph={morph}
+                from="1 бр × 120 €"
+                to="махнат по искане на клиента"
+              />
+            </p>
+          </div>
+          <m.p style={{ opacity: fridgeFade }} className={sumClass}>
+            120 €
+          </m.p>
+        </div>
+      </li>
+
+      <li className={border}>
+        <div className={rowClass}>
+          <Mark morph={morph} kind="changed" />
+          <div className="min-w-0">
+            <p className="truncate demo-text-13 font-bold">Краен срок</p>
+            <p className="truncate demo-text-11 text-[#52707d]">
+              <Cross
+                morph={morph}
+                from="договорен в оферта"
+                to="6 дни повече за новата линия"
+              />
+            </p>
+          </div>
+          <p className={sumClass}>
+            <Cross morph={morph} from="10.10" to="16.10" />
+            <m.s
+              style={{ opacity: deadlineWas }}
+              className="block demo-text-10 text-[#52707d]"
+            >
+              10.10
+            </m.s>
+          </p>
+        </div>
+      </li>
+    </ul>
+  );
+}
+
 export function VersionScene() {
   const sectionRef = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotion() ?? false;
   const [scrollStep, setScrollStep] = useState(0);
   const [scrollTotal, setScrollTotal] = useState(450);
+  const done = useMotionValue(1);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -124,29 +323,60 @@ export function VersionScene() {
   });
   const total = useTransform(
     scrollYProgress,
-    [COUNT_FROM, COUNT_TO],
+    [MORPH_FROM, MORPH_TO],
     [450, 384],
     { clamp: true },
   );
-  // Subscribed in an effect, not with useMotionValueEvent: the progress bar below is a motion.div bound
-  // to the same value, and a change that lands while it renders must not set this component's state.
+  const scrolledMorph = useTransform(
+    scrollYProgress,
+    [MORPH_FROM, MORPH_TO],
+    [0, 1],
+    { clamp: true },
+  );
+  const scrolledStamp = useTransform(
+    scrollYProgress,
+    [STAMP_FROM, STAMP_TO],
+    [0, 1],
+    { clamp: true },
+  );
+  // With reduced motion the last step is shown in place, so both values sit at their end.
+  const morph = reduceMotion ? done : scrolledMorph;
+  const stamp = reduceMotion ? done : scrolledStamp;
+  const stampOpacity = useTransform(stamp, (v) => 0.92 * v);
+  const stampScale = useTransform(stamp, (v) => 1.7 - 0.7 * v);
+  const stampRotate = useTransform(stamp, (v) => -18 + 12 * v);
+  const v2ChipOpacity = useTransform(morph, (v) => v);
+
+  // The progress bar below is a motion.div bound to the same value, and a change can fire while it
+  // renders. Setting this component's state then is a React error, so changes are applied on the next
+  // animation frame (coalesced to one update per frame), never inside the change callback itself.
   useEffect(() => {
+    let pending = 0;
     const sync = () => {
       setScrollStep(stepAt(scrollYProgress.get()));
       setScrollTotal(Math.round(total.get()));
     };
+    const schedule = () => {
+      if (!pending)
+        pending = requestAnimationFrame(() => {
+          pending = 0;
+          sync();
+        });
+    };
     sync();
     const stops = [
-      scrollYProgress.on("change", sync),
-      total.on("change", sync),
+      scrollYProgress.on("change", schedule),
+      total.on("change", schedule),
     ];
-    return () => stops.forEach((stop) => stop());
+    return () => {
+      stops.forEach((stop) => stop());
+      cancelAnimationFrame(pending);
+    };
   }, [scrollYProgress, total]);
 
   const step = reduceMotion ? steps.length - 1 : scrollStep;
   const shownTotal = reduceMotion ? 384 : scrollTotal;
   const second = step >= 2;
-  const rows = second ? v2Rows : v1Rows;
   const approved = step === 3;
 
   return (
@@ -160,7 +390,7 @@ export function VersionScene() {
           <div>
             <Reveal>
               <p className="mf-kicker !text-[#ff765f]">
-                ВЕРСИИ · ПРОМЯНАТА НЕ СЕ РЕДАКТИРА
+                ВСЯКА ПРОМЯНА Е НОВА ВЕРСИЯ
               </p>
               <h2 id="version-scene-title" className="sr-only">
                 Как една оферта минава през версии и одобрение
@@ -169,30 +399,16 @@ export function VersionScene() {
 
             {/* All four texts share one cell, so the column never changes height while they swap. */}
             <div className="mt-4 grid lg:mt-8">
-              {steps.map((item, index) => {
-                const active = index === step;
-                return (
-                  <div
-                    key={item.kicker}
-                    aria-hidden={!active}
-                    className={`col-start-1 row-start-1 transition-[opacity,transform] duration-500 ease-out ${
-                      active
-                        ? "translate-y-0 opacity-100"
-                        : "pointer-events-none translate-y-3 opacity-0"
-                    }`}
-                  >
-                    <p className="font-mono text-[0.6875rem] font-bold tracking-[0.12em] text-[#b8ecda]">
-                      {item.kicker}
-                    </p>
-                    <p className="mt-2 text-balance text-[clamp(1.5rem,3.4vw,3.25rem)] font-black leading-[1.02] tracking-[-0.04em] lg:mt-4">
-                      {item.title}
-                    </p>
-                    <p className="mt-3 max-w-md text-sm leading-6 text-[#f4efe4]/70 lg:mt-5 lg:text-base lg:leading-7">
-                      {item.text}
-                    </p>
-                  </div>
-                );
-              })}
+              {steps.map((item, index) => (
+                <StepText
+                  key={item.kicker}
+                  item={item}
+                  index={index}
+                  progress={scrollYProgress}
+                  active={index === step}
+                  reduceMotion={reduceMotion}
+                />
+              ))}
             </div>
 
             {/* Progress: the line fills with the scroll, the dots light up as each step is reached. */}
@@ -266,82 +482,36 @@ export function VersionScene() {
                     {second ? <Lock className="size-3" /> : null}v1 · 18.09
                   </span>
                 </li>
-                <li
-                  className={`flex items-center gap-1.5 transition-opacity duration-500 ${second ? "opacity-100" : "opacity-0"}`}
+                <m.li
+                  style={{ opacity: v2ChipOpacity }}
+                  className="flex items-center gap-1.5"
                 >
                   <span className="h-px w-3 bg-[#102b38]/20 sm:w-5" />
                   <span className="rounded-md bg-[#102b38] px-2 py-1 font-mono demo-text-10 font-bold text-[#f4efe4]">
                     v2 · 24.09
                   </span>
-                </li>
+                </m.li>
               </ol>
 
               <div className="mt-3 border-t border-[#102b38]/10 px-5 sm:mt-4 sm:px-6">
                 <p className="pt-2.5 demo-text-11 text-[#52707d] sm:pt-3">
-                  {second ? "Какво се промени спрямо v1" : "Съдържание на v1"}
+                  <Cross
+                    morph={morph}
+                    from="Съдържание на v1"
+                    to="Какво се промени спрямо v1"
+                  />
                 </p>
-                <ul className="divide-y divide-[#102b38]/[0.07]">
-                  {rows.map((row, index) => {
-                    const removed = row.kind === "removed";
-                    return (
-                      <m.li
-                        // A new key per version, so rows fade in again when v2 replaces v1.
-                        key={`${second ? 2 : 1}-${row.id}`}
-                        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.07 }}
-                        className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 py-2 sm:py-2.5"
-                      >
-                        <span
-                          className={`grid size-5 place-items-center rounded-md font-mono demo-text-12 font-bold ${
-                            row.kind
-                              ? marks[row.kind].className
-                              : "bg-[#102b38]/[0.05] text-[#52707d]"
-                          }`}
-                        >
-                          {row.kind ? marks[row.kind].sign : "•"}
-                        </span>
-                        <div className="min-w-0">
-                          <p
-                            className={`truncate demo-text-13 font-bold ${removed ? "text-[#52707d] line-through decoration-[#52707d]/60" : ""}`}
-                          >
-                            {row.label}
-                          </p>
-                          <p className="truncate demo-text-11 text-[#52707d]">
-                            {row.qty}
-                          </p>
-                        </div>
-                        <p className="text-right font-mono demo-text-13 tabular-nums">
-                          {removed ? (
-                            <s className="text-[#52707d]">{row.sum}</s>
-                          ) : (
-                            row.sum
-                          )}
-                          {row.was ? (
-                            <s className="block demo-text-10 text-[#52707d]">
-                              {row.was}
-                            </s>
-                          ) : null}
-                        </p>
-                      </m.li>
-                    );
-                  })}
-                </ul>
+                <VersionRows morph={morph} />
               </div>
 
               <div className="flex items-center justify-between gap-4 border-t border-[#102b38]/10 px-5 py-3 sm:py-4 sm:px-6">
                 <m.div
-                  className="pointer-events-none relative shrink-0 rounded-md border-[0.1875rem] border-[#d14b35] px-2.5 py-1.5 text-center font-mono text-[#d14b35] [filter:url(#mf-ink)]"
-                  initial={false}
-                  animate={
-                    approved
-                      ? { opacity: 0.92, scale: 1, rotate: -6 }
-                      : { opacity: 0, scale: 1.7, rotate: -18 }
-                  }
-                  transition={{
-                    duration: approved ? 0.28 : 0.15,
-                    ease: [0.55, 0, 1, 0.45],
+                  style={{
+                    opacity: stampOpacity,
+                    scale: stampScale,
+                    rotate: stampRotate,
                   }}
+                  className="pointer-events-none relative shrink-0 rounded-md border-[0.1875rem] border-[#d14b35] px-2.5 py-1.5 text-center font-mono text-[#d14b35] [filter:url(#mf-ink)]"
                 >
                   <span className="absolute inset-[0.1875rem] rounded-sm border border-[#d14b35]" />
                   <span className="block demo-text-14 font-black tracking-[0.14em]">

@@ -96,24 +96,28 @@ async function sendInviteEmail(input: { to: string; link: string; organizationNa
   });
 }
 
-export async function acceptTeamInviteAction(formData: FormData) {
+class InviteError extends Error {}
+
+/** Expected failures come back as `{ error }`: a thrown message is hidden in production and the person sees an English error page. */
+export async function acceptTeamInviteAction(formData: FormData): Promise<{ error: string } | undefined> {
   const token = z.string().min(20).parse(formData.get("token"));
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user?.id || !user.email || !user.email_confirmed_at) throw new Error("Потвърди имейла си и влез отново.");
+  if (error || !user?.id || !user.email || !user.email_confirmed_at) return { error: "Потвърди имейла си и влез отново." };
   const db = getDatabase();
+  try {
   await db.transaction(async (tx) => {
     const [invite] = await tx.select().from(teamInvites)
       .where(and(eq(teamInvites.tokenHash, hashPortalToken(token)), isNull(teamInvites.acceptedAt), isNull(teamInvites.revokedAt), gt(teamInvites.expiresAt, new Date())))
       .for("update").limit(1);
-    if (!invite || invite.email !== user.email!.toLowerCase()) throw new Error("Поканата е изтекла или е за друг имейл.");
+    if (!invite || invite.email !== user.email!.toLowerCase()) throw new InviteError("Поканата е изтекла или е за друг имейл.");
     const [existing] = await tx.select({ organizationId: organizationMembers.organizationId }).from(organizationMembers)
       .where(and(eq(organizationMembers.userId, user.id), eq(organizationMembers.status, "active"))).limit(1);
-    if (existing) throw new Error("Този профил вече е член на фирма.");
+    if (existing) throw new InviteError("Този профил вече е член на фирма.");
     if (invite.role === "owner") {
       const owners = await tx.select({ id: organizationMembers.userId }).from(organizationMembers)
         .where(and(eq(organizationMembers.organizationId, invite.organizationId), eq(organizationMembers.role, "owner"), eq(organizationMembers.status, "active")));
-      if (owners.length !== 1) throw new Error("Поканата за собственик вече изисква потвърждение от втори собственик.");
+      if (owners.length !== 1) throw new InviteError("Поканата за собственик вече изисква потвърждение от втори собственик.");
     }
     const displayName = String(user.user_metadata?.display_name ?? user.email!.split("@")[0]);
     await tx.insert(profiles).values({ id: user.id, displayName, email: user.email!.toLowerCase() })
@@ -127,6 +131,10 @@ export async function acceptTeamInviteAction(formData: FormData) {
     await tx.update(teamInvites).set({ acceptedAt: new Date() }).where(eq(teamInvites.id, invite.id));
     await tx.insert(staffNotifications).values({ organizationId: invite.organizationId, userId: user.id, eventType: "invitation_accepted", title: "Добре дошли в екипа", href: "/app" });
   });
+  } catch (cause) {
+    if (cause instanceof InviteError) return { error: cause.message };
+    throw cause;
+  }
   revalidatePath("/app", "layout");
   redirect("/app");
 }
@@ -207,7 +215,7 @@ export async function requestOwnerChangeAction(formData: FormData) {
       await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId: targetUserId, eventType: "owner_promoted", title: "Вече си собственик", href: "/app/team" });
       return;
     }
-    const [request] = await tx.insert(ownerRoleRequests).values({ organizationId: context.organizationId, targetUserId, requestedRole, removeMember, requestedBy: context.userId, expiresAt: new Date(Date.now() + 7 * 86400000) }).returning({ id: ownerRoleRequests.id });
+    const [request] = await tx.insert(ownerRoleRequests).values({ organizationId: context.organizationId, targetUserId, requestedRole, targetRole: target.role, removeMember, requestedBy: context.userId, expiresAt: new Date(Date.now() + 7 * 86400000) }).returning({ id: ownerRoleRequests.id });
     const approvers = owners.filter((owner) => owner.userId !== context.userId);
     if (approvers.length && request) await tx.insert(staffNotifications).values(approvers.map((owner) => ({ organizationId: context.organizationId, userId: owner.userId, eventType: "owner_change_requested", title: "Потвърди промяна на собственик", href: "/app/team" })));
   });
@@ -227,7 +235,7 @@ export async function approveOwnerChangeAction(formData: FormData) {
     if (!request || request.requestedBy === context.userId) throw new Error("Това предложение не може да бъде потвърдено.");
     const [target] = await tx.select({ role: organizationMembers.role }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, request.targetUserId), eq(organizationMembers.status, "active"))).limit(1);
-    if (!target || (request.requestedRole === "owner" ? target.role === "owner" : target.role !== "owner")) throw new Error("Ролята се е променила. Създай ново предложение.");
+    if (!target || (request.targetRole && target.role !== request.targetRole) || (request.requestedRole === "owner" ? target.role === "owner" : target.role !== "owner")) throw new Error("Ролята се е променила. Създай ново предложение.");
     const owners = await tx.select({ userId: organizationMembers.userId }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.role, "owner"), eq(organizationMembers.status, "active")));
     if ((request.removeMember || request.requestedRole !== "owner") && owners.some((owner) => owner.userId === request.targetUserId) && owners.length < 2) throw new Error("Фирмата трябва да има собственик.");

@@ -47,6 +47,22 @@ export const eventLabels: Record<string, string> = {
   payment_claimed: "Клиентът отбеляза плащане",
   payment_disputed: "Клиентът оспори плащане",
   client_merged: "Клиентът е слят с дубликат",
+  client_anonymized: "Клиентът е анонимизиран",
+  client_message: "Съобщение от клиента",
+  contact_added: "Добавен контакт",
+  contact_removed: "Премахнат контакт",
+  contact_updated: "Обновен контакт",
+  contact_verification_reset: "Нулирано потвърждение на имейла",
+  payment_dispute_resolved: "Оспорването на плащане е уредено",
+  payment_plan_adjusted: "Платежният план е коригиран",
+  payment_plan_review: "Платежният план чака преглед",
+  portal_links_resent: "Линковете към портала са изпратени отново",
+  project_created: "Създаден обект",
+  project_updated: "Обновени данни на обекта",
+  project_completed: "Обектът е приключен",
+  project_reopened: "Обектът е отворен отново",
+  project_archived: "Обектът е архивиран",
+  project_restored: "Обектът е върнат от архива",
 };
 
 /** Events worth a colored dot: the client's decisions and disputes. */
@@ -62,7 +78,7 @@ const eventTones: Record<string, string> = {
   document_canceled: "bg-tile-coral-foreground",
 };
 
-const dateTime = (value: Date) => new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short" }).format(value);
+const dateTime = (value: Date) => new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" }).format(value);
 
 export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions, events, olderEventsHref, latestEventsHref }: {
   changeOrderId: string;

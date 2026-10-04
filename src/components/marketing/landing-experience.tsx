@@ -6,23 +6,22 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  Lock,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   LazyMotion,
   MotionConfig,
   m,
+  useMotionValueEvent,
   useScroll,
   useSpring,
 } from "motion/react";
 
-import { AudienceSplit } from "./audience-split";
 import { Faq } from "./faq";
 import { PlatformTour } from "./platform-tour";
 import { ProcessVideo } from "./process-video";
-import { ProofStrip } from "./proof-strip";
+import { ProblemSection } from "./problem-section";
 import { MobileCtaBar } from "./mobile-cta-bar";
 import { HeroSeal } from "./hero-seal";
 import { SiteFooter } from "./site-chrome";
@@ -38,11 +37,24 @@ import { applyAuthHint } from "@/lib/auth/session-hint";
 const loadMotionFeatures = () =>
   import("./motion-features").then((module) => module.default);
 
+// The header slides away while reading down and returns on the first move up; it always shows near
+// the top, and stays while the pointer or keyboard focus is in it.
+const HEADER_TOP = 80;
+const HEADER_STEP = 8;
+
 export function LandingExperience() {
   // The root layout's inline script runs once per page load; after a client navigation to "/"
   // (say, after signing in) the hint is refreshed here.
   useEffect(applyAuthHint, []);
-  const { scrollYProgress } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const [navHidden, setNavHidden] = useState(false);
+  const [navHeld, setNavHeld] = useState(false);
+  useMotionValueEvent(scrollY, "change", (y) => {
+    const delta = y - scrollY.getPrevious()!;
+    if (y < HEADER_TOP) setNavHidden(false);
+    else if (delta > HEADER_STEP) setNavHidden(true);
+    else if (delta < -HEADER_STEP) setNavHidden(false);
+  });
   const pageProgress = useSpring(scrollYProgress, {
     stiffness: 120,
     damping: 30,
@@ -60,9 +72,18 @@ export function LandingExperience() {
             className="fixed left-0 top-0 z-[80] h-[0.1875rem] w-full origin-left bg-[#ff765f]"
           />
 
-          <header className="mf-nav fixed inset-x-0 top-0 z-50 px-[6vw] py-5 text-[#102b38]">
-            {/* Same width and gutter as the page content, so the logo lines up with the hero's left edge. */}
-            <div className="mx-auto flex max-w-[93.75rem] items-center justify-between">
+          <m.header
+            className="pointer-events-none fixed inset-x-0 top-0 z-50 px-[4vw] pt-3 text-[#102b38] lg:px-[6vw] lg:pt-4"
+            initial={false}
+            animate={{ y: navHidden && !navHeld ? "-150%" : "0%" }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            onFocusCapture={() => setNavHeld(true)}
+            onBlurCapture={() => setNavHeld(false)}
+            onHoverStart={() => setNavHeld(true)}
+            onHoverEnd={() => setNavHeld(false)}
+          >
+            {/* A floating glass pill, as wide as the page content. */}
+            <div className="mf-glass pointer-events-auto mx-auto flex max-w-[93.75rem] items-center justify-between rounded-full py-2 pl-4 pr-2 sm:pl-5">
               <Link
                 href="/"
                 className="group flex items-center gap-2.5"
@@ -113,7 +134,7 @@ export function LandingExperience() {
                 <Link
                   href="/app"
                   prefetch={true}
-                  className="mf-when-in flex items-center gap-2 border border-[#102b38]/50 bg-[#ff765f] px-3.5 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] text-[#102b38]"
+                  className="mf-when-in flex items-center gap-2 rounded-full border border-[#102b38]/40 bg-[#ff765f] px-4 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] text-[#102b38]"
                 >
                   КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-3.5" />
                 </Link>
@@ -126,7 +147,7 @@ export function LandingExperience() {
                   </Link>
                   <Link
                     href="/sign-up"
-                    className="flex items-center gap-2 border border-[#102b38]/50 bg-[#f4efe4]/70 px-3.5 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] backdrop-blur-md transition-colors hover:bg-[#ff765f]"
+                    className="flex items-center gap-2 rounded-full border border-[#102b38]/40 bg-[#ff765f] px-4 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] transition-colors hover:bg-[#ff8a75]"
                   >
                     ЗАПОЧНИ <span className="max-sm:hidden">БЕЗПЛАТНО</span>{" "}
                     <ArrowUpRight className="size-3.5" />
@@ -134,7 +155,7 @@ export function LandingExperience() {
                 </div>
               </div>
             </div>
-          </header>
+          </m.header>
 
           <section className="mf-hero relative overflow-hidden px-[6vw] pb-20 pt-32 lg:flex lg:min-h-svh lg:items-center lg:pb-16 lg:pt-28">
             <div className="mf-hero-grid absolute inset-0" />
@@ -144,7 +165,7 @@ export function LandingExperience() {
               <div className="lg:col-span-7">
                 <HeroReveal className="mf-kicker mb-7 flex items-center gap-3">
                   <span className="size-2 rounded-full bg-[#ff765f]" />
-                  ЗА ФИРМИ, КОИТО РАБОТЯТ С КЛИЕНТИ
+                  ОФЕРТИ И ПРОМЕНИ, ОДОБРЕНИ ПРЕДИ РАБОТАТА
                 </HeroReveal>
                 <HeroReveal solid delay={0.06}>
                   <h1 className="mf-hero-title relative z-20">
@@ -157,8 +178,9 @@ export function LandingExperience() {
                 </HeroReveal>
                 <HeroReveal delay={0.14} className="relative z-20 mt-10">
                   <p className="max-w-[28rem] text-pretty text-lg leading-8 text-[#284955] lg:text-xl">
-                    Оферти и допълнителни промени, които клиентът одобрява от
-                    телефона с код. Всяко „да“ остава записано.
+                    Клиентът поиска нещо допълнително? Изпращаш му цена и срок, той
+                    одобрява от телефона си и започваш чак след това. Три
+                    седмици по-късно няма какво да се оспорва.
                   </p>
                   <div
                     id="hero-cta"
@@ -182,8 +204,8 @@ export function LandingExperience() {
                     </a>
                   </div>
                   <p className="mt-6 flex items-center gap-2 text-sm text-[#46636e]">
-                    <Lock className="size-4 shrink-0" /> Безплатно в бета · без
-                    карта · клиентът не си прави профил
+                    <ShieldCheck className="size-4 shrink-0" /> Безплатно в бета ·
+                    без карта · клиентът не си прави профил
                   </p>
                 </HeroReveal>
               </div>
@@ -194,13 +216,11 @@ export function LandingExperience() {
             </div>
           </section>
 
-          <ProofStrip />
+          <ProblemSection />
 
           <VersionScene />
 
           <ProcessVideo />
-
-          <AudienceSplit />
 
           <PlatformTour />
 
@@ -254,8 +274,8 @@ export function LandingExperience() {
                 </h2>
                 <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-base leading-7">
-                    Регистрираш фирмата, създаваш обект и пращаш първата оферта
-                    още днес. Клиентът одобрява от телефона с код.
+                    Регистрираш фирмата, създаваш обект и изпращаш първата оферта
+                    още днес. Клиентът одобрява от телефона си с код от имейла.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">
                     КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />

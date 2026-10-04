@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 import { MessageCircleQuestion, SendHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,7 +32,7 @@ export function OfferQuestions({ messages, projectPublicId, changeOrderId, organ
   /** A change to an offer, not an offer: the words follow. */
   isChange?: boolean;
 }) {
-  const [state, send, sending] = useActionState(sendClientMessageAction, {});
+  const [state, send, sending] = useActionState(offlineSafe(sendClientMessageAction), {});
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.error) toast.error(state.error);

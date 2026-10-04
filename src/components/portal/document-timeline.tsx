@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight, CornerDownRight, FileText } from "lucide-react";
 
-import { ClientStatusBadge } from "@/components/portal/client-status";
+import { ClientStatusBadge, clientStatusDotClassName } from "@/components/portal/client-status";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { offerStatusLabels, offerStatusTones, type OfferDisplayStatus } from "@/modules/projects/offer-status";
 import { documentName, formatShortDay } from "@/modules/change-orders/labels";
 import { cents, formatCents } from "@/modules/projects/state";
 
@@ -17,17 +19,17 @@ export type TimelineDocument = {
   total: string;
   currency: string;
   firstSentAt: Date | null;
+  /** An approved offer's own status ("В изпълнение", "Завършена"), so it reads as on the project page. */
+  offerStatus?: OfferDisplayStatus;
 };
 
-/** One tone per offer, so an offer and its changes read as one thread; cycles after three. */
-const tones = [
-  { dot: "bg-tile-blue-foreground", stripe: "shadow-[inset_0.1875rem_0_0_var(--tile-blue-foreground)]", chip: "bg-tile-blue text-tile-blue-foreground" },
-  { dot: "bg-tile-lilac-foreground", stripe: "shadow-[inset_0.1875rem_0_0_var(--tile-lilac-foreground)]", chip: "bg-tile-lilac text-tile-lilac-foreground" },
-  { dot: "bg-tile-sand-foreground", stripe: "shadow-[inset_0.1875rem_0_0_var(--tile-sand-foreground)]", chip: "bg-tile-sand text-tile-sand-foreground" },
-];
-
-/** A change on its own, whose offer the client never saw. */
-const loose = { dot: "bg-tile-stone-foreground", stripe: "shadow-[inset_0.1875rem_0_0_var(--tile-stone-foreground)]", chip: "bg-tile-stone text-tile-stone-foreground" };
+/** The offer's status once it is approved, else what the client decided or what waits for them. */
+function StatusBadge({ document }: { document: TimelineDocument }) {
+  if (document.status === "approved" && document.offerStatus) {
+    return <Badge variant={offerStatusTones[document.offerStatus]}>{offerStatusLabels[document.offerStatus]}</Badge>;
+  }
+  return <ClientStatusBadge status={document.status} />;
+}
 
 const time = (document: TimelineDocument) => document.firstSentAt?.getTime() ?? 0;
 const faded = (status: string) => status === "superseded" || status === "canceled" || status === "expired";
@@ -54,12 +56,10 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
     ...orphans.map((change) => ({ lead: change, changes: [] as TimelineDocument[] })),
   ].toSorted((left, right) => time(left.lead) - time(right.lead));
   const href = (id: string) => `/portal/${projectPublicId}/changes/${id}`;
-  let offerIndex = 0;
 
   return (
     <ol className="rounded-3xl bg-card px-2 pt-3 pb-1 sm:px-3">
       {groups.map(({ lead, changes }, index) => {
-        const tone = lead.documentKind === "offer" ? tones[offerIndex++ % tones.length]! : loose;
         const [day, month] = lead.firstSentAt ? formatShortDay(lead.firstSentAt).split(" ") : ["", ""];
         const last = index === groups.length - 1;
         const parent = lead.documentKind === "change" && lead.baselineOfferId ? offerNames.get(lead.baselineOfferId) : null;
@@ -70,11 +70,11 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
               <span className="text-xs text-muted-foreground">{month}</span>
             </p>
             <div className="flex flex-col items-center">
-              <span aria-hidden="true" className={cn("mt-4 size-3 shrink-0 rounded-full ring-4 ring-card", tone.dot)} />
+              <span aria-hidden="true" className={cn("mt-4 size-3 shrink-0 rounded-full ring-4 ring-card", clientStatusDotClassName(lead.status))} />
               {!last ? <span className="w-0 flex-1 border-l-2 border-dashed border-foreground/15" /> : null}
             </div>
             <div className="min-w-0 pb-4">
-              <Link href={href(lead.id)} className={cn("group flex items-center gap-3 rounded-2xl bg-background/70 py-3 pr-3 pl-4 transition-colors hover:bg-background sm:pr-2", tone.stripe, faded(lead.status) && "opacity-70")}>
+              <Link href={href(lead.id)} className={cn("group/row flex items-center gap-3 rounded-2xl bg-background/70 py-3 pr-3 pl-4 transition-colors hover:bg-background sm:pr-2", faded(lead.status) && "opacity-70")}>
                 <span className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="inline-flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
                     <FileText className="size-3.5" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
                   </span>
                   <span className="line-clamp-2 leading-snug font-semibold">{lead.title}</span>
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <ClientStatusBadge status={lead.status} />
+                    <StatusBadge document={lead} />
                     <Amount document={lead} />
                   </span>
                 </span>
@@ -94,7 +94,7 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
                 <ol className="mt-2 ml-3 flex flex-col gap-1 border-l-2 border-dashed border-foreground/15 pl-2 sm:ml-4 sm:pl-3">
                   {changes.map((change) => (
                     <li key={change.id}>
-                      <Link href={href(change.id)} className={cn("group flex items-center gap-3 rounded-2xl py-2.5 pr-2 pl-3 transition-colors hover:bg-background/70", faded(change.status) && "opacity-70")}>
+                      <Link href={href(change.id)} className={cn("group/row flex items-center gap-3 rounded-2xl py-2.5 pr-2 pl-3 transition-colors hover:bg-background/70", faded(change.status) && "opacity-70")}>
                         <span className="flex min-w-0 flex-1 flex-col gap-1">
                           <span className="inline-flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
                             <CornerDownRight className="size-3.5" aria-hidden="true" />
@@ -126,7 +126,8 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
 function Amount({ document, small = false }: { document: TimelineDocument; small?: boolean }) {
   const minor = cents(document.total);
   const change = document.documentKind === "change";
-  const text = change && minor !== 0n
+  if (change && minor === 0n) return <span className="shrink-0 text-sm text-muted-foreground">без промяна в цената</span>;
+  const text = change
     ? `${minor < 0n ? "−" : "+"}${formatCents(minor < 0n ? -minor : minor, document.currency)}`
     : formatCents(minor, document.currency);
   return <span className={cn("shrink-0 tabular-nums", small ? "text-sm font-medium" : "font-semibold")}>{text}</span>;
@@ -134,7 +135,7 @@ function Amount({ document, small = false }: { document: TimelineDocument; small
 
 function Arrow({ small = false }: { small?: boolean }) {
   return (
-    <span aria-hidden="true" className={cn("hidden shrink-0 place-items-center rounded-full bg-muted sm:grid transition-colors group-hover:bg-foreground group-hover:text-background", small ? "size-7" : "size-8")}>
+    <span aria-hidden="true" className={cn("hidden shrink-0 place-items-center rounded-full bg-muted sm:grid transition-colors group-hover/row:bg-foreground group-hover/row:text-background", small ? "size-7" : "size-8")}>
       <ArrowUpRight className={small ? "size-3.5" : "size-4"} />
     </span>
   );

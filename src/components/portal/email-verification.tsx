@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { offlineSafe } from "@/lib/offline-safe";
 import { MailCheck, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,9 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
   verified: boolean;
   compact?: boolean;
 }) {
-  const [claimState, requestClaim, requestingClaim] = useActionState<VerificationState, FormData>(requestClaimCodeAction, {});
-  const [changeState, requestChange, requestingChange] = useActionState<VerificationState, FormData>(requestEmailChangeCodeAction, {});
-  const [confirmState, confirm, confirming] = useActionState<VerificationState, FormData>(confirmVerificationCodeAction, {});
+  const [claimState, requestClaim, requestingClaim] = useActionState<VerificationState, FormData>(offlineSafe(requestClaimCodeAction), {});
+  const [changeState, requestChange, requestingChange] = useActionState<VerificationState, FormData>(offlineSafe(requestEmailChangeCodeAction), {});
+  const [confirmState, confirm, confirming] = useActionState<VerificationState, FormData>(offlineSafe(confirmVerificationCodeAction), {});
   const [changing, setChanging] = useState(false);
   const [email, setEmail] = useState("");
 

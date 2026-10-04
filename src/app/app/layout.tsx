@@ -31,7 +31,7 @@ import { ActionNotice } from "@/components/workspace/action-notice";
 import { AppBreadcrumb } from "@/components/workspace/app-breadcrumb";
 import { SidebarToggle } from "@/components/workspace/sidebar-toggle";
 import { SIDEBAR_COOKIE, WORKSPACE_SHELL_ID } from "@/components/workspace/sidebar-state";
-import { DeletionPendingBanner } from "@/components/settings/account-dialogs";
+import { ConsentBanner, DeletionPendingBanner } from "@/components/settings/account-dialogs";
 import { can, roleLabel } from "@/lib/authz/permissions";
 import { getOptionalTenantContext, getSessionUserId } from "@/lib/authz/tenant-context";
 import { accountDeletionDate } from "@/lib/legal";
@@ -79,7 +79,7 @@ export default async function WorkspaceLayout({
       ...(clients ? [{ href: "/app/clients", label: "Клиенти", icon: <Contact className="size-4" /> }] : []),
       { href: "/app/offers", label: "Оферти", icon: <FileText className="size-4" /> },
     ] },
-    ...(finance ? [{ label: "Пари", links: [{ href: "/app/finance", label: "Плащания", icon: <Euro className="size-4" /> }] }] : []),
+    ...(finance ? [{ label: "Финанси", links: [{ href: "/app/finance", label: "Плащания", icon: <Euro className="size-4" /> }] }] : []),
     { label: "Фирма", links: [
       { href: "/app/catalog", label: "Каталог", icon: <BookOpen className="size-4" /> },
       ...(owner ? [{ href: "/app/team", label: "Екип", icon: <Users className="size-4" /> }] : []),
@@ -148,6 +148,7 @@ export default async function WorkspaceLayout({
         {/* Collapsing gives the content the room the sidebar frees, not just a left shift. */}
         <main className="max-w-content px-4 pt-2 pb-6 transition-[max-width] duration-200 motion-reduce:transition-none sm:px-6 lg:pr-7 lg:pl-4 lg:group-data-[sidebar=collapsed]/shell:max-w-[93.5rem]">
           {pendingDeletion ? <div className="mb-6"><DeletionPendingBanner deleteOn={deletionDateFormat.format(accountDeletionDate(pendingDeletion)).replace(/\.$/, "")} companyName={account?.closureRequested ? context.organizationName : null} /></div> : null}
+          {account?.consentMissing ? <div className="mb-6"><ConsentBanner /></div> : null}
           {children}
         </main>
         <DownloadTray aboveMobileNav />

@@ -10,8 +10,8 @@ const labels: Record<OfferTab, string> = { work: "Работа", payments: "Пл
 const icons: Record<OfferTab, typeof Hammer> = { work: Hammer, payments: Wallet, document: FileText };
 
 /**
- * An offer the client approved, in three tabs: the work (handover and stages) first, then its
- * payments, then the approved document itself. The tab lives in the URL (`?tab=`), so a link from an
+ * An offer the client approved, in three tabs: the work (handover and stages), its payments, and
+ * the approved document itself. The page opens on the work once there is any, else on the document. The tab lives in the URL (`?tab=`), so a link from an
  * email opens the right one and a refresh keeps it.
  */
 export function OfferTabs({ initial = "work", work, payments, document }: {
@@ -25,14 +25,15 @@ export function OfferTabs({ initial = "work", work, payments, document }: {
     const next = key as OfferTab;
     setTab(next);
     const url = new URL(window.location.href);
-    if (next === "work") url.searchParams.delete("tab"); else url.searchParams.set("tab", next);
+    // Always in the URL: which tab opens by default depends on whether the offer has work yet.
+    url.searchParams.set("tab", next);
     url.hash = "";
     window.history.replaceState(null, "", url);
   }
   const panels: Record<OfferTab, React.ReactNode> = { work, payments, document };
   return (
     <Tabs selectedKey={tab} onSelectionChange={select} className="flex flex-col gap-4">
-      <TabList aria-label="Раздели на офертата" className="sticky top-17 z-10 grid grid-cols-3 gap-1 rounded-full bg-card p-1.5 shadow-[0_0.75rem_1.5rem_-1rem_rgb(16_43_56/0.4)]">
+      <TabList aria-label="Раздели на офертата" className="sticky top-17 z-10 grid grid-cols-3 before:absolute before:inset-x-0 before:-top-2 before:h-2 before:bg-background gap-1 rounded-full bg-card p-1.5 shadow-[0_0.75rem_1.5rem_-1rem_rgb(16_43_56/0.4)]">
         {(Object.keys(labels) as OfferTab[]).map((key) => {
           const Icon = icons[key];
           return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { claimPaymentAction, disputePaymentAction } from "@/modules/change-portal/actions";
 
 const methodOptions = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => sofiaTodayIso();
 
 /** A row whose action opens a small form right under it, instead of a dialog. */
 function Unfolding({ row, trigger, variant = "outline", stack = false, triggerClassName, children }: {

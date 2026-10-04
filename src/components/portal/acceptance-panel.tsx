@@ -33,10 +33,13 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
   const [issues, setIssues] = useState(false);
 
   if (acceptance.kind === "accepted") return (
-    <p id="acceptance" className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border bg-card px-4 py-3 text-sm">
-      <Check className="size-4 shrink-0 text-tile-mint-foreground" />
-      <span className="font-semibold">Работата е приета</span>
-      <span className="text-muted-foreground">· приета от {acceptance.typedName} на {dateTime.format(acceptance.createdAt)}</span>
+    // Two lines, not a "·" run-on: on a phone the separator wrapped to the start of the second line.
+    <p id="acceptance" className="flex items-start gap-2.5 rounded-xl border bg-card px-4 py-3 text-sm">
+      <Check className="mt-0.5 size-4 shrink-0 text-tile-mint-foreground" />
+      <span className="flex flex-col">
+        <span className="font-semibold">Работата е приета</span>
+        <span className="text-muted-foreground">от {acceptance.typedName} на {dateTime.format(acceptance.createdAt)}</span>
+      </span>
     </p>
   );
 

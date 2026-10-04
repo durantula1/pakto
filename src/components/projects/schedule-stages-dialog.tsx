@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 import { CalendarPlus, TriangleAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ export function ScheduleStagesDialog({ projectId, offerId, items, deadline }: { 
 }
 
 function ScheduleStagesForm({ projectId, offerId, items, deadline }: { projectId: string; offerId: string; items: Item[]; deadline: string | null }) {
-  const [start, setStart] = useState(() => new Date().toISOString().slice(0, 10));
+  const [start, setStart] = useState(() => sofiaTodayIso());
   // Titles and dates the person changed by hand; a new start date recomputes the dates.
   const [titles, setTitles] = useState<Record<number, string>>({});
   const [dates, setDates] = useState<Record<number, string>>({});

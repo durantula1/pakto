@@ -3,4 +3,4 @@ export const siteUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:300
 
 /** The one-sentence product definition: the meta description and the landing page say the same thing. */
 export const productDefinition =
-  "Pakto е за фирми, които работят с клиенти и държат на сроковете: пращаш оферти и допълнителни промени с линк, а клиентът ги одобрява от телефона с код от имейла си, без регистрация.";
+  "Pakto записва всяка оферта и допълнителна промяна с цена и срок: пращаш линк, а клиентът ги одобрява от телефона с код от имейла си, без регистрация, преди да започнеш работа. Така няма спор какво е договорено.";

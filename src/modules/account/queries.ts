@@ -3,6 +3,7 @@ import "server-only";
 import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
+import { LEGAL_DOCUMENTS } from "@/lib/legal";
 import { organizationMembers, organizations, profiles, userConsents } from "@/db/schema";
 
 export async function getAccountProfile(userId: string) {
@@ -27,6 +28,12 @@ export async function getAccountSummary(userId: string) {
       displayName: profiles.displayName,
       email: profiles.email,
       deletionRequestedAt: profiles.deletionRequestedAt,
+      /** True when the current version of the terms or the privacy policy has no recorded acceptance. */
+      consentMissing: sql<boolean>`(
+        select count(distinct c.document) from ${userConsents} c
+        where c.user_id = ${userId}
+          and ((c.document = 'terms' and c.version = ${LEGAL_DOCUMENTS.terms.version}) or (c.document = 'privacy' and c.version = ${LEGAL_DOCUMENTS.privacy.version}))
+      ) < 2`,
       closureRequested: sql<boolean>`exists (
         select 1 from ${organizationMembers} m join ${organizations} o on o.id = m.organization_id
         where m.user_id = ${profiles.id} and m.status = 'active' and o.closure_requested_at is not null

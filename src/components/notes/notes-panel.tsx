@@ -31,7 +31,7 @@ function applyChange(list: Note[], change: NotesChange) {
   return [...list.slice(0, at), change.add, ...list.slice(at)];
 }
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short" });
+const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
 
 /** Team-only notes. `changeOrderId` scopes new notes to one document; without it they belong to the whole project. */
 export function NotesPanel({ projectId, changeOrderId, notes, legacy = [], currentUserId, isOwner, pagination }: {

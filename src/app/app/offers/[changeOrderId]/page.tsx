@@ -28,7 +28,7 @@ import { requireProjectCapability } from "@/lib/authz/project-access";
 import { listRevisionAttachments } from "@/modules/change-orders/attachment-data";
 import { documentCode } from "@/modules/change-orders/labels";
 import { pageHref, parsePage } from "@/lib/pagination";
-import { countChangeOrders, getChangeOrder, getChangeOrderTitle } from "@/modules/change-orders/queries";
+import { countChangeOrders, getChangeOrder, getChangeOrderTitle, listAbsorbableChanges } from "@/modules/change-orders/queries";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { changeHasStage } from "@/modules/projects/queries";
 import { loadSignature } from "@/modules/change-portal/signature";
@@ -57,6 +57,8 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
       head.documentKind === "offer" ? countChangeOrders({ context, baselineOfferId: changeOrderId, documentKind: "change" }) : Promise.resolve(0),
       listRevisionAttachments(head.revisionId),
       head.documentKind === "change" && head.approvedRevisionId ? changeHasStage(context.organizationId, changeOrderId) : Promise.resolve(true),
+      // A newer version of an approved offer: what is agreed now is that version plus its approved changes.
+      head.documentKind === "offer" && head.approvedRevisionId && head.approvedRevisionId !== head.revisionId ? listAbsorbableChanges(context.organizationId, changeOrderId) : Promise.resolve([]),
     ]),
   });
   if (!change) notFound();
@@ -64,7 +66,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const changesPage = parsePage(query.changesPage);
   const path = `/app/offers/${change.id}`;
   // The changes table, conversation, notes and tab counts stream in behind their own skeletons.
-  const [member, portalUrl, offerChangesTotal, attachments, hasStage] = change.extra;
+  const [member, portalUrl, offerChangesTotal, attachments, hasStage, inForceChanges] = change.extra;
   // An approved change whose work has not started and has no stage yet: offer to schedule it.
   const addStageHref = !hasStage && ["not_started", "scheduled"].includes(change.workStatus) && can(member, "milestones.manage") ? `/app/projects/${change.projectId}?tab=work&stageFor=${change.id}` : null;
   if (!can(member, "drafts.view_all") && !change.frozenAt && change.revisionCreatedBy !== context.userId) notFound();
@@ -114,7 +116,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
       />
       <div className={documentLayoutClassName}>
         <div className={documentAreas.status}>
-          <DocumentStatusCard change={change} path={path} portalUrl={portalUrl} canSend={can(member, "documents.send")} canEdit={canEdit} canDraftChange={can(member, "changes.draft")} addStageHref={addStageHref} />
+          <DocumentStatusCard change={change} path={path} portalUrl={portalUrl} canSend={can(member, "documents.send")} canEdit={canEdit} canDraftChange={can(member, "changes.draft")} addStageHref={addStageHref} inForceChanges={inForceChanges.map((item) => item.total)} />
         </div>
         <div className={documentAreas.main}>
           <DetailTabs key={tab} defaultTab={tab}>

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
@@ -13,14 +13,12 @@ import {
   changeOrderRevisions,
   changeOrders,
   offerAcceptances,
-  organizationMembers,
   paymentClaims,
   paymentDisputes,
   paymentInstallments,
   portalDecisions,
   portalSessions,
   projectContacts,
-  projectMembers,
   projectReceipts,
   timelineEvents,
 } from "@/db/schema";
@@ -31,10 +29,11 @@ import { createDisputeToken, getDisputeTarget, parseDisputeToken } from "@/modul
 import { clientProjects, getPortalSession, isOrganizationStaff } from "@/modules/change-portal/session";
 import { checkOtp, consumeOtp, issueOtp } from "@/modules/change-portal/verification";
 import { getPdfDocumentMeta, renderChangePdf } from "@/modules/pdf/render";
-import { notifyProjectStaff, notifyUsers } from "@/modules/notifications/staff";
+import { notifyProjectStaff, notifyUsers, projectStaffIds } from "@/modules/notifications/staff";
 import { parseSignature, removeSignature, storeSignature } from "@/modules/change-portal/signature";
 import { applyApprovedChange, applyApprovedOffer } from "@/modules/change-orders/approval";
 import { sofiaToday } from "@/modules/finance/queries";
+import { getProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
 
 const decisionSchema = z.object({
@@ -375,10 +374,8 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
         .where(and(eq(paymentDisputes.receiptId, receipt.id), eq(paymentDisputes.status, "open"))).limit(1);
       if (existing) return;
       const [dispute] = await tx.insert(paymentDisputes).values({ organizationId: session.organizationId, projectId: session.projectId, receiptId: receipt.id, projectContactId: session.contactId, reason: data.reason }).returning({ id: paymentDisputes.id });
-      const handlers = await tx.select({ userId: organizationMembers.userId }).from(organizationMembers)
-        .leftJoin(projectMembers, and(eq(projectMembers.userId, organizationMembers.userId), eq(projectMembers.projectId, session.projectId)))
-        .where(and(eq(organizationMembers.organizationId, session.organizationId), eq(organizationMembers.status, "active"), or(eq(organizationMembers.role, "owner"), and(sql`'payments.record' = any(${organizationMembers.permissions})`, or(eq(organizationMembers.allProjects, true), eq(projectMembers.projectId, session.projectId))))));
-      await notifyUsers(tx, handlers.map((handler) => handler.userId), { organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_disputed", title: "Клиент оспори плащане", body: data.reason, href: `/app/projects/${session.projectId}?tab=payments#dispute-${dispute!.id}` });
+      const handlers = await projectStaffIds(tx, session.organizationId, session.projectId, "payments.record");
+      await notifyUsers(tx, handlers, { organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_disputed", title: "Клиент оспори плащане", body: data.reason, href: `/app/projects/${session.projectId}?tab=payments#dispute-${dispute!.id}` });
     });
   } catch (cause) {
     return { error: cause instanceof Error ? cause.message : "Оспорването не беше записано. Опитайте отново." };
@@ -389,7 +386,7 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
 
 /**
  * "I paid": the client reports a payment (typically a bank transfer). The company confirms it, which
- * records the receipt, or answers why it cannot find it. Any contact of the project can report one.
+ * records the receipt, or answers why it cannot find it. Only the approving contact can report one; observers only follow along.
  */
 export async function claimPaymentAction(formData: FormData): Promise<{ error?: string }> {
   const parsed = z.object({
@@ -406,6 +403,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
   const session = await getPortalSession(data.projectPublicId);
   if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
   if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
+  if (session.contactRole !== "approver") return { error: "Плащане съобщава човекът, когото фирмата е посочила да одобрява." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
@@ -420,6 +418,20 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
           .where(and(eq(changeOrders.id, offerId), eq(changeOrders.projectId, session.projectId), eq(changeOrders.documentKind, "offer"))).limit(1);
         if (!offer) throw new Error("Офертата не е намерена.");
       }
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${session.projectId}::text))`);
+      const [twin] = await tx.select({ id: paymentClaims.id }).from(paymentClaims).where(and(
+        eq(paymentClaims.projectId, session.projectId), eq(paymentClaims.projectContactId, session.contactId), eq(paymentClaims.amount, data.amount.toFixed(2)),
+        eq(paymentClaims.paidOn, data.paidOn), data.installmentId ? eq(paymentClaims.installmentId, data.installmentId) : isNull(paymentClaims.installmentId),
+        sql`${paymentClaims.createdAt} > now() - interval '1 minute'`,
+      )).limit(1);
+      if (twin) throw new Error("Вече изпратихте това плащане. Фирмата ще го потвърди.");
+      // The client never owes more than what is left of the agreement, whatever the plan says.
+      if (offerId) {
+        const offerState = (await getProjectState(session.organizationId, session.projectId))?.offers.find((item) => item.id === offerId);
+        if (offerState?.inForce && Math.round(data.amount * 100) > Number(offerState.remainingMinor)) {
+          throw new Error(offerState.remainingMinor > 0n ? `По тази оферта остават ${formatAmount(Number(offerState.remainingMinor) / 100)} EUR. Въведете по-малка сума.` : "Тази оферта е платена изцяло.");
+        }
+      }
       const [pending] = await tx.select({ total: sql<number>`count(*)::int` }).from(paymentClaims)
         .where(and(eq(paymentClaims.projectId, session.projectId), eq(paymentClaims.status, "pending")));
       if ((pending?.total ?? 0) >= 10) throw new Error("Няколко ваши плащания още чакат фирмата. Изчакайте да ги потвърди.");
@@ -428,7 +440,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
         projectContactId: session.contactId, amount: data.amount.toFixed(2), currency: "EUR", method: data.method, paidOn: data.paidOn, note: data.note || null,
       });
       await notifyProjectStaff(tx, {
-        organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_claimed",
+        organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_claimed", permission: "payments.record",
         title: `${session.contactName} отбеляза плащане: ${formatAmount(data.amount)} EUR`,
         body: data.note || "Провери получената сума и я потвърди.",
         href: `/app/projects/${session.projectId}?tab=payments`,

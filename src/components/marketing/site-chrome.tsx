@@ -104,11 +104,11 @@ export function SiteFooter() {
           </Link>
           {/* Where the name comes from. */}
           <p className="mt-10 font-serif text-3xl leading-tight tracking-[-0.02em] text-[#fbf7ec] sm:text-4xl">
-            <i>Pactum</i> — договорка между две страни.
+            <i>Pactum</i> — латинската дума за договорка.
           </p>
           <p className="mt-4 max-w-md text-base leading-7 text-[#9db5b6]">
-            Римляните са знаели, че договорката само на думи трудно се доказва.
-            Pakto я записва.
+            <i>Pacta sunt servanda</i>: договореното се спазва. Pakto го
+            записва, за да има какво да се спазва.
           </p>
         </div>
 

@@ -70,6 +70,9 @@ export function Stepper({
         onFocus={(event) => event.currentTarget.select()}
         onInput={(event) => {
           const input = event.currentTarget;
+          // Letters and signs never stay in a quantity; a comma is a decimal point.
+          const cleaned = input.value.replace(",", ".").replace(/[^\d.]/g, "");
+          if (cleaned !== input.value) input.value = cleaned;
           const value = Number(input.value);
           if (input.value === "" || Number.isNaN(value)) return;
           if (value < min) input.value = String(min);

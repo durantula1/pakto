@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -49,7 +50,7 @@ import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, p
 import { formatAmount } from "@/lib/money";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric" });
+const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
 const tabs = ["overview", "documents", "work", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
@@ -96,13 +97,17 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const canRecordPayments = can(member, "payments.record") && project.status !== "archived";
   const showPayments = can(member, "payments.record") || can(member, "finance.view");
   const isOwner = member.role === "owner";
-  const today = new Date().toISOString().slice(0, 10);
+  const today = sofiaTodayIso();
 
   // Offers: the ones in force carry work and money; a chip row filters the work and payment tabs by offer.
   const inForce = state.offersInForce;
   const several = inForce.length > 1;
   const scope = parseOfferScope(query.offer, state);
   const view = scopeView(state, scope);
+  // An offer in force with a payment plan whose installments do not add up to what the client owes in total.
+  const planGaps = inForce
+    .filter((offer) => (scope === "all" || scope === offer.id) && offer.installments.length > 0 && offer.plannedMinor !== offer.contractMinor)
+    .map((offer) => ({ id: offer.id, label: offerLabel(offer), currency: offer.currency, planned: offer.plannedMinor, contract: offer.contractMinor }));
   const hrefFor = (target: string) => (value: OfferScope) => `${path}?tab=${target}${value === "all" ? "" : `&offer=${value}`}`;
   const codeOf = (offerId: string | null) => {
     const offer = offerId ? state.offers.find((item) => item.id === offerId) : null;
@@ -127,6 +132,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     ...claim,
     offerLabel: claim.offerId ? offerLabel(state.offers.find((offer) => offer.id === claim.offerId) ?? { sequenceNumber: 0, title: "" }) : null,
     installmentTitle: claim.installmentId ? state.installments.find((item) => item.id === claim.installmentId)?.title ?? null : null,
+    installmentKind: claim.installmentId ? state.installments.find((item) => item.id === claim.installmentId)?.kind ?? null : null,
   }));
   // Receipts can be dated in the future, so the range ends at whichever is later: today or the last receipt.
   const allReceiptsHref = can(member, "finance.view") && state.receiptsTotal > state.receipts.length && state.firstReceiptOn
@@ -325,6 +331,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           {scope !== "all" ? <p className="text-sm text-muted-foreground">
             {view.hasAgreement ? <>Договорено <strong className="text-foreground tabular-nums">{formatCents(view.contractMinor, view.currency)}</strong> · платено <strong className="text-foreground tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> · остава <strong className="text-foreground tabular-nums">{formatCents(view.remainingMinor, view.currency)}</strong></> : <>Без оферта: <strong className="text-foreground tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> получени. Разпредели ги към оферта, когато стане ясно за какво са.</>}
           </p> : null}
+          {planGaps.length ? <div role="status" className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+            <p className="font-medium">Платежният план не съвпада с договореното.</p>
+            <ul className="mt-1 list-disc pl-5 text-muted-foreground">
+              {planGaps.map((gap) => <li key={gap.id}>{gap.label}: вноските са общо {formatCents(gap.planned, gap.currency)}, а договореното е {formatCents(gap.contract, gap.currency)} ({gap.contract > gap.planned ? "липсват" : "над договореното са"} {formatCents(gap.contract > gap.planned ? gap.contract - gap.planned : gap.planned - gap.contract, gap.currency)}). Коригирай вноските.</li>)}
+            </ul>
+          </div> : null}
           {view.receipts.length ? <DataTable
             label="Получени суми"
             columns={[

@@ -8,6 +8,37 @@ import type { ProjectOption } from "@/components/workspace/project-combobox";
 import { cn } from "@/lib/utils";
 import { searchProjectsAction } from "@/modules/projects/search-actions";
 
+/** Pill switch shared by the project scope and the role picker on the member page. */
+export function Segmented<T extends string | boolean>({ label, value, options, onChange, disabled = false }: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  disabled?: boolean;
+}) {
+  return <div role="radiogroup" aria-label={label} className="grid auto-cols-fr grid-flow-col gap-1 rounded-xl bg-sidebar p-1">
+    {options.map((option) => (
+      <button
+        key={String(option.value)}
+        type="button"
+        role="radio"
+        aria-checked={value === option.value}
+        disabled={disabled}
+        onClick={() => onChange(option.value)}
+        className={cn(
+          "h-9 min-w-0 truncate rounded-lg px-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent disabled:cursor-not-allowed disabled:opacity-50",
+          value === option.value && "bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary",
+        )}
+      >
+        {option.label}
+      </button>
+    ))}
+  </div>;
+}
+
+/** Past this many chips the rest fold into "+N още" so a long scope does not push the page down. */
+const CHIP_LIMIT = 6;
+
 export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSelectedChange, disabled = false }: {
   allProjects: boolean;
   selected: ProjectOption[];
@@ -15,48 +46,37 @@ export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSel
   onSelectedChange: (value: ProjectOption[]) => void;
   disabled?: boolean;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? selected : selected.slice(0, CHIP_LIMIT);
+  const hidden = selected.length - visible.length;
+
   return <div className="flex flex-col gap-3">
     <input type="hidden" name="scope" value={allProjects ? "all" : "selected"} />
     {!allProjects ? selected.map((project) => <input key={project.id} type="hidden" name="projectIds" value={project.id} />) : null}
-    <div role="radiogroup" aria-label="Достъп до обекти" className="grid grid-cols-2 gap-1 rounded-xl bg-sidebar p-1">
-      {[{ value: true, label: "Всички обекти" }, { value: false, label: "Избрани обекти" }].map((option) => (
-        <button
-          key={option.label}
-          type="button"
-          role="radio"
-          aria-checked={allProjects === option.value}
-          disabled={disabled}
-          onClick={() => onAllProjectsChange(option.value)}
-          className={cn(
-            "h-9 rounded-lg text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent disabled:cursor-not-allowed disabled:opacity-50",
-            allProjects === option.value && "bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary",
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+    <Segmented label="Достъп до обекти" value={allProjects} disabled={disabled} onChange={onAllProjectsChange} options={[{ value: true, label: "Всички обекти" }, { value: false, label: "Избрани обекти" }]} />
     {allProjects ? <p className="text-sm text-muted-foreground">Вижда всички текущи и бъдещи обекти на фирмата.</p> : <>
       <ProjectSearch disabled={disabled} selected={selected} onAdd={(project) => onSelectedChange([...selected, project])} />
       {selected.length ? (
-        <ul aria-label="Избрани обекти" className="flex max-h-64 flex-col divide-y overflow-y-auto rounded-xl border bg-card">
-          {selected.map((project) => (
-            <li key={project.id} className="flex items-center gap-2 px-3 py-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{project.name}</p>
-                {project.siteAddress ? <p className="truncate text-xs text-muted-foreground">{project.siteAddress}</p> : null}
-              </div>
+        <ul aria-label="Избрани обекти" className="flex flex-wrap gap-1.5">
+          {visible.map((project) => (
+            <li key={project.id} title={project.siteAddress ?? undefined} className="flex h-8 max-w-full items-center gap-0.5 rounded-lg border bg-card pl-2.5 text-sm font-medium">
+              <span className="truncate">{project.name}</span>
               <button
                 type="button"
                 disabled={disabled}
                 aria-label={`Премахни ${project.name}`}
                 onClick={() => onSelectedChange(selected.filter((item) => item.id !== project.id))}
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <X className="size-4" />
+                <X className="size-3.5" />
               </button>
             </li>
           ))}
+          {hidden > 0 || showAll && selected.length > CHIP_LIMIT ? <li>
+            <button type="button" onClick={() => setShowAll(!showAll)} className="h-8 rounded-lg px-2.5 text-sm font-medium text-primary hover:bg-muted">
+              {showAll ? "Покажи по-малко" : `+${hidden} още`}
+            </button>
+          </li> : null}
         </ul>
       ) : <p className="text-sm text-muted-foreground">Няма избрани обекти. Потърси и добави обектите, до които човекът ще има достъп.</p>}
     </>}

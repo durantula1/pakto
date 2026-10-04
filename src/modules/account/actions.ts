@@ -165,7 +165,7 @@ export async function cancelAccountDeletionAction(): Promise<ActionResult> {
 export async function acceptLegalDocumentsAction(): Promise<ActionResult> {
   const { user } = await currentUser();
   await recordLegalConsent(user.id);
-  revalidatePath("/app/settings/privacy");
+  revalidatePath("/app", "layout");
 }
 
 async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyName: string | null) {

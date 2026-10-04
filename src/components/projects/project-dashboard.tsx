@@ -16,7 +16,7 @@ type Milestone = ProjectState["milestones"][number];
 
 export const stageLabels: Record<string, string> = { planned: "Предстои", in_progress: "В работа", completed: "Завършен" };
 export const workLabels: Record<string, string> = { not_started: "Одобрена, предстои", scheduled: "Планирана", in_progress: "В работа", completed: "Завършена" };
-export const paymentLabels: Record<string, string> = { deposit: "Капаро", progress: "Междинно", final: "Окончателно", other: "Друго" };
+export const paymentLabels: Record<string, string> = { deposit: "Аванс", progress: "Междинно", final: "Окончателно", other: "Друго" };
 export const methodLabels: Record<string, string> = { cash: "В брой", bank: "Банков превод", card: "Карта", other: "Друго" };
 
 
@@ -117,11 +117,11 @@ export function ProjectDashboard({ state, today, showPayments, openDisputes, pen
               <span className="flex items-center justify-between gap-3">
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{offer.title}</span>
-                  <span className="block text-xs text-muted-foreground">{documentCode("offer", offer.sequenceNumber)} · {offer.inForce ? `${formatCents(offer.paidMinor, offer.currency)} от ${formatCents(offer.contractMinor, offer.currency)}` : formatCents(cents(offer.total), offer.currency)}</span>
+                  <span className="block text-xs text-muted-foreground">{documentCode("offer", offer.sequenceNumber)} · {offer.inForce && showPayments ? `${formatCents(offer.paidMinor, offer.currency)} от ${formatCents(offer.contractMinor, offer.currency)}` : formatCents(cents(offer.total), offer.currency)}</span>
                 </span>
                 <Badge variant={offerStatusTones[offer.status]}>{offerStatusLabels[offer.status]}</Badge>
               </span>
-              {offer.inForce ? <PaidBar paidMinor={offer.paidMinor} contractMinor={offer.contractMinor} /> : null}
+              {offer.inForce && showPayments ? <PaidBar paidMinor={offer.paidMinor} contractMinor={offer.contractMinor} /> : null}
             </Link>
           ))}
           {pendingChanges.map((item) => (

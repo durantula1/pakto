@@ -10,6 +10,7 @@ const labels: Record<string, string> = {
   "/app": "Работен преглед",
   "/app/projects": "Обекти",
   "/app/projects/new": "Нов обект",
+  "/app/work": "Етапи",
   "/app/clients": "Клиенти",
   "/app/offers": "Оферти",
   "/app/offers/new": "Нова оферта",
