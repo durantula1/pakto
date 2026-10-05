@@ -27,7 +27,7 @@ async function checkedProjectIds(organizationId: string, values: FormDataEntryVa
   if (!ids.length) return ids;
   const rows = await getDatabase().select({ id: projects.id }).from(projects)
     .where(and(eq(projects.organizationId, organizationId), inArray(projects.id, ids)));
-  if (rows.length !== new Set(ids).size) throw new Error("Избран е чужд обект.");
+  if (rows.length !== new Set(ids).size) throw new Error("Един от обектите вече не е наличен. Презареди страницата.");
   return [...new Set(ids)];
 }
 
@@ -45,7 +45,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
   try {
     const context = await requireTenantContext();
     await requireOwner(context);
-    const email = z.email("Невалиден имейл.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
+    const email = z.email("Провери имейла, нещо в него не е наред.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
     const preset = z.enum(["field", "office", "owner"]).parse(formData.get("preset"));
     const scope = preset === "owner" ? { allProjects: false, projectIds: [] } : await projectScope(context.organizationId, formData);
     if (preset !== "owner" && !scope.allProjects && !scope.projectIds.length) return { error: "Избери поне един обект или „Всички обекти“." };
@@ -178,7 +178,7 @@ export async function disableTeamMemberAction(formData: FormData) {
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, userId)));
     const assigned = await tx.select({ id: projects.id }).from(projects).where(eq(projects.organizationId, context.organizationId));
     if (assigned.length) await tx.delete(projectMembers).where(and(eq(projectMembers.userId, userId), inArray(projectMembers.projectId, assigned.map((item) => item.id))));
-    await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId, eventType: "membership_disabled", title: "Достъпът ти до фирмата е отнет", href: "/app" });
+    await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId, eventType: "membership_disabled", title: "Вече нямаш достъп до фирмата", href: "/app" });
   });
   revalidatePath("/app/team");
   revalidatePath(`/app/team/${userId}`);

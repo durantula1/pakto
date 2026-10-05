@@ -82,7 +82,7 @@ const contactFields = {
   projectId: z.uuid(),
   name: z.string().trim().min(2, "Въведи име.").max(160),
   phone: z.string().trim().max(40).optional(),
-  email: z.union([z.literal(""), z.email("Невалиден имейл.")]).optional(),
+  email: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(),
 };
 
 /**

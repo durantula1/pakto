@@ -19,7 +19,7 @@ export const projectStatusLabels: Record<string, string> = { active: "Актив
 export const projectStatusBadgeVariants = { active: "brand-green", completed: "brand-blue", archived: "stone-soft" } as const;
 
 export const projectTabLabels = {
-  overview: "Обзор",
+  overview: "Преглед",
   documents: "Оферти",
   work: "Работа",
   payments: "Плащания",

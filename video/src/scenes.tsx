@@ -641,7 +641,7 @@ export function RequestScene() {
           <>
             <div style={enter(frame, 46, 8)}>
               <p style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>
-                Какво не ви устройва?
+                Как искате да продължим?
               </p>
             </div>
             {[
@@ -652,7 +652,7 @@ export function RequestScene() {
               },
               {
                 title: "Отказвам",
-                hint: "Фирмата няма да прави тази работа",
+                hint: "Офертата се затваря без работа по нея",
                 selected: false,
               },
             ].map((option, index) => (

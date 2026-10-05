@@ -442,7 +442,7 @@ export async function resolvePaymentDisputeAction(formData: FormData): Promise<A
       outro: "Ако все още не сте съгласни, можете да оспорите плащането отново от портала.",
     });
     refresh(projectId);
-  }, "Спорът не беше разрешен.");
+  }, "Отговорът не беше записан. Опитай отново.");
 }
 
 /** Confirms a client's "I paid": records the receipt the client reported (the company may fix the amount or date). */

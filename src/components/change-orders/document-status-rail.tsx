@@ -248,7 +248,7 @@ export function DocumentStatusCard({
                 {typeof change.disputeEvent.metadata.reason === "string" &&
                 change.disputeEvent.metadata.reason
                   ? change.disputeEvent.metadata.reason
-                  : "Клиентът твърди, че не е взел това решение."}
+                  : "Клиентът казва, че решението не е негово."}
               </p>
               <p className="mt-1 text-xs opacity-80">
                 {dateTime(change.disputeEvent.createdAt)}

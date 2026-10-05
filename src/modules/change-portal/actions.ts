@@ -272,7 +272,7 @@ async function submitDecision(
 export async function disputeDecisionAction(_: DecisionState, formData: FormData): Promise<DecisionState> {
   const data = z.object({ token: z.string().min(10).max(200), reason: z.string().trim().max(1000).optional() }).safeParse(Object.fromEntries(formData));
   const decisionId = data.success ? parseDisputeToken(data.data.token) : null;
-  if (!data.success || !decisionId) return { error: "Линкът за оспорване е невалиден." };
+  if (!data.success || !decisionId) return { error: "Линкът за оспорване вече не работи. Свържете се с фирмата." };
   const target = await getDisputeTarget(decisionId);
   if (!target) return { error: "Решението не е намерено." };
   if (target.accessRevoked && !target.disputed) return { error: `Достъпът ви до този обект е спрян. Свържете се с ${target.organizationName}.` };
@@ -338,7 +338,7 @@ async function sendDecisionReceipt(decisionId: number) {
     ["Сума", `${formatAmount(row.total)} ${row.currency}`],
     ["Решение", decisionReceiptLabels[row.decision]],
     ["Име", row.typedName],
-    ...(row.signatureSha256 ? [["Подпис", "Нарисуван на екрана — вижте го в приложения PDF"]] : []),
+    ...(row.signatureSha256 ? [["Нарисувано на екрана", "Вижте го в приложения PDF"]] : []),
     ["Време", when],
     ["IP адрес", row.ip ?? "—"],
     ["Отпечатък", row.contentHash],

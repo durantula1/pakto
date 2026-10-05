@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Нов обект" };
 export default async function NewProjectPage() {
   const context = await requireTenantContext();
   const member = await getCurrentMember(context);
-  if (!can(member, "projects.create")) return <PageShell width="narrow"><PageHeader page="newProject" back={{ href: "/app/projects", label: "Обекти" }} /><EmptyState illustration={false} title="Нямаш право да създаваш обекти." /></PageShell>;
+  if (!can(member, "projects.create")) return <PageShell width="narrow"><PageHeader page="newProject" back={{ href: "/app/projects", label: "Обекти" }} /><EmptyState illustration={false} title="Ролята ти не включва създаване на обекти. Попитай собственика на фирмата." /></PageShell>;
   return (
     <PageShell width="narrow">
       <PageHeader page="newProject" back={{ href: "/app/projects", label: "Обекти" }} />

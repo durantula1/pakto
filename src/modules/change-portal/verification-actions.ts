@@ -31,7 +31,7 @@ function failure(cause: unknown): VerificationState {
 
 export async function requestClaimCodeAction(_: VerificationState, formData: FormData): Promise<VerificationState> {
   try {
-    const data = z.object({ projectPublicId: z.uuid(), email: z.union([z.literal(""), z.email("Невалиден имейл.")]).optional() }).parse(Object.fromEntries(formData));
+    const data = z.object({ projectPublicId: z.uuid(), email: z.union([z.literal(""), z.email("Проверете имейла, нещо в него не е наред.")]).optional() }).parse(Object.fromEntries(formData));
     const session = await portalSessionFor(data.projectPublicId);
     if (session.contactEmailVerifiedAt) return { done: true };
     const email = (session.contactEmail ?? data.email ?? "").trim().toLowerCase();
@@ -45,7 +45,7 @@ export async function requestClaimCodeAction(_: VerificationState, formData: For
 
 export async function requestEmailChangeCodeAction(_: VerificationState, formData: FormData): Promise<VerificationState> {
   try {
-    const data = z.object({ projectPublicId: z.uuid(), email: z.email("Невалиден имейл.") }).parse(Object.fromEntries(formData));
+    const data = z.object({ projectPublicId: z.uuid(), email: z.email("Проверете имейла, нещо в него не е наред.") }).parse(Object.fromEntries(formData));
     const session = await portalSessionFor(data.projectPublicId);
     if (!session.contactEmailVerifiedAt || !session.contactEmail) return { error: "Първо потвърдете текущия си имейл." };
     const target = data.email.trim().toLowerCase();

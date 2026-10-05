@@ -126,7 +126,7 @@ export async function updateStageWarningAction(formData: FormData) {
 type LogoResult<T> = ({ ok: true } & T) | { ok: false; error: string };
 
 function logoFailure(error: unknown): { ok: false; error: string } {
-  if (error instanceof z.ZodError) return { ok: false, error: error.issues[0]?.message ?? "Невалиден файл." };
+  if (error instanceof z.ZodError) return { ok: false, error: error.issues[0]?.message ?? "Файлът не може да се отвори." };
   return { ok: false, error: error instanceof Error ? error.message : "Логото не беше запазено. Опитай отново." };
 }
 
@@ -158,7 +158,7 @@ export async function confirmLogoAction(input: { path: string }): Promise<LogoRe
     const { path } = z.object({ path: z.string().min(1).max(300) }).parse(input);
     const context = await requireTenantContext();
     requireRole(context, ["owner"]);
-    if (!path.startsWith(`${context.organizationId}/incoming/`)) throw new Error("Невалиден файл.");
+    if (!path.startsWith(`${context.organizationId}/incoming/`)) throw new Error("Файлът не може да се отвори.");
     incoming = path;
     const { data: blob, error } = await admin.storage.from(LOGO_BUCKET).download(path);
     if (error || !blob) throw new Error("Файлът не е качен докрай. Опитай отново.");

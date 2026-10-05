@@ -18,7 +18,7 @@ const body = z.string().trim().min(1, "Бележката е празна.").max
 async function notesAccess(projectId: string) {
   const context = await requireTenantContext();
   const member = await requireProjectCapability(context, projectId, "view");
-  if (!can(member, "notes.view")) throw new Error("Нямаш право да виждаш вътрешните бележки.");
+  if (!can(member, "notes.view")) throw new Error("Ролята ти не включва вътрешните бележки. Попитай собственика на фирмата.");
   return { context, member };
 }
 

@@ -25,7 +25,7 @@ export async function requireOwner(context: TenantContext) {
 
 export async function requirePermission(context: TenantContext, permission: Permission) {
   const member = await getCurrentMember(context);
-  if (!can(member, permission)) throw new Error("Нямаш право за това действие.");
+  if (!can(member, permission)) throw new Error("Ролята ти не включва това. Попитай собственика на фирмата.");
   return member;
 }
 
@@ -59,8 +59,8 @@ export async function requireProjectCapability(
   if (!member.allProjects && !project.assigned) throw new Error("Нямаш достъп до този обект.");
   if (capability === "view") return member;
   if (capabilityPermissions[capability].some((permission) => member.permissions.includes(permission))) return member;
-  if (capability === "payment") throw new Error("Нямаш право да записваш плащания.");
-  throw new Error("Нямаш право за това действие.");
+  if (capability === "payment") throw new Error("Ролята ти не включва записване на плащания. Попитай собственика на фирмата.");
+  throw new Error("Ролята ти не включва това. Попитай собственика на фирмата.");
 }
 
 export function seesAllProjects(context: Pick<TenantContext, "role" | "allProjects">) {

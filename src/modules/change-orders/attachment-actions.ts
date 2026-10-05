@@ -62,7 +62,7 @@ export async function confirmAttachmentAction(input: z.input<typeof confirmSchem
   try {
     const data = confirmSchema.parse(input);
     const { context, draft } = await requireEditableDraft(data.changeOrderId);
-    if (!data.path.startsWith(`${context.organizationId}/${data.changeOrderId}/`)) throw new Error("Невалиден файл.");
+    if (!data.path.startsWith(`${context.organizationId}/${data.changeOrderId}/`)) throw new Error("Файлът не може да се отвори.");
     path = data.path;
     const { data: blob, error } = await admin.storage.from(ATTACHMENT_BUCKET).download(path);
     if (error || !blob) throw new Error("Файлът не е качен докрай. Опитай отново.");
@@ -87,7 +87,7 @@ export async function confirmAttachmentAction(input: z.input<typeof confirmSchem
   } catch (error) {
     // Nothing references a rejected upload; do not leave it in the bucket.
     if (path) await admin.storage.from(ATTACHMENT_BUCKET).remove([path]).catch(() => undefined);
-    return failure(error instanceof z.ZodError ? new Error("Невалиден файл.") : error);
+    return failure(error instanceof z.ZodError ? new Error("Файлът не може да се отвори.") : error);
   }
 }
 

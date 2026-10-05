@@ -159,7 +159,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
     ...(finance ? [{
       id: "payments",
       kicker: "ПЛАЩАНИЯ",
-      title: "Знаеш кой колко дължи.",
+      title: "Виждаш какво е платено и какво остава.",
       text: "Вноските следват одобрената оферта и всяка одобрена промяна. Клиентът натиска „Платих“, а ти потвърждаваш.",
       points: ["Вноски по договорените условия", "Етапи на работата и приемане в края", "Напомняния към клиента"],
       visual: <FinanceDemo />,

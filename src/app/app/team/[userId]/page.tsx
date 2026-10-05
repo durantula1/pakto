@@ -91,9 +91,9 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
               </ActionForm>
             </div>
             <div className="flex flex-col gap-2 border-t pt-4">
-              <h3 className="text-xs font-semibold tracking-wide text-destructive uppercase">Опасна зона</h3>
+              <h3 className="text-xs font-semibold tracking-wide text-destructive uppercase">Премахване от екипа</h3>
               <p className="text-sm text-muted-foreground">Спира достъпа веднага. Офертите и бележките, които е създал, остават.</p>
-              <ConfirmDialog trigger={<Button type="button" variant="destructive" size="sm" className="self-start">Отнеми достъпа</Button>} title={`Да отнема ли достъпа на ${name}?`} description="Достъпът спира веднага. Офертите и бележките, които е създал, остават във фирмата." confirmLabel="Отнеми достъпа" action={disableTeamMemberAction} fields={{ userId: member.userId }} success="Достъпът е отнет" />
+              <ConfirmDialog trigger={<Button type="button" variant="destructive" size="sm" className="self-start">Премахни достъпа</Button>} title={`Да премахна ли достъпа на ${name}?`} description="Достъпът спира веднага. Офертите и бележките, които е създал, остават във фирмата." confirmLabel="Премахни достъпа" action={disableTeamMemberAction} fields={{ userId: member.userId }} success="Достъпът е отнет" />
             </div>
           </AccessCard>
         </MemberAccess>

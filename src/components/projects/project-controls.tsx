@@ -239,7 +239,7 @@ function ResolveDisputeDialog({ projectId, dispute }: { projectId: string; dispu
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Отговор на оспорването</DialogTitle>
-        <DialogDescription>Ако сумата е грешна, коригирай плащането — спорът се затваря автоматично. Клиентът получава отговора по имейл.</DialogDescription>
+        <DialogDescription>Ако сумата е грешна, коригирай плащането и въпросът се затваря сам. Клиентът получава отговора по имейл.</DialogDescription>
       </DialogHeader>
       <Quote by="Клиентът:" tone="danger">{dispute.reason}</Quote>
       <ActionForm action={resolvePaymentDisputeAction} success="Отговорът е изпратен" className="grid gap-3">
@@ -248,7 +248,7 @@ function ResolveDisputeDialog({ projectId, dispute }: { projectId: string; dispu
         <Field><FieldLabel htmlFor={resolutionId}>Отговор към клиента</FieldLabel><Textarea id={resolutionId} name="resolution" required minLength={3} rows={2} placeholder="Напр. сумата съвпада с банковото извлечение от 26.09" /></Field>
         <div className="flex justify-end gap-2 pt-1">
           <DialogClose>Отказ</DialogClose>
-          <ActionSubmit>Изпрати и затвори спора</ActionSubmit>
+          <ActionSubmit>Изпрати отговора</ActionSubmit>
         </div>
       </ActionForm>
     </Dialog>

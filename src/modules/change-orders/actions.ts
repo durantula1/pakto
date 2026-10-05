@@ -230,7 +230,7 @@ export async function createChangeOrderAction(
   let scheduleDays: number | null = null;
   // A change moves the deadline of its own offer.
   try { if (data.scheduleImpactType === "days") scheduleDays = deadlineDelta(offerState.deadline, data.agreedDeadline); }
-  catch (error) { return { error: error instanceof Error ? error.message : "Невалиден срок." }; }
+  catch (error) { return { error: error instanceof Error ? error.message : "Провери срока и опитай пак." }; }
   const authoritativeSubtotal =
     data.changeKind === "no_cost" || data.changeKind === "schedule_only"
       ? 0
@@ -478,7 +478,7 @@ const revisionSchema = z.object({
 
 export async function createDocumentRevisionAction(_state: QuickChangeState, formData: FormData): Promise<QuickChangeState> {
   const parsed = revisionSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Невалидна версия." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Тази версия вече не е налична. Презареди страницата." };
   const data = parsed.data;
   const context = await requireTenantContext();
   const db = getDatabase();
@@ -489,7 +489,7 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
     await requireProjectCapability(context, document.projectId, document.documentKind === "offer" ? "offer" : "draft");
     await requireActiveProject(context.organizationId, document.projectId);
   }
-  catch (error) { return { error: error instanceof Error ? error.message : "Нямаш право за това действие." }; }
+  catch (error) { return { error: error instanceof Error ? error.message : "Ролята ти не включва това. Попитай собственика на фирмата." }; }
   if (document.documentKind === "offer" && (!data.agreedDeadline || !data.lines.length)) return { error: "Офертата изисква краен срок и поне една услуга или материал." };
   if (document.documentKind === "change" && data.scheduleImpactType === "days" && !data.agreedDeadline) return { error: "Посочи нов краен срок." };
   let scheduleDays: number | null = null;
@@ -497,7 +497,7 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   const baseline = projectState?.offers.find((offer) => offer.id === document.baselineOfferId);
   if (document.documentKind === "change" && data.scheduleImpactType === "days") {
     try { scheduleDays = deadlineDelta(baseline?.deadline ?? null, data.agreedDeadline); }
-    catch (error) { return { error: error instanceof Error ? error.message : "Невалиден срок." }; }
+    catch (error) { return { error: error instanceof Error ? error.message : "Провери срока и опитай пак." }; }
   }
   const priced = data.lines.map((line) => ({ ...line, lineTotal: money(line.quantity * line.unitPrice) }));
   // Discounts apply to offers only; a change has one price of its own.

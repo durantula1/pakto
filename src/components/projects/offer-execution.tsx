@@ -78,7 +78,7 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
       </div> : null}
       {canManage && unscheduled.length ? <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
         <p className="font-medium">{unscheduled.length === 1 ? `Няма срок за работата по ${documentCode("change", unscheduled[0]!.sequenceNumber)}` : `Няма срок за работата по ${unscheduled.length} промени`}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">Клиентът одобри допълнителната работа, но не знае кога ще се свърши. Добави срок.</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">Работата е одобрена, но още няма срок. Добави го, за да го види и клиентът.</p>
         <ul className="mt-3 flex flex-col divide-y rounded-lg border bg-card">
           {unscheduled.map((change) => <li key={change.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-sm">
             <span className="min-w-0">

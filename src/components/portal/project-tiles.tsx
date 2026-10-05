@@ -88,7 +88,7 @@ export function MoneyTile({ view, claims }: { view: ScopeView; claims: PortalCla
       </span>
       <Bar percent={percent} />
       <span className={cn("line-clamp-2 text-xs", overdue && !claimed && "font-medium text-destructive")}>
-        {next ? (claimed ? "вноската чака потвърждение" : `${overdue ? "просрочена вноска" : "вноска"} ${formatCents(next.remainingMinor, next.currency)} до ${formatShortDay(next.dueOn)}`) : `платени ${percent}%`}
+        {next ? (claimed ? "вноската чака потвърждение" : `вноска ${formatCents(next.remainingMinor, next.currency)} ${overdue ? "· срокът беше" : "до"} ${formatShortDay(next.dueOn)}`) : `платени ${percent}%`}
       </span>
     </>
   );

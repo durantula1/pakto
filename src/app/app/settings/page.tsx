@@ -72,7 +72,7 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
         <span aria-label="Скрита парола" className="tracking-widest text-muted-foreground">••••••••</span>
         <ChangePasswordDialog />
       </SettingsRow>
-      <SettingsRow label="Всички устройства" description="Влизано е от чужд телефон или компютър? Излез навсякъде наведнъж." align="end">
+      <SettingsRow label="Всички устройства" description="Влизал ли си от чуждо устройство? Излез навсякъде наведнъж." align="end">
         <SignOutEverywhereDialog />
       </SettingsRow>
     </SettingsGroup>

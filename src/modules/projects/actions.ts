@@ -25,7 +25,7 @@ const projectSchema = z.object({
   siteAddress: z.string().trim().min(3, "Въведи адрес.").max(300),
   reference: z.string().trim().max(80).optional(),
   contactName: z.string().trim().max(160).optional(),
-  contactEmail: z.union([z.literal(""), z.email("Невалиден имейл.")]).optional(),
+  contactEmail: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(),
   contactPhone: z.string().trim().max(40).optional(),
   clientId: z.union([z.literal(""), z.uuid()]).optional(),
 });

@@ -29,7 +29,7 @@ export default async function NewOfferPage({
     requireTenantContext(),
   ]);
   const member = await getCurrentMember(context);
-  if (!can(member, "offers.edit")) return <PageShell><PageHeader page="newOffer" back={{ href: "/app/offers", label: "Назад" }} /><EmptyState illustration={false} title="Нямаш право да създаваш оферти." /></PageShell>;
+  if (!can(member, "offers.edit")) return <PageShell><PageHeader page="newOffer" back={{ href: "/app/offers", label: "Назад" }} /><EmptyState illustration={false} title="Ролята ти не включва създаване на оферти. Попитай собственика на фирмата." /></PageShell>;
   const [anyProjects, defaultProject, organization, catalog, templates, template, copy] = await Promise.all([
     hasProjects(context),
     getProjectOption(context, typeof projectId === "string" ? projectId : undefined, { activeOnly: true }),

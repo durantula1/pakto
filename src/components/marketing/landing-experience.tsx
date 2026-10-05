@@ -33,7 +33,7 @@ import { HeroReveal, Reveal } from "./reveal";
 import { SecuritySection } from "./security-section";
 import { UpdatesSection } from "./updates-section";
 import { VersionScene } from "./version-scene";
-import { applyAuthHint } from "@/lib/auth/session-hint";
+import { applyAuthHint, verifyAuthHint } from "@/lib/auth/session-hint";
 
 // The landing page is static (cached, back/forward-cacheable). Both signed-in and visitor buttons
 // are in the HTML; `authHintScript` (run before paint by the root layout) sets <html data-auth>, and CSS
@@ -56,7 +56,10 @@ const heroBenefits = [
 export function LandingExperience() {
   // The root layout's inline script runs once per page load; after a client navigation to "/"
   // (say, after signing in) the hint is refreshed here.
-  useEffect(applyAuthHint, []);
+  useEffect(() => {
+    applyAuthHint();
+    verifyAuthHint();
+  }, []);
   const { scrollY, scrollYProgress } = useScroll();
   const [navHidden, setNavHidden] = useState(false);
   const [navHeld, setNavHeld] = useState(false);
@@ -149,21 +152,14 @@ export function LandingExperience() {
                 >
                   КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-3.5" />
                 </Link>
-                <div className="mf-when-out contents">
-                  <Link
-                    href="/sign-in"
-                    className="px-2 py-2 font-mono text-[0.6875rem] font-bold tracking-[0.09em] transition-colors hover:text-[#e85f48] sm:px-3"
-                  >
-                    ВХОД
-                  </Link>
-                  <Link
-                    href="/sign-up"
-                    className="flex items-center gap-2 rounded-full border border-[#102b38]/40 bg-[#ff765f] px-4 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] transition-colors hover:bg-[#ff8a75]"
-                  >
-                    ЗАПОЧНИ <span className="max-sm:hidden">БЕЗПЛАТНО</span>{" "}
-                    <ArrowUpRight className="size-3.5" />
-                  </Link>
-                </div>
+                {/* Returning users sign in from the sign-up page's "Влез" link or the footer. */}
+                <Link
+                  href="/sign-up"
+                  className="mf-when-out flex items-center gap-2 rounded-full border border-[#102b38]/40 bg-[#ff765f] px-4 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] transition-colors hover:bg-[#ff8a75]"
+                >
+                  ЗАПОЧНИ <span className="max-sm:hidden">БЕЗПЛАТНО</span>{" "}
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
               </div>
             </div>
           </m.header>
@@ -189,9 +185,8 @@ export function LandingExperience() {
                 </HeroReveal>
                 <HeroReveal delay={0.14} className="relative z-20 mt-10">
                   <p className="max-w-[28rem] text-pretty text-lg leading-8 text-[#284955] lg:text-xl">
-                    Клиентът поиска нещо допълнително? Изпращаш му цена и срок,
-                    той одобрява от телефона си и започваш чак след това. Три
-                    седмици по-късно няма какво да се оспорва.
+                    Изпращаш офертата с линк. Клиентът я одобрява от телефона си
+                    с код от имейла. Остава запис коя версия е приел и кога.
                   </p>
                   <div
                     id="hero-cta"

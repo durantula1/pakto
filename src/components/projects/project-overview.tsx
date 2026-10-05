@@ -94,7 +94,7 @@ function StageList({ view, now, next, name, foldDone }: {
       const [day, month] = formatShortDay(completed && item.completedAt ? sofiaDay.format(item.completedAt) : item.dueOn).split(" ");
       const when = completed
         ? "Завършен"
-        : overdue ? `Закъснява · трябваше до ${formatShortDay(item.dueOn)}`
+        : overdue ? `Срокът беше ${formatShortDay(item.dueOn)}`
         : item.status === "in_progress" ? "В момента"
         : current ? "Следва"
         : "Предстои";

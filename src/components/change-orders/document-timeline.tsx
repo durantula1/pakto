@@ -23,7 +23,7 @@ export const eventLabels: Record<string, string> = {
   decision_changes_requested: "Клиентът поиска промяна",
   decision_disputed: "Клиентът оспори решението",
   decision_dispute_resolved: "Оспорването е отбелязано като уредено",
-  portal_staff_session_blocked: "Блокиран опит за решение от служебен профил",
+  portal_staff_session_blocked: "Служител опита да реши вместо клиента. Действието е спряно.",
   attachment_added: "Прикачен файл",
   attachment_removed: "Премахнат файл",
   revision_canceled: "Новата версия е оттеглена; в сила остава одобрената",

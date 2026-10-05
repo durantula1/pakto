@@ -86,9 +86,9 @@ export function DisputeRow({ row, projectId, disputeId }: { row: ReactNode; proj
           <input type="hidden" name="disputeId" value={disputeId} />
           <Textarea aria-label="Отговор към клиента" name="resolution" required minLength={3} rows={2} autoFocus placeholder="Отговор към клиента. Напр. сумата съвпада с банковото извлечение от 26.09, прилагаме го." />
           <div className="flex flex-wrap items-center gap-2">
-            <ActionSubmit>Изпрати и затвори спора</ActionSubmit>
+            <ActionSubmit>Изпрати отговора</ActionSubmit>
             <Button type="button" variant="ghost" size="sm" onPress={close}>Отказ</Button>
-            <span className="text-xs text-muted-foreground">Ако сумата е грешна, коригирай плащането: спорът се затваря сам.</span>
+            <span className="text-xs text-muted-foreground">Ако сумата е грешна, коригирай плащането и въпросът се затваря сам.</span>
           </div>
         </ActionForm>
       )}

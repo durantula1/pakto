@@ -124,7 +124,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
         <Dialog isOpen={open === "anonymize"} onOpenChange={(value) => !value && close()} role="alertdialog" isDismissable={false} showCloseButton={false} className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Да анонимизирам ли клиента?</DialogTitle>
-            <DialogDescription>Името, имейлът, телефонът и бележките се изтриват от клиента и от всички обекти, а линковете му спират. Решенията остават с името и имейла, с които са подписани, като доказателство. Това не може да се върне.</DialogDescription>
+            <DialogDescription>Името, имейлът, телефонът и бележките се изтриват от клиента и от всички обекти, а линковете му спират. Решенията остават с името и имейла, с които са взети. Това не може да се върне.</DialogDescription>
           </DialogHeader>
           <ActionForm action={anonymizeClientAction} success="Клиентът е анонимизиран" onSuccess={close} className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <input type="hidden" name="clientId" value={client.id} />

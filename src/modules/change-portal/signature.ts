@@ -12,10 +12,10 @@ const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 /** Decodes the pad's `data:image/png;base64,…` value; throws a client-facing message when it is not a real drawing. */
 export function parseSignature(dataUrl: string | undefined | null) {
   const match = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl ?? "");
-  if (!match) throw new Error("Подпиши се в полето за подпис.");
+  if (!match) throw new Error("Нарисувай в полето.");
   const bytes = Buffer.from(match[1]!, "base64");
-  if (bytes.length > MAX_BYTES) throw new Error("Подписът е твърде голям. Изчисти полето и опитай отново.");
-  if (bytes.length < MIN_BYTES || !bytes.subarray(0, 8).equals(PNG_MAGIC)) throw new Error("Подпиши се в полето за подпис.");
+  if (bytes.length > MAX_BYTES) throw new Error("Рисунката е твърде голяма. Изчисти полето и опитай отново.");
+  if (bytes.length < MIN_BYTES || !bytes.subarray(0, 8).equals(PNG_MAGIC)) throw new Error("Нарисувай в полето.");
   return bytes;
 }
 
@@ -23,7 +23,7 @@ export async function storeSignature(input: { organizationId: string; revisionId
   const path = `${input.organizationId}/${input.revisionId}/${input.key}.png`;
   const { error } = await createAdminClient().storage.from(SIGNATURE_BUCKET)
     .upload(path, input.bytes, { contentType: "image/png", upsert: true });
-  if (error) throw new Error("Подписът не беше записан. Опитай отново.");
+  if (error) throw new Error("Рисунката не беше записана. Опитай отново.");
   return { path, sha256: createHash("sha256").update(input.bytes).digest("hex") };
 }
 

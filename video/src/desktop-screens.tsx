@@ -1125,7 +1125,7 @@ export function DeskRequest() {
               ...enter(frame, 46, 8),
             }}
           >
-            Какво не ви устройва?
+            Как искате да продължим?
           </p>
           {[
             {
@@ -1136,7 +1136,7 @@ export function DeskRequest() {
             },
             {
               title: "Отказвам",
-              hint: "Фирмата няма да прави тази работа",
+              hint: "Офертата се затваря без работа по нея",
               y: REQUEST_OPTION.y - 120 - 22 + 40,
               selected: false,
             },

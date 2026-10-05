@@ -99,6 +99,6 @@ export function requireRole(
   allowed: TenantContext["role"][],
 ) {
   if (!allowed.includes(context.role)) {
-    throw new AuthenticationRequiredError("Нямаш право за това действие.");
+    throw new AuthenticationRequiredError("Ролята ти не включва това. Попитай собственика на фирмата.");
   }
 }

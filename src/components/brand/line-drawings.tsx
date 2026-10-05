@@ -55,7 +55,7 @@ function Sparks({ children }: { children: ReactNode }) {
 export function NotFoundArt({ className }: { className?: string }) {
   return (
     <Art
-      label="Грешка 404: скъсан линк"
+      label="Страницата не е намерена"
       viewBox="0 0 240 120"
       className={className}
     >

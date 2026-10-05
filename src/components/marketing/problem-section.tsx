@@ -12,6 +12,13 @@ const trades = [
   "Услуги",
 ] as const;
 
+/** Lines a business hears weeks later, worded so any trade recognises them. */
+const disputes = [
+  "Това не беше ли включено?",
+  "Казахте 3 седмици, а минаха 5.",
+  "Не знаех, че капарото не се връща.",
+] as const;
+
 /** What Pakto solves, told as three beats: how it goes today, how it ends, and what changes. */
 export function ProblemSection() {
   return (
@@ -76,6 +83,19 @@ export function ProblemSection() {
               </p>
             </li>
           </ol>
+        </Reveal>
+
+        <Reveal className="mt-8 border-t border-[#102b38]/25 pt-6 lg:mt-10">
+          <p className="mf-kicker">ЗВУЧИ ЛИ ПОЗНАТО?</p>
+          <ul className="mt-4 flex flex-col gap-2 text-lg font-bold leading-snug tracking-[-0.02em] lg:flex-row lg:gap-10">
+            {disputes.map((line) => (
+              <li key={line}>„{line}“</li>
+            ))}
+          </ul>
+          <p className="mt-6 max-w-2xl text-base leading-7">
+            Проблемът не е, че не е било казано. Проблемът е, че няма запис какво
+            е приел клиентът.
+          </p>
         </Reveal>
 
         <Reveal className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[#102b38]/25 pt-6 lg:mt-10">

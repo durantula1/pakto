@@ -20,7 +20,7 @@ type Decision = "approved" | "changes_requested" | "declined";
 
 const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: string }[] = [
   { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Тази версия се затваря и фирмата изпраща нова" },
-  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Фирмата няма да прави тази работа" },
+  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Офертата се затваря без работа по нея" },
 ];
 
 const RESEND_SECONDS = 30;
@@ -160,7 +160,7 @@ export function PortalDecisionForm({
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg font-semibold">Какво не ви устройва?</h3>
+                <h3 className="text-lg font-semibold">Как искате да продължим?</h3>
                 <button type="button" onClick={() => choose("approved")} className="inline-flex min-h-11 items-center self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
                   Всъщност одобрявам
                 </button>

@@ -16,7 +16,7 @@ const clientSchema = z.object({
   clientId: z.uuid(),
   name: z.string().trim().min(2, "Въведи име на клиента.").max(160),
   phone: z.string().trim().max(40).optional(),
-  email: z.union([z.literal(""), z.email("Невалиден имейл.")]).optional(),
+  email: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(),
   address: z.string().trim().max(300).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
@@ -29,7 +29,7 @@ export async function updateClientAction(formData: FormData): Promise<ActionResu
   return attempt(async () => {
     const data = clientSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
-    if (!managesClients(context)) throw new Error("Нямаш право да редактираш клиенти.");
+    if (!managesClients(context)) throw new Error("Ролята ти не включва редакция на клиенти. Попитай собственика на фирмата.");
     await getDatabase().transaction(async (tx) => {
       const [client] = await tx.select({ id: clients.id, email: clients.email }).from(clients)
         .where(and(eq(clients.id, data.clientId), eq(clients.organizationId, context.organizationId), isNull(clients.mergedIntoId)))

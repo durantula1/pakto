@@ -100,7 +100,7 @@ export async function checkOtp(input: { otpId: string; code: string; sessionId: 
   if (!otp) throw new Error("Кодът е изтекъл или опитите свършиха. Поискайте нов код.");
   const expected = Buffer.from(otp.codeHash);
   const actual = Buffer.from(hashCode(otp.id, input.code.trim()));
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw new Error("Грешен код.");
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) throw new Error("Кодът не съвпада. Проверете го и опитайте пак.");
   return otp;
 }
 

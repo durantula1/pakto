@@ -133,7 +133,7 @@ const statusText: Record<Download["state"], string> = {
   preparing: "Подготвя се…",
   downloading: "Изтегля се",
   done: "Изтеглено",
-  error: "Не успя",
+  error: "Не се изтегли. Опитай пак.",
 };
 
 /**

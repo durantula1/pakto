@@ -208,7 +208,7 @@ async function DecisionSignature({ path, name }: { path: string; name: string })
   const bytes = await loadSignature(path).catch(() => null);
   if (!bytes) return null;
   // eslint-disable-next-line @next/next/no-img-element -- inline data URL from private storage
-  return <img src={`data:image/png;base64,${bytes.toString("base64")}`} alt={`Подпис на ${name}`} className="h-20 w-full rounded-lg border bg-white object-contain p-2" />;
+  return <img src={`data:image/png;base64,${bytes.toString("base64")}`} alt={`Нарисувано от ${name}`} className="h-20 w-full rounded-lg border bg-white object-contain p-2" />;
 }
 
 /** Messages and the unread count in one go. The client's messages stay unread until someone from the firm answers. */

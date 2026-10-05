@@ -200,7 +200,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
           <View style={styles.signature}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt attribute */}
             <Image src={decision.signature} style={styles.signatureImage} />
-            <Text style={styles.signatureCaption}>Подпис: {decision.typedName}</Text>
+            <Text style={styles.signatureCaption}>Нарисувано от: {decision.typedName}</Text>
           </View>
         ) : null}
       </View>
