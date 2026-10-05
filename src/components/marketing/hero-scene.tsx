@@ -180,7 +180,7 @@ export function HeroScene() {
               <span className="absolute top-[1.5%] left-1/2 h-[2.2%] w-[28%] -translate-x-1/2 rounded-full bg-[#0b1f29]" />
               <div className="mf-sc-screen flex h-full flex-col px-[0.875rem] pt-[11%] pb-[0.875rem]">
                 <p className="font-mono demo-text-9 font-bold tracking-[0.1em] text-[#52707d]">
-                  pakto.eu
+                  pakto.net
                 </p>
                 <p className="mt-2 demo-text-9 text-[#c24a35]">ПР-042 · v2</p>
                 <p className="demo-text-14 font-black tracking-[-0.03em]">

@@ -81,7 +81,7 @@
       │ /data/files     │ volume     └───────────┘
       │ (volume)        │ pgdata
       ▼
- SMTP smtp.hostinger.com:465 ──▶ notifications@pakto.eu
+ SMTP smtp.hostinger.com:465 ──▶ info@pakto.net
 ```
 
 - Едно копие на приложението. Live известията се разпращат в паметта на процеса (`LISTEN` в един postgres.js клиент → SSE към браузърите).
@@ -132,7 +132,7 @@
    - **През опашката:** известия, напомняния, дайджести. Изпращат се в `after()` след заявката, а cron на всяка минута взима неуспелите с exponential backoff (1, 5, 15, 60 мин.; до 6 опита).
    - Дневен брояч: при приближаване до лимита (напр. 900/1000) неспешните писма чакат до следващия ден, OTP минава винаги.
    - Плюс: виждаме колко пращаме на ден и кое не е стигнало.
-3. **Подател:** кутия `notifications@pakto.eu` (Hostinger Email **Starter**: 1000 изходящи/ден в плъзгащ се 24-часов прозорец, лимитът е на кутия; до 100 получатели на писмо; до 35 MB на писмо). „From“ винаги е тази кутия. Отговорите отиват към фирмата чрез `Reply-To` (както сега). Не можем да пращаме „от името“ на адреса на фирмата.
+3. **Подател:** кутия `info@pakto.net` (Hostinger Email **Starter**: 1000 изходящи/ден в плъзгащ се 24-часов прозорец, лимитът е на кутия; до 100 получатели на писмо; до 35 MB на писмо). „From“ винаги е тази кутия. Отговорите отиват към фирмата чрез `Reply-To` (както сега). Не можем да пращаме „от името“ на адреса на фирмата.
 4. **DNS (задължително за да не отиват в спам):** MX към Hostinger, SPF (`v=spf1 include:_spf.mail.hostinger.com ~all`), DKIM от hPanel, DMARC (`p=none` с отчети първите 2–4 седмици → `p=quarantine`).
 5. **Ако растем:** същият Nodemailer, други `SMTP_*` стойности (Amazon SES, Brevo, Mailgun). Без промяна в кода.
 6. **Локално:** Mailpit в `docker-compose.dev.yml` лови всичко (UI на :8025). Край на ограничението „само до един адрес“.
@@ -215,11 +215,12 @@
 Ключов принцип: **всички смени на код (имейли, файлове, live, auth) се правят, докато още сме на Supabase базата.** Postgres си е Postgres. Така всяка стъпка се тества локално и самостоятелно, а финалното преминаване е само копиране на данни и смяна на `DATABASE_URL`.
 
 ### Фаза 0: Покупки и DNS (ти)
-- [ ] Hostinger KVM 2 с Ubuntu 24.04 LTS (без готов „Coolify“/„Dokploy“ шаблон)
-- [ ] Hostinger Email **Starter** (1 кутия `notifications@pakto.eu`; `support@pakto.eu` като alias или пренасочване, Starter има 5 alias-а и 5 пренасочвания). **Не** безплатния пробен план: там лимитът е 100/ден
+- [x] Hostinger KVM 2 с Ubuntu 24.04 LTS (Düsseldorf, SSH ключ `~/.ssh/pakto_vps`) (без готов „Coolify“/„Dokploy“ шаблон)
+- [x] Hostinger Email **Starter** (купена: кутия `info@pakto.net`; по желание `support@pakto.net` като alias, Starter има 5 alias-а и 5 пренасочвания). **Не** безплатния пробен план: там лимитът е 100/ден
 - [ ] Безплатен акаунт в Backblaze B2 (bucket за бекъпи, ключ само за този bucket)
-- [ ] DNS на `pakto.eu`: `A` за `pakto.eu` и `www.pakto.eu` → IP на VPS-а (`www` пренасочва към `pakto.eu`); MX, SPF, DKIM, DMARC за пощата
-- [x] Домейн: всичко на `pakto.eu` (лендинг на `/`, приложение на `/app`, портал на `/portal`). `NEXT_PUBLIC_APP_URL=https://pakto.eu`. Един сертификат, един cookie домейн, без CORS
+- [ ] DNS на `pakto.net`: `A` за `pakto.net` → IP на VPS-а, `www` (CNAME, вече има) пренасочва към `pakto.net` в Caddy
+- [x] Пощата на `pakto.net`: MX, SPF, DKIM (3 записа), DMARC `p=none` (Hostinger ги сложи сам)
+- [x] Домейн: всичко на `pakto.net` (лендинг на `/`, приложение на `/app`, портал на `/portal`). `NEXT_PUBLIC_APP_URL=https://pakto.net`. Един сертификат, един cookie домейн, без CORS
 
 ### Фаза 1: Локална среда без Supabase облака
 - [ ] `docker-compose.dev.yml`: Postgres 17 + Mailpit (виж 3.11)
@@ -252,7 +253,9 @@
 - [ ] Тест: регистрация → потвърждение → onboarding; вход със **стара** парола; забравена парола; смяна на имейл и парола; покана в екипа; изход; изтриване на профил; rate limit
 
 ### Фаза 6: Сървърът
-- [ ] Hardening (3.8), Docker, `/opt/pakto` с `compose.yml`, `Caddyfile`, `.env`
+- [x] Hardening (3.8): потребител `deploy` (sudo, docker), вход само с ключ `~/.ssh/pakto_vps`, root вход изключен, `ufw` (22, 80, 443 tcp/udp), fail2ban, unattended-upgrades, 2 GB swap
+- [x] Docker 29.8 + Compose v5.6 от официалното хранилище, ротация на логовете (10m × 5), папка `/opt/pakto`
+- [ ] `/opt/pakto`: `compose.yml`, `Caddyfile`, `.env`
 - [ ] GitHub Actions → GHCR → деплой
 - [ ] Бекъп контейнер + **пробно възстановяване**
 - [ ] `/api/health` + външен монитор
@@ -311,12 +314,14 @@
 
 ## 8. Решения
 
-1. **Домейн:** `pakto.eu/app` (един домейн за лендинга, приложението и портала).
+1. **Домейн:** `pakto.net/app` (един домейн за лендинга, приложението и портала).
 2. **Поща за бетата:** Hostinger Email **Starter**. 1000 писма/ден срещу ~40–150 нужни при 5 фирми; Standard добавя AI функции и „кой е отворил писмото“, които не ни трябват. Надграждането е без миграция, ако някога стигнем ~700/ден (виждаме го от брояча в `email_outbox`).
 3. **Офсайт бекъп:** безплатно, Backblaze B2 (10 GB).
 4. **Старт:** засега само план; нищо не се изпълнява.
 
 ## Дневник
 - 04.10.2026: първа версия на плана.
-- 04.10.2026: решения: `pakto.eu/app`, Hostinger Email Starter, Backblaze B2 (безплатно); засега само план.
+- 04.10.2026: решения: `pakto.net/app`, Hostinger Email Starter, Backblaze B2 (безплатно); засега само план.
+- 05.10.2026: VPS `187.7.64.36` (srv2036017.hstgr.cloud, Düsseldorf, Ubuntu 24.04.5) защитен и с Docker; вход: `ssh -i ~/.ssh/pakto_vps deploy@187.7.64.36`.
+- 05.10.2026: основният домейн е **`pakto.net`** (не `pakto.eu`); пощата е `info@pakto.net`; VPS и пощата са купени.
 - 04.10.2026: добавена локална разработка (3.11): Postgres + Mailpit в Docker, `pnpm db:pull` с анонимизация; локалното приложение никога не се свързва с прод.

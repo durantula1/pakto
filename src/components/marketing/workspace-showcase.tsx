@@ -216,7 +216,7 @@ export function WorkspaceShowcase() {
               <i className="size-2 rounded-full bg-[#bceba8]" />
             </span>
             <span className="mx-auto rounded-full bg-[#f4efe4] px-4 py-1 font-mono demo-text-9 text-[#52707d]">
-              pakto.eu/app
+              pakto.net/app
             </span>
           </div>
 
