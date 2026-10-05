@@ -12,7 +12,7 @@ import { getServerEnvironment } from "@/lib/env/server";
 type Attachment = { filename: string; content: Buffer; contentId?: string };
 
 export type EmailKind =
-  | "otp" | "portal_links" | "offer_sent" | "team_invite" | "account_deletion" | "support"
+  | "otp" | "auth_verify" | "auth_reset" | "portal_links" | "offer_sent" | "team_invite" | "account_deletion" | "support"
   | "staff_notification" | "client_notification" | "client_digest" | "reminder" | "client_answer" | "decision_receipt";
 
 type Content = { kind: EmailKind; to: string; subject: string; text: string; html: string; replyTo?: string };

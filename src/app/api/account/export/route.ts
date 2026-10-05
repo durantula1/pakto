@@ -1,12 +1,12 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 import { getDatabase } from "@/db";
 import {
-  changeOrders, organizationMembers, organizations, profiles, projectMembers,
+  authSessions, authUsers, changeOrders, organizationMembers, organizations, profiles, projectMembers,
   projects, staffNotifications, timelineEvents, userConsents,
 } from "@/db/schema";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
 
@@ -15,11 +15,14 @@ export const runtime = "nodejs";
  * Company records the user only touched stay with the company; they appear here as references.
  */
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = getDatabase();
+  const [login] = await db.select({
+    createdAt: authUsers.createdAt,
+    lastSignInAt: sql<Date | null>`(select max(${authSessions.createdAt}) from ${authSessions} where ${authSessions.userId} = ${authUsers.id})`,
+  }).from(authUsers).where(eq(authUsers.id, user.id)).limit(1);
   const [[profile], memberships, projectAccess, consents, notifications, createdProjects, createdDocuments, activity] = await Promise.all([
     db.select({ displayName: profiles.displayName, email: profiles.email, phone: profiles.phone, createdAt: profiles.createdAt, updatedAt: profiles.updatedAt, deletionRequestedAt: profiles.deletionRequestedAt })
       .from(profiles).where(eq(profiles.id, user.id)).limit(1),
@@ -47,7 +50,7 @@ export async function GET() {
   const exportedAt = new Date();
   const body = {
     exportedAt: exportedAt.toISOString(),
-    account: { id: user.id, email: user.email, createdAt: user.created_at, lastSignInAt: user.last_sign_in_at ?? null },
+    account: { id: user.id, email: user.email, createdAt: login?.createdAt ?? null, lastSignInAt: login?.lastSignInAt ?? null },
     profile: profile ?? null,
     memberships,
     projectAccess,

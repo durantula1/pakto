@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { roleLabel } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 import { updateProfileAction } from "@/modules/account/actions";
 import { syncProfileEmail } from "@/modules/account/mutations";
 import { getAccountProfile } from "@/modules/account/queries";
@@ -26,8 +26,7 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
   const query = await searchParams;
   if (typeof query.invite === "string") redirect(`/app/team?invite=${encodeURIComponent(query.invite)}`);
   const context = await requireTenantContext();
-  const supabase = await createClient();
-  const [{ data: { user } }, profile] = await Promise.all([supabase.auth.getUser(), getAccountProfile(context.userId)]);
+  const [user, profile] = await Promise.all([getSessionUser(), getAccountProfile(context.userId)]);
   const email = user?.email?.toLowerCase() ?? profile?.email ?? "";
   // A confirmed email change lands here; keep the copy the team sees in sync with Auth.
   if (profile && email && profile.email !== email) await syncProfileEmail(context.userId, email);
@@ -62,7 +61,6 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
     <SettingsGroup id="sign-in" title="Вход и сигурност">
       <SettingsRow
         label="Имейл за вход"
-        description={user?.new_email ? <>Чака потвърждение: <span className="font-medium text-foreground">{user.new_email}</span>. Отвори линка, който изпратихме.</> : undefined}
         align="end"
       >
         <span className="min-w-0 truncate text-muted-foreground">{email}</span>

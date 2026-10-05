@@ -13,13 +13,12 @@
 | Променлива | Задължителна | Какво е | Бележки |
 |---|---|---|---|
 | `NEXT_PUBLIC_APP_URL` | да | Публичният адрес, напр. `https://pakto.net` | Влиза в линковете към клиента, в имейлите, в auth пренасочванията и в SEO адресите (`robots.txt`, `sitemap.xml`, canonical, JSON-LD). Ако лендингът и приложението са на различни домейни, SEO адресите трябва да сочат към лендинга. **Задава се при build**, защото е `NEXT_PUBLIC_`. |
-| `NEXT_PUBLIC_SUPABASE_URL` | да | `https://mzmvtxjmdqucrfuajimd.supabase.co` | Задава се при build. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | да | Publishable ключ от Supabase → Settings → API | Задава се при build. |
 | `DATABASE_URL` | да | Postgres connection string (pooler, transaction mode) | Сървърният код чете и пише само оттук. |
 | `DATABASE_MIGRATION_URL` | не | Direct connection (session mode) за миграции | Нужен само ако миграциите се пускат от сървъра. |
-| `SUPABASE_SECRET_KEY` | да | Service-role/secret ключ | Нужен за изтриване на профили (Supabase Auth). Файловете вече не минават през Supabase. |
+| `DATABASE_SSL` | не | `true` (по подразбиране) | `false` за Postgres контейнера на нашия сървър (вътрешна Docker мрежа без TLS). Supabase иска `true`. Live известията слушат през `DATABASE_MIGRATION_URL` (ако има), защото `LISTEN` не минава през transaction pooler. |
+| `BETTER_AUTH_SECRET` | препоръчително | `openssl rand -hex 32` | Подписва сесиите на служителите (Better Auth). Ако липсва, се извежда от `PORTAL_LINK_SECRET`. Смяната изкарва всички служители от профилите им; клиентските линкове не се засягат. |
 | `FILES_DIR` | да на сървъра | `/data/files` | Папката с качените файлове (Docker volume, влиза в бекъпа). Локално по подразбиране е `.data/files`. Вътре са папките `change-attachments`, `decision-signatures`, `organization-logos`. |
-| `PORTAL_LINK_SECRET` | **да, задай го изрично** | Дълъг случаен низ (`openssl rand -hex 32`) | Ако липсва, кодът взима `SUPABASE_SECRET_KEY`, а ако и той липсва, `DATABASE_URL`. **Смяна на стойността обезсилва всички клиентски линкове.** Първо провери каква стойност ползва сегашната среда и я запази. |
+| `PORTAL_LINK_SECRET` | **да, задай го изрично** | Дълъг случаен низ (`openssl rand -hex 32`) | Ако липсва, кодът взима `SUPABASE_SECRET_KEY` (стара стойност, ако още е зададена), а ако и той липсва, `DATABASE_URL`. **Смяна на стойността обезсилва всички клиентски линкове.** Първо провери каква стойност ползва сегашната среда и я запази. |
 | `CRON_SECRET` | да | Случаен низ, поне 16 знака | Cron задачите го пращат като `Authorization: Bearer …`. |
 | `SMTP_HOST` | да | `smtp.hostinger.com` | Имейлите излизат през пощата `info@pakto.net` (Hostinger Email Starter, 1000 писма на 24 часа). Ако липсва, кодът пада обратно на Resend. |
 | `SMTP_PORT` | не | `465` (по подразбиране) | 465 е SSL; при 587 връзката минава на STARTTLS. |
@@ -64,7 +63,7 @@
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   proxy_set_header X-Forwarded-Proto $scheme;
   ```
-- `client_max_body_size 20m;`: подписът се праща в server action (до ~400 KB). Прикачените файлове отиват директно в Supabase, но лимитът трябва да е с резерв. Формата `/contact` праща до 3 снимки по 5 MB (общо до 10 MB) в server action, затова лимитът не бива да пада под 12m.
+- `client_max_body_size 20m;`: подписът се праща в server action (до ~400 KB). Прикачените файлове (до 15 MB) отиват на `PUT /api/uploads`, затова лимитът трябва да е поне 16m. Формата `/contact` праща до 3 снимки по 5 MB (общо до 10 MB) в server action, затова лимитът не бива да пада под 12m.
 - Server Actions: ако домейнът зад proxy е различен, провери `experimental.serverActions.allowedOrigins` в `next.config.ts`.
 - **HSTS се слага тук**, не в Next.js, защото https свършва в nginx. `X-Frame-Options`, `nosniff` и `Referrer-Policy` вече идват от `next.config.ts` за всички страници:
   ```nginx
@@ -101,13 +100,11 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
 
 ---
 
-## 5. Supabase настройки при смяна на домейна
+## 5. Вход на служителите (Better Auth)
 
-- **Authentication → URL Configuration**:
-  - Site URL = новият `NEXT_PUBLIC_APP_URL`.
-  - Redirect URLs: добави `https://<домейн>/auth/callback`. Ползва се при регистрация, забравена парола и смяна на имейл.
-- Имейл шаблоните на Supabase Auth, ако са персонализирани, да сочат към новия домейн.
-- **Authentication → Rate Limits** (наблюдавано на 2026-10-05: вход с грешна парола към `/auth/v1/token` → 429 след ≈30 опита за 5 минути от един IP; писмата за потвърждаване/регистрация са ограничени много по-строго при стандартния SMTP на Supabase): провери и запиши тук стойностите за вход, регистрация, имейли и OTP по IP. Входът разчита на тях срещу отгатване на пароли; приложението няма свой лимит за паролите. „Изпрати линка пак“ при вход също минава през лимита за имейли на Supabase.
+- Входът е в приложението (`src/lib/auth/server.ts`, Better Auth), таблиците са `app.auth_users`, `app.auth_sessions`, `app.auth_accounts`, `app.auth_verifications`. Паролите са bcrypt (пренесени от Supabase Auth на 05.10.2026, без смяна).
+- Линковете в писмата водят към `NEXT_PUBLIC_APP_URL/api/auth/...`, затова той трябва да е точният публичен адрес. Нищо не се настройва във външна услуга.
+- Лимити за опити (`src/lib/auth/limits.ts`, в паметта на процеса): вход 30 на 5 мин. от IP и 10 на 15 мин. за имейл; регистрация 10 на IP и 3 на имейл за 15 мин.; писма (нов линк, забравена парола) 10 на IP и 3 на имейл за 15 мин. Лимитите искат реалния IP в `X-Forwarded-For` от proxy-то.
 - Файловете са на диска на сървъра под `FILES_DIR` (`src/lib/storage/`), в папки с имената на старите buckets:
   - `change-attachments`: снимки и PDF към оферти; отварят се само през `/api/attachments/[id]` след проверка на достъпа;
   - `decision-signatures`: рисунки на клиенти при решение, само за PDF и страницата на офертата;
@@ -139,13 +136,14 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
 - [ ] В „Доказателство за решението“ IP адресът е реалният, не `127.0.0.1`.
 - [ ] `curl` към двата cron endpoint-а с грешен ключ връща 401, а с верния връща JSON.
 - [ ] Старите клиентски линкове (от преди миграцията) още работят (`PORTAL_LINK_SECRET` е същият).
-- [ ] Известията на живо (Supabase Realtime) идват без презареждане.
+- [ ] Известията на живо (`/api/live`, Postgres `LISTEN/NOTIFY`) идват без презареждане. Proxy-то не бива да буферира `text/event-stream`.
 - [ ] `SUPPORT_EMAIL` е зададен и кутията съществува: изпрати тестово съобщение от `/contact` със снимка, то трябва да пристигне с прикачения файл, а „Отговор“ да отиде до подателя.
 
 ---
 
 ## Дневник на промените в този файл
 
+- **05.10.2026**: входът на служителите минава през Better Auth вместо Supabase Auth (раздел 5); live известията през `LISTEN/NOTIFY` и `/api/live` вместо Supabase Realtime. Нови env `BETTER_AUTH_SECRET`, `DATABASE_SSL`; махнати `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. Нови таблици `app.auth_*`. Без нов cron или папка за файлове.
 - **05.10.2026**: файловете се пазят на диска (`FILES_DIR`, нова env) вместо в Supabase Storage. Нови маршрути `PUT /api/uploads` и `GET /api/logos/...`; скрипт `scripts/copy-supabase-files.mjs`. `SUPABASE_SECRET_KEY` остава само за Auth. Без нов cron.
 - **05.10.2026**: имейлите минават през SMTP на Hostinger (`info@pakto.net`) вместо Resend. Нови env `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_DAILY_LIMIT`; `RESEND_API_KEY` става резерва. Нова таблица `app.email_outbox`, нов cron `email-outbox` всяка минута. Без нов bucket.
 - **05.10.2026**: домейнът е `pakto.net` (не `pakto.eu`), всичко на един домейн (`https://pakto.net`, приложението на `/app`). Пълната нова схема (Docker, Caddy, SMTP) е в `docs/production-migration-plan.md`; този файл ще се пренапише при миграцията.

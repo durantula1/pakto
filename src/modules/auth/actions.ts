@@ -1,13 +1,19 @@
 "use server";
 
+import { isAPIError } from "better-auth/api";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
+import { getDatabase } from "@/db";
+import { authUsers } from "@/db/schema";
+import { allowAuthAttempt } from "@/lib/auth/limits";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { auth } from "@/lib/auth/server";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { recordLegalConsent } from "@/modules/account/mutations";
-import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
   error?: string;
@@ -18,10 +24,17 @@ export type AuthActionState = {
   signedUp?: boolean;
 };
 
+const TOO_MANY = "Твърде много опити за кратко време. Изчакай няколко минути и опитай пак.";
+
 const credentialsSchema = z.object({
-  email: z.email("Въведи валиден имейл адрес."),
-  password: z.string().min(8, "Паролата трябва да е поне 8 символа."),
+  email: z.email("Въведи валиден имейл адрес.").transform((email) => email.trim().toLowerCase()),
+  password: z.string().min(8, "Паролата трябва да е поне 8 символа.").max(72, "Паролата може да е до 72 символа."),
 });
+
+/** Where an email link lands: /auth/callback turns a failed link into a message on the sign-in page. */
+function callbackUrl(next: string) {
+  return `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(next)}`;
+}
 
 export async function signInAction(
   _state: AuthActionState,
@@ -31,17 +44,17 @@ export async function signInAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message };
   }
+  if (!(await allowAuthAttempt("sign-in", parsed.data.email))) return { error: TOO_MANY };
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-  // Supabase answers "not confirmed" only after the password matched, so this tells nothing to a stranger.
-  if (error?.code === "email_not_confirmed") {
-    return { error: "Първо потвърди имейла си. Линкът е в писмото от регистрацията.", unconfirmedEmail: parsed.data.email };
-  }
-  if (error?.status === 429) {
-    return { error: "Твърде много опити за кратко време. Изчакай няколко минути и опитай пак." };
-  }
-  if (error) {
+  try {
+    await auth.api.signInEmail({ body: parsed.data, headers: await headers() });
+  } catch (error) {
+    // Better Auth answers "not verified" only after the password matched, so this tells nothing to a stranger.
+    if (isAPIError(error) && error.body?.code === "EMAIL_NOT_VERIFIED") {
+      return { error: "Първо потвърди имейла си. Линкът е в писмото от регистрацията.", unconfirmedEmail: parsed.data.email };
+    }
+    if (isAPIError(error) && error.status === "TOO_MANY_REQUESTS") return { error: TOO_MANY };
+    if (!isAPIError(error)) console.error("[sign-in]", error);
     return { error: "Имейлът или паролата не са правилни." };
   }
 
@@ -62,31 +75,23 @@ export async function signUpAction(
   if (formData.get("acceptLegal") !== "on") {
     return { error: "Приеми Условията и Политиката за поверителност, за да продължиш." };
   }
+  if (!(await allowAuthAttempt("sign-up", parsed.data.email))) return { error: TOO_MANY };
 
-  const { NEXT_PUBLIC_APP_URL } = getPublicEnvironment();
-  const supabase = await createClient();
-  const next = formData.get("next");
-  const safeNext = safeNextPath(next);
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(safeNext)}`,
-      data: { display_name: parsed.data.displayName },
-    },
-  });
-
-  if (error) {
-    console.error("[sign-up]", error.code, error.message);
-    if (error.code === "over_email_send_rate_limit" || error.status === 429) return { error: "Твърде много опити за кратко време. Изчакай няколко минути и опитай пак." };
-    if (error.code === "weak_password") return { error: "Паролата е твърде слаба. Избери по-дълга, по-трудна за познаване парола." };
+  const safeNext = safeNextPath(formData.get("next"));
+  try {
+    const result = await auth.api.signUpEmail({
+      body: { name: parsed.data.displayName, email: parsed.data.email, password: parsed.data.password, callbackURL: callbackUrl(safeNext) },
+      headers: await headers(),
+    });
+    // An already registered email gets a made-up answer (no account is created), so check the row exists.
+    const [created] = await getDatabase().select({ id: authUsers.id }).from(authUsers).where(eq(authUsers.id, result.user.id)).limit(1);
+    if (created) await recordLegalConsent(created.id);
+  } catch (error) {
+    console.error("[sign-up]", isAPIError(error) ? error.body?.code : error);
+    if (isAPIError(error) && error.body?.code === "PASSWORD_TOO_SHORT") return { error: "Паролата трябва да е поне 8 символа." };
+    if (isAPIError(error) && error.status === "TOO_MANY_REQUESTS") return { error: TOO_MANY };
     return { error: "Регистрацията не беше завършена. Опитай отново." };
   }
-
-  // An already registered email comes back as a placeholder user without identities.
-  if (data.user?.identities?.length) await recordLegalConsent(data.user.id);
-
-  if (data.session) redirect(safeNext);
 
   // The same answer for a new and a registered email, so the form does not reveal who has a profile.
   return {
@@ -99,25 +104,22 @@ export async function resendConfirmationAction(
   _state: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const email = z.email("Въведи валиден имейл адрес.").safeParse(formData.get("email"));
+  const email = z.email("Въведи валиден имейл адрес.").safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!email.success) return { error: email.error.issues[0]?.message };
-  const { NEXT_PUBLIC_APP_URL } = getPublicEnvironment();
-  const supabase = await createClient();
+  if (!(await allowAuthAttempt("email", email.data))) return { error: TOO_MANY };
   // An invited member goes back to the invitation (not to a new company), anyone else to the page they opened.
-  const next = formData.get("next");
-  const safeNext = safeNextPath(next);
-  const { error } = await supabase.auth.resend({
-    type: "signup",
-    email: email.data,
-    options: { emailRedirectTo: `${NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(safeNext)}` },
-  });
-  if (error) return { error: "Линкът не беше изпратен. Опитай отново след минута." };
+  const safeNext = safeNextPath(formData.get("next"));
+  try {
+    await auth.api.sendVerificationEmail({ body: { email: email.data, callbackURL: callbackUrl(safeNext) } });
+  } catch (error) {
+    console.error("[resend-confirmation]", isAPIError(error) ? error.body?.code : error);
+    return { error: "Линкът не беше изпратен. Опитай отново след минута." };
+  }
   return { message: "Изпратихме нов линк. Провери и папката за спам." };
 }
 
 export async function signOutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
   redirect("/");
 }
 
@@ -125,14 +127,15 @@ export async function requestPasswordResetAction(
   _state: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const email = z.email("Въведи валиден имейл адрес.").safeParse(formData.get("email"));
+  const email = z.email("Въведи валиден имейл адрес.").safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!email.success) return { error: email.error.issues[0]?.message };
-  const { NEXT_PUBLIC_APP_URL } = getPublicEnvironment();
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email.data, {
-    redirectTo: `${NEXT_PUBLIC_APP_URL}/auth/callback?next=/update-password`,
-  });
-  if (error) return { error: "Имейлът за възстановяване не беше изпратен." };
+  if (!(await allowAuthAttempt("email", email.data))) return { error: TOO_MANY };
+  try {
+    await auth.api.requestPasswordReset({ body: { email: email.data, redirectTo: `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/update-password` } });
+  } catch (error) {
+    console.error("[password-reset]", isAPIError(error) ? error.body?.code : error);
+    return { error: "Имейлът за възстановяване не беше изпратен." };
+  }
   return { message: "Ако профилът съществува, изпратихме линк за нова парола." };
 }
 
@@ -140,10 +143,15 @@ export async function updatePasswordAction(
   _state: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const password = z.string().min(8, "Паролата трябва да е поне 8 символа.").safeParse(formData.get("password"));
+  const password = z.string().min(8, "Паролата трябва да е поне 8 символа.").max(72, "Паролата може да е до 72 символа.").safeParse(formData.get("password"));
   if (!password.success) return { error: password.error.issues[0]?.message };
-  const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password: password.data });
-  if (error) return { error: "Паролата не беше променена. Отвори линка отново." };
-  redirect("/app");
+  const token = z.string().min(10).safeParse(formData.get("token"));
+  if (!token.success) return { error: "Линкът е изтекъл. Поискай нов от „Забравена парола“." };
+  try {
+    await auth.api.resetPassword({ body: { newPassword: password.data, token: token.data } });
+  } catch {
+    return { error: "Линкът е изтекъл или вече е използван. Поискай нов от „Забравена парола“." };
+  }
+  // Every session of the account was ended with the reset; signing in again proves the new password.
+  redirect("/sign-in?account=password-updated");
 }

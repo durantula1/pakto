@@ -33,6 +33,8 @@
 
 ### 0.2 Тестови хора (един Gmail с „+“ адреси)
 
+Към 05.10.2026 в базата няма профил `+owner`; `QA_PASSWORD` важи за `+office` и `+ba`.
+
 | Роля | Имейл | Бележка |
 |---|---|---|
 | Собственик A | `mitqqq35+owner@gmail.com` | Фирма `QA-Фирма А` |
@@ -41,6 +43,7 @@
 | Специалист A | `mitqqq35+field@gmail.com` | Пресет „Специалист“, само някои обекти |
 | По избор A | `mitqqq35+custom@gmail.com` | Ръчно избрани права |
 | Собственик Б | `mitqqq35+ownerb@gmail.com` | Втора фирма, за изолацията |
+| Собственик (Better Auth) | `mitqqq35+ba@gmail.com` | Фирма `QA-BA Фирма`, регистрирана на 05.10.2026 през Better Auth; паролата е `QA_PASSWORD` от `.env.qa.local` |
 | Клиент 1 | `mitqqq35+client1@gmail.com` | Одобряващ, два обекта |
 | Клиент 2 | `mitqqq35+client2@gmail.com` | Одобряващ, един обект |
 | Наблюдател | `mitqqq35+viewer@gmail.com` | Наблюдател в обекта на клиент 1 |

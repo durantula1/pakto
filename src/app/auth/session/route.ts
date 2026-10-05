@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 
-/**
- * Confirms the landing page's cookie-based auth hint. getClaims() refreshes a valid session and
- * clears the cookies of an expired or revoked one, so a stale cookie stops showing "signed in".
- */
+/** Confirms the landing page's cookie-based auth hint: a cookie can outlive its session. */
 export async function GET() {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
   return NextResponse.json(
-    { signedIn: Boolean(data?.claims) },
+    { signedIn: Boolean(await getSessionUser()) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

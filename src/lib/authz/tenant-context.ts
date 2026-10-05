@@ -6,7 +6,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { getDatabase } from "@/db";
 import { organizationMembers, organizations } from "@/db/schema";
 import type { Permission } from "@/lib/authz/permissions";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 
 export type TenantContext = {
   userId: string;
@@ -27,13 +27,11 @@ class MembershipRequiredError extends Error {
 }
 
 /**
- * The signed-in user's id from the session JWT, verified locally (no query), once per request.
+ * The signed-in user's id from the session (cookie cache, else one read), once per request.
  * Lets callers start user-scoped reads alongside the membership read instead of after it.
  */
 export const getSessionUserId = cache(async (): Promise<string | null> => {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  return error ? null : data?.claims?.sub ?? null;
+  return (await getSessionUser())?.id ?? null;
 });
 
 export const getOptionalTenantContext = cache(

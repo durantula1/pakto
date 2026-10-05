@@ -17,7 +17,7 @@ import {
 } from "@/db/schema";
 import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { maskEmail } from "@/lib/email/send";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 
 export const PORTAL_COOKIE = "sitechange_portal";
 /** One cookie per organization for a client-wide session (docs/clients-plan.md, 6). */
@@ -215,8 +215,7 @@ export const clientVerifiedEmail = cache(async (clientId: string) => {
 });
 
 export async function isOrganizationStaff(organizationId: string) {
-  const { data } = await (await createClient()).auth.getClaims();
-  const userId = data?.claims?.sub;
+  const userId = (await getSessionUser())?.id;
   if (!userId) return false;
   const [member] = await getDatabase().select({ userId: organizationMembers.userId }).from(organizationMembers)
     .where(and(eq(organizationMembers.organizationId, organizationId), eq(organizationMembers.userId, userId), eq(organizationMembers.status, "active")))

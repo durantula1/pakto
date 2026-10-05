@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { safeNextPath } from "@/lib/auth/next-path";
-import { createClient } from "@/lib/supabase/server";
 
+import { safeNextPath } from "@/lib/auth/next-path";
+
+/**
+ * Where the email confirmation (and the new-address confirmation) lands after Better Auth checked the link
+ * (/api/auth/verify-email). A failed link comes back with ?error= and is explained on the sign-in page.
+ */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const code = url.searchParams.get("code");
-  const requestedNext = url.searchParams.get("next");
-  const next = requestedNext === "/update-password" ? requestedNext : safeNextPath(requestedNext);
-  if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, url.origin));
-  }
-  return NextResponse.redirect(new URL("/sign-in?error=confirmation", url.origin));
+  if (url.searchParams.get("error")) return NextResponse.redirect(new URL("/sign-in?error=confirmation", url.origin));
+  return NextResponse.redirect(new URL(safeNextPath(url.searchParams.get("next")), url.origin));
 }

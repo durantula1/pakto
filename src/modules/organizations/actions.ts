@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 import { bootstrapOrganization } from "@/modules/organizations/mutations";
 import { getDatabase } from "@/db";
 import { changeOrderRevisions, organizations } from "@/db/schema";
@@ -36,9 +36,7 @@ export async function completeOnboardingAction(
     return { error: parsed.error.issues[0]?.message };
   }
 
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  const userId = data?.claims.sub;
+  const userId = (await getSessionUser())?.id;
   if (!userId) {
     return { error: "Сесията е изтекла. Влез отново." };
   }

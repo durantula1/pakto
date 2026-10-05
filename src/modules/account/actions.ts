@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient as createStatelessClient } from "@supabase/supabase-js";
+import { isAPIError } from "better-auth/api";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import "@/lib/zod-messages";
@@ -13,30 +14,16 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { accountDeletionDate } from "@/lib/legal";
-import { createClient } from "@/lib/supabase/server";
+import { auth, getSessionUser, signOutEverywhere, verifyUserPassword } from "@/lib/auth/server";
 import { recordLegalConsent } from "@/modules/account/mutations";
 import { getAccountDeletionPlan, getLeaveBlocker } from "@/modules/account/queries";
 
 type ActionResult = { error?: string } | void;
 
 async function currentUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) throw new Error("Сесията е изтекла. Влез отново.");
-  const displayName = String(user.user_metadata?.display_name ?? user.email.split("@")[0]);
-  return { supabase, user: { id: user.id, email: user.email, displayName } };
-}
-
-/** Checks the password without touching the browser session: the throwaway session is revoked at once. */
-async function passwordMatches(email: string, password: string) {
-  const environment = getPublicEnvironment();
-  const client = createStatelessClient(environment.NEXT_PUBLIC_SUPABASE_URL, environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) return false;
-  await client.auth.signOut({ scope: "local" });
-  return true;
+  const user = await getSessionUser();
+  if (!user) throw new Error("Сесията е изтекла. Влез отново.");
+  return { user: { id: user.id, email: user.email, displayName: user.name || user.email.split("@")[0]! } };
 }
 
 const profileSchema = z.object({
@@ -70,13 +57,17 @@ export async function finishWelcomeAction(formData: FormData) {
 export async function changeEmailAction(formData: FormData): Promise<ActionResult> {
   const email = z.email("Въведи валиден имейл адрес.").safeParse(String(formData.get("email") ?? "").trim().toLowerCase());
   if (!email.success) return { error: email.error.issues[0]?.message };
-  const { supabase, user } = await currentUser();
+  const { user } = await currentUser();
   if (email.data === user.email.toLowerCase()) return { error: "Това е текущият ти имейл." };
-  const { error } = await supabase.auth.updateUser(
-    { email: email.data },
-    { emailRedirectTo: `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/auth/callback?next=/app/settings` },
-  );
-  if (error) return { error: "Имейлът не беше сменен. Може вече да се използва от друг профил." };
+  // The address changes only after the link sent to the new address is opened.
+  try {
+    await auth.api.changeEmail({
+      body: { newEmail: email.data, callbackURL: `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/auth/callback?next=/app/settings` },
+      headers: await headers(),
+    });
+  } catch {
+    return { error: "Имейлът не беше сменен. Може вече да се използва от друг профил." };
+  }
 }
 
 const passwordSchema = z.object({
@@ -88,15 +79,23 @@ const passwordSchema = z.object({
 export async function changePasswordAction(formData: FormData): Promise<ActionResult> {
   const parsed = passwordSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
-  const { supabase, user } = await currentUser();
-  if (!(await passwordMatches(user.email, parsed.data.currentPassword))) return { error: "Текущата парола не е правилна." };
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
-  if (error) return { error: error.code === "same_password" ? "Новата парола трябва да е различна от старата." : "Паролата не беше сменена. Опитай отново." };
+  await currentUser();
+  if (parsed.data.password === parsed.data.currentPassword) return { error: "Новата парола трябва да е различна от старата." };
+  if (parsed.data.password.length > 72) return { error: "Паролата може да е до 72 символа." };
+  try {
+    // Other devices are signed out; this one keeps a fresh session.
+    await auth.api.changePassword({
+      body: { currentPassword: parsed.data.currentPassword, newPassword: parsed.data.password, revokeOtherSessions: true },
+      headers: await headers(),
+    });
+  } catch (error) {
+    if (isAPIError(error) && error.body?.code === "INVALID_PASSWORD") return { error: "Текущата парола не е правилна." };
+    return { error: "Паролата не беше сменена. Опитай отново." };
+  }
 }
 
 export async function signOutEverywhereAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut({ scope: "global" });
+  await signOutEverywhere();
   redirect("/sign-in");
 }
 
@@ -135,13 +134,13 @@ export async function requestAccountDeletionAction(formData: FormData): Promise<
   const parsed = deletionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   if (parsed.data.confirmation.toUpperCase() !== "ИЗТРИЙ") return { error: "Напиши ИЗТРИЙ, за да потвърдиш." };
-  const { supabase, user } = await currentUser();
+  const { user } = await currentUser();
   const plan = await getAccountDeletionPlan(user.id);
   if (plan.kind === "blocked") return { error: plan.message };
   if (plan.kind === "account_and_company" && parsed.data.organizationName?.toLocaleLowerCase("bg") !== plan.organizationName.trim().toLocaleLowerCase("bg")) {
     return { error: "Напиши точното име на фирмата, за да потвърдиш закриването ѝ." };
   }
-  if (!(await passwordMatches(user.email, parsed.data.password))) return { error: "Паролата не е правилна." };
+  if (!(await verifyUserPassword(user.id, parsed.data.password))) return { error: "Паролата не е правилна." };
   const requestedAt = new Date();
   await getDatabase().transaction(async (tx) => {
     // A user who never finished onboarding has no profile row yet; the purge job still needs one.
@@ -154,7 +153,7 @@ export async function requestAccountDeletionAction(formData: FormData): Promise<
   });
   const companyName = plan.kind === "account_and_company" ? plan.organizationName : null;
   await sendDeletionScheduledEmail(user.email, accountDeletionDate(requestedAt), companyName).catch(() => undefined);
-  await supabase.auth.signOut({ scope: "global" });
+  await signOutEverywhere();
   redirect("/sign-in?account=deletion-scheduled");
 }
 

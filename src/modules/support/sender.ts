@@ -3,16 +3,15 @@ import "server-only";
 import { cache } from "react";
 
 import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 import { clientVerifiedEmail, getClientPortal } from "@/modules/change-portal/session";
 
 /** What the session says about the sender: a staff account first, else a client portal session. */
 export const describeSender = cache(async (): Promise<{ email: string | null; lines: [string, string | null][] }> => {
-  const { data } = await (await createClient()).auth.getClaims();
-  const claims = data?.claims;
-  if (claims?.sub) {
+  const user = await getSessionUser();
+  if (user) {
     const tenant = await getOptionalTenantContext();
-    const email = typeof claims.email === "string" ? claims.email : null;
+    const email = user.email;
     return {
       email,
       lines: [

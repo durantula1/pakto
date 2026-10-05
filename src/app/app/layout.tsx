@@ -54,7 +54,7 @@ export default async function WorkspaceLayout({
   // New owners and new team members see the welcome screens once, wherever they enter the app.
   if (account && !account.welcomeSeen) redirect("/welcome");
   // Streamed into the badge so the shell never waits on it. The layout re-renders on the realtime
-  // refresh LiveNotifications triggers for each new notification, which is what keeps the badge live.
+  // refresh LiveNotifications triggers (via /api/live) for each new notification, which is what keeps the badge live.
   const unread = countUnreadNotifications(context.organizationId, context.userId);
   const unreadBadge = <Suspense fallback={null}><UnreadBadge count={unread} /></Suspense>;
   const sidebarCollapsed = cookieStore.get(SIDEBAR_COOKIE)?.value === "collapsed";
@@ -114,7 +114,7 @@ export default async function WorkspaceLayout({
   return (
     <div id={WORKSPACE_SHELL_ID} data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"} className="group/shell min-h-dvh bg-background transition-[padding] duration-200 motion-reduce:transition-none lg:pl-[16.875rem] lg:data-[sidebar=collapsed]:pl-[5.125rem]">
       <Suspense fallback={null}><NavigationProgress /></Suspense>
-      <LiveNotifications userId={context.userId} />
+      <LiveNotifications />
       <Suspense fallback={null}><ActionNotice /></Suspense>
       <aside className="hidden flex-col overflow-x-hidden rounded-2xl border bg-card p-3 text-foreground shadow-[0_0.625rem_1.875rem_-1.125rem_rgb(16_43_56/0.45)] transition-[width,padding] duration-200 motion-reduce:transition-none lg:fixed lg:inset-y-2.5 lg:left-2.5 lg:z-40 lg:flex lg:w-64 lg:overflow-y-auto lg:group-data-[sidebar=collapsed]/shell:w-16 lg:group-data-[sidebar=collapsed]/shell:px-2">
         <Link href="/app" title={context.organizationName} className="flex items-center gap-2 rounded-xl p-1 hover:bg-muted lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:p-0.5">

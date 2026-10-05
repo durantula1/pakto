@@ -3,10 +3,9 @@ import "server-only";
 import { and, eq, isNull, lte, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { notificationPreferences, organizationMembers, organizations, profiles, projectMembers, staffNotifications, teamInvites, userConsents } from "@/db/schema";
+import { authUsers, notificationPreferences, organizationMembers, organizations, profiles, projectMembers, staffNotifications, teamInvites, userConsents } from "@/db/schema";
 import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
 import { removeFolder } from "@/lib/storage";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { getAccountDeletionPlan } from "@/modules/account/queries";
 
 const DELETED_USER_NAME = "Изтрит потребител";
@@ -23,7 +22,6 @@ export async function purgeDueAccounts(now = new Date()) {
   const due = await db.select({ id: profiles.id, email: profiles.email }).from(profiles)
     .where(and(lte(profiles.deletionRequestedAt, cutoff), isNull(profiles.deletedAt)))
     .limit(50);
-  const admin = createAdminClient();
   const result = { purged: 0, skipped: [] as { userId: string; reason: string }[] };
 
   for (const account of due) {
@@ -43,11 +41,8 @@ export async function purgeDueAccounts(now = new Date()) {
       await removeCompanyFiles(plan.organizationId);
       await db.execute(sql`select app.purge_organization(${plan.organizationId}::uuid)`);
     }
-    const { error } = await admin.auth.admin.deleteUser(account.id);
-    if (error && error.status !== 404) {
-      result.skipped.push({ userId: account.id, reason: error.message });
-      continue;
-    }
+    // The login goes (its sessions and password with it, by cascade); the profile stays, anonymized below.
+    await db.delete(authUsers).where(eq(authUsers.id, account.id));
     await db.transaction(async (tx) => {
       await tx.update(profiles)
         .set({ displayName: DELETED_USER_NAME, email: null, phone: null, deletedAt: now, updatedAt: now })

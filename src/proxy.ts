@@ -1,5 +1,10 @@
-import { createServerClient } from "@supabase/ssr";
+import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
+
+import { AUTH_HINT_COOKIE } from "@/lib/auth/session-hint";
+
+/** Same as AUTH_COOKIE_PREFIX in src/lib/auth/server.ts (not imported: that module is server-only and heavy). */
+const AUTH_COOKIE_PREFIX = "pakto";
 
 function nextWithPath(request: NextRequest, pathname: string) {
   const requestHeaders = new Headers(request.headers);
@@ -13,66 +18,34 @@ export async function proxy(request: NextRequest) {
     request.headers.get("next-router-prefetch") === "1" ||
     request.headers.get("next-router-segment-prefetch") === "1" ||
     request.headers.get("purpose") === "prefetch";
-  const guardsSession =
+  const isProtected =
     pathname.startsWith("/app") ||
     pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/welcome") ||
-    pathname === "/sign-in" ||
-    pathname === "/sign-up";
+    pathname.startsWith("/welcome");
 
-  // Public routes and prefetches must not read the session. getClaims() can
-  // refresh or wipe auth cookies, and Next drops Set-Cookie on prefetch.
-  if (isPrefetch || !guardsSession) {
+  // Public routes and prefetches are passed through; Next drops Set-Cookie on prefetch anyway.
+  if (isPrefetch || !(isProtected || pathname === "/sign-in" || pathname === "/sign-up")) {
     return nextWithPath(request, pathname);
   }
 
-  let response = nextWithPath(request, pathname);
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  // Only whether the cookie is there: an optimistic check without a database read. The pages verify the
+  // session itself (getSessionUser), and the sign-in page sends a signed-in visitor on to the app.
+  const hasSession = Boolean(getSessionCookie(request, { cookiePrefix: AUTH_COOKIE_PREFIX }));
 
-  if (!supabaseUrl || !publishableKey) {
-    return response;
-  }
-
-  const supabase = createServerClient(supabaseUrl, publishableKey, {
-    cookies: {
-      getAll: () => request.cookies.getAll(),
-      setAll(cookiesToSet) {
-        for (const { name, value } of cookiesToSet) {
-          request.cookies.set(name, value);
-        }
-
-        response = nextWithPath(request, pathname);
-
-        for (const { name, value, options } of cookiesToSet) {
-          response.cookies.set(name, value, options);
-        }
-      },
-    },
-  });
-
-  const { data } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-
-  function redirectWithSession(url: URL) {
-    const redirectResponse = NextResponse.redirect(url);
-    for (const cookie of response.cookies.getAll()) {
-      redirectResponse.cookies.set(cookie);
-    }
-    return redirectResponse;
-  }
-
-  if ((pathname.startsWith("/app") || pathname.startsWith("/onboarding") || pathname.startsWith("/welcome")) && !claims) {
+  let response: NextResponse;
+  if (isProtected && !hasSession) {
     const loginUrl = new URL("/sign-in", request.url);
     // With the query, so a link like "/app/offers/new?projectId=…" opens the same form after sign-in.
     loginUrl.searchParams.set("next", pathname + request.nextUrl.search);
-    return redirectWithSession(loginUrl);
+    response = NextResponse.redirect(loginUrl);
+  } else {
+    response = nextWithPath(request, pathname);
   }
 
-  if ((pathname === "/sign-in" || pathname === "/sign-up") && claims) {
-    return redirectWithSession(new URL("/app", request.url));
-  }
-
+  // Keeps the landing page's "signed in" hint (a plain flag, readable by its script) in step with the session.
+  const hinted = request.cookies.has(AUTH_HINT_COOKIE);
+  if (hasSession && !hinted) response.cookies.set(AUTH_HINT_COOKIE, "1", { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 30 });
+  if (!hasSession && hinted) response.cookies.delete(AUTH_HINT_COOKIE);
   return response;
 }
 

@@ -14,7 +14,8 @@ const globalDatabase = globalThis as unknown as {
 
 function getSqlClient() {
   if (!globalDatabase.paktoSqlV3) {
-    globalDatabase.paktoSqlV3 = postgres(getServerEnvironment().DATABASE_URL, {
+    const environment = getServerEnvironment();
+    globalDatabase.paktoSqlV3 = postgres(environment.DATABASE_URL, {
       prepare: false,
       // Pages run their reads in parallel (about twenty at once on the project and document pages); a small pool
       // would queue them in waves of one network round trip each. Supavisor multiplexes these client connections.
@@ -24,7 +25,7 @@ function getSqlClient() {
       // Idle connections stay open for 30 minutes so a page opened after a pause does not pay that again.
       idle_timeout: 1800,
       connect_timeout: 10,
-      ssl: "require",
+      ssl: environment.DATABASE_SSL ? "require" : false,
     });
   }
 

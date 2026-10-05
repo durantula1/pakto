@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import { Wordmark } from "@/components/brand/wordmark";
 import { PERMISSION_GROUPS, can, roleLabel } from "@/lib/authz/permissions";
 import { hashPortalToken } from "@/lib/crypto/portal-token";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { acceptTeamInviteAction } from "@/modules/team/actions";
 import { getTeamInvite } from "@/modules/team/queries";
@@ -29,8 +29,7 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
   if (!invite || invite.acceptedAt || invite.revokedAt || invite.expiresAt < new Date()) {
     return <Shell><h1 className="text-2xl font-semibold tracking-tight">Поканата не е активна</h1><p className="text-muted-foreground">Линкът е използван, отменен или изтекъл. Поискай нова покана от фирмата.</p></Shell>;
   }
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   const next = encodeURIComponent(`/join/${token}`);
   const granted = PERMISSION_GROUPS.flatMap((group) => group.items).filter((item) => can(invite, item.key));
 

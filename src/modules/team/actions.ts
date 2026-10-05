@@ -17,7 +17,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { createPortalToken, hashPortalToken } from "@/lib/crypto/portal-token";
 import { escapeHtml, maskEmail, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/auth/server";
 
 export type InviteState = { error?: string; link?: string; sentTo?: string; emailError?: string };
 export type MemberAccessState = { error?: string; savedAt?: number };
@@ -102,9 +102,8 @@ class InviteError extends Error {}
 /** Expected failures come back as `{ error }`: a thrown message is hidden in production and the person sees an English error page. */
 export async function acceptTeamInviteAction(formData: FormData): Promise<{ error: string } | undefined> {
   const token = z.string().min(20).parse(formData.get("token"));
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user?.id || !user.email || !user.email_confirmed_at) return { error: "Потвърди имейла си и влез отново." };
+  const user = await getSessionUser();
+  if (!user?.emailVerified) return { error: "Потвърди имейла си и влез отново." };
   const db = getDatabase();
   try {
   await db.transaction(async (tx) => {
@@ -120,7 +119,7 @@ export async function acceptTeamInviteAction(formData: FormData): Promise<{ erro
         .where(and(eq(organizationMembers.organizationId, invite.organizationId), eq(organizationMembers.role, "owner"), eq(organizationMembers.status, "active")));
       if (owners.length !== 1) throw new InviteError("Поканата за собственик вече изисква потвърждение от втори собственик.");
     }
-    const displayName = String(user.user_metadata?.display_name ?? user.email!.split("@")[0]);
+    const displayName = user.name || user.email.split("@")[0]!;
     await tx.insert(profiles).values({ id: user.id, displayName, email: user.email!.toLowerCase() })
       .onConflictDoUpdate({ target: profiles.id, set: { email: user.email!.toLowerCase() } });
     const access = { role: invite.role, status: "active" as const, permissions: invite.permissions, allProjects: invite.allProjects };
