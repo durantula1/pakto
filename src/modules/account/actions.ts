@@ -186,6 +186,7 @@ async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyNam
   const link = `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/sign-in`;
   const what = companyName ? `Профилът ти и фирмата „${companyName}“ с всички обекти, оферти и плащания ще бъдат изтрити` : "Профилът ще бъде изтрит";
   await sendEmail({
+    kind: "account_deletion",
     to,
     subject: "Профилът ти в Pakto ще бъде изтрит",
     text: `Получихме заявка за изтриване на профила ти в Pakto.\n\n${what} окончателно на ${date}. Ако заявката не е от теб или си промениш решението, влез до тази дата и натисни „Отмени изтриването“: ${link}`,

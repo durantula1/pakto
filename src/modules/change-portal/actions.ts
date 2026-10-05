@@ -344,6 +344,7 @@ async function sendDecisionReceipt(decisionId: number) {
     ["Отпечатък", row.contentHash],
   ];
   await sendEmail({
+    kind: "decision_receipt",
     to: row.verifiedEmail,
     subject: projectSubject(document?.projectName, `Разписка: ${decisionReceiptLabels[row.decision]} — ${row.title}`),
     text: `${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nАко решението не е Ваше или е взето по грешка, можете да го оспорите тук: ${disputeUrl}`,

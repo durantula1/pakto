@@ -1794,3 +1794,30 @@ export const offerTemplates = appSchema.table(
   },
   (table) => [index("offer_templates_org_idx").on(table.organizationId, table.createdAt.desc())],
 );
+
+export type EmailOutboxStatus = "sending" | "queued" | "sent" | "failed";
+
+/** One row per outgoing email (see src/lib/email/send.ts). Bodies are kept only for mail that may be retried. */
+export const emailOutbox = appSchema.table(
+  "email_outbox",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    toAddress: text("to_address").notNull(),
+    subject: text("subject"),
+    textBody: text("text_body"),
+    htmlBody: text("html_body"),
+    replyTo: text("reply_to"),
+    status: text("status").$type<EmailOutboxStatus>().notNull().default("sending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("email_outbox_due_idx").on(table.nextAttemptAt).where(sql`${table.status} = 'queued'`),
+    index("email_outbox_sent_idx").on(table.sentAt).where(sql`${table.status} = 'sent'`),
+    index("email_outbox_created_idx").on(table.createdAt),
+  ],
+);

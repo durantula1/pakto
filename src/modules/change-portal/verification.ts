@@ -77,6 +77,7 @@ export async function issueOtp(input: {
 
   const summary = input.summary ? `<p style="margin:16px 0;padding:12px;border-radius:8px;background:#f4f4f5">${escapeHtml(input.summary)}</p>` : "";
   await sendEmail({
+    kind: "otp",
     to: input.email,
     subject: `Код за ${purposeText[input.purpose]}: ${code}`,
     text: `Вашият код за ${purposeText[input.purpose]} е ${code}. Валиден е 10 минути.${input.summary ? `\n\n${input.summary}` : ""}\n\nАко не сте го поискали Вие, не го споделяйте с никого.`,

@@ -855,6 +855,7 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
   const changesText = changeLines.length ? `\n\nКакво се промени:\n${changeLines.map((line) => `• ${line}`).join("\n")}` : "";
   const changesHtml = changeLines.length ? `<p style="margin:16px 0 4px;font-weight:600">Какво се промени</p><ul style="margin:0;padding-left:20px">${changeLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
   await sendEmail({
+    kind: "offer_sent",
     to: input.contact.email,
     subject,
     text: `Здравейте, ${input.contact.name}!\n\n${intro}${changesText}\n\nПрегледайте я тук: ${url}\n\nРешението се потвърждава с еднократен код, който получавате само Вие на този имейл.`,

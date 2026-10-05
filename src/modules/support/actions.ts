@@ -97,6 +97,7 @@ export async function sendSupportRequestAction(_: SupportState, formData: FormDa
 
   try {
     await sendEmail({
+      kind: "support",
       to: environment.SUPPORT_EMAIL,
       replyTo,
       subject: `[Pakto · ${kindLabel}] ${firstLine}${input.message.length > firstLine.length ? "…" : ""}`,

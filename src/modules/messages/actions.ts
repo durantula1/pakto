@@ -93,6 +93,7 @@ async function emailClientAnswer(document: { id: string; organizationId: string;
   const [organization] = await db.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, document.organizationId)).limit(1);
   const from = organization?.name ?? "Фирмата";
   await sendEmail({
+    kind: "client_answer", retry: true,
     to: contact.email,
     subject: `${from} Ви отговори за „${document.title}“`,
     text: `Здравейте, ${contact.name}!\n\n${from} Ви отговори:\n\n${text}\n\nВижте отговора: ${link}`,

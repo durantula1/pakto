@@ -89,6 +89,7 @@ async function sendInviteEmail(input: { to: string; link: string; organizationNa
   const who = input.inviterName ? `${input.inviterName} от ${input.organizationName}` : input.organizationName;
   const until = input.expiresAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }).replace(/\.$/, "");
   await sendEmail({
+    kind: "team_invite",
     to: input.to,
     subject: `${input.organizationName} те кани в Pakto`,
     text: `Здравей!\n\n${who} те кани в екипа в Pakto като „${input.roleLabel}“.\n\nПриеми поканата: ${input.link}\n\nЛинкът е валиден до ${until} и работи само с профил на ${input.to}.`,

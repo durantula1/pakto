@@ -229,9 +229,10 @@
 - [ ] Проверка: приложението върви на локалния Postgres (засега auth и файлове още през Supabase)
 
 ### Фаза 2: Имейли (може веднага, решава лимита 100/ден)
-- [ ] Nodemailer транспорт в `src/lib/email/send.ts`, env `SMTP_HOST/PORT/USER/PASSWORD`, `EMAIL_PROVIDER=smtp|resend`
-- [ ] Таблица `email_outbox`, worker, cron `/api/cron/email-outbox`, дневен брояч
-- [ ] Български съобщения за SMTP грешки
+- [x] Nodemailer транспорт в `src/lib/email/send.ts`, env `SMTP_HOST/PORT/USER/PASSWORD`, `EMAIL_DAILY_LIMIT`. Без `EMAIL_PROVIDER`: SMTP, ако има `SMTP_HOST`, иначе Resend (05.10.2026)
+- [x] Таблица `email_outbox` (приложена в Supabase), повторни опити, cron `/api/cron/email-outbox`, дневен брояч (05.10.2026)
+- [x] Български съобщения за SMTP грешки (05.10.2026)
+- [ ] Паролата на `info@pakto.net` в `.env.local`, проба с реален SMTP
 - [ ] Тест: OTP, известие, напомняне, дайджест, контактна форма → Mailpit локално, реална кутия на сървъра; проверка в mail-tester.com (цел ≥ 9/10)
 
 ### Фаза 3: Файлове

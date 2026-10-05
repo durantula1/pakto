@@ -1,7 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/purge-accounts", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/offer-reminders", "schedule": "0 7 * * *" }
+    {
+      "path": "/api/cron/purge-accounts",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/offer-reminders",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/email-outbox",
+      "schedule": "* * * * *"
+    }
   ]
 }

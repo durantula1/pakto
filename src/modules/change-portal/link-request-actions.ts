@@ -80,6 +80,7 @@ async function sendNewLinks(email: string) {
     if (!entry.links.length) continue;
     const list = entry.links.map((link) => `<li style="margin:8px 0"><a href="${escapeHtml(link.url)}">${escapeHtml(link.projectName)}</a></li>`).join("");
     await sendEmail({
+      kind: "portal_links",
       to: email,
       subject: `Вашите линкове към ${entry.name}`,
       text: `Поискахте нови линкове към обектите си при ${entry.name}:\n\n${entry.links.map((link) => `${link.projectName}: ${link.url}`).join("\n")}\n\nАко не сте ги поискали Вие, не препращайте този имейл.`,

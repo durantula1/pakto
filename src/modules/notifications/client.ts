@@ -41,6 +41,7 @@ async function sendClientEmail(projectId: string, message: ClientMessage) {
   if (!url) return false;
   const facts = message.facts ?? [];
   await sendEmail({
+    kind: "client_notification", retry: true,
     to: contact.email,
     subject: projectSubject(contact.projectName, message.subject),
     text: `Здравейте, ${contact.name}!\n\n${message.intro}${facts.length ? `\n\n${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}` : ""}\n\n${message.cta ?? "Отвори портала"}: ${url}${message.outro ? `\n\n${message.outro}` : ""}\n\n— ${contact.organizationName}`,
@@ -134,6 +135,7 @@ export async function sendClientDigests(now = new Date()) {
     const intro = single ? "Ето какво се промени в графика на работата от последното ни писмо:" : "Ето какво се промени в графика на работата по обектите Ви от последното ни писмо:";
     try {
       await sendEmail({
+        kind: "client_digest", retry: true,
         to,
         subject,
         text: `Здравейте, ${name}!\n\n${intro}\n\n${text}\n\n— ${organizationName}`,

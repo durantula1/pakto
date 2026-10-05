@@ -74,6 +74,7 @@ async function emailStaffNotifications(ids: string[]) {
     if (!event || !row.email || !(row.preference ?? event.emailByDefault)) continue;
     const url = row.href ? `${appUrl}${row.href}` : `${appUrl}/app/notifications`;
     await sendEmail({
+      kind: "staff_notification", retry: true,
       to: row.email,
       subject: row.title,
       text: `${row.title}${row.body ? `\n\n${row.body}` : ""}\n\nОтвори: ${url}\n\nНастрой кои известия получаваш по имейл: ${appUrl}/app/settings/notifications`,

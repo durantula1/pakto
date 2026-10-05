@@ -49,6 +49,7 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
     ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) е валидна до ${due}.`
     : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}).${due ? ` Валидна е до ${due}.` : ""}`;
   await sendEmail({
+    kind: "reminder", retry: true,
     to: contact.email,
     subject: projectSubject(document.projectName, subject),
     text: `Здравейте, ${contact.name}!\n\n${intro}\n\nМожете да я одобрите, да поискате промяна или да зададете въпрос тук: ${url}`,
