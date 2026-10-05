@@ -5,51 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { documentCode, formatDay } from "@/modules/change-orders/labels";
 import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
-import type { OfferScope } from "@/modules/projects/scope";
 import { cents, formatCents, type OfferState } from "@/modules/projects/state";
-
-/**
- * "Всички · ОФ-001 · ОФ-002 · Без оферта": one row of chips that filters a tab by offer. It shows only
- * when there is something to choose, so a project with one offer looks as it always did.
- */
-export function OfferScopeChips({ offers, scope, hasUnassigned, hrefFor, className }: {
-  offers: Pick<OfferState, "id" | "sequenceNumber" | "title">[];
-  scope: OfferScope;
-  hasUnassigned: boolean;
-  hrefFor: (scope: OfferScope) => string;
-  className?: string;
-}) {
-  // Nothing to choose with no offer, or with one offer and nothing outside it.
-  if (!offers.length || (offers.length === 1 && !hasUnassigned)) return null;
-  const chips = [
-    { scope: "all", label: "Всички" },
-    ...offers.map((offer) => ({ scope: offer.id, label: documentCode("offer", offer.sequenceNumber), title: offer.title })),
-    ...(hasUnassigned ? [{ scope: "none", label: "Без оферта" }] : []),
-  ];
-  return (
-    <nav aria-label="Филтър по оферта" className={cn("-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1", className)}>
-      {chips.map((chip) => {
-        const active = chip.scope === scope;
-        return (
-          <Link
-            key={chip.scope}
-            href={hrefFor(chip.scope)}
-            scroll={false}
-            aria-current={active ? "true" : undefined}
-            title={"title" in chip ? chip.title : undefined}
-            className={cn(
-              "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition",
-              active ? "border-foreground bg-foreground text-background" : "bg-card text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {chip.label}
-            {"title" in chip ? <span className={cn("hidden max-w-40 truncate font-normal sm:inline", active ? "text-background/70" : "text-muted-foreground/80")}>{chip.title}</span> : null}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
 
 /** A thin bar in the brand green with what it measures written next to it ("40% платено"), so it is never a bare line. */
 export function Meter({ percent, caption, label, className }: { percent: number; caption: string; label: string; className?: string }) {

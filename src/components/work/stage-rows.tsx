@@ -12,13 +12,13 @@ export const stageColumns: DataTableColumn[] = [
   { id: "due", header: "Срок", skeleton: "badge" },
 ];
 
-/** The stage's own page: the work tab of its project, where it can be changed. */
+/** The stage's own page: the stages of its offer, where it can be changed (the project's work tab for an old stage with no offer). */
 export function stageRows(stages: Stage[]) {
   return stages.map((stage) => {
     const due = stageDue(stage.days);
     return {
       id: stage.id,
-      href: `/app/projects/${stage.projectId}?tab=work`,
+      href: stage.offerId ? `/app/offers/${stage.offerId}?tab=stages` : `/app/projects/${stage.projectId}?tab=work`,
       cells: [
         <div key="title"><p className="font-medium">{stage.title}</p><p className="text-sm text-muted-foreground">{stage.clientName ? `${stage.projectName} · ${stage.clientName}` : stage.projectName}</p></div>,
         <span key="due" className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums"><span>{formatDay(stage.dueOn)}</span><Badge variant={due.tone}>{due.label}</Badge></span>,

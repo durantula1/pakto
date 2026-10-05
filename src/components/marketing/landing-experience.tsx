@@ -6,6 +6,10 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
+  CalendarCheck,
+  GitCompareArrows,
+  Lock,
+  MailCheck,
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -23,7 +27,7 @@ import { PlatformTour } from "./platform-tour";
 import { ProcessVideo } from "./process-video";
 import { ProblemSection } from "./problem-section";
 import { MobileCtaBar } from "./mobile-cta-bar";
-import { HeroSeal } from "./hero-seal";
+import { HeroScene } from "./hero-scene";
 import { SiteFooter } from "./site-chrome";
 import { HeroReveal, Reveal } from "./reveal";
 import { SecuritySection } from "./security-section";
@@ -41,6 +45,13 @@ const loadMotionFeatures = () =>
 // the top, and stays while the pointer or keyboard focus is in it.
 const HEADER_TOP = 80;
 const HEADER_STEP = 8;
+
+const heroBenefits = [
+  { icon: Lock, text: "ИЗПРАТЕНАТА ВЕРСИЯ Е ЗАКЛЮЧЕНА" },
+  { icon: MailCheck, text: "ОДОБРЕНИЕ С КОД, БЕЗ ПРОФИЛ" },
+  { icon: GitCompareArrows, text: "ВСЯКА ПРОМЯНА Е НОВА ВЕРСИЯ" },
+  { icon: CalendarCheck, text: "ПЛАЩАНИЯ И СРОКОВЕ ПО ЕТАПИ" },
+] as const;
 
 export function LandingExperience() {
   // The root layout's inline script runs once per page load; after a client navigation to "/"
@@ -157,11 +168,11 @@ export function LandingExperience() {
             </div>
           </m.header>
 
-          <section className="mf-hero relative overflow-hidden px-[6vw] pb-20 pt-32 lg:flex lg:min-h-svh lg:items-center lg:pb-16 lg:pt-28">
+          <section className="mf-hero relative overflow-hidden px-[6vw] pb-20 pt-32 lg:flex lg:min-h-[min(100svh,56rem)] lg:flex-col lg:pb-8 lg:pt-28">
             <div className="mf-hero-grid absolute inset-0" />
 
             {/* One left edge for the whole text column; the card takes the right five columns. */}
-            <div className="relative z-10 mx-auto grid w-full max-w-[93.75rem] items-center gap-14 lg:grid-cols-12 lg:gap-10">
+            <div className="relative z-10 mx-auto grid w-full max-w-[93.75rem] items-center gap-14 lg:my-auto lg:grid-cols-12 lg:gap-10">
               <div className="lg:col-span-7">
                 <HeroReveal className="mf-kicker mb-7 flex items-center gap-3">
                   <span className="size-2 rounded-full bg-[#ff765f]" />
@@ -178,8 +189,8 @@ export function LandingExperience() {
                 </HeroReveal>
                 <HeroReveal delay={0.14} className="relative z-20 mt-10">
                   <p className="max-w-[28rem] text-pretty text-lg leading-8 text-[#284955] lg:text-xl">
-                    Клиентът поиска нещо допълнително? Изпращаш му цена и срок, той
-                    одобрява от телефона си и започваш чак след това. Три
+                    Клиентът поиска нещо допълнително? Изпращаш му цена и срок,
+                    той одобрява от телефона си и започваш чак след това. Три
                     седмици по-късно няма какво да се оспорва.
                   </p>
                   <div
@@ -204,16 +215,38 @@ export function LandingExperience() {
                     </a>
                   </div>
                   <p className="mt-6 flex items-center gap-2 text-sm text-[#46636e]">
-                    <ShieldCheck className="size-4 shrink-0" /> Безплатно в бета ·
-                    без карта · клиентът не си прави профил
+                    <ShieldCheck className="size-4 shrink-0" /> Безплатно в бета
+                    · без карта · клиентът не си прави профил
                   </p>
                 </HeroReveal>
               </div>
 
               <div className="lg:col-span-5">
-                <HeroSeal />
+                <HeroScene />
               </div>
             </div>
+
+            {/* Why it holds up, in four short lines; desktop only, quiet on purpose. */}
+            <HeroReveal
+              delay={0.5}
+              className="relative z-10 mx-auto mt-6 hidden w-full max-w-[93.75rem] lg:block"
+            >
+              <ul className="grid grid-cols-4 gap-6 border-t border-[#102b38]/10 pt-5">
+                {heroBenefits.map(({ icon: Icon, text }) => (
+                  <li
+                    key={text}
+                    className="group flex items-center gap-3 font-mono text-[0.6875rem] font-bold tracking-[0.08em] text-[#284955]"
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className="size-[1.125rem] shrink-0 text-[#102b38] transition-colors group-hover:text-[#e85f48]"
+                      strokeWidth={1.75}
+                    />
+                    {text}
+                  </li>
+                ))}
+              </ul>
+            </HeroReveal>
           </section>
 
           <ProblemSection />
@@ -250,7 +283,7 @@ export function LandingExperience() {
                   </span>
                   <br />
                   <i>— писмено.</i>
-                  {/* The hero's ink seal (`#mf-ink` lives in hero-seal.tsx), pressed once more as the page closes. */}
+                  {/* The hero's ink seal (`#mf-ink` lives in hero-scene.tsx), pressed once more as the page closes. */}
                   <m.span
                     aria-hidden="true"
                     className="relative ml-[0.3em] hidden rounded-lg border-[0.3125rem] border-[#102b38] px-5 py-3 text-center align-middle font-mono normal-case leading-normal tracking-normal text-[#102b38] mix-blend-multiply [filter:url(#mf-ink)] lg:inline-block"
@@ -274,8 +307,9 @@ export function LandingExperience() {
                 </h2>
                 <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-base leading-7">
-                    Регистрираш фирмата, създаваш обект и изпращаш първата оферта
-                    още днес. Клиентът одобрява от телефона си с код от имейла.
+                    Регистрираш фирмата, създаваш обект и изпращаш първата
+                    оферта още днес. Клиентът одобрява от телефона си с код от
+                    имейла.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">
                     КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />

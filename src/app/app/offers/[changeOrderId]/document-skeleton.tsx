@@ -7,7 +7,7 @@ import { PageShell } from "@/components/workspace/page/page-shell";
 import { documentStatusStepLabels, totalLabel } from "@/modules/change-orders/labels";
 
 export const changesCardTitle = "Промени по офертата";
-export const documentTabLabels = { document: "Съдържание", messages: "Разговор", notes: "Бележки", history: "История" };
+export const documentTabLabels = { document: "Съдържание", stages: "Етапи", payments: "Плащания", messages: "Разговор", notes: "Бележки", history: "История" };
 /** Status band across the top, then the document with the facts beside it. Phones: status, document, facts. */
 export const documentLayoutClassName = "grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-6";
 export const documentAreas = { status: "lg:col-span-2", main: "min-w-0 lg:col-start-1 lg:row-start-2", facts: "lg:col-start-2 lg:row-start-2 lg:self-start" };

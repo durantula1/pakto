@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone } from "lucide-react";
+import { Building2, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Sparkles } from "lucide-react";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
 import { ScenarioPlayer } from "@/components/guide/scenario-player";
@@ -40,7 +40,7 @@ export const metadata: Metadata = { title: "Как работи" };
 export default function GuidePage() {
   return (
     <PageShell>
-      <PageHeader page="guide" />
+      <PageHeader page="guide" actions={<Link href="/welcome?again=1" className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted"><Sparkles className="size-4 text-primary" />Виж въведението отново</Link>} />
 
       <div className="grid gap-3 sm:grid-cols-3">
         {promises.map(({ icon: Icon, title, text }) => (

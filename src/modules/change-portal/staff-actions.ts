@@ -1,12 +1,12 @@
 "use server";
 
-import { and, eq, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
-import { portalGrants, portalSessions, projectContacts, timelineEvents } from "@/db/schema";
+import { changeOrderRevisions, changeOrders, portalGrants, portalSessions, projectContacts, staffNotifications, timelineEvents } from "@/db/schema";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireOwner, requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
@@ -216,4 +216,37 @@ export async function resetContactVerificationAction(formData: FormData): Promis
     });
     refresh(projectId);
   }, "Потвърждението не беше нулирано.");
+}
+
+/**
+ * A disputed decision is dealt with: a note on how, kept in the history. The decision itself is not
+ * touched. A new event, since the timeline is append-only.
+ */
+export async function resolveDecisionDisputeAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { changeOrderId, revisionId, note } = z.object({ changeOrderId: z.uuid(), revisionId: z.coerce.number().int().positive(), note: z.string().trim().min(3, "Напиши накратко как е уредено.").max(1000) }).parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    const [document] = await getDatabase().select({ projectId: changeOrders.projectId }).from(changeOrders)
+      .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
+    if (!document) throw new Error("Документът не е намерен.");
+    await requireProjectCapability(context, document.projectId, "send");
+    await getDatabase().transaction(async (tx) => {
+      const [revision] = await tx.select({ id: changeOrderRevisions.id }).from(changeOrderRevisions)
+        .where(and(eq(changeOrderRevisions.id, revisionId), eq(changeOrderRevisions.changeOrderId, changeOrderId))).limit(1);
+      if (!revision) throw new Error("Версията не е намерена.");
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`dispute:${revisionId}`}))`);
+      const events = await tx.select({ eventType: timelineEvents.eventType }).from(timelineEvents)
+        .where(and(eq(timelineEvents.revisionId, revisionId), inArray(timelineEvents.eventType, ["decision_disputed", "decision_dispute_resolved"]))).orderBy(desc(timelineEvents.createdAt), desc(timelineEvents.id)).limit(1);
+      if (events[0]?.eventType !== "decision_disputed") throw new Error("Няма отворено оспорване за тази версия.");
+      await tx.insert(timelineEvents).values({
+        organizationId: context.organizationId, projectId: document.projectId, changeOrderId, revisionId,
+        actorType: "staff", actorId: context.userId, eventType: "decision_dispute_resolved", visibility: "internal", metadata: { note },
+      });
+      // Answered, so it stops asking the team for a reply.
+      await tx.update(staffNotifications).set({ readAt: new Date() })
+        .where(and(eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.eventType, "decision_disputed"), eq(staffNotifications.href, `/app/offers/${changeOrderId}`), isNull(staffNotifications.readAt)));
+    });
+    revalidatePath(`/app/offers/${changeOrderId}`);
+    revalidatePath("/app/notifications");
+  }, "Не се получи да отбележа оспорването.");
 }

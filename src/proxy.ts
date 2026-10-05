@@ -16,6 +16,7 @@ export async function proxy(request: NextRequest) {
   const guardsSession =
     pathname.startsWith("/app") ||
     pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/welcome") ||
     pathname === "/sign-in" ||
     pathname === "/sign-up";
 
@@ -61,7 +62,7 @@ export async function proxy(request: NextRequest) {
     return redirectResponse;
   }
 
-  if ((pathname.startsWith("/app") || pathname.startsWith("/onboarding")) && !claims) {
+  if ((pathname.startsWith("/app") || pathname.startsWith("/onboarding") || pathname.startsWith("/welcome")) && !claims) {
     const loginUrl = new URL("/sign-in", request.url);
     // With the query, so a link like "/app/offers/new?projectId=…" opens the same form after sign-in.
     loginUrl.searchParams.set("next", pathname + request.nextUrl.search);

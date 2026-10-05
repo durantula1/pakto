@@ -3,12 +3,6 @@ import type { OfferState, ProjectState } from "@/modules/projects/state";
 /** Which part of the project a screen shows: everything, one offer, or the rows tied to no offer. */
 export type OfferScope = "all" | "none" | string;
 
-export function parseOfferScope(value: unknown, state: ProjectState): OfferScope {
-  if (value === "none" && (state.unassigned.milestones.length || state.unassigned.installments.length || state.unassigned.receiptsCount)) return "none";
-  if (typeof value === "string" && state.offers.some((offer) => offer.id === value)) return value;
-  return "all";
-}
-
 /**
  * The project seen through one scope. With "all" the figures are the project totals; with one offer
  * they are that agreement's; with "none" they are the unassigned rows (no contract of their own).

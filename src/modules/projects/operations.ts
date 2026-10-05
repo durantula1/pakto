@@ -48,7 +48,7 @@ async function offerOf(db: Executor, organizationId: string, projectId: string, 
 
 /**
  * A stage may point at one approved change; it then belongs to that change's offer. Otherwise it
- * belongs to the chosen offer, or to the project as a whole.
+ * belongs to the chosen offer. A stage never belongs to the project alone.
  */
 async function stageOwner(db: Executor, organizationId: string, projectId: string, input: { changeOrderId: string | null; offerId: string | null }) {
   if (input.changeOrderId) {
@@ -57,7 +57,9 @@ async function stageOwner(db: Executor, organizationId: string, projectId: strin
     if (!change) throw new Error("Промяната още не е одобрена.");
     return { changeOrderId: change.id, offerId: change.offerId };
   }
-  return { changeOrderId: null, offerId: await offerOf(db, organizationId, projectId, input.offerId) };
+  const offerId = await offerOf(db, organizationId, projectId, input.offerId);
+  if (!offerId) throw new Error("Избери към коя оферта е етапът.");
+  return { changeOrderId: null, offerId };
 }
 
 /** Installments generated from a "after a stage" term follow the stage's date. */
@@ -70,7 +72,7 @@ const milestoneFields = z.object({
   projectId: uuid,
   title: z.string().trim().min(2, "Името е твърде кратко.").max(180),
   dueOn: z.iso.date("Избери срок."),
-  /** "offer:<id>", "change:<id>" or "project" */
+  /** "offer:<id>" or "change:<id>" */
   work: z.string().optional(),
   reason: z.string().trim().max(300).optional(),
 });
@@ -242,6 +244,7 @@ export async function addInstallmentAction(formData: FormData): Promise<ActionRe
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
     const db = getDatabase();
     const offerId = await offerOf(db, context.organizationId, data.projectId, data.offerId);
+    if (!offerId) throw new Error("Избери към коя оферта е вноската.");
     const milestoneId = await checkedStage(db, data.projectId, data.milestoneId, offerId);
     await db.insert(paymentInstallments).values({ organizationId: context.organizationId, projectId: data.projectId, offerId, milestoneId, kind: data.kind, title: data.title, amount: data.amount, currency: "EUR", dueOn: data.dueOn, createdBy: context.userId });
     refresh(data.projectId);
@@ -256,6 +259,7 @@ export async function editInstallmentAction(formData: FormData): Promise<ActionR
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
     const db = getDatabase();
     const offerId = await offerOf(db, context.organizationId, data.projectId, data.offerId);
+    if (!offerId) throw new Error("Избери към коя оферта е вноската.");
     const milestoneId = await checkedStage(db, data.projectId, data.milestoneId, offerId);
     await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${data.projectId}))`);
@@ -302,7 +306,11 @@ async function receiptOffer(db: Executor, organizationId: string, projectId: str
     if (!installment) throw new Error("Вноската не принадлежи на този обект.");
     return installment.offerId;
   }
-  return offerOf(db, organizationId, projectId, offerId);
+  if (offerId) return offerOf(db, organizationId, projectId, offerId);
+  // With a single offer in the project there is nothing to choose: the payment is its own.
+  const offers = await db.select({ id: changeOrders.id }).from(changeOrders)
+    .where(and(eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), eq(changeOrders.documentKind, "offer"), isNull(changeOrders.archivedAt), sql`${changeOrders.lifecycleStatus} <> 'canceled'`)).limit(2);
+  return offers.length === 1 ? offers[0]!.id : null;
 }
 
 function emailReceipt(projectId: string, input: { amount: string; currency: string; receivedOn: string; method: string; corrected?: boolean }) {

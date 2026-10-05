@@ -51,6 +51,8 @@ export default async function WorkspaceLayout({
   const userId = await getSessionUserId();
   const [context, account, cookieStore] = await Promise.all([getOptionalTenantContext(), userId ? getAccountSummary(userId) : null, cookies()]);
   if (!context) redirect("/onboarding");
+  // New owners and new team members see the welcome screens once, wherever they enter the app.
+  if (account && !account.welcomeSeen) redirect("/welcome");
   // Streamed into the badge so the shell never waits on it. The layout re-renders on the realtime
   // refresh LiveNotifications triggers for each new notification, which is what keeps the badge live.
   const unread = countUnreadNotifications(context.organizationId, context.userId);

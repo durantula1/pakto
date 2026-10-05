@@ -90,6 +90,7 @@ function StageList({ view, now, next, name, foldDone }: {
       const current = item.id === next?.id;
       const overdue = !completed && item.dueOn < now;
       const offerName = name(item.offerId);
+      const change = item.changeOrderId ? view.changes.find((entry) => entry.id === item.changeOrderId) : null;
       const [day, month] = formatShortDay(completed && item.completedAt ? sofiaDay.format(item.completedAt) : item.dueOn).split(" ");
       const when = completed
         ? "Завършен"
@@ -113,7 +114,7 @@ function StageList({ view, now, next, name, foldDone }: {
           <div className={cn("rounded-2xl px-3.5 py-3", current ? "bg-sidebar text-sidebar-foreground" : completed ? "bg-tile-mint/60" : "bg-muted/60")}>
             <p className={cn("font-semibold", current && "text-white")}>
               {item.title}
-              {offerName ? <span className={cn("ml-1.5 text-xs font-normal", current ? "text-sidebar-foreground/70" : "text-muted-foreground")}>{offerName}</span> : null}
+              {offerName || change ? <span className={cn("ml-1.5 text-xs font-normal", current ? "text-sidebar-foreground/70" : "text-muted-foreground")}>{[offerName, change ? `от ${documentName("change", change.sequenceNumber)}` : null].filter(Boolean).join(" · ")}</span> : null}
             </p>
             <p className={cn("text-sm", current ? "text-sidebar-foreground/75" : "text-muted-foreground", overdue && (current ? "font-medium text-primary" : "text-destructive"))}>{when}</p>
             {item.previousDueOn && !completed ? <Quote tone="warning" className={cn("mt-1 text-xs", current ? "text-sidebar-foreground/75" : "text-muted-foreground")}>Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}

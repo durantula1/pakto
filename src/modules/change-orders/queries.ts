@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, exists, ilike, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, gt, ilike, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import {
@@ -280,7 +280,15 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
       .where(and(eq(timelineEvents.changeOrderId, changeOrderId), eq(timelineEvents.eventType, "decision_disputed"), eq(timelineEvents.revisionId, change.revisionId)))
       .orderBy(desc(timelineEvents.createdAt), desc(timelineEvents.id))
       .limit(1)
-      .then((rows) => rows[0] ?? null),
+      .then(async (rows) => {
+        const dispute = rows[0];
+        if (!dispute) return null;
+        // Dealt with: a later resolving note from the team (the timeline is append-only, so it is a new event).
+        const [resolved] = await getDatabase().select({ createdAt: timelineEvents.createdAt, metadata: timelineEvents.metadata }).from(timelineEvents)
+          .where(and(eq(timelineEvents.changeOrderId, changeOrderId), eq(timelineEvents.eventType, "decision_dispute_resolved"), eq(timelineEvents.revisionId, change.revisionId), gt(timelineEvents.id, dispute.id)))
+          .orderBy(desc(timelineEvents.id)).limit(1);
+        return { ...dispute, resolved: resolved ?? null };
+      }),
     getDatabase()
       .select()
       .from(portalDecisions)

@@ -374,202 +374,9 @@
   animation: mf-rise-solid 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/*
- * Hero seal: a change order fills in, the client says "yes" with a code, the version locks and is
- * stamped. Every rule animates FROM the earlier state, so the element's own styles are the final,
- * approved state: reduced motion (or a browser without animations) shows the sealed version at once.
- * `--d` on each element is its beat in the ~3 s sequence.
- */
-@property --mf-total {
-  syntax: "<integer>";
-  inherits: false;
-  initial-value: 384;
-}
-
-.mf-seal-anim {
-  animation-delay: var(--d, 0ms);
-  animation-fill-mode: both;
-}
-
-/* Flat card: it rises in once, then nudges when the stamp lands. */
-.mf-seal-card {
-  animation:
-    mf-seal-rise var(--mf-dur-enter) var(--mf-ease-out) 100ms both,
-    mf-seal-nudge 260ms var(--mf-ease-out) 2580ms both;
-}
-
-/* Ink: a rough edge from the SVG filter in hero-seal.tsx, multiplied into the paper. */
-.mf-seal-stamp {
-  transform: rotate(-7deg);
-  opacity: 0.88;
-  mix-blend-mode: multiply;
-  filter: url(#mf-ink);
-}
-
-.mf-seal-row {
-  animation-name: mf-seal-row;
-  animation-duration: 360ms;
-  animation-timing-function: var(--mf-ease-out);
-}
-
-.mf-seal-count::after {
-  counter-reset: mf-total var(--mf-total);
-  content: counter(mf-total);
-}
-
-.mf-seal-count {
-  --mf-total: 384;
-}
-
-.mf-seal-total .mf-seal-count {
-  animation: mf-seal-count 700ms cubic-bezier(0.16, 1, 0.3, 1) 800ms both;
-}
-
-.mf-seal-yes {
-  animation-name: mf-seal-yes;
-  animation-duration: 420ms;
-  animation-timing-function: var(--mf-ease-out);
-}
-
-.mf-seal-current {
-  animation-name: mf-seal-fade-in;
-  animation-duration: var(--mf-dur-swap);
-  animation-timing-function: var(--mf-ease-out);
-}
-
-.mf-seal-out {
-  opacity: 0;
-  animation-name: mf-seal-fade-out;
-  animation-duration: var(--mf-dur-swap);
-  animation-timing-function: var(--mf-ease-in-out);
-}
-
-.mf-seal-in {
-  animation-name: mf-seal-fade-in;
-  animation-duration: var(--mf-dur-swap);
-  animation-timing-function: var(--mf-ease-in-out);
-}
-
-/* Strokes that draw themselves: the path's own `pathLength="1"` makes 1 the whole outline. */
-.mf-seal-draw {
-  stroke-dasharray: 1;
-  animation-name: mf-seal-draw;
-  animation-duration: 380ms;
-  animation-timing-function: var(--mf-ease-out);
-}
-
-/* The line between two versions grows from the older one. */
-.mf-seal-line {
-  transform-origin: left;
-  animation-name: mf-seal-line;
-  animation-duration: 320ms;
-  animation-timing-function: var(--mf-ease-out);
-}
-
-.mf-seal-hash {
-  animation-name: mf-seal-type;
-  animation-duration: 520ms;
-  animation-timing-function: steps(18, end);
-}
-
-.mf-seal-stamp {
-  animation-name: mf-seal-stamp;
-  animation-duration: 420ms;
-}
-
-/* `translate`/`scale`, not `transform`, so it adds to the entrance instead of replacing it. */
-@keyframes mf-seal-nudge {
-  40% {
-    translate: 0 0.125rem;
-    scale: 0.995;
-  }
-}
-
-@keyframes mf-seal-rise {
-  from {
-    opacity: 0;
-    transform: translateY(1.5rem);
-  }
-}
-
-@keyframes mf-seal-row {
-  from {
-    opacity: 0;
-    transform: translateX(0.5rem);
-  }
-}
-
-@keyframes mf-seal-count {
-  from {
-    --mf-total: 0;
-  }
-}
-
-/* The client's answer slides up out of the card's bottom edge. */
-@keyframes mf-seal-yes {
-  from {
-    opacity: 0;
-    clip-path: inset(100% 0 0 0);
-  }
-}
-
-@keyframes mf-seal-fade-out {
-  from {
-    opacity: 1;
-  }
-}
-
-@keyframes mf-seal-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes mf-seal-draw {
-  from {
-    stroke-dashoffset: 1;
-  }
-}
-
-@keyframes mf-seal-line {
-  from {
-    transform: scaleX(0);
-  }
-}
-
-@keyframes mf-seal-type {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-}
-
-/* Falls fast (accelerating), lands, then settles a touch. */
-@keyframes mf-seal-stamp {
-  0% {
-    opacity: 0;
-    transform: scale(1.7) rotate(-16deg);
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  45% {
-    opacity: 0.88;
-    transform: scale(0.94) rotate(-7deg);
-    animation-timing-function: var(--mf-ease-out);
-  }
-  100% {
-    transform: rotate(-7deg);
-  }
-}
-
-/* A status chip that changes text fades in, so the swap reads as a state change. */
-.mf-chip-swap {
-  animation: mf-seal-fade-in var(--mf-dur-swap) var(--mf-ease-out);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .mf-rise,
-  .mf-rise-solid,
-  .mf-seal *,
-  .mf-seal-count {
+  .mf-rise-solid {
     animation: none !important;
   }
 }
@@ -578,4 +385,438 @@
 html:not([data-auth="in"]) .mf-when-in,
 html[data-auth="in"] .mf-when-out {
   display: none !important;
+}
+
+/*
+ * Hero scene: one ~10 s loop. The markup is the approved final state (what reduced motion shows);
+ * every rule below starts from the earlier state, plays its beat, holds, and fades out together
+ * at 96-99 % so the loop restarts clean. Beats (% of the loop): 10 version swap and diff rows,
+ * 12-22 price counts 450 to 384, 20 deadline, 24 notification, 32-44 code, 52 button, 54 stamp
+ * and status, 56 footer, 64 payment stages. `on-N` appears at N %, `off-N` is the state it replaces.
+ */
+@property --mf-price {
+  syntax: "<integer>";
+  inherits: true;
+  initial-value: 384;
+}
+
+:where(.mf-scene) [class*="mf-sc-"] {
+  animation-duration: 10s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.mf-sc-price::after {
+  counter-reset: mf-price var(--mf-price);
+  content: counter(mf-price);
+}
+.mf-sc-price {
+  --mf-price: 384;
+  animation-name: mf-sc-price;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mf-sc-on-10 {
+  animation-name: mf-sc-on-10;
+}
+.mf-sc-off-10 {
+  animation-name: mf-sc-off-10;
+}
+.mf-sc-on-20 {
+  animation-name: mf-sc-on-20;
+}
+.mf-sc-off-20 {
+  animation-name: mf-sc-off-20;
+}
+.mf-sc-off-52 {
+  animation-name: mf-sc-off-52;
+}
+.mf-sc-on-52 {
+  animation-name: mf-sc-on-52;
+}
+.mf-sc-off-54 {
+  animation-name: mf-sc-off-54;
+}
+.mf-sc-on-54 {
+  animation-name: mf-sc-on-54;
+}
+.mf-sc-rows {
+  animation-name: mf-sc-rows;
+}
+.mf-sc-screen {
+  animation-name: mf-sc-screen;
+}
+.mf-sc-notif {
+  animation-name: mf-sc-notif;
+}
+.mf-sc-code {
+  animation-name: mf-sc-code;
+  animation-timing-function: linear;
+}
+.mf-sc-btn {
+  animation-name: mf-sc-btn;
+}
+.mf-sc-stamp {
+  animation-name: mf-sc-stamp;
+}
+.mf-sc-sheet {
+  animation-name: mf-sc-nudge;
+}
+.mf-sc-footer {
+  animation-name: mf-sc-footer;
+}
+.mf-sc-hash {
+  animation-name: mf-sc-hash;
+  animation-timing-function: steps(18, end);
+}
+.mf-sc-chips {
+  animation-name: mf-sc-chips;
+}
+.mf-sc-due {
+  animation-name: mf-sc-due;
+}
+
+@keyframes mf-sc-price {
+  0%,
+  12% {
+    --mf-price: 450;
+  }
+  22%,
+  96% {
+    --mf-price: 384;
+  }
+  100% {
+    --mf-price: 450;
+  }
+}
+@keyframes mf-sc-on-10 {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  13%,
+  96% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-off-10 {
+  0%,
+  10% {
+    opacity: 1;
+  }
+  13%,
+  96% {
+    opacity: 0;
+  }
+  99%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes mf-sc-on-20 {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  23%,
+  96% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-off-20 {
+  0%,
+  20% {
+    opacity: 1;
+  }
+  23%,
+  96% {
+    opacity: 0;
+  }
+  99%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes mf-sc-on-52 {
+  0%,
+  52% {
+    opacity: 0;
+  }
+  54%,
+  96% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-off-52 {
+  0%,
+  52% {
+    opacity: 1;
+  }
+  54%,
+  96% {
+    opacity: 0;
+  }
+  99%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes mf-sc-on-54 {
+  0%,
+  54% {
+    opacity: 0;
+  }
+  57%,
+  96% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-off-54 {
+  0%,
+  54% {
+    opacity: 1;
+  }
+  57%,
+  96% {
+    opacity: 0;
+  }
+  99%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* The change lines slide in from the right, then leave with the loop. */
+@keyframes mf-sc-rows {
+  0%,
+  10% {
+    opacity: 0;
+    translate: 0.75rem 0;
+  }
+  15%,
+  96% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  99%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+/* The phone is dim until the notification wakes it. */
+@keyframes mf-sc-screen {
+  0%,
+  25% {
+    opacity: 0.3;
+  }
+  29%,
+  96% {
+    opacity: 1;
+  }
+  99%,
+  100% {
+    opacity: 0.3;
+  }
+}
+@keyframes mf-sc-notif {
+  0%,
+  22% {
+    opacity: 0;
+    translate: 0 -1rem;
+    scale: 0.94;
+  }
+  27%,
+  44% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  48%,
+  100% {
+    opacity: 0;
+    translate: 0 -0.5rem;
+    scale: 0.97;
+  }
+}
+/* Six digits typed one after another (the grid underneath keeps the empty cells). */
+@keyframes mf-sc-code {
+  0%,
+  32% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 1;
+    animation-timing-function: steps(6, end);
+  }
+  44%,
+  96% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  99% {
+    clip-path: inset(0 0 0 0);
+    opacity: 0;
+  }
+  100% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-btn {
+  0%,
+  52% {
+    background-color: #102b38;
+  }
+  54%,
+  96% {
+    background-color: #16623f;
+  }
+  99%,
+  100% {
+    background-color: #102b38;
+  }
+}
+/* Falls fast, lands, settles; the sheet dips a touch when it lands. */
+@keyframes mf-sc-stamp {
+  0%,
+  54% {
+    opacity: 0;
+    scale: 1.7;
+    rotate: -16deg;
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+  }
+  57% {
+    opacity: 0.9;
+    scale: 0.94;
+    rotate: -7deg;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  60%,
+  96% {
+    opacity: 0.9;
+    scale: 1;
+    rotate: -7deg;
+  }
+  99%,
+  100% {
+    opacity: 0;
+    scale: 1;
+    rotate: -7deg;
+  }
+}
+@keyframes mf-sc-nudge {
+  0%,
+  55% {
+    translate: 0 0;
+  }
+  57% {
+    translate: 0 0.2rem;
+  }
+  61%,
+  100% {
+    translate: 0 0;
+  }
+}
+@keyframes mf-sc-footer {
+  0%,
+  57% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+  61%,
+  96% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+  99% {
+    clip-path: inset(0 0 0 0);
+    opacity: 0;
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+  }
+}
+@keyframes mf-sc-hash {
+  0%,
+  61% {
+    clip-path: inset(0 100% 0 0);
+  }
+  66%,
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes mf-sc-chips {
+  0%,
+  64% {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+  69%,
+  96% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  99%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+/* One soft ring on the first payment stage once it opens. */
+@keyframes mf-sc-due {
+  0%,
+  70% {
+    outline-color: transparent;
+    outline-offset: 0;
+  }
+  74% {
+    outline-color: rgb(232 95 72 / 55%);
+    outline-offset: 0.125rem;
+  }
+  84%,
+  100% {
+    outline-color: transparent;
+    outline-offset: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-scene [class*="mf-sc-"] {
+    animation: none !important;
+  }
+}
+
+/* Hero scene depth: layers drift with the pointer (hero-parallax.tsx), each by its own --depth. */
+.mf-layer {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(
+    calc(var(--mx, 0) * var(--depth, 0) * 0.5rem),
+    calc(var(--my, 0) * var(--depth, 0) * 0.375rem),
+    0
+  );
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Off screen: freeze the loop. */
+[data-paused="true"] [class*="mf-sc-"] {
+  animation-play-state: paused;
 }

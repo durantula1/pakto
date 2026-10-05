@@ -42,6 +42,7 @@ export async function listStages(input: { context: TenantContext; range: StageRa
       title: projectMilestones.title,
       dueOn: projectMilestones.dueOn,
       status: projectMilestones.status,
+      offerId: projectMilestones.offerId,
       projectId: projects.id,
       projectName: projects.name,
       clientName: clients.name,

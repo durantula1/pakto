@@ -31,6 +31,11 @@ import { pageHref, parsePage } from "@/lib/pagination";
 import { countChangeOrders, getChangeOrder, getChangeOrderTitle, listAbsorbableChanges } from "@/modules/change-orders/queries";
 import { getActivePortalLink } from "@/modules/change-portal/links";
 import { changeHasStage } from "@/modules/projects/queries";
+import { getProjectState } from "@/modules/projects/state";
+import { listPaymentInbox } from "@/modules/projects/payment-inbox";
+import { OfferPayments, OfferWork } from "@/components/projects/offer-execution";
+import { CountPill } from "@/components/workspace/tab-count";
+import { sofiaTodayIso } from "@/lib/sofia-today";
 import { loadSignature } from "@/modules/change-portal/signature";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
 import { OfferChangesTable, offerChangeColumns } from "./offer-changes-table";
@@ -59,6 +64,8 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
       head.documentKind === "change" && head.approvedRevisionId ? changeHasStage(context.organizationId, changeOrderId) : Promise.resolve(true),
       // A newer version of an approved offer: what is agreed now is that version plus its approved changes.
       head.documentKind === "offer" && head.approvedRevisionId && head.approvedRevisionId !== head.revisionId ? listAbsorbableChanges(context.organizationId, changeOrderId) : Promise.resolve([]),
+      // An approved offer carries its own work and money: stages, installments, payments.
+      head.documentKind === "offer" && head.approvedRevisionId ? Promise.all([getProjectState(context.organizationId, head.projectId), listPaymentInbox(context.organizationId, head.projectId)]) : Promise.resolve(null),
     ]),
   });
   if (!change) notFound();
@@ -66,9 +73,11 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const changesPage = parsePage(query.changesPage);
   const path = `/app/offers/${change.id}`;
   // The changes table, conversation, notes and tab counts stream in behind their own skeletons.
-  const [member, portalUrl, offerChangesTotal, attachments, hasStage, inForceChanges] = change.extra;
+  const [member, portalUrl, offerChangesTotal, attachments, hasStage, inForceChanges, executionReads] = change.extra;
+  const execution = executionReads && executionReads[0] ? { state: executionReads[0], inbox: executionReads[1] } : null;
   // An approved change whose work has not started and has no stage yet: offer to schedule it.
-  const addStageHref = !hasStage && ["not_started", "scheduled"].includes(change.workStatus) && can(member, "milestones.manage") ? `/app/projects/${change.projectId}?tab=work&stageFor=${change.id}` : null;
+  // The stage is added in the work of the offer the change belongs to.
+  const addStageHref = !hasStage && ["not_started", "scheduled"].includes(change.workStatus) && can(member, "milestones.manage") && change.baselineOffer ? `/app/offers/${change.baselineOffer.id}?tab=stages&stageFor=${change.id}` : null;
   if (!can(member, "drafts.view_all") && !change.frozenAt && change.revisionCreatedBy !== context.userId) notFound();
   const canEdit = revisableStatus(change.documentKind, change.revisionStatus) && can(member, change.documentKind === "offer" ? "offers.edit" : "changes.draft");
   // Old links opened the editor in place; it has its own page now.
@@ -87,7 +96,21 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
 
   const code = documentCode(change.documentKind, change.sequenceNumber);
   const requestedTab = typeof query.tab === "string" ? query.tab : "";
-  const tab = eventsBefore !== undefined ? "history" : requestedTab === "messages" && showThread ? "messages" : requestedTab === "notes" && canNotes ? "notes" : requestedTab === "history" ? "history" : "document";
+  const offerState = execution?.state.offers.find((item) => item.id === change.id) ?? null;
+  // Work and money of an offer in force (or one waiting for a new version to be decided).
+  const inForce = !!offerState && (offerState.inForce || offerState.approved);
+  const showMoney = can(member, "payments.record") || can(member, "finance.view");
+  const projectOpen = change.projectStatus === "active";
+  const tab = eventsBefore !== undefined ? "history"
+    : requestedTab === "messages" && showThread ? "messages"
+    : requestedTab === "notes" && canNotes ? "notes"
+    : requestedTab === "history" ? "history"
+    : requestedTab === "stages" && inForce ? "stages"
+    : requestedTab === "payments" && inForce && showMoney ? "payments"
+    : "document";
+  const today = sofiaTodayIso();
+  const claimsOpen = execution ? execution.inbox.claims.filter((claim) => claim.offerId === change.id).length + execution.inbox.disputes.filter((item) => item.offerId === change.id).length : 0;
+  const openStages = execution ? execution.state.milestones.filter((item) => item.offerId === change.id && item.status !== "completed").length : 0;
   const showChanges = isOffer && (!!change.approvedRevisionId || offerChangesTotal > 0);
 
   return (
@@ -122,6 +145,8 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
           <DetailTabs key={tab} defaultTab={tab}>
             <TabsList>
               <TabsTrigger id="document">{documentTabLabels.document}</TabsTrigger>
+              {inForce ? <TabsTrigger id="stages">{documentTabLabels.stages}{openStages ? <CountPill value={openStages} /> : null}</TabsTrigger> : null}
+              {inForce && showMoney ? <TabsTrigger id="payments">{documentTabLabels.payments}{claimsOpen ? <CountPill value={claimsOpen} highlight /> : null}</TabsTrigger> : null}
               {thread ? <TabsTrigger id="messages">{documentTabLabels.messages}<Suspense fallback={null}><TabCount count={thread.then((data) => data.unread)} highlight={Promise.resolve(true)} /></Suspense></TabsTrigger> : null}
               {notesTotal ? <TabsTrigger id="notes">{documentTabLabels.notes}<Suspense fallback={null}><TabCount count={notesTotal} /></Suspense></TabsTrigger> : null}
               <TabsTrigger id="history">{documentTabLabels.history}</TabsTrigger>
@@ -147,6 +172,12 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
                 </Card>
               ) : null}
             </TabsContent>
+            {inForce && execution && offerState ? <TabsContent id="stages" className="pt-5">
+              <OfferWork state={execution.state} offer={offerState} projectId={change.projectId} canManage={can(member, "milestones.manage") && projectOpen} today={today} stageFor={typeof query.stageFor === "string" ? query.stageFor : null} />
+            </TabsContent> : null}
+            {inForce && showMoney && execution && offerState ? <TabsContent id="payments" className="pt-5">
+              <OfferPayments state={execution.state} offer={offerState} projectId={change.projectId} canRecord={can(member, "payments.record") && change.projectStatus !== "archived"} today={today} inbox={execution.inbox} />
+            </TabsContent> : null}
             {thread ? <TabsContent id="messages" className="pt-4">
               <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} thread={thread} /></Suspense>
             </TabsContent> : null}

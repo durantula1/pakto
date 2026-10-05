@@ -72,7 +72,7 @@ export function NotesPanel({ projectId, changeOrderId, notes, legacy = [], curre
           ))}
         </ul>
       ) : (
-        <EmptyResult className="rounded-xl border border-dashed" title="Още няма бележки." description="Запиши неща, които екипът трябва да помни за този обект." />
+        <EmptyResult className="rounded-xl border border-dashed" title="Още няма бележки." description={changeOrderId ? "Запиши какво екипът трябва да помни за тази оферта." : "Запиши неща, които екипът трябва да помни за този обект. Бележките към оферти са в самите оферти и се виждат и тук."} />
       )}
       {pagination}
     </section>

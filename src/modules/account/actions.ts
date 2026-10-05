@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient as createStatelessClient } from "@supabase/supabase-js";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -52,6 +52,19 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     .set({ displayName: parsed.data.displayName, phone: parsed.data.phone || null, updatedAt: new Date() })
     .where(eq(profiles.id, userId));
   revalidatePath("/app", "layout");
+}
+
+const welcomeTargets = ["/app", "/app/projects/new", "/app/offers/new", "/app/guide"] as const;
+
+/** Marks the welcome screens as seen (finished or skipped) and opens where the user chose. */
+export async function finishWelcomeAction(formData: FormData) {
+  const next = z.enum(welcomeTargets).catch("/app").parse(formData.get("next"));
+  const { user } = await currentUser();
+  await getDatabase().update(profiles)
+    .set({ welcomeSeenAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(profiles.id, user.id), isNull(profiles.welcomeSeenAt)));
+  revalidatePath("/app", "layout");
+  redirect(next);
 }
 
 export async function changeEmailAction(formData: FormData): Promise<ActionResult> {

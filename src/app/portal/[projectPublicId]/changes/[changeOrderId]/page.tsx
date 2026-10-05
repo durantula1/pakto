@@ -9,7 +9,6 @@ import { PortalEmailVerification } from "@/components/portal/email-verification"
 import { maskEmail } from "@/lib/email/send";
 import { Badge } from "@/components/ui/badge";
 import { dueText } from "@/components/portal/action-card";
-import { OfferTabs, type OfferTab } from "@/components/portal/offer-tabs";
 import { OfferQuestions } from "@/components/portal/offer-questions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
@@ -54,8 +53,6 @@ const eventLabels: Record<string, string> = {
   acceptance_accepted: "Работата е приета",
   acceptance_issues: "Изпратени забележки по работата",
 };
-
-const tabs: OfferTab[] = ["work", "payments", "document"];
 
 type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode };
 const statusStyles: Record<Status["tone"], { className: string; icon: typeof Info }> = {
@@ -310,11 +307,6 @@ export default async function PortalChangePage({
       isChange={change.documentKind === "change"}
     />
   );
-  // Old "?questions=1" links from emails open the tab the questions live in.
-  // The work tab leads once there is work to show; until then the client lands on what they approved.
-  const hasWork = !!agreement && (agreement.milestones.length > 0 || !!offerState?.acceptance);
-  const initialTab = tabs.find((tab) => tab === query.tab) ?? (query.questions || !hasWork ? "document" : "work");
-
   const header = (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
@@ -365,24 +357,49 @@ export default async function PortalChangePage({
     </div>
   );
 
-  // B. An offer in force: the work, its payments and the approved document, one tab at a time.
-  if (agreement) return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-5">
+  // B. An offer in force: one page from top to bottom. What is agreed, how the work goes, the money, then the document itself.
+  const heading = "px-1 text-xl font-semibold tracking-tight";
+  if (agreement && offerState) return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
       {header}
-      <OfferTabs
-        key={initialTab}
-        initial={initialTab}
-        work={
-          <>
-            {offerState?.acceptance ? (
-              <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
-            ) : null}
-            <PortalSchedule view={agreement} />
-          </>
-        }
-        payments={<PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived" && data.session.contactRole === "approver"} />}
-        document={<>{diff}{details}{questions}{history}</>}
-      />
+      {offerState.acceptance ? (
+        <AcceptancePanel projectPublicId={projectPublicId} offerId={change.id} code={name} signerName={data.session.contactName} acceptance={offerState.acceptance} organizationName={data.project.organizationName} canAnswer={projectActive && data.session.contactRole === "approver" && !!data.session.contactEmailVerifiedAt} />
+      ) : null}
+      <section id="progress" aria-labelledby="progress-title" className="flex scroll-mt-20 flex-col gap-3">
+        <h2 id="progress-title" className={heading}>Как върви работата</h2>
+        <PortalSchedule view={agreement} />
+      </section>
+      <section id="payments" aria-labelledby="payments-title" className="flex scroll-mt-20 flex-col gap-3">
+        <h2 id="payments-title" className={heading}>Плащания</h2>
+        <PortalPayments view={agreement} portalPublicId={projectPublicId} claims={data.claims.filter((claim) => claim.offerId === change.id)} canAct={data.project.status !== "archived" && data.session.contactRole === "approver"} />
+      </section>
+      {offerState.changes.length ? (
+        <section id="changes" aria-labelledby="changes-title" className="flex scroll-mt-20 flex-col gap-3">
+          <h2 id="changes-title" className={heading}>Промени по офертата</h2>
+          <ul className="flex flex-col gap-2 rounded-3xl bg-card p-2">
+            {offerState.changes.map((item) => {
+              const minor = cents(item.total);
+              return (
+                <li key={item.id}>
+                  <Link href={`/portal/${projectPublicId}/changes/${item.id}`} className="flex items-center gap-3 rounded-2xl p-2.5 hover:bg-muted/60">
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-xs text-muted-foreground">{documentName("change", item.sequenceNumber)}</span>
+                      <span className="line-clamp-2 text-sm leading-snug font-medium">{item.title}</span>
+                    </span>
+                    <span className={cn("shrink-0 text-sm tabular-nums", minor === 0n ? "text-muted-foreground" : "font-medium")}>{minor === 0n ? "без промяна в цената" : `${minor < 0n ? "−" : "+"}${formatCents(minor < 0n ? -minor : minor, offerState.currency)}`}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+      <section id="document" aria-labelledby="document-title" className="flex scroll-mt-20 flex-col gap-4">
+        <h2 id="document-title" className={heading}>Офертата</h2>
+        {diff}{details}
+      </section>
+      {questions}
+      {history}
     </div>
   );
 

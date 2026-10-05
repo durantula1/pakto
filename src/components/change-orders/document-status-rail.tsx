@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResolveDecisionDisputeDialog } from "@/components/change-orders/dispute-resolve";
 import { CopyPortalLink } from "@/components/change-orders/copy-portal-link";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { maskEmail } from "@/lib/email/send";
@@ -206,7 +207,7 @@ export function DocumentStatusCard({
   } else if (status === "approved" && addStageHref) {
     primary = (
       <Link href={addStageHref} className={primaryClassName}>
-        <CalendarClock className="size-4" /> Добави етап
+        <CalendarClock className="size-4" /> Добави срок
       </Link>
     );
   }
@@ -228,21 +229,36 @@ export function DocumentStatusCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {change.disputeEvent ? (
-          <div
-            role="alert"
-            className="rounded-lg bg-tile-coral p-3 text-sm text-tile-coral-foreground"
-          >
-            <p className="font-semibold">Клиентът оспори решението</p>
-            <p className="mt-1">
-              {typeof change.disputeEvent.metadata.reason === "string" &&
-              change.disputeEvent.metadata.reason
-                ? change.disputeEvent.metadata.reason
-                : "Клиентът твърди, че не е взел това решение."}
-            </p>
-            <p className="mt-1 text-xs opacity-80">
-              {dateTime(change.disputeEvent.createdAt)}
-            </p>
-          </div>
+          change.disputeEvent.resolved ? (
+            <div role="status" className="rounded-lg bg-muted p-3 text-sm">
+              <p className="font-semibold">Оспорването е уредено</p>
+              <p className="mt-1 text-muted-foreground">
+                Клиентът написа: {typeof change.disputeEvent.metadata.reason === "string" && change.disputeEvent.metadata.reason ? change.disputeEvent.metadata.reason : "твърди, че не е взел това решение."}
+              </p>
+              {typeof change.disputeEvent.resolved.metadata.note === "string" ? <p className="mt-1">Уредено: {change.disputeEvent.resolved.metadata.note}</p> : null}
+              <p className="mt-1 text-xs text-muted-foreground">{dateTime(change.disputeEvent.createdAt)} → {dateTime(change.disputeEvent.resolved.createdAt)}</p>
+            </div>
+          ) : (
+            <div
+              role="alert"
+              className="rounded-lg bg-tile-coral p-3 text-sm text-tile-coral-foreground"
+            >
+              <p className="font-semibold">Клиентът оспори решението</p>
+              <p className="mt-1">
+                {typeof change.disputeEvent.metadata.reason === "string" &&
+                change.disputeEvent.metadata.reason
+                  ? change.disputeEvent.metadata.reason
+                  : "Клиентът твърди, че не е взел това решение."}
+              </p>
+              <p className="mt-1 text-xs opacity-80">
+                {dateTime(change.disputeEvent.createdAt)}
+              </p>
+              <p className="mt-2 opacity-90">
+                Решението остава в сила. Свържи се с клиента. Ако не е вярно, анулирай документа и изпрати нов. Когато е уредено, отбележи го.
+              </p>
+              {canSend ? <ResolveDecisionDisputeDialog changeOrderId={change.id} revisionId={change.revisionId} /> : null}
+            </div>
+          )
         ) : null}
         {inForce ? (
           <div role="status" className="rounded-lg bg-muted p-3 text-sm">
