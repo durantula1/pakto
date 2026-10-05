@@ -1,0 +1,45 @@
+# Local development: Postgres 17 (same version and setup as the server) and Mailpit, which catches every
+# email the app sends (http://localhost:8025). Start with `pnpm db:up`.
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pakto_owner
+      POSTGRES_PASSWORD: pakto_dev
+      POSTGRES_DB: pakto
+      PAKTO_APP_PASSWORD: pakto_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pakto-dev-pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pakto_owner -d pakto"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+  # `pnpm db:migrate` applies db/migrations/ (dbmate); `pnpm db:new name` creates a new migration file.
+  migrate:
+    image: ghcr.io/amacneil/dbmate:2
+    profiles: ["tools"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://pakto_owner:pakto_dev@postgres:5432/pakto?sslmode=disable
+      DBMATE_MIGRATIONS_DIR: /db/migrations
+      DBMATE_NO_DUMP_SCHEMA: "true"
+    volumes:
+      - ./db:/db
+    command: ["--wait", "up"]
+
+volumes:
+  pakto-dev-pgdata:

@@ -12,10 +12,15 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "docker compose -f docker-compose.dev.yml --profile tools run --rm migrate",
     "db:studio": "drizzle-kit studio",
     "video:studio": "pnpm --filter pakto-video studio",
-    "video:render": "pnpm --filter pakto-video render"
+    "video:render": "pnpm --filter pakto-video render",
+    "db:up": "docker compose -f docker-compose.dev.yml up -d --wait",
+    "db:down": "docker compose -f docker-compose.dev.yml down",
+    "db:reset": "docker compose -f docker-compose.dev.yml down -v && pnpm db:up && pnpm db:migrate",
+    "db:new": "docker compose -f docker-compose.dev.yml --profile tools run --rm migrate new",
+    "db:pull": "bash scripts/db-pull.sh"
   },
   "dependencies": {
     "@fontsource/noto-sans": "5.3.0",

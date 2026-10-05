@@ -143,6 +143,9 @@
 - **Нови миграции:** продължават като SQL файлове, но в `db/migrations/` с **dbmate** (един binary, чист SQL, пази `schema_migrations`). Пускат се от отделен контейнер при деплой, преди новата версия на приложението. `supabase/migrations/` и `drizzle/` остават като история.
 - RLS: таблиците нямат нужда от него (браузърът никога не говори с базата), но не пречи. Махаме само политиките, които сочат към `auth.uid()`.
 - `DATABASE_URL` → `pakto_app`, `DATABASE_MIGRATION_URL` → `pakto_owner` (вече ги има в `src/lib/env/server.ts`).
+- **Направено (05.10.2026):** `deploy/compose.postgres.yml` (Postgres 17 със `deploy/postgresql.conf`, без публикуван порт; `migrate` = dbmate), `deploy/postgres-init/01-setup.sh` (схема `extensions`, `pg_trgm`/`pgcrypto`, роля `pakto_app` с DEFAULT PRIVILEGES). На сървъра: `/opt/pakto/{deploy,db,.env}`, паролите са генерирани там (`.env`, права 600).
+- **Копие на данните** (бележка: сървърът сега държи снимка от Supabase от 05.10.2026; при преминаването се прави наново): `pg_dump --data-only -Fc` от Supabase → `pg_restore --disable-triggers` в новата база; броят редове по таблици съвпада на всички 49 таблици.
+- Проверено с ролята `pakto_app`: чете и пише, `CREATE`/`DROP` са отказани, тригерът за неизменяемите записи отказва `DELETE`, 28 тригера са на място.
 
 ### 3.6 Cron
 Контейнер `cron` с `supercronic` и TZ `Europe/Sofia`:
@@ -175,6 +178,8 @@
 4. Rollback: предишният таг в `.env` (`APP_IMAGE_TAG`) → `docker compose up -d app`.
 
 ### 3.11 Локална разработка
+_Статус: файловете са готови и анонимизацията е изпробвана върху копие на сървъра; целият `db:pull` и `db:up` още не са пускани на Mac-а (няма Docker)._
+
 Правило: **локалното приложение никога не се свързва с продукционната база.** Иначе тестово изпращане на оферта стига до реален клиент, тестови решения остават завинаги (`portal_decisions` и `timeline_events` са append-only), а локално пробвана миграция се изпълнява върху прод преди кода.
 
 **Какво върви локално** (`docker-compose.dev.yml`, вдига се с `docker compose -f docker-compose.dev.yml up -d`):
@@ -223,10 +228,11 @@
 - [x] Домейн: всичко на `pakto.net` (лендинг на `/`, приложение на `/app`, портал на `/portal`). `NEXT_PUBLIC_APP_URL=https://pakto.net`. Един сертификат, един cookie домейн, без CORS
 
 ### Фаза 1: Локална среда без Supabase облака
-- [ ] `docker-compose.dev.yml`: Postgres 17 + Mailpit (виж 3.11)
-- [ ] Baseline схема (`db/baseline.sql`) + dbmate; данни от Supabase с `pg_dump --data-only --schema=app`
-- [ ] Команди `db:up`, `db:migrate`, `db:reset` и демо данни `db/seed.sql`
-- [ ] Проверка: приложението върви на локалния Postgres (засега auth и файлове още през Supabase)
+- [x] `docker-compose.dev.yml`: Postgres 17 + Mailpit + dbmate (05.10.2026; **не е пускан на Mac-а**: там още няма Docker)
+- [x] Baseline схема `db/migrations/20261005160000_baseline.sql` (pg_dump 17 от Supabase, без RLS и политиката с `auth.uid()`) + dbmate; приложена на сървъра
+- [x] Команди `db:up`, `db:down`, `db:migrate`, `db:new`, `db:reset`, `db:pull` (`db:migrate` вече е dbmate, не drizzle-kit)
+- [ ] Docker на Mac-а (OrbStack или Docker Desktop), после `pnpm db:up` и проверка, че приложението върви на локалния Postgres
+- [ ] Демо данни `db/seed.sql` (ПР-042 v1 450 € → v2 384 €); засега `db:pull` е източникът на данни
 
 ### Фаза 2: Имейли (може веднага, решава лимита 100/ден)
 - [x] Nodemailer транспорт в `src/lib/email/send.ts`, env `SMTP_HOST/PORT/USER/PASSWORD`, `EMAIL_DAILY_LIMIT`. Без `EMAIL_PROVIDER`: SMTP, ако има `SMTP_HOST`, иначе Resend (05.10.2026)
