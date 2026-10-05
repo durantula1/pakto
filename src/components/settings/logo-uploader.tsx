@@ -9,7 +9,7 @@ import { formatFileSize } from "@/components/change-orders/attachment-upload";
 import { DemoOfferDialog } from "@/components/settings/demo-offer-dialog";
 import { prepareLogoPreview, type LogoPreview } from "@/components/settings/logo-preview";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
+import { uploadWithTicket } from "@/lib/storage/upload-client";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { confirmLogoAction, createLogoUploadAction, removeLogoAction, updateLogoSizeAction } from "@/modules/organizations/actions";
@@ -80,9 +80,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
     startBusy(async () => {
       const ticket = await createLogoUploadAction({ mimeType: pending.mimeType, byteSize: pending.file.size });
       if (!ticket.ok) return void toast.error(ticket.error);
-      const { error } = await createClient().storage.from("organization-logos")
-        .uploadToSignedUrl(ticket.path, ticket.token, pending.file, { contentType: pending.mimeType });
-      if (error) return void toast.error("Логото не беше качено. Провери връзката и опитай пак.");
+      if (!await uploadWithTicket(ticket.token, pending.file, pending.mimeType)) return void toast.error("Логото не беше качено. Провери връзката и опитай пак.");
       const result = await confirmLogoAction({ path: ticket.path });
       if (!result.ok) return void toast.error(result.error);
       setCurrent({ url: result.url, dimensions: { width: result.width, height: result.height } });

@@ -11,7 +11,7 @@ import { getDatabase } from "@/db";
 import { changeAttachments, changeOrderRevisions, timelineEvents } from "@/db/schema";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createUploadTicket, readFile, removeFiles } from "@/lib/storage";
 import {
   ATTACHMENT_BUCKET, ATTACHMENT_MAX_BYTES, ATTACHMENT_TYPES, getDraftRevision, isStoragePathShared,
   sniffMimeType, type AttachmentMimeType, type AttachmentSummary,
@@ -39,15 +39,13 @@ const uploadSchema = z.object({
   byteSize: z.number().int().positive().max(ATTACHMENT_MAX_BYTES, "Файлът е над 15 MB."),
 });
 
-/** Step 1: a one-time signed URL; the browser uploads straight to the private bucket. */
+/** Step 1: a short-lived upload ticket; the browser sends the file to /api/uploads. */
 export async function createAttachmentUploadAction(input: z.input<typeof uploadSchema>): Promise<Result<{ path: string; token: string }>> {
   try {
     const data = uploadSchema.parse(input);
     const { context } = await requireEditableDraft(data.changeOrderId);
     const path = `${context.organizationId}/${data.changeOrderId}/${randomUUID()}.${ATTACHMENT_TYPES[data.mimeType]}`;
-    const { data: signed, error } = await createAdminClient().storage.from(ATTACHMENT_BUCKET).createSignedUploadUrl(path);
-    if (error || !signed) throw new Error("Качването не можа да започне. Опитай отново.");
-    return { ok: true, path: signed.path, token: signed.token };
+    return { ok: true, path, token: createUploadTicket({ bucket: ATTACHMENT_BUCKET, path, maxBytes: ATTACHMENT_MAX_BYTES }) };
   } catch (error) {
     return failure(error instanceof z.ZodError ? new Error(error.issues[0]?.message) : error);
   }
@@ -57,16 +55,15 @@ const confirmSchema = z.object({ changeOrderId: z.uuid(), path: z.string().min(1
 
 /** Step 2: check what actually landed in storage, then attach it to the draft. */
 export async function confirmAttachmentAction(input: z.input<typeof confirmSchema>): Promise<Result<{ attachment: AttachmentSummary }>> {
-  const admin = createAdminClient();
   let path: string | null = null;
   try {
     const data = confirmSchema.parse(input);
     const { context, draft } = await requireEditableDraft(data.changeOrderId);
     if (!data.path.startsWith(`${context.organizationId}/${data.changeOrderId}/`)) throw new Error("Файлът не може да се отвори.");
     path = data.path;
-    const { data: blob, error } = await admin.storage.from(ATTACHMENT_BUCKET).download(path);
-    if (error || !blob) throw new Error("Файлът не е качен докрай. Опитай отново.");
-    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const stored = await readFile(ATTACHMENT_BUCKET, path);
+    if (!stored) throw new Error("Файлът не е качен докрай. Опитай отново.");
+    const bytes = new Uint8Array(stored);
     const mimeType = sniffMimeType(bytes);
     if (!mimeType) throw new Error("Позволени са снимки (JPG, PNG, WebP) и PDF.");
     if (bytes.byteLength > ATTACHMENT_MAX_BYTES) throw new Error("Файлът е над 15 MB.");
@@ -86,7 +83,7 @@ export async function confirmAttachmentAction(input: z.input<typeof confirmSchem
     return { ok: true, attachment: { id: row!.id, name: data.name, mimeType, byteSize: bytes.byteLength, isImage: mimeType.startsWith("image/") } };
   } catch (error) {
     // Nothing references a rejected upload; do not leave it in the bucket.
-    if (path) await admin.storage.from(ATTACHMENT_BUCKET).remove([path]).catch(() => undefined);
+    if (path) await removeFiles(ATTACHMENT_BUCKET, [path]).catch(() => undefined);
     return failure(error instanceof z.ZodError ? new Error("Файлът не може да се отвори.") : error);
   }
 }
@@ -110,7 +107,7 @@ export async function deleteAttachmentAction(input: { changeOrderId: string; att
       });
     });
     // Earlier sent versions may still show the same file.
-    if (!shared) await createAdminClient().storage.from(ATTACHMENT_BUCKET).remove([attachment.storagePath]);
+    if (!shared) await removeFiles(ATTACHMENT_BUCKET, [attachment.storagePath]);
     revalidatePath(`/app/offers/${changeOrderId}`);
     return { ok: true };
   } catch (error) {

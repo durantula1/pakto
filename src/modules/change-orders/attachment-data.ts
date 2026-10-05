@@ -4,9 +4,9 @@ import { and, asc, eq, ne } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { changeAttachments, changeOrderRevisions, changeOrders, projects } from "@/db/schema";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { readFile } from "@/lib/storage";
 
-export const ATTACHMENT_BUCKET = "change-attachments";
+export const ATTACHMENT_BUCKET = "change-attachments" as const;
 export const ATTACHMENT_MAX_BYTES = 15 * 1024 * 1024;
 export const ATTACHMENT_TYPES = {
   "image/jpeg": "jpg",
@@ -57,10 +57,9 @@ export async function loadRevisionPhotos(revisionId: number) {
     .where(and(eq(changeAttachments.revisionId, revisionId), eq(changeAttachments.kind, "image")))
     .orderBy(asc(changeAttachments.id));
   if (!images.length) return [];
-  const admin = createAdminClient();
   const photos = await Promise.all(images.map(async (image) => {
-    const { data } = await admin.storage.from(ATTACHMENT_BUCKET).download(image.storagePath);
-    return data ? { name: image.name, data: Buffer.from(await data.arrayBuffer()) } : null;
+    const data = await readFile(ATTACHMENT_BUCKET, image.storagePath).catch(() => null);
+    return data ? { name: image.name, data } : null;
   }));
   return photos.filter((photo) => photo !== null);
 }

@@ -13,6 +13,7 @@ const serverEnvironmentSchema = z.object({
   SMTP_USER: z.string().min(1).optional(),
   SMTP_PASSWORD: z.string().min(1).optional(),
   EMAIL_DAILY_LIMIT: z.coerce.number().int().positive().default(1000),
+  FILES_DIR: z.string().min(1).default(".data/files"),
   EMAIL_FROM: z.string().min(1).default("Pakto <notifications@example.com>"),
   SUPPORT_EMAIL: z.email().optional(),
 });
@@ -33,6 +34,7 @@ export function getServerEnvironment(): ServerEnvironment {
     SMTP_USER: process.env.SMTP_USER || undefined,
     SMTP_PASSWORD: process.env.SMTP_PASSWORD || undefined,
     EMAIL_DAILY_LIMIT: process.env.EMAIL_DAILY_LIMIT || undefined,
+    FILES_DIR: process.env.FILES_DIR || undefined,
     EMAIL_FROM: process.env.EMAIL_FROM,
     SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || undefined,
   });

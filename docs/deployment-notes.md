@@ -17,7 +17,8 @@
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | да | Publishable ключ от Supabase → Settings → API | Задава се при build. |
 | `DATABASE_URL` | да | Postgres connection string (pooler, transaction mode) | Сървърният код чете и пише само оттук. |
 | `DATABASE_MIGRATION_URL` | не | Direct connection (session mode) за миграции | Нужен само ако миграциите се пускат от сървъра. |
-| `SUPABASE_SECRET_KEY` | да | Service-role/secret ключ | Нужен за файловете (прикачени файлове, **подписи**) и за изтриване на профили. Без него подписите не се записват и клиентът не може да одобри. |
+| `SUPABASE_SECRET_KEY` | да | Service-role/secret ключ | Нужен за изтриване на профили (Supabase Auth). Файловете вече не минават през Supabase. |
+| `FILES_DIR` | да на сървъра | `/data/files` | Папката с качените файлове (Docker volume, влиза в бекъпа). Локално по подразбиране е `.data/files`. Вътре са папките `change-attachments`, `decision-signatures`, `organization-logos`. |
 | `PORTAL_LINK_SECRET` | **да, задай го изрично** | Дълъг случаен низ (`openssl rand -hex 32`) | Ако липсва, кодът взима `SUPABASE_SECRET_KEY`, а ако и той липсва, `DATABASE_URL`. **Смяна на стойността обезсилва всички клиентски линкове.** Първо провери каква стойност ползва сегашната среда и я запази. |
 | `CRON_SECRET` | да | Случаен низ, поне 16 знака | Cron задачите го пращат като `Authorization: Bearer …`. |
 | `SMTP_HOST` | да | `smtp.hostinger.com` | Имейлите излизат през пощата `info@pakto.net` (Hostinger Email Starter, 1000 писма на 24 часа). Ако липсва, кодът пада обратно на Resend. |
@@ -107,10 +108,12 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
   - Redirect URLs: добави `https://<домейн>/auth/callback`. Ползва се при регистрация, забравена парола и смяна на имейл.
 - Имейл шаблоните на Supabase Auth, ако са персонализирани, да сочат към новия домейн.
 - **Authentication → Rate Limits** (наблюдавано на 2026-10-05: вход с грешна парола към `/auth/v1/token` → 429 след ≈30 опита за 5 минути от един IP; писмата за потвърждаване/регистрация са ограничени много по-строго при стандартния SMTP на Supabase): провери и запиши тук стойностите за вход, регистрация, имейли и OTP по IP. Входът разчита на тях срещу отгатване на пароли; приложението няма свой лимит за паролите. „Изпрати линка пак“ при вход също минава през лимита за имейли на Supabase.
-- Storage buckets (вече създадени с миграции, нищо ръчно):
-  - `change-attachments`: private, снимки и PDF към оферти;
-  - `decision-signatures`: private, подписи на клиенти (добавен на 24.09.2026);
-  - `organization-logos`: **public**, фирмени лога, оптимизирани до PNG от сървъра (добавен на 26.09.2026). Сървърът ползва `sharp` (директна зависимост), при `pnpm install` на VPS-а се сваля готов бинарен файл за платформата.
+- Файловете са на диска на сървъра под `FILES_DIR` (`src/lib/storage/`), в папки с имената на старите buckets:
+  - `change-attachments`: снимки и PDF към оферти; отварят се само през `/api/attachments/[id]` след проверка на достъпа;
+  - `decision-signatures`: рисунки на клиенти при решение, само за PDF и страницата на офертата;
+  - `organization-logos`: фирмени лога, оптимизирани до PNG от сървъра (`sharp`); публични през `/api/logos/...`, кеширани за година, защото името е хеш на съдържанието.
+  - Качването: сървърното действие дава подписан билет за 10 минути (`createUploadTicket`), браузърът праща файла на `PUT /api/uploads`. Този път е изключен от `proxy.ts`, иначе лимитът 12 MB на proxy-то би спрял прикачените файлове до 15 MB. Ако има nginx/Caddy отпред, лимитът за тяло трябва да е поне 16 MB.
+  - Пренос от Supabase Storage: `node --env-file=.env scripts/copy-supabase-files.mjs` (пропуска файловете, които вече са там).
 - Миграциите се прилагат само от `supabase/migrations/` (не от `drizzle/`). Последната е `20260926131713_query_indexes`.
 
 ---
@@ -143,6 +146,7 @@ pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
 
 ## Дневник на промените в този файл
 
+- **05.10.2026**: файловете се пазят на диска (`FILES_DIR`, нова env) вместо в Supabase Storage. Нови маршрути `PUT /api/uploads` и `GET /api/logos/...`; скрипт `scripts/copy-supabase-files.mjs`. `SUPABASE_SECRET_KEY` остава само за Auth. Без нов cron.
 - **05.10.2026**: имейлите минават през SMTP на Hostinger (`info@pakto.net`) вместо Resend. Нови env `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_DAILY_LIMIT`; `RESEND_API_KEY` става резерва. Нова таблица `app.email_outbox`, нов cron `email-outbox` всяка минута. Без нов bucket.
 - **05.10.2026**: домейнът е `pakto.net` (не `pakto.eu`), всичко на един домейн (`https://pakto.net`, приложението на `/app`). Пълната нова схема (Docker, Caddy, SMTP) е в `docs/production-migration-plan.md`; този файл ще се пренапише при миграцията.
 

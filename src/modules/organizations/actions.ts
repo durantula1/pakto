@@ -13,7 +13,7 @@ import { changeOrderRevisions, organizations } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireRole, requireTenantContext } from "@/lib/authz/tenant-context";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createUploadTicket, putFile, readFile, removeFiles } from "@/lib/storage";
 import {
   LOGO_BUCKET, LOGO_MAX_BYTES, LOGO_TYPES, logoPathFor, logoPublicUrl, optimizeLogo, sniffLogoType, type LogoMimeType,
 } from "@/modules/organizations/logo";
@@ -135,16 +135,14 @@ const logoUploadSchema = z.object({
   byteSize: z.number().int().positive().max(LOGO_MAX_BYTES, "Файлът е над 5 MB."),
 });
 
-/** Step 1: a one-time signed URL; the browser uploads the original straight to storage. */
+/** Step 1: a short-lived upload ticket; the browser sends the original to /api/uploads. */
 export async function createLogoUploadAction(input: z.input<typeof logoUploadSchema>): Promise<LogoResult<{ path: string; token: string }>> {
   try {
     const data = logoUploadSchema.parse(input);
     const context = await requireTenantContext();
     requireRole(context, ["owner"]);
     const path = `${context.organizationId}/incoming/${randomUUID()}.${LOGO_TYPES[data.mimeType]}`;
-    const { data: signed, error } = await createAdminClient().storage.from(LOGO_BUCKET).createSignedUploadUrl(path);
-    if (error || !signed) throw new Error("Качването не можа да започне. Опитай отново.");
-    return { ok: true, path: signed.path, token: signed.token };
+    return { ok: true, path, token: createUploadTicket({ bucket: LOGO_BUCKET, path, maxBytes: LOGO_MAX_BYTES }) };
   } catch (error) {
     return logoFailure(error);
   }
@@ -152,7 +150,6 @@ export async function createLogoUploadAction(input: z.input<typeof logoUploadSch
 
 /** Step 2: optimize what landed in storage into one PNG, keep that, and drop the original. */
 export async function confirmLogoAction(input: { path: string }): Promise<LogoResult<{ url: string; originalBytes: number; optimizedBytes: number; width: number; height: number }>> {
-  const admin = createAdminClient();
   let incoming: string | null = null;
   try {
     const { path } = z.object({ path: z.string().min(1).max(300) }).parse(input);
@@ -160,17 +157,17 @@ export async function confirmLogoAction(input: { path: string }): Promise<LogoRe
     requireRole(context, ["owner"]);
     if (!path.startsWith(`${context.organizationId}/incoming/`)) throw new Error("Файлът не може да се отвори.");
     incoming = path;
-    const { data: blob, error } = await admin.storage.from(LOGO_BUCKET).download(path);
-    if (error || !blob) throw new Error("Файлът не е качен докрай. Опитай отново.");
-    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const stored = await readFile(LOGO_BUCKET, path);
+    if (!stored) throw new Error("Файлът не е качен докрай. Опитай отново.");
+    const bytes = new Uint8Array(stored);
     if (bytes.byteLength > LOGO_MAX_BYTES) throw new Error("Файлът е над 5 MB.");
     const mimeType = sniffLogoType(bytes);
     if (!mimeType) throw new Error("Позволени са SVG, PNG, JPG и WebP.");
     const logo = await optimizeLogo(bytes, mimeType);
     const storagePath = logoPathFor(context.organizationId, logo);
-    const { error: uploadError } = await admin.storage.from(LOGO_BUCKET)
-      .upload(storagePath, logo.png, { contentType: "image/png", cacheControl: "31536000", upsert: true });
-    if (uploadError) throw new Error("Логото не беше запазено. Опитай отново.");
+    // Content-addressed: the same logo uploaded again lands on the same name with the same bytes.
+    await putFile(LOGO_BUCKET, storagePath, logo.png, { overwrite: true })
+      .catch(() => { throw new Error("Логото не беше запазено. Опитай отново."); });
     const [previous] = await getDatabase().select({ path: organizations.logoStoragePath }).from(organizations)
       .where(eq(organizations.id, context.organizationId)).limit(1);
     await getDatabase().update(organizations).set({ logoStoragePath: storagePath, updatedAt: new Date() })
@@ -182,7 +179,7 @@ export async function confirmLogoAction(input: { path: string }): Promise<LogoRe
   } catch (error) {
     return logoFailure(error);
   } finally {
-    if (incoming) await admin.storage.from(LOGO_BUCKET).remove([incoming]).catch(() => undefined);
+    if (incoming) await removeFiles(LOGO_BUCKET, [incoming]).catch(() => undefined);
   }
 }
 
@@ -209,7 +206,7 @@ async function removeUnusedLogo(organizationId: string, path: string) {
   // The path already carries the organization id, so it identifies this company's file on its own.
   const [used] = await getDatabase().select({ id: changeOrderRevisions.id }).from(changeOrderRevisions)
     .where(eq(changeOrderRevisions.logoStoragePath, path)).limit(1);
-  if (!used) await createAdminClient().storage.from(LOGO_BUCKET).remove([path]).catch(() => undefined);
+  if (!used) await removeFiles(LOGO_BUCKET, [path]).catch(() => undefined);
 }
 
 export async function updateLogoSizeAction(formData: FormData) {

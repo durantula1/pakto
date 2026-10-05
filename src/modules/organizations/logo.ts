@@ -4,11 +4,10 @@ import { createHash } from "node:crypto";
 
 import sharp from "sharp";
 
-import { getPublicEnvironment } from "@/lib/env/public";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { readFile } from "@/lib/storage";
 import { findContentBox, isLogoSize, logoDimensionsFromPath, type DocumentLogo, type LogoDimensions } from "@/modules/organizations/logo-box";
 
-export const LOGO_BUCKET = "organization-logos";
+export const LOGO_BUCKET = "organization-logos" as const;
 export const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 export const LOGO_TYPES = {
   "image/png": "png",
@@ -80,9 +79,10 @@ export function logoPathFor(organizationId: string, logo: { png: Buffer; width: 
   return `${organizationId}/${createHash("sha256").update(logo.png).digest("hex")}-${logo.width}x${logo.height}.png`;
 }
 
+/** Served by /api/logos (public, cached for a year: the name changes whenever the logo does). */
 export function logoPublicUrl(path: string | null | undefined) {
   if (!path) return null;
-  return `${getPublicEnvironment().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${LOGO_BUCKET}/${path}`;
+  return `/api/logos/${path}`;
 }
 
 /**
@@ -110,9 +110,8 @@ function pngDimensions(bytes: Buffer): LogoDimensions | null {
 /** Bytes and size for the PDF; a missing file only drops the logo, it never breaks the document. */
 export async function loadLogo(path: string | null | undefined) {
   if (!path) return null;
-  const { data } = await createAdminClient().storage.from(LOGO_BUCKET).download(path);
-  if (!data) return null;
-  const bytes = Buffer.from(await data.arrayBuffer());
+  const bytes = await readFile(LOGO_BUCKET, path);
+  if (!bytes) return null;
   const dimensions = logoDimensionsFromPath(path) ?? pngDimensions(bytes);
   return dimensions ? { data: bytes, ...dimensions } : null;
 }

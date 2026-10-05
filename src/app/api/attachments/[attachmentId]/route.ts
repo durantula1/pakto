@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { can } from "@/lib/authz/permissions";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { readFile } from "@/lib/storage";
 import { ATTACHMENT_BUCKET, getAttachmentAccess } from "@/modules/change-orders/attachment-data";
 import { getPortalSession } from "@/modules/change-portal/session";
 
@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 const notFound = () => NextResponse.json({ error: "Not found" }, { status: 404 });
 
 /**
- * Opens an attachment through a 60-second signed URL. Staff need view access to the project
+ * Streams an attachment from private storage. Staff need view access to the project
  * (and to the draft, like the document page); the client portal sees files of sent versions only.
  */
 export async function GET(request: Request, { params }: RouteContext<"/api/attachments/[attachmentId]">) {
@@ -35,8 +35,19 @@ export async function GET(request: Request, { params }: RouteContext<"/api/attac
   }
   if (!authorized) return notFound();
 
-  const download = new URL(request.url).searchParams.has("download") ? attachment.originalName : undefined;
-  const { data, error } = await createAdminClient().storage.from(ATTACHMENT_BUCKET).createSignedUrl(attachment.storagePath, 60, { download });
-  if (error || !data) return NextResponse.json({ error: "Unavailable" }, { status: 503 });
-  return NextResponse.redirect(data.signedUrl, { status: 302, headers: { "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
+  const bytes = await readFile(ATTACHMENT_BUCKET, attachment.storagePath).catch(() => null);
+  if (!bytes) return NextResponse.json({ error: "Unavailable" }, { status: 503 });
+  const disposition = new URL(request.url).searchParams.has("download") ? "attachment" : "inline";
+  // RFC 6266: an ASCII fallback plus the real (Cyrillic) name.
+  const asciiName = attachment.originalName.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "_");
+  return new NextResponse(new Uint8Array(bytes), {
+    headers: {
+      "Content-Type": attachment.mimeType,
+      "Content-Length": String(bytes.byteLength),
+      "Content-Disposition": `${disposition}; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(attachment.originalName)}`,
+      "Cache-Control": "private, no-store",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

@@ -2,9 +2,9 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { putFile, readFile, removeFiles } from "@/lib/storage";
 
-const SIGNATURE_BUCKET = "decision-signatures";
+const SIGNATURE_BUCKET = "decision-signatures" as const;
 const MAX_BYTES = 256 * 1024;
 const MIN_BYTES = 400;
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -21,18 +21,16 @@ export function parseSignature(dataUrl: string | undefined | null) {
 
 export async function storeSignature(input: { organizationId: string; revisionId: number; key: string; bytes: Buffer }) {
   const path = `${input.organizationId}/${input.revisionId}/${input.key}.png`;
-  const { error } = await createAdminClient().storage.from(SIGNATURE_BUCKET)
-    .upload(path, input.bytes, { contentType: "image/png", upsert: true });
-  if (error) throw new Error("Рисунката не беше записана. Опитай отново.");
+  await putFile(SIGNATURE_BUCKET, path, input.bytes, { overwrite: true })
+    .catch(() => { throw new Error("Рисунката не беше записана. Опитай отново."); });
   return { path, sha256: createHash("sha256").update(input.bytes).digest("hex") };
 }
 
 export async function removeSignature(path: string) {
-  await createAdminClient().storage.from(SIGNATURE_BUCKET).remove([path]).catch(() => undefined);
+  await removeFiles(SIGNATURE_BUCKET, [path]).catch(() => undefined);
 }
 
 export async function loadSignature(path: string | null | undefined) {
   if (!path) return null;
-  const { data } = await createAdminClient().storage.from(SIGNATURE_BUCKET).download(path);
-  return data ? Buffer.from(await data.arrayBuffer()) : null;
+  return readFile(SIGNATURE_BUCKET, path);
 }

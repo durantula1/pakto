@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { uploadWithTicket } from "@/lib/storage/upload-client";
 import { confirmAttachmentAction, createAttachmentUploadAction } from "@/modules/change-orders/attachment-actions";
 
 export const ATTACHMENT_ACCEPT = "image/*,application/pdf";
@@ -33,15 +33,13 @@ async function prepareFile(file: File): Promise<{ blob: Blob; name: string; mime
   return { blob, name: file.name.replace(/\.[^.]+$/, "") + ".jpg", mimeType: "image/jpeg" };
 }
 
-/** Uploads one file straight to the private bucket and attaches it to the document's draft. */
+/** Uploads one file to the server's private storage and attaches it to the document's draft. */
 export async function uploadAttachment(changeOrderId: string, file: File): Promise<UploadedAttachment> {
   const prepared = await prepareFile(file);
   if (prepared.blob.size > MAX_BYTES) throw new Error(`„${file.name}“ е над 15 MB.`);
   const ticket = await createAttachmentUploadAction({ changeOrderId, mimeType: prepared.mimeType, byteSize: prepared.blob.size });
   if (!ticket.ok) throw new Error(ticket.error);
-  const { error } = await createClient().storage.from("change-attachments")
-    .uploadToSignedUrl(ticket.path, ticket.token, prepared.blob, { contentType: prepared.mimeType });
-  if (error) throw new Error(`„${file.name}“ не беше качен. Провери връзката и опитай пак.`);
+  if (!await uploadWithTicket(ticket.token, prepared.blob, prepared.mimeType)) throw new Error(`„${file.name}“ не беше качен. Провери връзката и опитай пак.`);
   const saved = await confirmAttachmentAction({ changeOrderId, path: ticket.path, name: prepared.name });
   if (!saved.ok) throw new Error(saved.error);
   return saved.attachment;

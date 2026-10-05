@@ -5,6 +5,7 @@ import { and, eq, isNull, lte, sql } from "drizzle-orm";
 import { getDatabase } from "@/db";
 import { notificationPreferences, organizationMembers, organizations, profiles, projectMembers, staffNotifications, teamInvites, userConsents } from "@/db/schema";
 import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
+import { removeFolder } from "@/lib/storage";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAccountDeletionPlan } from "@/modules/account/queries";
 
@@ -39,7 +40,7 @@ export async function purgeDueAccounts(now = new Date()) {
         result.skipped.push({ userId: account.id, reason: "Фирмата не е заявена за закриване." });
         continue;
       }
-      await removeCompanyFiles(admin, plan.organizationId);
+      await removeCompanyFiles(plan.organizationId);
       await db.execute(sql`select app.purge_organization(${plan.organizationId}::uuid)`);
     }
     const { error } = await admin.auth.admin.deleteUser(account.id);
@@ -68,25 +69,9 @@ export async function purgeDueAccounts(now = new Date()) {
   return result;
 }
 
-const COMPANY_BUCKETS = ["order-files", "change-attachments", "decision-signatures", "organization-logos"];
+const COMPANY_BUCKETS = ["order-files", "change-attachments", "decision-signatures", "organization-logos"] as const;
 
-/** Storage has no recursive delete: list each folder under `<orgId>/` and remove what is in it. */
-async function removeCompanyFiles(admin: ReturnType<typeof createAdminClient>, organizationId: string) {
-  for (const bucket of COMPANY_BUCKETS) {
-    const folders = [organizationId];
-    while (folders.length) {
-      const folder = folders.pop()!;
-      const { data, error } = await admin.storage.from(bucket).list(folder, { limit: 1000 });
-      if (error) {
-        if (/not found/i.test(error.message)) break;
-        throw error;
-      }
-      const files = data.filter((item) => item.id).map((item) => `${folder}/${item.name}`);
-      folders.push(...data.filter((item) => !item.id).map((item) => `${folder}/${item.name}`));
-      if (files.length) {
-        const { error: removeError } = await admin.storage.from(bucket).remove(files);
-        if (removeError) throw removeError;
-      }
-    }
-  }
+/** Every bucket keeps a company's files under `<orgId>/`, so closing the company removes that folder in each. */
+async function removeCompanyFiles(organizationId: string) {
+  for (const bucket of COMPANY_BUCKETS) await removeFolder(bucket, organizationId);
 }

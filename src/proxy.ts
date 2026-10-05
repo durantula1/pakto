@@ -77,7 +77,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // /api/uploads is left out: the proxy would buffer a 15 MB upload against its 12 MB body limit.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|api/uploads|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
