@@ -31,6 +31,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile --filter pakto
+      - run: pnpm exec next typegen
       - run: pnpm typecheck
       - run: pnpm lint
 
