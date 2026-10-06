@@ -79,7 +79,7 @@ export function LeaveOrganizationDialog({ organizationName, blocker }: { organiz
   );
 }
 
-export function DeleteAccountDialog({ plan, graceDays }: { plan: AccountDeletionPlan; graceDays: number }) {
+export function DeleteAccountDialog({ plan, graceDays, hasPassword }: { plan: AccountDeletionPlan; graceDays: number; /** An account made with Google has none: typing ИЗТРИЙ is the confirmation. */ hasPassword: boolean }) {
   const company = plan.kind === "account_and_company" ? plan.organizationName : null;
   return (
     <div className="grid justify-items-start gap-0 @xl:justify-items-end">
@@ -108,10 +108,12 @@ export function DeleteAccountDialog({ plan, graceDays }: { plan: AccountDeletion
             </p>
           ) : null}
           <ActionForm action={requestAccountDeletionAction} success="" redirects className="grid gap-4">
-            <Field>
-              <FieldLabel htmlFor="delete-password">Парола</FieldLabel>
-              <Input id="delete-password" name="password" type="password" autoComplete="current-password" required className="h-10" />
-            </Field>
+            {hasPassword ? (
+              <Field>
+                <FieldLabel htmlFor="delete-password">Парола</FieldLabel>
+                <Input id="delete-password" name="password" type="password" autoComplete="current-password" required className="h-10" />
+              </Field>
+            ) : null}
             {company ? (
               <Field>
                 <FieldLabel htmlFor="delete-company">Напиши името на фирмата</FieldLabel>

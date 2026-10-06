@@ -119,6 +119,23 @@ export async function resendConfirmationAction(
   return { message: "Ако имейлът чака потвърждение, изпратихме нов линк. Провери и папката за спам." };
 }
 
+/** Starts the Google sign-in; Better Auth's callback signs the user in (or creates the account) and comes back to `next`. */
+export async function googleSignInAction(formData: FormData) {
+  const appUrl = getPublicEnvironment().NEXT_PUBLIC_APP_URL;
+  const next = safeNextPath(formData.get("next"));
+  let url: string | undefined;
+  try {
+    const result = await auth.api.signInSocial({
+      body: { provider: "google", callbackURL: `${appUrl}${next}`, errorCallbackURL: `${appUrl}/sign-in?next=${encodeURIComponent(next)}`, disableRedirect: true },
+      headers: await headers(),
+    });
+    url = result.url;
+  } catch (error) {
+    console.error("[google-sign-in]", isAPIError(error) ? error.body?.code : error);
+  }
+  redirect(url ?? "/sign-in?error=google");
+}
+
 export async function signOutAction() {
   await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
   redirect("/");

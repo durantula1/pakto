@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ChangeEmailDialog, ChangePasswordDialog, SignOutEverywhereDialog } from "@/components/settings/account-dialogs";
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { roleLabel } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { getSessionUser } from "@/lib/auth/server";
+import { getSessionUser, userHasPassword } from "@/lib/auth/server";
 import { updateProfileAction } from "@/modules/account/actions";
 import { syncProfileEmail } from "@/modules/account/mutations";
 import { getAccountProfile } from "@/modules/account/queries";
@@ -26,7 +27,7 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
   const query = await searchParams;
   if (typeof query.invite === "string") redirect(`/app/team?invite=${encodeURIComponent(query.invite)}`);
   const context = await requireTenantContext();
-  const [user, profile] = await Promise.all([getSessionUser(), getAccountProfile(context.userId)]);
+  const [user, profile, hasPassword] = await Promise.all([getSessionUser(), getAccountProfile(context.userId), userHasPassword(context.userId)]);
   const email = user?.email?.toLowerCase() ?? profile?.email ?? "";
   // A confirmed email change lands here; keep the copy the team sees in sync with Auth.
   if (profile && email && profile.email !== email) await syncProfileEmail(context.userId, email);
@@ -66,10 +67,16 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
         <span className="min-w-0 truncate text-muted-foreground">{email}</span>
         <ChangeEmailDialog />
       </SettingsRow>
-      <SettingsRow label="Парола" description="Поне 8 символа." align="end">
-        <span aria-label="Скрита парола" className="tracking-widest text-muted-foreground">••••••••</span>
-        <ChangePasswordDialog />
-      </SettingsRow>
+      {hasPassword ? (
+        <SettingsRow label="Парола" description="Поне 8 символа." align="end">
+          <span aria-label="Скрита парола" className="tracking-widest text-muted-foreground">••••••••</span>
+          <ChangePasswordDialog />
+        </SettingsRow>
+      ) : (
+        <SettingsRow label="Парола" description="Влизаш с Google. Ако искаш и парола, ще ти изпратим линк, с който да я зададеш." align="end">
+          <Link href="/forgot-password" className="inline-flex h-9 items-center rounded-lg border bg-background px-3 text-sm font-medium hover:bg-muted">Задай парола</Link>
+        </SettingsRow>
+      )}
       <SettingsRow label="Всички устройства" description="Влизал ли си от чуждо устройство? Излез навсякъде наведнъж." align="end">
         <SignOutEverywhereDialog />
       </SettingsRow>

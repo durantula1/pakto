@@ -14,7 +14,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { accountDeletionDate } from "@/lib/legal";
-import { auth, getSessionUser, signOutEverywhere, verifyUserPassword } from "@/lib/auth/server";
+import { auth, getSessionUser, signOutEverywhere, userHasPassword, verifyUserPassword } from "@/lib/auth/server";
 import { recordLegalConsent } from "@/modules/account/mutations";
 import { getAccountDeletionPlan, getLeaveBlocker } from "@/modules/account/queries";
 
@@ -125,7 +125,7 @@ export async function leaveOrganizationAction(): Promise<ActionResult> {
 }
 
 const deletionSchema = z.object({
-  password: z.string().min(1, "Въведи паролата си."),
+  password: z.string().optional(),
   confirmation: z.string().trim(),
   organizationName: z.string().trim().optional(),
 });
@@ -140,7 +140,11 @@ export async function requestAccountDeletionAction(formData: FormData): Promise<
   if (plan.kind === "account_and_company" && parsed.data.organizationName?.toLocaleLowerCase("bg") !== plan.organizationName.trim().toLocaleLowerCase("bg")) {
     return { error: "Напиши точното име на фирмата, за да потвърдиш закриването ѝ." };
   }
-  if (!(await verifyUserPassword(user.id, parsed.data.password))) return { error: "Паролата не е правилна." };
+  // An account made with Google has no password; the open session and typing ИЗТРИЙ confirm it.
+  if (await userHasPassword(user.id)) {
+    if (!parsed.data.password) return { error: "Въведи паролата си." };
+    if (!(await verifyUserPassword(user.id, parsed.data.password))) return { error: "Паролата не е правилна." };
+  }
   const requestedAt = new Date();
   await getDatabase().transaction(async (tx) => {
     // A user who never finished onboarding has no profile row yet; the purge job still needs one.

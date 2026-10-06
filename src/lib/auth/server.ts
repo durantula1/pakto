@@ -14,6 +14,7 @@ import { getDatabase } from "@/db";
 import { authAccounts, authSessions, authUsers, authVerifications, profiles } from "@/db/schema";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
+import { recordLegalConsent } from "@/modules/account/mutations";
 
 /** Session cookies are `pakto.session_token` (and `__Secure-pakto…` over https). */
 export const AUTH_COOKIE_PREFIX = "pakto";
@@ -30,6 +31,12 @@ function authSecret() {
 }
 
 const appUrl = getPublicEnvironment().NEXT_PUBLIC_APP_URL;
+
+/** "Продължи с Google" shows only when both keys are set (Google Cloud → APIs & Services → Credentials). */
+const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+  ? { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }
+  : null;
+export const googleSignInEnabled = !!google;
 
 function authEmail(title: string, intro: string, url: string, button: string, outro: string) {
   return {
@@ -94,6 +101,11 @@ export const auth = betterAuth({
       }).catch((cause) => console.error("[auth-email] verify", cause));
     },
   },
+  // Google answers only for addresses it verified. An existing account gets Google linked only once its own email
+  // is confirmed (Better Auth's default), so an unconfirmed sign-up cannot catch the owner's later Google sign-in.
+  socialProviders: google ? { google: { ...google, prompt: "select_account" } } : {},
+  // A failed Google sign-in (cancelled, or an unconfirmed account with that email) is explained on the sign-in page.
+  onAPIError: { errorURL: `${appUrl}/sign-in` },
   user: {
     changeEmail: { enabled: true },
   },
@@ -101,9 +113,11 @@ export const auth = betterAuth({
     user: {
       // Every account has a profile from the start: team lists, invites and onboarding read it.
       create: {
-        after: async (user) => {
+        after: async (user, context) => {
           await getDatabase().insert(profiles).values({ id: user.id, displayName: user.name, email: user.email.toLowerCase() })
             .onConflictDoNothing();
+          // A Google sign-up has no checkbox: the button says that continuing accepts the terms and the privacy policy.
+          if (context?.path?.startsWith("/callback/")) await recordLegalConsent(user.id);
         },
       },
       // The profile keeps a copy of the sign-in email for team lists and invites.
@@ -128,6 +142,13 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const { id, email, name, emailVerified } = session.user;
   return { id, email, name, emailVerified };
 });
+
+/** Whether the account has a password (one made with Google has none until "Забравена парола" sets one). */
+export async function userHasPassword(userId: string) {
+  const [account] = await getDatabase().select({ id: authAccounts.id }).from(authAccounts)
+    .where(and(eq(authAccounts.userId, userId), eq(authAccounts.providerId, "credential"))).limit(1);
+  return !!account;
+}
 
 /** Whether `password` is the account's current one (asked again before deleting the account). */
 export async function verifyUserPassword(userId: string, password: string) {

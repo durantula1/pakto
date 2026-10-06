@@ -44,6 +44,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 | `POSTGRES_OWNER_PASSWORD`, `POSTGRES_APP_PASSWORD` | `.env` | Паролите на двете роли, генерирани на сървъра. |
 | `PORTAL_LINK_SECRET` | app | Подписва клиентските линкове. **Смяната обезсилва всички изпратени линкове.** Задължителна. |
 | `BETTER_AUTH_SECRET` | app | Подписва сесиите на служителите. Смяната изкарва всички служители. Локално може да липсва (извежда се от `PORTAL_LINK_SECRET`). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | app | „Продължи с Google“ при вход и регистрация. От Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web application). Authorized JavaScript origin: `https://pakto.net`; Authorized redirect URI: `https://pakto.net/api/auth/callback/google` (локално и `http://localhost:3000/api/auth/callback/google`). Без двата ключа бутонът не се показва. Четат се при старт на контейнера. |
 | `CRON_SECRET` | app + cron | Bearer токенът за `/api/cron/*`, поне 16 знака. |
 | `CRON_DAILY_JOBS` | cron | `on` по подразбиране; `off` спира `purge-accounts` и `offer-reminders` (опашката с писма продължава). |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | app | `smtp.hostinger.com`, `465`, `info@pakto.net`, паролата на кутията от hPanel → Emails. Локално: Mailpit (`127.0.0.1`, `1025`, без потребител). |

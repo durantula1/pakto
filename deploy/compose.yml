@@ -70,6 +70,9 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-Pakto <info@pakto.net>}
       EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-1000}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL:-info@pakto.net}
+      # Optional: without both keys the "Продължи с Google" button is hidden.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     volumes:
       - files:/data/files
     # after() sends the last emails of a request: give them time to finish on a restart.

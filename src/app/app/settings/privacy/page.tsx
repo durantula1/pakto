@@ -6,6 +6,7 @@ import { DeleteAccountDialog, ExportDataLink, LeaveOrganizationDialog } from "@/
 import { SettingsGroup, SettingsRow } from "@/components/settings/settings-group";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
+import { userHasPassword } from "@/lib/auth/server";
 import { ACCOUNT_DELETION_GRACE_DAYS, LEGAL_DOCUMENTS, type LegalDocument } from "@/lib/legal";
 import { acceptLegalDocumentsAction } from "@/modules/account/actions";
 import { getAccountDeletionPlan, getLeaveBlocker, listUserConsents } from "@/modules/account/queries";
@@ -16,8 +17,8 @@ export const metadata: Metadata = { title: "Данни и профил · Нас
 
 export default async function PrivacySettingsPage() {
   const context = await requireTenantContext();
-  const [consents, deletionPlan, leaveBlocker] = await Promise.all([
-    listUserConsents(context.userId), getAccountDeletionPlan(context.userId), getLeaveBlocker(context.userId),
+  const [consents, deletionPlan, leaveBlocker, hasPassword] = await Promise.all([
+    listUserConsents(context.userId), getAccountDeletionPlan(context.userId), getLeaveBlocker(context.userId), userHasPassword(context.userId),
   ]);
   const closesCompany = deletionPlan.kind === "account_and_company";
   const documents = (Object.keys(LEGAL_DOCUMENTS) as LegalDocument[]).map((key) => ({
@@ -72,7 +73,7 @@ export default async function PrivacySettingsPage() {
           : `Офертите ти остават във фирмата. Имаш ${ACCOUNT_DELETION_GRACE_DAYS} дни да се откажеш.`}
         align="end"
       >
-        <DeleteAccountDialog plan={deletionPlan} graceDays={ACCOUNT_DELETION_GRACE_DAYS} />
+        <DeleteAccountDialog plan={deletionPlan} graceDays={ACCOUNT_DELETION_GRACE_DAYS} hasPassword={hasPassword} />
       </SettingsRow>
     </SettingsGroup>
   </>;
