@@ -29,7 +29,7 @@ function RecentHeader() {
         <h2 className="text-base font-semibold">{label}</h2>
         <p className="text-sm text-muted-foreground">Последните {recentLimit} оферти и промени.</p>
       </div>
-      <Link href="/app/offers" className="shrink-0 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Всички оферти →</Link>
+      <Link href="/app/offers" className="shrink-0 rounded-md text-sm font-medium text-primary-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">Всички оферти →</Link>
     </div>
   );
 }
@@ -42,7 +42,7 @@ function StagesHeader({ total }: { total?: number }) {
         <h2 className="text-base font-semibold">{stagesLabel}</h2>
         <p className="text-sm text-muted-foreground">Просрочени етапи и такива, на които срокът наближава.</p>
       </div>
-      <Link href="/app/work" className="shrink-0 rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{total && total > stageLimit ? `Всички ${total} етапа →` : "Всички етапи →"}</Link>
+      <Link href="/app/work" className="shrink-0 rounded-md text-sm font-medium text-primary-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{total && total > stageLimit ? `Всички ${total} етапа →` : "Всички етапи →"}</Link>
     </div>
   );
 }

@@ -95,8 +95,8 @@ export function DocumentBody({ document, brand, compact = false }: {
                     <td className="px-3 pt-2.5 text-right tabular-nums text-foreground">{money(Number(document.subtotal) + discount)}</td>
                   </tr>
                   <tr>
-                    <td colSpan={3} className="px-3 pt-1 text-right text-primary">{discountLabel(document.discountType, document.discountValue)}</td>
-                    <td className="px-3 pt-1 text-right font-medium tabular-nums text-primary">−{money(discount)}</td>
+                    <td colSpan={3} className="px-3 pt-1 text-right text-primary-ink">{discountLabel(document.discountType, document.discountValue)}</td>
+                    <td className="px-3 pt-1 text-right font-medium tabular-nums text-primary-ink">−{money(discount)}</td>
                   </tr>
                 </> : null}
                 <tr>

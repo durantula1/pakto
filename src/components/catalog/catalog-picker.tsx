@@ -45,7 +45,7 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
             <EmptyResult
               className="rounded-xl border border-dashed"
               title="Каталогът е празен"
-              description={<><Link href="/app/catalog" className="font-medium text-primary underline">Добави услуги и материали</Link> или ги запазвай от офертата с иконата до тях.</>}
+              description={<><Link href="/app/catalog" className="font-medium text-primary-ink underline">Добави услуги и материали</Link> или ги запазвай от офертата с иконата до тях.</>}
             />
           ) : !groups.length ? (
             <EmptyResult title={`Нищо не съвпада с „${query}“.`} />

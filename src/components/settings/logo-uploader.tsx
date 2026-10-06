@@ -172,7 +172,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
               <div className="min-w-0">
                 <div
                   style={miniBox ? { width: ptToRem(miniBox.width * MINI_SCALE), height: ptToRem(miniBox.height * MINI_SCALE) } : undefined}
-                  className={cn("mb-1.5 flex items-center transition-[width,height]", !miniBox && "h-10 w-36", !shown && "justify-center rounded-md border-2 border-dashed border-primary/40 bg-primary/5 text-primary transition group-hover:border-primary group-hover:bg-primary/10", dragging && "border-primary bg-primary/10")}>
+                  className={cn("mb-1.5 flex items-center transition-[width,height]", !miniBox && "h-10 w-36", !shown && "justify-center rounded-md border-2 border-dashed border-primary/40 bg-primary/5 text-primary-ink transition group-hover:border-primary group-hover:bg-primary/10", dragging && "border-primary bg-primary/10")}>
                   {preparing ? (
                     <LoaderCircle className="size-4 animate-spin text-neutral-400" aria-hidden />
                   ) : shown ? (

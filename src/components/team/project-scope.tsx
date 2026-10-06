@@ -73,7 +73,7 @@ export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSel
             </li>
           ))}
           {hidden > 0 || showAll && selected.length > CHIP_LIMIT ? <li>
-            <button type="button" onClick={() => setShowAll(!showAll)} className="h-8 rounded-lg px-2.5 text-sm font-medium text-primary hover:bg-muted">
+            <button type="button" onClick={() => setShowAll(!showAll)} className="h-8 rounded-lg px-2.5 text-sm font-medium text-primary-ink hover:bg-muted">
               {showAll ? "Покажи по-малко" : `+${hidden} още`}
             </button>
           </li> : null}

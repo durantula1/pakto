@@ -80,10 +80,10 @@ export function ProjectMenu({ project, canManage, isOwner, openItems }: {
               <ul className="mt-1.5 divide-y divide-dashed border-y border-dashed text-sm">
                 {openItems.map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} onClick={close} className="group flex items-center gap-2.5 py-2 hover:text-primary">
+                    <Link href={item.href} onClick={close} className="group flex items-center gap-2.5 py-2 hover:text-primary-ink">
                       <Circle className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
                       <span className="min-w-0 flex-1">{item.label}</span>
-                      <ArrowRight className="size-3.5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
+                      <ArrowRight className="size-3.5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary-ink" aria-hidden="true" />
                     </Link>
                   </li>
                 ))}

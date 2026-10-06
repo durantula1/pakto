@@ -293,7 +293,7 @@ export function OfferForm({
                 <dt className="text-muted-foreground">Сума без отстъпка</dt>
                 <dd className="tabular-nums">{formatMoney(totals.gross)}</dd>
               </div>
-              <div className="flex justify-between gap-3 text-primary">
+              <div className="flex justify-between gap-3 text-primary-ink">
                 <dt>{discountLabel(discountType || null, discountValue)}</dt>
                 <dd className="tabular-nums">−{formatMoney(totals.discount)}</dd>
               </div>
@@ -335,7 +335,7 @@ export function OfferForm({
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5">
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl border border-dashed border-primary/40 px-4 py-3">
-              <p className="font-mono text-xs tracking-wide text-primary uppercase">Чернова · {projectName}</p>
+              <p className="font-mono text-xs tracking-wide text-primary-ink uppercase">Чернова · {projectName}</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight">{title}</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">Така ще я види клиентът. Докато не я изпратиш, само ти я виждаш.</p>
             </div>

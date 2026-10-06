@@ -125,7 +125,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
             <span className="block text-sm font-semibold">Права · {permissions.length} от {PERMISSION_KEYS.length}</span>
             <span className="block text-xs text-muted-foreground">Какво може да прави в обектите, до които има достъп.</span>
           </span>
-          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
+          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary-ink">
             {open ? "Скрий" : "Промени права"}
             <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </span>

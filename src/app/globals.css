@@ -33,6 +33,7 @@
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
+  --color-primary-ink: var(--primary-ink);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -91,6 +92,8 @@
   --popover-foreground: #102b38;
   --primary: #ff765f;
   --primary-foreground: #102b38;
+  /* Coral for text and icons on light surfaces: --primary is 2.3:1 on the paper, this is 4.9:1 (WCAG AA). */
+  --primary-ink: #b5412d;
   --secondary: #dceeea;
   --secondary-foreground: #102b38;
   --muted: #e7efe9;
@@ -146,6 +149,7 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
+  --primary-ink: #ff8f7a;
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);

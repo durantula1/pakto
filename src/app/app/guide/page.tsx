@@ -40,12 +40,12 @@ export const metadata: Metadata = { title: "Как работи" };
 export default function GuidePage() {
   return (
     <PageShell>
-      <PageHeader page="guide" actions={<Link href="/welcome?again=1" className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted"><Sparkles className="size-4 text-primary" />Виж въведението отново</Link>} />
+      <PageHeader page="guide" actions={<Link href="/welcome?again=1" className="inline-flex h-9 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted"><Sparkles className="size-4 text-primary-ink" />Виж въведението отново</Link>} />
 
       <div className="grid gap-3 sm:grid-cols-3">
         {promises.map(({ icon: Icon, title, text }) => (
           <div key={title} className="rounded-2xl border bg-card p-4">
-            <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></span>
+            <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary-ink"><Icon className="size-5" /></span>
             <p className="mt-3 font-semibold">{title}</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p>
           </div>
@@ -57,7 +57,7 @@ export default function GuidePage() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {clientRules.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
-              <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+              <Icon className="mt-0.5 size-5 shrink-0 text-primary-ink" />
               <div><p className="font-medium">{title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div>
             </div>
           ))}
@@ -82,7 +82,7 @@ export default function GuidePage() {
       <section className="grid gap-3 lg:grid-cols-3">
         {visibility.map(({ who, icon: Icon, items }) => (
           <div key={who} className="rounded-2xl border bg-card p-4 sm:p-5">
-            <p className="flex items-center gap-2 font-semibold"><Icon className="size-4 text-primary" />{who}</p>
+            <p className="flex items-center gap-2 font-semibold"><Icon className="size-4 text-primary-ink" />{who}</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
               {items.map((item) => <li key={item} className="flex gap-2"><span aria-hidden="true" className="mt-2.5 size-1.5 shrink-0 rounded-full bg-primary" />{item}</li>)}
             </ul>
@@ -92,7 +92,7 @@ export default function GuidePage() {
 
       <p className="text-sm text-muted-foreground">
         Как се кани екип, какви са правата, как се записват плащания и други въпроси:{" "}
-        <Link href="/faq" className="font-medium text-primary underline-offset-4 hover:underline">Често задавани въпроси</Link>
+        <Link href="/faq" className="font-medium text-primary-ink underline-offset-4 hover:underline">Често задавани въпроси</Link>
       </p>
     </PageShell>
   );

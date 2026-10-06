@@ -36,7 +36,7 @@ export default async function ProfileSettingsPage({ searchParams }: PageProps<"/
   return <>
     {/* Who you are, before any field: the same name and role the team sees. */}
     <div className="flex items-center gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:p-5">
-      <span aria-hidden className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/15 text-lg font-semibold text-primary">{initials(name)}</span>
+      <span aria-hidden className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary/15 text-lg font-semibold text-primary-ink">{initials(name)}</span>
       <div className="min-w-0">
         <p className="truncate text-lg font-semibold">{name}</p>
         <p className="truncate text-sm text-muted-foreground">{email}</p>

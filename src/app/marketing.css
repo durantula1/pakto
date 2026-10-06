@@ -366,6 +366,16 @@
   }
 }
 
+/*
+ * Sections below the first screen: the browser skips their style and layout until they come near the viewport
+ * (mobile Lighthouse: most of the main-thread time went to laying out the demos). `auto` keeps the real height
+ * once a section has been seen, so the page does not jump on the way back up.
+ */
+.mf-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 50rem;
+}
+
 .mf-rise {
   animation: mf-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

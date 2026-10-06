@@ -82,7 +82,7 @@ export default function FaqPage() {
                 >
                   <h2
                     id={`${section.id}-title`}
-                    className="mf-kicker mb-4 text-[#e85f48]"
+                    className="mf-kicker mb-4 text-[#b5412d]"
                   >
                     {section.title.toUpperCase()}
                   </h2>

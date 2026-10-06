@@ -45,7 +45,7 @@ export function StatCard({ label, value, size = "md", icon, tone = "default", hi
           <div className={cn("mt-2 flex items-center font-semibold tabular-nums", valueSizes[size])}>{value}</div>
           {hint !== undefined ? <div className={cn("mt-1 flex min-h-4 items-center text-xs", toned ? "opacity-75" : "text-muted-foreground")}>{hint}</div> : null}
         </div>
-        {icon ? <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", toned ? "bg-card/60" : "bg-primary/10 text-primary")}>{icon}</span> : null}
+        {icon ? <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl", toned ? "bg-card/60" : "bg-primary/10 text-primary-ink")}>{icon}</span> : null}
       </CardContent>
     </Card>
   );

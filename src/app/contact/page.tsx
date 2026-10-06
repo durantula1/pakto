@@ -9,7 +9,8 @@ import { describeSender } from "@/modules/support/sender";
 export const metadata: Metadata = {
   title: "Връзка с нас",
   description: "Съобщете за проблем, задайте въпрос или споделете идея с екипа на Pakto.",
-  robots: { index: false, follow: false },
+  // "?from=" only says which in-app page sent the visitor: one indexed address for all of them.
+  alternates: { canonical: "/contact" },
 };
 
 export default async function ContactPage({ searchParams }: PageProps<"/contact">) {

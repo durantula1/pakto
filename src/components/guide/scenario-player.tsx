@@ -176,7 +176,7 @@ export function ScenarioPlayer() {
           <div className="sticky top-0 z-10 hidden grid-cols-2 gap-3 bg-card pb-3 sm:grid">
             {(["company", "client"] as const).map((lane) => {
               const Icon = laneMeta[lane].icon;
-              return <p key={lane} className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2 text-sm font-semibold"><Icon className="size-4 text-primary" />{laneMeta[lane].label}</p>;
+              return <p key={lane} className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2 text-sm font-semibold"><Icon className="size-4 text-primary-ink" />{laneMeta[lane].label}</p>;
             })}
           </div>
           <ol className="relative flex flex-col gap-2">
@@ -208,7 +208,7 @@ export function ScenarioPlayer() {
                       active ? "border-primary bg-primary/10 shadow-sm" : done ? "bg-card" : "border-dashed bg-card",
                     )}
                   >
-                    <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>
+                    <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
                       <Icon className="size-4" />
                     </span>
                     <span className="min-w-0">

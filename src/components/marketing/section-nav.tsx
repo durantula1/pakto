@@ -86,7 +86,7 @@ export function SectionNav({
                 }`}
               >
                 <span
-                  className={`font-mono text-xs leading-5 ${current ? "text-[#102b38]" : "text-[#e85f48]"}`}
+                  className={`font-mono text-xs leading-5 ${current ? "text-[#102b38]" : "text-[#b5412d]"}`}
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>

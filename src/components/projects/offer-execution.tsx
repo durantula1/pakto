@@ -119,7 +119,7 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
         rows={offer.changes.map((change) => ({
           id: change.id,
           cells: [
-            <Link key="title" href={`/app/offers/${change.id}`} className="font-medium text-primary hover:underline">{documentCode("change", change.sequenceNumber)} · {change.title}</Link>,
+            <Link key="title" href={`/app/offers/${change.id}`} className="font-medium text-primary-ink hover:underline">{documentCode("change", change.sequenceNumber)} · {change.title}</Link>,
             canManage
               ? <StatusSelect key="status" label={`Статус на ${change.title}`} name="workStatus" value={change.workStatus} options={changeWorkOptions} action={updateChangeWorkAction} fields={{ projectId, changeOrderId: change.id }} success="Статусът на работата е обновен" />
               : <Badge key="status" variant="secondary">{workLabels[change.workStatus] ?? change.workStatus}</Badge>,
@@ -202,7 +202,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
     />
     <ReceiptsTable projectId={projectId} state={state} receipts={view.receipts} disputes={inbox.disputes} canRecord={canRecord} footer={capped && allReceiptsHref ? <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
       <p className="text-muted-foreground">Показани са последните плащания по обекта</p>
-      <Link href={allReceiptsHref} className="font-medium text-primary underline">Всички плащания</Link>
+      <Link href={allReceiptsHref} className="font-medium text-primary-ink underline">Всички плащания</Link>
     </div> : undefined} />
   </div>;
 }

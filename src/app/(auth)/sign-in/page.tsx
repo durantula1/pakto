@@ -20,7 +20,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   const defaultEmail = await inviteEmailFor(safeNext);
   return (
     <div className="w-full">
-      <p className="text-sm font-semibold text-primary">Вход в профила</p>
+      <p className="text-sm font-semibold text-primary-ink">Вход в профила</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
         Вход
       </h1>

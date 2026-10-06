@@ -281,7 +281,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             <dl className="mt-3 space-y-2 text-sm">
               {bill.discountAmount ? <>
                 <BillRow label="Сума без отстъпка" value={formatMoney(bill.gross)} />
-                <BillRow label={discountLabel(discountType || null, discountValue)} value={`−${formatMoney(bill.discountAmount)}`} className="text-primary" />
+                <BillRow label={discountLabel(discountType || null, discountValue)} value={`−${formatMoney(bill.discountAmount)}`} className="text-primary-ink" />
               </> : null}
               <BillRow label="Без ДДС" value={`${sign}${formatMoney(bill.subtotal)}`} />
               <BillRow label={vatLabel(taxRate)} value={`${sign}${formatMoney(bill.taxAmount)}`} />

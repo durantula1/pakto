@@ -148,7 +148,7 @@ function NoteRow({ note, showDocument, canEdit, canDelete, onRemove }: { note: N
       )}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          {note.pinned ? <span className="font-medium text-primary">Закачена · </span> : null}
+          {note.pinned ? <span className="font-medium text-primary-ink">Закачена · </span> : null}
           {note.pending ? "Записва се…" : <>{note.authorName ?? "Служител"} · {dateTime.format(note.createdAt)}</>}
           {note.updatedAt.getTime() - note.createdAt.getTime() > 1000 ? " · редактирана" : ""}
           {showDocument && note.changeOrderId && note.documentKind && note.sequenceNumber ? <> · <Link href={`/app/offers/${note.changeOrderId}`} className="font-mono underline">{documentCode(note.documentKind, note.sequenceNumber)}</Link></> : null}

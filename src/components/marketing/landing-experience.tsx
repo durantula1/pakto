@@ -237,19 +237,32 @@ export function LandingExperience() {
             </HeroReveal>
           </section>
 
-          <ProblemSection />
+          <div className="mf-defer">
+            <ProblemSection />
+          </div>
 
-          <VersionScene />
+          <div className="mf-defer">
+            <VersionScene />
+          </div>
 
-          <ProcessVideo />
+          <div className="mf-defer">
+            <ProcessVideo />
+          </div>
 
+          {/* Not deferred: its demos animate in place, and a skipped subtree has no colours to check. */}
           <PlatformTour />
 
-          <UpdatesSection />
+          <div className="mf-defer">
+            <UpdatesSection />
+          </div>
 
-          <SecuritySection />
+          <div className="mf-defer">
+            <SecuritySection />
+          </div>
 
-          <Faq />
+          <div className="mf-defer">
+            <Faq />
+          </div>
 
           <section
             id="beta"

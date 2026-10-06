@@ -107,7 +107,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете обекта</span>}
+                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary-ink" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете обекта</span>}
                   <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"><ArrowUpRight className="size-4" /></span>
                 </div>
               </Link>

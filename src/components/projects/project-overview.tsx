@@ -33,7 +33,7 @@ export function PortalSummary({ state, view }: { state: ProjectState; view: Scop
         <BillLine label="Платено" amount={`− ${formatCents(view.paidMinor, view.currency)}`} muted />
       </div>
       <BillLine
-        className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-primary")}
+        className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-primary-ink")}
         strong
         label={left > 0n ? "Остава да платите" : left < 0n ? "Надплатено" : "Изплатено изцяло"}
         amount={formatCents(left < 0n ? -left : left, view.currency)}
@@ -185,7 +185,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
   const balance = <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
     {view.hasAgreement ? <>
       <span>Платено <strong className="whitespace-nowrap tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> <span className="whitespace-nowrap text-muted-foreground">от {formatCents(view.contractMinor, view.currency)}</span></span>
-      <span className={cn("font-semibold whitespace-nowrap tabular-nums", view.remainingMinor > 0n ? "text-primary" : "text-muted-foreground")}>
+      <span className={cn("font-semibold whitespace-nowrap tabular-nums", view.remainingMinor > 0n ? "text-primary-ink" : "text-muted-foreground")}>
         {/* Paid in full: the bar below already says "изплатено". */}
         {view.remainingMinor === 0n ? null : `${overpaid ? "надплатено" : "остава"} ${formatCents(overpaid ? -view.remainingMinor : view.remainingMinor, view.currency)}`}
       </span>

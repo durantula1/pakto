@@ -53,7 +53,7 @@ export function HeroScene() {
           <article className="mf-sc-sheet absolute top-[10%] left-0 w-[67%] origin-center rounded-[1.125rem] border border-[#102b38]/10 bg-[linear-gradient(160deg,#fffefa,#fbf6e8)] shadow-[0_1px_0_rgb(255_255_255/80%)_inset,0_2px_4px_rgb(16_43_56/6%),0_14px_24px_-8px_rgb(16_43_56/14%),0_42px_70px_-24px_rgb(16_43_56/32%)] [transform:perspective(75rem)_rotateY(7deg)_rotateX(2deg)_rotate(-2deg)]">
             <header className="flex items-start justify-between gap-3 px-[1.375rem] pt-[1.25rem]">
               <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-mono demo-text-10 font-bold tracking-[0.08em] text-[#c24a35]">
+                <p className="flex items-center gap-1.5 font-mono demo-text-10 font-bold tracking-[0.08em] text-[#b5412d]">
                   <Lock className="size-3" />
                   ПР-042 ·
                   <span className="inline-grid">
@@ -164,7 +164,7 @@ export function HeroScene() {
                   {stage.share}
                 </p>
                 <p
-                  className={`demo-text-9 font-bold ${stage.due ? "text-[#c24a35]" : "text-[#52707d]/70"}`}
+                  className={`demo-text-9 font-bold ${stage.due ? "text-[#b5412d]" : "text-[#52707d]/70"}`}
                 >
                   {stage.due ? "дължимо" : "предстои"}
                 </p>
@@ -182,7 +182,7 @@ export function HeroScene() {
                 <p className="font-mono demo-text-9 font-bold tracking-[0.1em] text-[#52707d]">
                   pakto.net
                 </p>
-                <p className="mt-2 demo-text-9 text-[#c24a35]">ПР-042 · v2</p>
+                <p className="mt-2 demo-text-9 text-[#b5412d]">ПР-042 · v2</p>
                 <p className="demo-text-14 font-black tracking-[-0.03em]">
                   Кухня · Лозенец
                 </p>

@@ -31,7 +31,7 @@ function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: bool
     return <div className="flex flex-col gap-4 px-4 pb-8">
       {state.sentTo ? (
         <div className="flex gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary-ink" />
           <div><p className="font-semibold">Поканата е изпратена</p><p className="text-sm text-muted-foreground">Имейл до {state.sentTo}. Линкът работи само с този имейл и е валиден 7 дни.</p></div>
         </div>
       ) : (

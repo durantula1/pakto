@@ -30,7 +30,7 @@ export function PageHeader({ page, back, actions, variant = "default" }: {
         : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          {eyebrow ? <p className="text-sm font-semibold text-primary">{eyebrow}</p> : null}
+          {eyebrow ? <p className="text-sm font-semibold text-primary-ink">{eyebrow}</p> : null}
           <h1 className={cn("text-3xl font-semibold tracking-tight", eyebrow && "mt-1")}>{copy.title}</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">{copy.description}</p>
         </div>

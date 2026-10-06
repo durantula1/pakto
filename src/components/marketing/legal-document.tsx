@@ -108,7 +108,7 @@ export function LegalDocument({
               >
                 <span
                   aria-hidden="true"
-                  className="font-mono text-sm font-bold leading-8 text-[#e85f48]"
+                  className="font-mono text-sm font-bold leading-8 text-[#b5412d]"
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>

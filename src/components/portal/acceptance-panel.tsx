@@ -96,7 +96,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               Нещо не е наред?{" "}
-              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary">Напишете забележки</button>
+              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary-ink">Напишете забележки</button>
               {" "}вместо да приемате.
             </p>
           </ActionForm>

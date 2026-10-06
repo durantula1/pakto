@@ -34,7 +34,7 @@ export function SettingsNav({ owner }: { owner: boolean }) {
                   active ? "border-primary/30 bg-primary/10 text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
-                <item.icon className={cn("size-4", active && "text-primary")} />
+                <item.icon className={cn("size-4", active && "text-primary-ink")} />
                 {item.label}
               </Link>
             );

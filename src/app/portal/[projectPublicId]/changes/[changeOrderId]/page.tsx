@@ -183,7 +183,7 @@ export default async function PortalChangePage({
         {versions.length ? (
           <div className="flex flex-wrap gap-2 border-b pb-4">
             {versions.map((revision) => (
-              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/5">
+              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary-ink transition hover:bg-primary/5">
                 <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {revision.currency}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
               </DownloadLink>
             ))}
@@ -192,7 +192,7 @@ export default async function PortalChangePage({
         <ol className="space-y-3">
           {data.events.map((event) => (
             <li key={event.id} className="flex gap-3">
-              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary-ink">
                 <Clock3 className="size-4" />
               </span>
               <div>

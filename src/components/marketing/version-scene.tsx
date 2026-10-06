@@ -447,7 +447,7 @@ export function VersionScene() {
             >
               <header className="flex items-start justify-between gap-3 px-5 pt-4 sm:px-6 sm:pt-5">
                 <div className="min-w-0">
-                  <p className="flex items-center gap-1.5 font-mono demo-text-10 font-bold tracking-[0.08em] text-[#c24a35]">
+                  <p className="flex items-center gap-1.5 font-mono demo-text-10 font-bold tracking-[0.08em] text-[#b5412d]">
                     <Lock className="size-3.5" />
                     ПР-042
                   </p>
@@ -570,7 +570,7 @@ export function VersionScene() {
                           ? "Версия 2 е изпратена на Иван Петров"
                           : "Изпратена на Иван Петров по имейл"}
                   </span>
-                  <span className="block truncate font-mono demo-text-10 opacity-70">
+                  <span className="block truncate font-mono demo-text-10">
                     {approved
                       ? "14:32 · отпечатък 3f9a8c…dc21e"
                       : step === 1

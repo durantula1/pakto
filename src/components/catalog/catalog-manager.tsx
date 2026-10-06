@@ -100,7 +100,7 @@ export function CatalogManager({ items, canEdit, currency = "EUR" }: { items: Ca
                       {group.items.map((item) => <li key={item.id}><CatalogRow item={item} currency={currency} onEdit={canEdit ? () => setEditing({ item }) : undefined} /></li>)}
                     </ul>
                     {canEdit && group.key ? (
-                      <button type="button" onClick={() => setEditing({ item: null, category: group.name })} className="flex min-h-11 w-full items-center gap-2 border-t px-4 text-sm font-medium text-primary transition-colors hover:bg-muted/50">
+                      <button type="button" onClick={() => setEditing({ item: null, category: group.name })} className="flex min-h-11 w-full items-center gap-2 border-t px-4 text-sm font-medium text-primary-ink transition-colors hover:bg-muted/50">
                         <Plus className="size-4" /> Добави в „{group.name}“
                       </button>
                     ) : null}
@@ -182,7 +182,7 @@ function CategorySheet({ categories, total, active, onChange, onClose }: { categ
         {options.map((item) => (
           <li key={item.key ?? "all"}>
             <button type="button" role="radio" aria-checked={active === item.key} onClick={() => onChange(item.key)} className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left hover:bg-muted">
-              <Check className={cn("size-4 shrink-0 text-primary", active !== item.key && "invisible")} aria-hidden="true" />
+              <Check className={cn("size-4 shrink-0 text-primary-ink", active !== item.key && "invisible")} aria-hidden="true" />
               <span className={cn("min-w-0 flex-1 truncate", active === item.key && "font-semibold")}>{item.name}</span>
               <span className="text-sm text-muted-foreground tabular-nums">{item.count}</span>
             </button>

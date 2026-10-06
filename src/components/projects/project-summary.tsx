@@ -175,7 +175,7 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
       <SectionHeader title="Последни плащания" description="Всички получени суми по обекта, най-новите най-отдолу. Грешка се поправя с корекция в офертата." />
       <ReceiptsTable projectId={projectId} state={state} receipts={state.receipts} disputes={inbox.disputes} canRecord={false} showOffer footer={allReceiptsHref ? <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
         <p className="text-muted-foreground">Последните {state.receipts.length} от {state.receiptsTotal} плащания</p>
-        <Link href={allReceiptsHref} className="font-medium text-primary underline">Всички плащания</Link>
+        <Link href={allReceiptsHref} className="font-medium text-primary-ink underline">Всички плащания</Link>
       </div> : undefined} />
     </section> : <Card><EmptyResult title="Още няма получени плащания." /></Card>}
   </div>;

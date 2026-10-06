@@ -131,7 +131,7 @@ export function PortalDecisionForm({
             <button type="button" onClick={() => setCodeFor(null)} className="-ml-1 inline-flex min-h-11 items-center gap-1 self-start px-1 text-sm font-medium text-muted-foreground hover:text-foreground">
               <ArrowLeft className="size-4" /> Назад
             </button>
-            <h3 className="flex items-center gap-2 text-lg font-semibold"><MailCheck className="size-5 text-primary" /> Въведете кода от имейла</h3>
+            <h3 className="flex items-center gap-2 text-lg font-semibold"><MailCheck className="size-5 text-primary-ink" /> Въведете кода от имейла</h3>
             <p className="text-sm leading-6 text-muted-foreground">Изпратихме 6-цифрен код на {codeState.sentTo}. Кодът е само за вас, фирмата не го вижда.</p>
           </div>
           <OtpInput label="Код от имейла" autoFocus disabled={submitting} />

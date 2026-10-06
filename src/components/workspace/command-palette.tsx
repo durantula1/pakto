@@ -103,7 +103,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
               <CommandGroup heading="Ново">
                 {actions.map((item) => (
                   <CommandItem key={item.command ?? item.href} id={item.command ?? item.href} textValue={item.label}>
-                    <CirclePlus className="text-primary" /> {item.label}
+                    <CirclePlus className="text-primary-ink" /> {item.label}
                   </CommandItem>
                 ))}
               </CommandGroup>

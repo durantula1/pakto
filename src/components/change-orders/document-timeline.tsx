@@ -108,7 +108,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
                   </span>
                   <span className="flex items-center gap-3 text-sm">
                     <span className="tabular-nums text-muted-foreground">{formatAmount(revision.total)} {revision.currency}</span>
-                    <DownloadLink href={`/api/changes/${changeOrderId}/pdf?revision=${revision.id}`} label={`PDF · версия ${revision.revisionNumber}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                    <DownloadLink href={`/api/changes/${changeOrderId}/pdf?revision=${revision.id}`} label={`PDF · версия ${revision.revisionNumber}`} className="inline-flex items-center gap-1 font-medium text-primary-ink hover:underline">
                       <Download className="size-3.5" /> PDF
                     </DownloadLink>
                   </span>
@@ -121,7 +121,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
       <Card>
         <CardHeader><CardTitle>Събития</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {latestEventsHref ? <Link href={latestEventsHref} className="text-sm font-medium text-primary hover:underline">Към най-новите събития</Link> : null}
+          {latestEventsHref ? <Link href={latestEventsHref} className="text-sm font-medium text-primary-ink hover:underline">Към най-новите събития</Link> : null}
           {events.length ? (
             <ol>
               {events.map((event, index) => (
@@ -136,7 +136,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
               ))}
             </ol>
           ) : <EmptyResult title="Няма събития." />}
-          {olderEventsHref ? <Link href={olderEventsHref} className="text-sm font-medium text-primary hover:underline">По-стари събития</Link> : null}
+          {olderEventsHref ? <Link href={olderEventsHref} className="text-sm font-medium text-primary-ink hover:underline">По-стари събития</Link> : null}
         </CardContent>
       </Card>
     </div>
