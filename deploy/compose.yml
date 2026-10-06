@@ -107,7 +107,7 @@ services:
     command: ["sh", "-c", "apk add --no-cache curl tzdata >/dev/null && exec sh /loop.sh"]
     logging: *logging
 
-  # Nightly copy of the database and the files to /opt/pakto/backups, 14 days kept. Off-site copy: see docs.
+  # Nightly database dump to /opt/pakto/backups, 14 days kept. The off-site copy (with the files) is the offsite service.
   backup:
     image: postgres:17
     restart: unless-stopped
@@ -121,12 +121,11 @@ services:
       PGDATABASE: pakto
     volumes:
       - ./backup/run.sh:/run.sh:ro
-      - files:/data/files:ro
       - ../backups:/backups
     command: ["bash", "/run.sh"]
     logging: *logging
 
-  # Copies /opt/pakto/backups to Cloudflare R2 every night (restic, encrypted). Restore: see docs/deployment-notes.md.
+  # Copies /opt/pakto/backups and the files volume to Cloudflare R2 every night (restic, encrypted). Restore: see docs/deployment-notes.md.
   offsite:
     image: restic/restic:0.18.1
     restart: unless-stopped
@@ -142,6 +141,7 @@ services:
     volumes:
       - ./offsite/run.sh:/run.sh:ro
       - ../backups:/backups:ro
+      - files:/data/files:ro
       - restic_cache:/cache
     logging: *logging
 
