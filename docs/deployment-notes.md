@@ -132,6 +132,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 - **Реалният IP:** Caddy вярва на `CF-Connecting-IP` само от IP диапазоните на Cloudflare (`trusted_proxies` в `deploy/Caddyfile`; списъкът е от https://www.cloudflare.com/ips/, проверявай го веднъж годишно) и праща на приложението `X-Forwarded-For` с един адрес. Пряка заявка до сървъра запазва собствения си адрес, затова фалшив header не сменя IP-то за лимитите.
 - `deploy.sh` рестартира Caddy, когато Caddyfile се е сменил (`/opt/pakto/.caddyfile.sha256`): новият файл не се вижда през bind mount-а без рестарт.
 - DMARC: `p=quarantine`.
+- **pakto.io** (Hostinger, DNS в Cloudflare): само пренасочва. `@` и `www` са A `192.0.2.1` (фиктивен адрес, Proxied), Redirect Rule „All incoming requests“ → `concat("https://pakto.net", http.request.uri.path)`, 301, със query string. Не стига до сървъра. Няма поща: SPF `v=spf1 -all`, DMARC `p=reject`, за да не може да се праща от името на домейна.
 
 ---
 
