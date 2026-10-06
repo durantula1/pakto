@@ -22,8 +22,9 @@ permissions:
 
 env:
   IMAGE: ghcr.io/durantula1/pakto
-  SERVER: deploy@pakto.net
-  SERVER_HOST_KEY: pakto.net ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGHJIwZYI6Jfr8kTwSMUeozh66oNoZ7r5igUGBZyPVPK
+  # The VPS by its IP: pakto.net goes through the Cloudflare proxy, which carries only HTTP(S), not SSH.
+  SERVER: deploy@187.7.64.36
+  SERVER_HOST_KEY: 187.7.64.36 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGHJIwZYI6Jfr8kTwSMUeozh66oNoZ7r5igUGBZyPVPK
 
 jobs:
   check:
@@ -99,4 +100,4 @@ jobs:
           echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           printf '%s' "$REGISTRY_TOKEN" > .deploy-token
-          tar czf - deploy db .deploy-token | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "$SERVER" "${{ github.sha }}"
+          tar czf - deploy db .deploy-token | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o ConnectTimeout=20 "$SERVER" "${{ github.sha }}"

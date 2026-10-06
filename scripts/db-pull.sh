@@ -6,12 +6,12 @@
 #   pnpm db:pull -- --raw        no anonymization (only when the problem depends on the exact data)
 #   pnpm db:pull -- --files      also copy uploaded files to .data/files
 #
-# Environment: DB_PULL_HOST (default deploy@pakto.net), DB_PULL_KEY (default ~/.ssh/pakto_vps),
+# Environment: DB_PULL_HOST (default deploy@187.7.64.36: pakto.net is behind the Cloudflare proxy, which does not carry SSH), DB_PULL_KEY (default ~/.ssh/pakto_vps),
 #              DB_PULL_KEEP (staff emails kept as they are, a LIKE pattern, default 'mitqqq35%')
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-HOST="${DB_PULL_HOST:-deploy@pakto.net}"
+HOST="${DB_PULL_HOST:-deploy@187.7.64.36}"
 KEY="${DB_PULL_KEY:-$HOME/.ssh/pakto_vps}"
 KEEP="${DB_PULL_KEEP:-mitqqq35%}"
 RAW=0; FILES=0

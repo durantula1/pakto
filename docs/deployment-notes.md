@@ -78,7 +78,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 
 1. Паралелно: `pnpm typecheck` + `pnpm lint` и `next build` (Turbopack, с пазен `.next/cache`).
 2. `Dockerfile.prebuilt` само копира готовия `.next/standalone` в образа → `ghcr.io/durantula1/pakto:<sha>`.
-3. SSH като `deploy@pakto.net` с ключа от GitHub secret `DEPLOY_SSH_KEY`. В `authorized_keys` ключът е `restrict,command="/opt/pakto/deploy/deploy.sh"`: може да пусне само този скрипт.
+3. SSH като `deploy@187.7.64.36` (по IP: `pakto.net` минава през Cloudflare, който не пренася SSH) с ключа от GitHub secret `DEPLOY_SSH_KEY`. В `authorized_keys` ключът е `restrict,command="/opt/pakto/deploy/deploy.sh"`: може да пусне само този скрипт.
 4. `deploy.sh` получава `deploy/` и `db/` и краткотраен токен за GHCR. Ако има нова миграция: бекъп, после миграцията. После сменя `APP_TAG`, пуска `up -d`, рестартира `cron`, `backup` и `offsite` и чака `healthy`. При провал връща предишния образ.
 
 Целият цикъл е около 2–3 минути; сайтът не спира, освен за секундите на смяната.
