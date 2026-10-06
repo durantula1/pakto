@@ -25,6 +25,8 @@ pnpm video:render   # re-render public/video/*.mp4 + posters (phone + desktop cl
 
 Pakto (formerly MadeFlow) is a mobile-first pilot for agreed offers, change orders, deadlines, stages and payments on construction and renovation sites. The UI copy and most docs are in Bulgarian; keep user-facing strings in Bulgarian. Core flow: project → draft → frozen (sent) version → protected client link → client approves, requests a change, or declines. The pilot does not issue invoices.
 
+**Cloudflare sits in front of pakto.net** (DNS and proxy since 06.10.2026; pakto.io only redirects there). The proxy carries HTTP(S) only, so anything that SSHes to the server (the deploy workflow, `scripts/db-pull.sh`, a person) uses the VPS IP `187.7.64.36`, never `pakto.net`. Caddy takes the visitor's IP from `CF-Connecting-IP`, trusted only from Cloudflare's ranges (`deploy/Caddyfile`).
+
 `docs/architecture-decisions.md`, `docs/state-machines.md` and `docs/implementation-plan.md` hold the accepted design. `docs/deployment-notes.md` lists every env var, cron job and storage bucket for the Hostinger VPS deployment (not Vercel; `vercel.json` crons are only a reference). Update it whenever you add an env var, cron or bucket.
 
 ## Architecture
