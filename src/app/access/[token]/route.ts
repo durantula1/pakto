@@ -15,6 +15,7 @@ import {
 import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { clientIp } from "@/lib/http/client-ip";
 import { CLIENT_IDLE_MS, PORTAL_COOKIE, clientCookieName } from "@/modules/change-portal/session";
+import { appUrl } from "@/lib/env/public";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -46,12 +47,12 @@ export async function GET(
     )
     .limit(1);
   if (!grant)
-    return NextResponse.redirect(new URL("/portal/invalid", request.url));
+    return NextResponse.redirect(appUrl("/portal/invalid"));
 
   const cookieName = grant.clientId ? clientCookieName(grant.organizationId) : `${PORTAL_COOKIE}_${grant.publicId}`;
   // "?offer=<id>" (e.g. from an answer email) lands on that offer; the offer page checks it belongs here.
   const offer = request.nextUrl.searchParams.get("offer");
-  const target = new URL(offer && uuidPattern.test(offer) ? `/portal/${grant.publicId}/changes/${offer}` : `/portal/${grant.publicId}`, request.url);
+  const target = appUrl(offer && uuidPattern.test(offer) ? `/portal/${grant.publicId}/changes/${offer}` : `/portal/${grant.publicId}`);
 
   // Another link of the same client on this device joins the session already open here, so a
   // confirmed code keeps the client's other projects open.

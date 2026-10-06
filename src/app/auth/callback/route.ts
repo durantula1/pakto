@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { safeNextPath } from "@/lib/auth/next-path";
+import { appUrl } from "@/lib/env/public";
 
 /**
  * Where the email confirmation (and the new-address confirmation) lands after Better Auth checked the link
@@ -8,6 +9,6 @@ import { safeNextPath } from "@/lib/auth/next-path";
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  if (url.searchParams.get("error")) return NextResponse.redirect(new URL("/sign-in?error=confirmation", url.origin));
-  return NextResponse.redirect(new URL(safeNextPath(url.searchParams.get("next")), url.origin));
+  if (url.searchParams.get("error")) return NextResponse.redirect(appUrl("/sign-in?error=confirmation"));
+  return NextResponse.redirect(appUrl(safeNextPath(url.searchParams.get("next"))));
 }

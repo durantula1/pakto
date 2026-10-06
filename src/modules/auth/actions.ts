@@ -18,9 +18,9 @@ import { recordLegalConsent } from "@/modules/account/mutations";
 export type AuthActionState = {
   error?: string;
   message?: string;
-  /** Sign-in with the right password on an email not confirmed yet: the form offers a new link. */
+  /** An email that may still need confirming (sign-in with the right password, or a sign-up just answered): the form offers a new link. */
   unconfirmedEmail?: string;
-  /** Sign-up answered; the form links to sign-in and password reset for someone who already has a profile. */
+  /** Sign-up answered: the form gives way to a "check your email" panel. */
   signedUp?: boolean;
 };
 
@@ -97,6 +97,7 @@ export async function signUpAction(
   return {
     message: "Ако имейлът е нов, изпратихме линк за потвърждение. Провери и папката за спам.",
     signedUp: true,
+    unconfirmedEmail: parsed.data.email,
   };
 }
 
@@ -115,7 +116,7 @@ export async function resendConfirmationAction(
     console.error("[resend-confirmation]", isAPIError(error) ? error.body?.code : error);
     return { error: "Линкът не беше изпратен. Опитай отново след минута." };
   }
-  return { message: "Изпратихме нов линк. Провери и папката за спам." };
+  return { message: "Ако имейлът чака потвърждение, изпратихме нов линк. Провери и папката за спам." };
 }
 
 export async function signOutAction() {

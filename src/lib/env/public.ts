@@ -11,3 +11,11 @@ export function getPublicEnvironment(): PublicEnvironment {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   });
 }
+
+/**
+ * An absolute address on this site for redirects from route handlers. Behind Caddy in Docker, `request.url` of a
+ * Next standalone server carries the container's own address (https://0.0.0.0:3000), so it must not be the base.
+ */
+export function appUrl(path: string) {
+  return new URL(path, getPublicEnvironment().NEXT_PUBLIC_APP_URL);
+}
