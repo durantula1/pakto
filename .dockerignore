@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.data
+.env*
+video/*
+!video/package.json
+docs
+supabase
+drizzle
+*.md
+tsconfig.tsbuildinfo

@@ -143,7 +143,7 @@
 - **Нови миграции:** продължават като SQL файлове, но в `db/migrations/` с **dbmate** (един binary, чист SQL, пази `schema_migrations`). Пускат се от отделен контейнер при деплой, преди новата версия на приложението. `supabase/migrations/` и `drizzle/` остават като история.
 - RLS: таблиците нямат нужда от него (браузърът никога не говори с базата), но не пречи. Махаме само политиките, които сочат към `auth.uid()`.
 - `DATABASE_URL` → `pakto_app`, `DATABASE_MIGRATION_URL` → `pakto_owner` (вече ги има в `src/lib/env/server.ts`).
-- **Направено (05.10.2026):** `deploy/compose.postgres.yml` (Postgres 17 със `deploy/postgresql.conf`, без публикуван порт; `migrate` = dbmate), `deploy/postgres-init/01-setup.sh` (схема `extensions`, `pg_trgm`/`pgcrypto`, роля `pakto_app` с DEFAULT PRIVILEGES). На сървъра: `/opt/pakto/{deploy,db,.env}`, паролите са генерирани там (`.env`, права 600).
+- **Направено (05.10.2026):** `deploy/compose.yml` (Postgres 17 със `deploy/postgresql.conf`, без публикуван порт; `migrate` = dbmate), `deploy/postgres-init/01-setup.sh` (схема `extensions`, `pg_trgm`/`pgcrypto`, роля `pakto_app` с DEFAULT PRIVILEGES). На сървъра: `/opt/pakto/{deploy,db,.env}`, паролите са генерирани там (`.env`, права 600).
 - **Копие на данните** (бележка: сървърът сега държи снимка от Supabase от 05.10.2026; при преминаването се прави наново): `pg_dump --data-only -Fc` от Supabase → `pg_restore --disable-triggers` в новата база; броят редове по таблици съвпада на всички 49 таблици.
 - Проверено с ролята `pakto_app`: чете и пише, `CREATE`/`DROP` са отказани, тригерът за неизменяемите записи отказва `DELETE`, 28 тригера са на място.
 
@@ -266,7 +266,7 @@ _Статус: файловете са готови и анонимизация�
 ### Фаза 6: Сървърът
 - [x] Hardening (3.8): потребител `deploy` (sudo, docker), вход само с ключ `~/.ssh/pakto_vps`, root вход изключен, `ufw` (22, 80, 443 tcp/udp), fail2ban, unattended-upgrades, 2 GB swap
 - [x] Docker 29.8 + Compose v5.6 от официалното хранилище, ротация на логовете (10m × 5), папка `/opt/pakto`
-- [ ] `/opt/pakto`: `compose.yml`, `Caddyfile`, `.env`
+- [x] `/opt/pakto`: `deploy/compose.yml` (postgres, app, caddy, cron, backup), `Caddyfile`, `.env`; приложението работи на https://pakto.net (сертификат от Let's Encrypt, www → без www, `/api/health` ok), нощен бекъп проверен ръчно (`BACKUP_NOW=1`)
 - [ ] GitHub Actions → GHCR → деплой
 - [ ] Бекъп контейнер + **пробно възстановяване**
 - [ ] `/api/health` + външен монитор

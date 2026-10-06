@@ -1,0 +1,24 @@
+{
+	email info@pakto.net
+}
+
+www.pakto.net {
+	redir https://pakto.net{uri} permanent
+}
+
+pakto.net {
+	encode zstd gzip
+	# 15 MB attachments (+ a little) and the 10 MB of screenshots from the contact form.
+	request_body {
+		max_size 20MB
+	}
+	header {
+		# Not includeSubDomains: other subdomains may not be on https yet.
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy app:3000 {
+		# Server-sent events (/api/live) must not be buffered.
+		flush_interval -1
+	}
+}

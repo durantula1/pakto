@@ -26,7 +26,7 @@ done
 
 SSH=(ssh -i "$KEY" -o IdentitiesOnly=yes "$HOST")
 LOCAL=(docker compose -f docker-compose.dev.yml exec -T)
-PROD_COMPOSE='cd /opt/pakto/deploy && docker compose --env-file ../.env -f compose.postgres.yml'
+PROD_COMPOSE='cd /opt/pakto/deploy && docker compose --env-file ../.env'
 
 # Only ever write to the local container, whatever DATABASE_URL says.
 if ! docker compose -f docker-compose.dev.yml ps --status running postgres 2>/dev/null | grep -q postgres; then

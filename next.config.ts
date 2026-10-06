@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // A self-contained server.js with only the files it needs: the Docker image copies .next/standalone.
+  output: "standalone",
   allowedDevOrigins: ["127.0.0.1"],
   experimental: {
     authInterrupts: true,
