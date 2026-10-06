@@ -64,7 +64,7 @@ export async function purgeDueAccounts(now = new Date()) {
   return result;
 }
 
-const COMPANY_BUCKETS = ["order-files", "change-attachments", "decision-signatures", "organization-logos"] as const;
+const COMPANY_BUCKETS = ["change-attachments", "decision-signatures", "organization-logos"] as const;
 
 /** Every bucket keeps a company's files under `<orgId>/`, so closing the company removes that folder in each. */
 async function removeCompanyFiles(organizationId: string) {

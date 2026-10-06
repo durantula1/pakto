@@ -156,6 +156,7 @@ pnpm dev
 
 ## Дневник
 
+- **06.10.2026**: махнат старият модел „паспорт“ от MadeFlow: 19 празни таблици, 12 типа, 2 функции и 6 колони (`20261006120000_drop_legacy_madeflow.sql`, необратима: връщане само от бекъп), папката `order-files` от списъка за файлове; `purge_organization` вече не ги чисти.
 - **06.10.2026**: преместването е завършено. Сървърът, деплоят, бекъпите (локални и R2) и имейлите са описани по-горе; Supabase, Resend и Vercel са махнати от кода (`@supabase/supabase-js`, `resend`, `drizzle-kit`, `vercel.json`, `supabase/`, `drizzle/`, `src/instrumentation.ts`). Базата на сървъра е започната на чисто (данните в Supabase бяха само тестови). Добавени CSP и `db/seed.sql`. Поправени: пренасочвания към `0.0.0.0:3000`, контактната форма (искаше `RESEND_API_KEY`), `db:pull` (историята на миграциите и `--files`).
 - **05.10.2026**: имейли през SMTP с опашка, файлове на диска, Better Auth, live през `LISTEN/NOTIFY`, собствен Postgres. Подробно в `docs/production-migration-plan.md`.
 - По-старите записи (Vercel/Supabase периода) са в историята на git.

@@ -11,7 +11,7 @@ import { signPortalValue } from "@/lib/crypto/portal-token";
  * Files live on the server's disk under FILES_DIR/<bucket>/<path> (a Docker volume in production,
  * `.data/files` locally). The database stores the path within the bucket.
  */
-export const BUCKETS = ["change-attachments", "decision-signatures", "organization-logos", "order-files"] as const;
+export const BUCKETS = ["change-attachments", "decision-signatures", "organization-logos"] as const;
 export type Bucket = (typeof BUCKETS)[number];
 
 /** Organization id, revision id, uuid or hash segments with an extension: nothing that can climb out of the bucket. */
