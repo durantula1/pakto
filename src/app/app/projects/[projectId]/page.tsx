@@ -10,7 +10,6 @@ import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailTabs } from "@/components/workspace/detail-tabs";
 import { loadNotes, NotesSection, NotesSectionSkeleton } from "@/components/notes/notes-section";
-import { TabCount } from "@/components/workspace/tab-count";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/workspace/data-table";
 import { DetailHeader } from "@/components/workspace/detail-header";
 import { seesClients } from "@/modules/clients/access";
@@ -70,6 +69,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   if (!project || !state) notFound();
   const { disputes, claims } = inbox;
   const notesTotal = notes?.total ?? null;
+  // Tab counts are known before the tabs render: React Aria also renders tab items into a hidden template on the
+  // server, and a Suspense boundary there streams into nodes the browser cannot find (hydration error #418).
+  const notesCount = await (notesTotal ?? 0);
   const path = `/app/projects/${projectId}`;
   const tab = tabs.find((item) => item === query.tab) ?? "overview";
   const active = project.status === "active";
@@ -160,7 +162,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           <TabsTrigger id="documents">{projectTabLabels.documents}</TabsTrigger>
           <TabsTrigger id="work">{projectTabLabels.work}</TabsTrigger>
           {showPayments ? <TabsTrigger id="payments">{projectTabLabels.payments}{disputes.length || claims.length ? <CountPill value={disputes.length + claims.length} highlight /> : null}</TabsTrigger> : null}
-          {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}<Suspense fallback={null}><TabCount count={notesTotal} /></Suspense></TabsTrigger> : null}
+          {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}{notesCount ? <CountPill value={notesCount} /> : null}</TabsTrigger> : null}
         </TabsList>
         <TabsContent id="overview" className="pt-4">
           <ProjectDashboard

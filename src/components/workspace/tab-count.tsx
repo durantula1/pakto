@@ -12,10 +12,3 @@ export function CountPill({ value, highlight = false }: { value: number; highlig
       : "bg-sidebar-accent text-sidebar-foreground in-data-selected:bg-white in-data-selected:text-sidebar",
   )}>{value}</span>;
 }
-
-/** Count next to a tab label, streamed after the page; nothing while it loads or when zero. */
-export async function TabCount({ count, highlight }: { count: Promise<number>; highlight?: Promise<boolean> }) {
-  const [value, strong] = await Promise.all([count, highlight ?? false]);
-  if (!value) return null;
-  return <CountPill value={value} highlight={strong} />;
-}

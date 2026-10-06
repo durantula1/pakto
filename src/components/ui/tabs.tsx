@@ -3,27 +3,55 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import {
+  type Key,
   TabList as TabListPrimitive,
-  TabPanel as TabPanelPrimitive,
   Tab as TabPrimitive,
   Tabs as TabsPrimitive,
 } from "react-aria-components"
 
 import { cn } from "@/lib/utils"
 
+/*
+ * React Aria only drives the tab strip (keyboard, focus, roles). The panels are plain elements outside it:
+ * React Aria renders everything inside <Tabs> a second time into a hidden <template> to collect the tabs,
+ * and panel content that the server streams in later left its placeholders in that template, where the
+ * browser cannot find them ("$RS … parentNode" errors and React hydration error #418 on every tabbed page).
+ */
+const TabsSelection = React.createContext<{ selected: Key | null; select: (key: Key) => void } | null>(null)
+
 function Tabs({
   className,
+  selectedKey,
+  defaultSelectedKey,
+  onSelectionChange,
+  children,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive>) {
+}: Omit<React.ComponentProps<"div">, "onSelect"> & {
+  selectedKey?: Key
+  defaultSelectedKey?: Key
+  onSelectionChange?: (key: Key) => void
+}) {
+  const [own, setOwn] = React.useState<Key | null>(defaultSelectedKey ?? null)
+  const selected = selectedKey ?? own
+  const select = React.useCallback((key: Key) => {
+    setOwn(key)
+    onSelectionChange?.(key)
+  }, [onSelectionChange])
+  const value = React.useMemo(() => ({ selected, select }), [selected, select])
   return (
-    <TabsPrimitive
-      data-slot="tabs"
-      className={cn(
-        "group/tabs flex gap-2 data-horizontal:flex-col",
-        className
-      )}
-      {...props}
-    />
+    <TabsSelection.Provider value={value}>
+      <div
+        data-slot="tabs"
+        data-orientation="horizontal"
+        className={cn(
+          "group/tabs flex gap-2 data-horizontal:flex-col",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </TabsSelection.Provider>
   )
 }
 
@@ -48,13 +76,20 @@ function TabsList({
   ...props
 }: React.ComponentProps<typeof TabListPrimitive> &
   VariantProps<typeof tabsListVariants>) {
+  const tabs = React.useContext(TabsSelection)
   return (
-    <TabListPrimitive
-      data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
-      {...props}
-    />
+    <TabsPrimitive
+      className="contents"
+      selectedKey={tabs?.selected ?? undefined}
+      onSelectionChange={(key) => { if (key != null) tabs?.select(key) }}
+    >
+      <TabListPrimitive
+        data-slot="tabs-list"
+        data-variant={variant}
+        className={cn(tabsListVariants({ variant }), className)}
+        {...props}
+      />
+    </TabsPrimitive>
   )
 }
 
@@ -78,12 +113,18 @@ function TabsTrigger({
   )
 }
 
+/** The selected tab's panel; the others are not rendered, as React Aria did before. */
 function TabsContent({
+  id,
   className,
   ...props
-}: React.ComponentProps<typeof TabPanelPrimitive>) {
+}: Omit<React.ComponentProps<"div">, "id"> & { id: Key }) {
+  const tabs = React.useContext(TabsSelection)
+  if (tabs?.selected !== id) return null
   return (
-    <TabPanelPrimitive
+    <div
+      role="tabpanel"
+      tabIndex={0}
       data-slot="tabs-content"
       className={cn("flex-1 text-sm outline-none", className)}
       {...props}

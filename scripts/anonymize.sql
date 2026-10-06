@@ -31,7 +31,6 @@ UPDATE app.projects SET site_address = 'Адрес на обекта';
 -- Traces of who decided what from where
 UPDATE app.portal_decisions SET typed_name = 'Клиент', ip = NULL, user_agent = NULL, verified_email = 'client@example.test';
 UPDATE app.offer_acceptances SET typed_name = 'Клиент', ip = NULL, user_agent = NULL;
-UPDATE app.approvals SET approver_name = 'Клиент', approver_email = 'client@example.test', user_agent = NULL;
 UPDATE app.portal_otps SET email = 'client@example.test', target_email = NULL, created_ip = NULL;
 UPDATE app.portal_sessions SET created_ip = NULL, user_agent = NULL;
 
@@ -39,11 +38,9 @@ UPDATE app.portal_sessions SET created_ip = NULL, user_agent = NULL;
 UPDATE app.portal_sessions SET session_hash = md5(random()::text), revoked_at = coalesce(revoked_at, now());
 UPDATE app.portal_otps SET code_hash = md5(random()::text);
 UPDATE app.portal_grants SET token_hash = md5(random()::text), token_ciphertext = 'invalidated';
-UPDATE app.portal_links SET token_hash = md5(random()::text);
 
 -- Mail records and queued notifications (nothing from the copy must ever be sent)
 DELETE FROM app.email_outbox;
-DELETE FROM app.notification_outbox;
 UPDATE app.notification_preferences SET email = false;
 
 COMMIT;

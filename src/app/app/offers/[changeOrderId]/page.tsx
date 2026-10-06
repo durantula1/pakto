@@ -8,7 +8,6 @@ import { loadNotes, NotesSection, NotesSectionSkeleton } from "@/components/note
 import { MessageThread } from "@/components/messages/message-thread";
 import { sendStaffMessageAction } from "@/modules/messages/actions";
 import { listThread, unreadCount } from "@/modules/messages/queries";
-import { TabCount } from "@/components/workspace/tab-count";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,7 +71,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const isOffer = change.documentKind === "offer";
   const changesPage = parsePage(query.changesPage);
   const path = `/app/offers/${change.id}`;
-  // The changes table, conversation, notes and tab counts stream in behind their own skeletons.
+  // The changes table, conversation and notes stream in behind their own skeletons.
   const [member, portalUrl, offerChangesTotal, attachments, hasStage, inForceChanges, executionReads] = change.extra;
   const execution = executionReads && executionReads[0] ? { state: executionReads[0], inbox: executionReads[1] } : null;
   // An approved change whose work has not started and has no stage yet: offer to schedule it.
@@ -90,6 +89,9 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const notesPage = parsePage(query.notesPage);
   const notes = canNotes ? loadNotes(context.organizationId, { projectId: change.projectId, changeOrderId: change.id }, notesPage) : null;
   const notesTotal = notes?.total ?? null;
+  // Tab counts are known before the tabs render: React Aria also renders tab items into a hidden template on the
+  // server, and a Suspense boundary there streams into nodes the browser cannot find (hydration error #418).
+  const [notesCount, unreadCount] = await Promise.all([notesTotal ?? 0, thread ? thread.then((data) => data.unread) : 0]);
   const changesPageParam = changesPage > 1 ? String(changesPage) : undefined;
   const olderEventsHref = change.hasOlderEvents && change.events.length ? pageHref(path, { changesPage: changesPageParam, eventsBefore: String(change.events[change.events.length - 1].id) }, "changesPage", changesPage) : null;
   const latestEventsHref = eventsBefore !== undefined ? pageHref(path, {}, "changesPage", changesPage) : null;
@@ -147,8 +149,8 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
               <TabsTrigger id="document">{documentTabLabels.document}</TabsTrigger>
               {inForce ? <TabsTrigger id="stages">{documentTabLabels.stages}{openStages ? <CountPill value={openStages} /> : null}</TabsTrigger> : null}
               {inForce && showMoney ? <TabsTrigger id="payments">{documentTabLabels.payments}{claimsOpen ? <CountPill value={claimsOpen} highlight /> : null}</TabsTrigger> : null}
-              {thread ? <TabsTrigger id="messages">{documentTabLabels.messages}<Suspense fallback={null}><TabCount count={thread.then((data) => data.unread)} highlight={Promise.resolve(true)} /></Suspense></TabsTrigger> : null}
-              {notesTotal ? <TabsTrigger id="notes">{documentTabLabels.notes}<Suspense fallback={null}><TabCount count={notesTotal} /></Suspense></TabsTrigger> : null}
+              {thread ? <TabsTrigger id="messages">{documentTabLabels.messages}{unreadCount ? <CountPill value={unreadCount} highlight /> : null}</TabsTrigger> : null}
+              {notesTotal ? <TabsTrigger id="notes">{documentTabLabels.notes}{notesCount ? <CountPill value={notesCount} /> : null}</TabsTrigger> : null}
               <TabsTrigger id="history">{documentTabLabels.history}</TabsTrigger>
             </TabsList>
             <TabsContent id="document" className="flex flex-col gap-4 pt-4">
