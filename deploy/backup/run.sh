@@ -4,7 +4,8 @@
 set -u
 backup() {
   stamp=$(date +%Y%m%d-%H%M)
-  pg_dump -Fc --schema=app -f "/backups/pakto-$stamp.dump" && echo "$(date -Iseconds) database ok: pakto-$stamp.dump"
+  # The whole database: schema app, the extensions schema (pg_trgm) and dbmate's schema_migrations, with grants.
+  pg_dump -Fc -f "/backups/pakto-$stamp.dump" && echo "$(date -Iseconds) database ok: pakto-$stamp.dump"
   tar -czf "/backups/files-$stamp.tar.gz" -C /data/files . && echo "$(date -Iseconds) files ok: files-$stamp.tar.gz"
   find /backups -name 'pakto-*.dump' -mtime +14 -delete
   find /backups -name 'files-*.tar.gz' -mtime +14 -delete

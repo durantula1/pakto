@@ -268,7 +268,7 @@ _Статус: файловете са готови и анонимизация�
 - [x] Docker 29.8 + Compose v5.6 от официалното хранилище, ротация на логовете (10m × 5), папка `/opt/pakto`
 - [x] `/opt/pakto`: `deploy/compose.yml` (postgres, app, caddy, cron, backup), `Caddyfile`, `.env`; приложението работи на https://pakto.net (сертификат от Let's Encrypt, www → без www, `/api/health` ok), нощен бекъп проверен ръчно (`BACKUP_NOW=1`)
 - [x] GitHub Actions → GHCR → деплой (`.github/workflows/deploy.yml`, `deploy/deploy.sh`; нужен secret `DEPLOY_SSH_KEY`)
-- [ ] Бекъп контейнер + **пробно възстановяване**
+- [x] Бекъп контейнер + **пробно възстановяване** (06.10.2026: пълен дъмп, възстановен в чиста база за 1 s, всичките 60 таблици с еднакъв брой редове, хешовете на версиите съвпадат). Остава офсайт копие (B2)
 - [ ] `/api/health` + външен монитор
 - [ ] `pnpm db:pull` (`scripts/db-pull.sh`) с анонимизация; проба: копие на лаптопа, вход с локалната парола, писмата в Mailpit
 - [ ] Пълен QA по `docs/qa-test-plan.md` на сървъра (P0 и P1)
