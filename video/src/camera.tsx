@@ -571,15 +571,11 @@ export function EndCard({ layout }: { layout: Layout }) {
           ...enter(frame, 20),
         }}
       >
+        {/* On coral the bubble is navy, so it does not vanish into the background. */}
         <Img
-          src={staticFile("pakto-mark.svg")}
-          style={{ width: 56, height: 56 }}
+          src={staticFile("pakto-logo-on-coral.svg")}
+          style={{ height: 56, width: "auto" }}
         />
-        <span
-          style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.04em" }}
-        >
-          Pakto
-        </span>
       </div>
       <div
         style={{

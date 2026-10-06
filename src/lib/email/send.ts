@@ -163,7 +163,7 @@ function brandedLayout(body: string) {
   return `<!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f4efe6">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4efe6"><tr><td align="center" style="padding:24px 12px">`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px">`
-    + `<tr><td style="padding:0 4px 16px"><img src="cid:${LOGO_CONTENT_ID}" width="32" height="32" alt="Pakto" style="display:inline-block;vertical-align:middle;border:0;border-radius:8px"><span style="${font};display:inline-block;vertical-align:middle;margin-left:10px;font-size:20px;font-weight:800;letter-spacing:-0.5px;color:#102b38">Pakto</span></td></tr>`
+    + `<tr><td style="padding:0 4px 16px"><img src="cid:${LOGO_CONTENT_ID}" width="97" height="32" alt="Pakto" style="display:block;border:0"></td></tr>`
     + `<tr><td style="${font};background:#ffffff;border-radius:16px;padding:24px;font-size:15px;line-height:1.55;color:#18181b">${body}</td></tr>`
     + `<tr><td style="${font};padding:16px 4px 0;font-size:12px;line-height:1.5;color:#71717a">Изпратено чрез Pakto — оферти и промени, одобрени с код.</td></tr>`
     + `</table></td></tr></table></body></html>`;
