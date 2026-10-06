@@ -165,8 +165,11 @@ export default async function WorkspaceLayout({
           >
             <CirclePlus className="size-6" />
           </Link> : <span />}
-          <NavLink href="/app/notifications" label="Известия" icon={<Bell className="size-5" />} badge={unreadBadge} variant="tab" />
-          <MobileMoreMenu owner={owner} finance={finance} clients={clients} />
+          {/* The bell in the header already opens notifications; members who see clients get them here instead. */}
+          {clients
+            ? <NavLink href="/app/clients" label="Клиенти" icon={<Contact className="size-5" />} variant="tab" />
+            : <NavLink href="/app/notifications" label="Известия" icon={<Bell className="size-5" />} badge={unreadBadge} variant="tab" />}
+          <MobileMoreMenu owner={owner} finance={finance} />
         </nav>
       </section>
     </div>
