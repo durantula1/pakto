@@ -1,0 +1,16 @@
+# syntax=docker/dockerfile:1
+# Image from an app CI has already built (`pnpm build` → .next/standalone): only copies files, so it takes seconds.
+# The full build from source is in Dockerfile (used for a manual build on the server).
+FROM node:24-bookworm-slim
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 FILES_DIR=/data/files
+WORKDIR /app
+RUN groupadd --system --gid 1001 pakto && useradd --system --uid 1001 --gid pakto pakto \
+  && mkdir -p /data/files && chown pakto:pakto /data/files
+COPY --chown=pakto:pakto .next/standalone ./
+COPY --chown=pakto:pakto .next/static ./.next/static
+COPY --chown=pakto:pakto public ./public
+USER pakto
+EXPOSE 3000
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "server.js"]

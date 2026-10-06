@@ -25,10 +25,11 @@ set_tag() {
   if grep -q '^APP_TAG=' ../.env; then sed -i "s|^APP_TAG=.*|APP_TAG=$1|" ../.env; else echo "APP_TAG=$1" >> ../.env; fi
 }
 
-# Backup before the schema can change; a failed backup stops the deploy.
-"${COMPOSE[@]}" exec -T -e BACKUP_NOW=1 backup sh /run.sh < /dev/null
-
-"${COMPOSE[@]}" --profile tools run --rm migrate < /dev/null
+# Only a new migration can change the data: then a backup first (a failed backup stops the deploy), then the migration.
+if ! "${COMPOSE[@]}" --profile tools run --rm migrate --wait status --exit-code --quiet < /dev/null; then
+  "${COMPOSE[@]}" exec -T -e BACKUP_NOW=1 backup sh /run.sh < /dev/null
+  "${COMPOSE[@]}" --profile tools run --rm migrate < /dev/null
+fi
 
 set_tag "$TAG"
 "${COMPOSE[@]}" up -d --remove-orphans < /dev/null

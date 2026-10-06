@@ -17,7 +17,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # `next build` loads server modules to collect page data; nothing connects or signs anything at build time.
 # These placeholders live in this stage only: the runner image gets the real values from the environment.
-# .next/cache survives between builds (in CI through buildkit-cache-dance), so an unchanged page is not compiled again.
+# .next/cache survives between builds on the same machine. CI builds outside Docker and uses Dockerfile.prebuilt.
 RUN --mount=type=cache,target=/app/.next/cache DATABASE_URL=postgres://build:build@localhost:5432/build BETTER_AUTH_SECRET=build-only-placeholder PORTAL_LINK_SECRET=build-only-placeholder pnpm build
 
 FROM node:24-bookworm-slim AS runner

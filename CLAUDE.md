@@ -12,7 +12,7 @@ pnpm 11 on Node 24.19+. There is no test suite (see the testing preference in AG
 pnpm dev            # next dev on :3000 (also the "dev" entry in .claude/launch.json)
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint .
-pnpm build          # next build --webpack
+pnpm build          # next build (Turbopack)
 pnpm format         # prettier --write . (default Prettier settings, no config file)
 pnpm db:generate    # drizzle-kit generate from src/db/schema/index.ts
 pnpm video:studio   # Remotion Studio for the landing video (video/, its own pnpm package)
