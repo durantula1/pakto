@@ -1823,9 +1823,8 @@ export const emailOutbox = appSchema.table(
 );
 
 /*
- * Better Auth (src/lib/auth/server.ts). The ids are the same UUIDs Supabase Auth used, so profiles.id and
- * every user_id stay valid. New ids come from the database default (Better Auth's generateId "uuid" leaves them to
- * Postgres). Passwords are bcrypt, the format Supabase stored them in.
+ * Better Auth (src/lib/auth/server.ts). Ids are UUIDs, like profiles.id and every user_id; they come from the
+ * database default (Better Auth's generateId "uuid" leaves them to Postgres). Passwords are bcrypt.
  */
 export const authUsers = appSchema.table(
   "auth_users",

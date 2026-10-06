@@ -8,37 +8,27 @@ import * as schema from "@/db/schema";
 
 // Versioned keys: a dev server keeps globalThis across reloads, so a changed pool config needs a new key.
 const globalDatabase = globalThis as unknown as {
-  paktoSqlV3?: ReturnType<typeof postgres>;
-  paktoDbV3?: ReturnType<typeof drizzle<typeof schema>>;
+  paktoSqlV4?: ReturnType<typeof postgres>;
+  paktoDbV4?: ReturnType<typeof drizzle<typeof schema>>;
 };
 
 function getSqlClient() {
-  if (!globalDatabase.paktoSqlV3) {
+  if (!globalDatabase.paktoSqlV4) {
     const environment = getServerEnvironment();
-    globalDatabase.paktoSqlV3 = postgres(environment.DATABASE_URL, {
-      prepare: false,
+    globalDatabase.paktoSqlV4 = postgres(environment.DATABASE_URL, {
       // Pages run their reads in parallel (about twenty at once on the project and document pages); a small pool
-      // would queue them in waves of one network round trip each. Supavisor multiplexes these client connections.
-      // The client is kept on globalThis, so dev reloads reuse it instead of opening more.
+      // would queue them. The client is kept on globalThis, so dev reloads reuse it instead of opening more.
       max: 20,
-      // Opening a connection to the Supabase pooler costs ~0.5 s (TLS and auth), far more than a query.
-      // Idle connections stay open for 30 minutes so a page opened after a pause does not pay that again.
-      idle_timeout: 1800,
+      idle_timeout: 300,
       connect_timeout: 10,
       ssl: environment.DATABASE_SSL ? "require" : false,
     });
   }
 
-  return globalDatabase.paktoSqlV3;
+  return globalDatabase.paktoSqlV4;
 }
 
 export function getDatabase() {
-  globalDatabase.paktoDbV3 ??= drizzle(getSqlClient(), { schema });
-  return globalDatabase.paktoDbV3;
-}
-
-/** Opens several pool connections ahead of the first request (see src/instrumentation.ts). */
-export async function warmDatabase(connections = 16) {
-  const sql = getSqlClient();
-  await Promise.all(Array.from({ length: connections }, () => sql`select 1`));
+  globalDatabase.paktoDbV4 ??= drizzle(getSqlClient(), { schema });
+  return globalDatabase.paktoDbV4;
 }

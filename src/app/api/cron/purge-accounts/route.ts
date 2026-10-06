@@ -16,7 +16,7 @@ function authorized(request: Request) {
   return expected.length === received.length && timingSafeEqual(expected, received);
 }
 
-/** Called daily by Vercel Cron (see vercel.json) with `Authorization: Bearer $CRON_SECRET`. */
+/** Called daily by the cron container (deploy/cron/loop.sh) with `Authorization: Bearer $CRON_SECRET`. */
 export async function GET(request: Request) {
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const result = await purgeDueAccounts();

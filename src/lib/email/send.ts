@@ -2,7 +2,6 @@ import "server-only";
 
 import { and, eq, gt, inArray, lt, sql } from "drizzle-orm";
 import nodemailer, { type Transporter } from "nodemailer";
-import { Resend } from "resend";
 
 import { getDatabase } from "@/db";
 import { emailOutbox } from "@/db/schema";
@@ -123,47 +122,32 @@ function minutesFromNow(minutes: number) {
 }
 
 let smtp: Transporter | undefined;
-let resend: Resend | undefined;
 
-/** SMTP (our Hostinger mailbox) when it is configured; Resend stays as the fallback until the move is done. */
+/** Through SMTP: the info@pakto.net mailbox on the server, Mailpit locally. */
 async function deliver(message: Content, attachments: Attachment[]) {
   const environment = getServerEnvironment();
   const logo = { filename: "pakto.png", content: Buffer.from(PAKTO_LOGO_PNG_BASE64, "base64"), contentId: LOGO_CONTENT_ID };
   const content = { from: environment.EMAIL_FROM, to: message.to, subject: message.subject, text: message.text, html: brandedLayout(message.html), replyTo: message.replyTo };
 
-  if (environment.SMTP_HOST) {
-    smtp ??= nodemailer.createTransport({
-      host: environment.SMTP_HOST,
-      port: environment.SMTP_PORT,
-      secure: environment.SMTP_PORT === 465,
-      auth: environment.SMTP_USER ? { user: environment.SMTP_USER, pass: environment.SMTP_PASSWORD } : undefined,
-      pool: true,
-      maxConnections: 2,
-    });
-    // Inline (cid:) rather than a hosted URL: shows without "load images" and without a public address.
-    await smtp.sendMail({ ...content, attachments: [...attachments, logo].map(({ filename, content: data, contentId }) => ({ filename, content: data, cid: contentId })) });
-    return;
-  }
-
-  if (!environment.RESEND_API_KEY) throw new EmailDeliveryError("Имейл услугата не е настроена.");
-  resend ??= new Resend(environment.RESEND_API_KEY);
-  const { error } = await resend.emails.send({ ...content, attachments: [...attachments, logo] });
-  if (error) throw Object.assign(new Error(error.message), { name: error.name, provider: "resend" });
+  if (!environment.SMTP_HOST) throw new EmailDeliveryError("SMTP_HOST is not set.");
+  smtp ??= nodemailer.createTransport({
+    host: environment.SMTP_HOST,
+    port: environment.SMTP_PORT,
+    secure: environment.SMTP_PORT === 465,
+    auth: environment.SMTP_USER ? { user: environment.SMTP_USER, pass: environment.SMTP_PASSWORD } : undefined,
+    pool: true,
+    maxConnections: 2,
+  });
+  // Inline (cid:) rather than a hosted URL: shows without "load images" and without a public address.
+  await smtp.sendMail({ ...content, attachments: [...attachments, logo].map(({ filename, content: data, contentId }) => ({ filename, content: data, cid: contentId })) });
 }
 
 /** The provider's own text is English and technical: it goes to the log, the person sees a Bulgarian reason. */
 function describeFailure(cause: unknown): Failure {
   if (cause instanceof EmailDeliveryError) return { reason: "имейл услугата не е настроена.", temporary: false, log: cause.message };
-  const error = (cause ?? {}) as { name?: string; message?: string; code?: string; responseCode?: number; response?: string; provider?: string };
+  const error = (cause ?? {}) as { name?: string; message?: string; code?: string; responseCode?: number; response?: string };
   const log = [error.code, error.responseCode, error.response ?? error.message].filter(Boolean).join(" ").slice(0, 500);
   const text = `${error.name ?? ""} ${error.message ?? ""} ${error.response ?? ""}`;
-
-  if (error.provider === "resend") {
-    if (/testing emails|verify a domain|own email address/i.test(text)) return { reason: "имейл услугата още е в тестов режим и праща само до един адрес.", temporary: false, log };
-    if (/rate|too many|quota/i.test(text)) return { reason: "твърде много писма за кратко време. Опитай след малко.", temporary: true, log };
-    if (/invalid.*(email|address|to)|not a valid/i.test(text)) return { reason: "адресът изглежда невалиден.", temporary: false, log };
-    return { reason: "доставчикът на имейли върна грешка. Опитай отново след малко.", temporary: true, log };
-  }
 
   const code = error.responseCode ?? 0;
   if (error.code === "EAUTH" || code === 535) return { reason: "пощата отказа входа. Провери потребителя и паролата на пощата.", temporary: false, log };

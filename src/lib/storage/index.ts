@@ -9,8 +9,7 @@ import { signPortalValue } from "@/lib/crypto/portal-token";
 
 /**
  * Files live on the server's disk under FILES_DIR/<bucket>/<path> (a Docker volume in production,
- * `.data/files` locally). The bucket names and paths are the ones Supabase Storage used, so stored
- * paths in the database did not change.
+ * `.data/files` locally). The database stores the path within the bucket.
  */
 export const BUCKETS = ["change-attachments", "decision-signatures", "organization-logos", "order-files"] as const;
 export type Bucket = (typeof BUCKETS)[number];
@@ -77,8 +76,7 @@ type UploadTicket = { bucket: Bucket; path: string; maxBytes: number; expiresAt:
 const UPLOAD_TTL_MS = 10 * 60_000;
 
 /**
- * A short-lived, signed permission to upload exactly one file to one path (replaces Supabase's signed
- * upload URL). The browser sends the bytes to /api/uploads; the server action that issued the ticket
+ * A short-lived, signed permission to upload exactly one file to one path. The browser sends the bytes to /api/uploads; the server action that issued the ticket
  * checks what arrived before anything refers to it.
  */
 export function createUploadTicket(input: { bucket: Bucket; path: string; maxBytes: number }) {

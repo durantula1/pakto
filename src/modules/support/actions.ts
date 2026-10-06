@@ -74,8 +74,8 @@ export async function sendSupportRequestAction(_: SupportState, formData: FormDa
   if (!replyTo) return { error: "Въведете имейл, за да можем да ви отговорим." };
 
   const environment = getServerEnvironment();
-  if (!environment.SUPPORT_EMAIL || !environment.RESEND_API_KEY) {
-    console.error("[support] SUPPORT_EMAIL or RESEND_API_KEY is not set");
+  if (!environment.SUPPORT_EMAIL) {
+    console.error("[support] SUPPORT_EMAIL is not set");
     return { error: "Формата временно не работи. Моля, опитайте по-късно." };
   }
 

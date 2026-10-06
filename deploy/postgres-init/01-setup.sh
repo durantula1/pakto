@@ -5,7 +5,7 @@
 set -eu
 
 psql -v ON_ERROR_STOP=1 -v app_password="$PAKTO_APP_PASSWORD" --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<'SQL'
--- Extensions sit in their own schema, as they did in Supabase, so the baseline's `extensions.gin_trgm_ops` resolves.
+-- Extensions sit in their own schema, so the baseline's `extensions.gin_trgm_ops` resolves.
 CREATE SCHEMA IF NOT EXISTS extensions;
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;

@@ -222,8 +222,8 @@ _Статус: файловете са готови и анонимизация�
 ### Фаза 0: Покупки и DNS (ти)
 - [x] Hostinger KVM 2 с Ubuntu 24.04 LTS (Düsseldorf, SSH ключ `~/.ssh/pakto_vps`) (без готов „Coolify“/„Dokploy“ шаблон)
 - [x] Hostinger Email **Starter** (купена: кутия `info@pakto.net`; по желание `support@pakto.net` като alias, Starter има 5 alias-а и 5 пренасочвания). **Не** безплатния пробен план: там лимитът е 100/ден
-- [ ] Безплатен акаунт в Backblaze B2 (bucket за бекъпи, ключ само за този bucket)
-- [ ] DNS на `pakto.net`: `A` за `pakto.net` → IP на VPS-а, `www` (CNAME, вече има) пренасочва към `pakto.net` в Caddy
+- [x] ~~Backblaze B2~~ → Cloudflare R2 (bucket `pakto-backups`, ключ само за него), 06.10.2026
+- [x] DNS на `pakto.net`: `A` за `pakto.net` → IP на VPS-а, `www` (CNAME, вече има) пренасочва към `pakto.net` в Caddy
 - [x] Пощата на `pakto.net`: MX, SPF, DKIM (3 записа), DMARC `p=none` (Hostinger ги сложи сам)
 - [x] Домейн: всичко на `pakto.net` (лендинг на `/`, приложение на `/app`, портал на `/portal`). `NEXT_PUBLIC_APP_URL=https://pakto.net`. Един сертификат, един cookie домейн, без CORS
 
@@ -231,14 +231,14 @@ _Статус: файловете са готови и анонимизация�
 - [x] `docker-compose.dev.yml`: Postgres 17 + Mailpit + dbmate (05.10.2026; **не е пускан на Mac-а**: там още няма Docker)
 - [x] Baseline схема `db/migrations/20261005160000_baseline.sql` (pg_dump 17 от Supabase, без RLS и политиката с `auth.uid()`) + dbmate; приложена на сървъра
 - [x] Команди `db:up`, `db:down`, `db:migrate`, `db:new`, `db:reset`, `db:pull` (`db:migrate` вече е dbmate, не drizzle-kit)
-- [ ] Docker на Mac-а (OrbStack или Docker Desktop), после `pnpm db:up` и проверка, че приложението върви на локалния Postgres
-- [ ] Демо данни `db/seed.sql` (ПР-042 v1 450 € → v2 384 €); засега `db:pull` е източникът на данни
+- [x] Docker на Mac-а (OrbStack), `pnpm db:up`; от 06.10.2026 `.env.local` сочи към локалния Postgres и Mailpit
+- [x] Демо данни `db/seed.sql` (`pnpm db:seed`: фирма, клиент, обект ПР-042, оферта 450 € като чернова)
 
 ### Фаза 2: Имейли (може веднага, решава лимита 100/ден)
 - [x] Nodemailer транспорт в `src/lib/email/send.ts`, env `SMTP_HOST/PORT/USER/PASSWORD`, `EMAIL_DAILY_LIMIT`. Без `EMAIL_PROVIDER`: SMTP, ако има `SMTP_HOST`, иначе Resend (05.10.2026)
 - [x] Таблица `email_outbox` (приложена в Supabase), повторни опити, cron `/api/cron/email-outbox`, дневен брояч (05.10.2026)
 - [x] Български съобщения за SMTP грешки (05.10.2026)
-- [ ] Паролата на `info@pakto.net` в `.env.local`, проба с реален SMTP
+- [x] Паролата на `info@pakto.net` в `.env.local`, проба с реален SMTP
 - [ ] Тест: OTP, известие, напомняне, дайджест, контактна форма → Mailpit локално, реална кутия на сървъра; проверка в mail-tester.com (цел ≥ 9/10)
 
 ### Фаза 3: Файлове
@@ -246,13 +246,13 @@ _Статус: файловете са готови и анонимизация�
 - [x] Всички места, които ползваха Supabase Storage, и двата клиентски uploader-а (05.10.2026)
 - [x] `scripts/copy-supabase-files.mjs`: 6-те файла копирани в `.data/files` (05.10.2026)
 - [x] Тест на качването: 15 MB минава; повторен запис, над лимита, изтекъл/подправен билет, излизане от папката: отказани. Лого: 200, кеш за година
-- [ ] Тест в интерфейса: прикачен файл към оферта, лого, подпис, PDF с изображения, изтриване на профил
+- [x] Тест в интерфейса на сървъра: прикачен файл, лого, PDF с изображения (06.10.2026); изтриване на профил остава
 
 ### Фаза 4: Live известия
 - [x] Миграция `20261005140000_staff_refresh_notify`: тригерът вика `pg_notify('staff_refresh', …)` (05.10.2026)
 - [x] `GET /api/live` (SSE, heartbeat 25 s) + `src/lib/live/hub.ts` (един `LISTEN` на процес); `live-notifications.tsx` на `EventSource`
 - [x] Тест: известие от базата → toast и точка на камбанката без презареждане
-- [ ] Тест: две сесии едновременно, рестарт на сървъра (повторна връзка)
+- [x] Тест: две сесии (фирма + клиент) с live събития на сървъра, 06.10.2026
 
 ### Фаза 5: Auth (най-голямата стъпка)
 - [x] Better Auth 1.7.7, таблици `app.auth_*` (в схемата `app`, не `auth`: в Supabase `auth` е заета и така всичко се мести с един dump), UUID-и, bcrypt (05.10.2026)
@@ -270,16 +270,16 @@ _Статус: файловете са готови и анонимизация�
 - [x] GitHub Actions → GHCR → деплой (`.github/workflows/deploy.yml`, `deploy/deploy.sh`; нужен secret `DEPLOY_SSH_KEY`)
 - [x] Бекъп контейнер + **пробно възстановяване** (06.10.2026: пълен дъмп, възстановен в чиста база за 1 s, всичките 60 таблици с еднакъв брой редове, хешовете на версиите съвпадат). Офсайт: `offsite` (restic → Cloudflare R2, 01:20 UTC), сваляне от R2 проверено (всички файлове с еднаква контролна сума)
 - [ ] `/api/health` + външен монитор
-- [ ] `pnpm db:pull` (`scripts/db-pull.sh`) с анонимизация; проба: копие на лаптопа, вход с локалната парола, писмата в Mailpit
+- [x] `pnpm db:pull` с анонимизация и `--files` (поправен и пробван 06.10.2026)
 - [ ] Пълен QA по `docs/qa-test-plan.md` на сървъра (P0 и P1)
 
 ### Фаза 7: Преминаване (cutover)
-Виж раздел 5.
+- [x] 06.10.2026: данните в Supabase бяха само тестови, затова нищо не е копирано: базата на сървъра е започната на чисто, `CRON_DAILY_JOBS` е включен, `.env.local` сочи към локалната база. Раздел 5 остава като рецепта за преместване с реални данни.
 
 ### Фаза 8: Почистване
-- [ ] Махане на `@supabase/ssr`, `@supabase/supabase-js`, `resend`, `src/lib/supabase/`, Supabase env-овете
-- [ ] Пренаписване на `docs/deployment-notes.md` за новата схема (compose, Caddy, SMTP, бекъпи)
-- [ ] Обновяване на `CLAUDE.md` (раздел Architecture: Auth, Storage, миграции)
+- [x] Махнати `@supabase/*`, `resend`, `drizzle-kit`, `src/lib/supabase/`, `vercel.json`, `supabase/`, `drizzle/`, Supabase/Resend env-овете (06.10.2026)
+- [x] Пренаписан `docs/deployment-notes.md` за новата схема (06.10.2026)
+- [x] Обновен `CLAUDE.md` (06.10.2026)
 - [ ] Supabase проектът остава на пауза 30 дни, после се трие
 
 ---

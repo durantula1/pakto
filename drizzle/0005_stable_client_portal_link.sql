@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX "portal_links_active_review_order_uidx" ON "app"."portal_links" USING btree ("organization_id","order_id") WHERE "app"."portal_links"."scope" = 'review'::app.portal_scope and "app"."portal_links"."revoked_at" is null;

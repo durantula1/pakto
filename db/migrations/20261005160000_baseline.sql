@@ -3,7 +3,7 @@
 -- Removed: row level security and the one policy (they guarded the Supabase Data API, which our server does not
 -- have), the psql \restrict lines and the search_path reset. Extensions live in the "extensions" schema like in
 -- Supabase; deploy/postgres-init creates them, so index operators such as extensions.gin_trgm_ops resolve.
--- Older history: supabase/migrations/ (applied to Supabase, not replayed here).
+-- Older history: supabase/migrations/ and drizzle/ in git before 06.10.2026 (not replayed here).
 
 --
 -- PostgreSQL database dump

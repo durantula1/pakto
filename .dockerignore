@@ -6,7 +6,6 @@ node_modules
 video/*
 !video/package.json
 docs
-supabase
 drizzle
 *.md
 tsconfig.tsbuildinfo

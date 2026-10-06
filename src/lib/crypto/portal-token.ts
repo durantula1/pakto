@@ -12,8 +12,8 @@ export function createPortalToken() {
 }
 
 function portalSecret() {
-  const secret = process.env.PORTAL_LINK_SECRET ?? process.env.SUPABASE_SECRET_KEY ?? process.env.DATABASE_URL;
-  if (!secret) throw new Error("Липсва сървърен ключ за клиентските линкове.");
+  const secret = process.env.PORTAL_LINK_SECRET;
+  if (!secret) throw new Error("Липсва PORTAL_LINK_SECRET.");
   return secret;
 }
 

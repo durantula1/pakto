@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-HOST="${DB_PULL_HOST:-deploy@187.7.64.36}"
+HOST="${DB_PULL_HOST:-deploy@pakto.net}"
 KEY="${DB_PULL_KEY:-$HOME/.ssh/pakto_vps}"
 KEEP="${DB_PULL_KEEP:-mitqqq35%}"
 RAW=0; FILES=0
@@ -43,10 +43,12 @@ DUMP="$(mktemp)"
 trap 'rm -f "$DUMP"' EXIT
 "${SSH[@]}" "$PROD_COMPOSE exec -T postgres pg_dump -U pakto_owner -d pakto --schema=app -Fc --no-owner --no-privileges" > "$DUMP"
 [ -s "$DUMP" ] || { echo "The dump is empty." >&2; exit 1; }
+# Applied migrations, so `pnpm db:migrate` afterwards only runs the ones made since (pg_dump ignores --schema once --table is given).
+VERSIONS="$("${SSH[@]}" "$PROD_COMPOSE exec -T postgres psql -U pakto_owner -d pakto -tA -c 'select version from public.schema_migrations'")"
 
 echo "2/4 Recreate the local database..."
 "${LOCAL[@]}" postgres psql -U pakto_owner -d postgres -v ON_ERROR_STOP=1 -q <<SQL
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'pakto' AND pid <> pg_backend_pid();
+SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity WHERE datname = 'pakto' AND pid <> pg_backend_pid();
 DROP DATABASE IF EXISTS pakto;
 CREATE DATABASE pakto OWNER pakto_owner;
 SQL
@@ -65,7 +67,11 @@ GRANT USAGE ON SCHEMA app TO pakto_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA app TO pakto_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA app TO pakto_app;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app TO pakto_app;
+CREATE TABLE IF NOT EXISTS public.schema_migrations (version varchar(128) PRIMARY KEY);
 SQL
+for version in $VERSIONS; do
+  "${LOCAL[@]}" postgres psql -U pakto_owner -d pakto -q -c "INSERT INTO public.schema_migrations VALUES ('$version') ON CONFLICT DO NOTHING"
+done
 
 if [ "$RAW" = 1 ]; then
   echo "4/4 Skipped anonymization (--raw)."
@@ -78,7 +84,8 @@ fi
 if [ "$FILES" = 1 ]; then
   echo "Files..."
   mkdir -p .data/files
-  rsync -az -e "ssh -i $KEY -o IdentitiesOnly=yes" "$HOST:/data/files/" .data/files/
+  # The files live in the app container's volume, not on the host's disk.
+  "${SSH[@]}" "docker exec deploy-app-1 tar czf - -C /data/files ." | tar xzf - -C .data/files
 fi
 
 echo "Rows per table (largest first):"

@@ -4,11 +4,9 @@ import { z } from "zod";
 
 const serverEnvironmentSchema = z.object({
   DATABASE_URL: z.string().min(1),
-  DATABASE_MIGRATION_URL: z.string().min(1).optional(),
-  // Supabase needs TLS; the Postgres container on our own server is reached over the private Docker network without it.
+  // Our Postgres (the server's Docker network, the local dev container) is reached without TLS: set "false" there.
   DATABASE_SSL: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
   CRON_SECRET: z.string().min(16).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
   SMTP_HOST: z.string().min(1).optional(),
   SMTP_PORT: z.coerce.number().int().positive().default(465),
   SMTP_USER: z.string().min(1).optional(),
@@ -26,10 +24,8 @@ let cachedEnvironment: ServerEnvironment | undefined;
 export function getServerEnvironment(): ServerEnvironment {
   cachedEnvironment ??= serverEnvironmentSchema.parse({
     DATABASE_URL: process.env.DATABASE_URL,
-    DATABASE_MIGRATION_URL: process.env.DATABASE_MIGRATION_URL,
     DATABASE_SSL: process.env.DATABASE_SSL || undefined,
     CRON_SECRET: process.env.CRON_SECRET,
-    RESEND_API_KEY: process.env.RESEND_API_KEY,
     SMTP_HOST: process.env.SMTP_HOST || undefined,
     SMTP_PORT: process.env.SMTP_PORT || undefined,
     SMTP_USER: process.env.SMTP_USER || undefined,

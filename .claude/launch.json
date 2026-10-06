@@ -2,6 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     { "name": "dev", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 3000, "autoPort": true },
-    { "name": "prod", "runtimeExecutable": "sh", "runtimeArgs": ["-c", "pnpm build && pnpm start -p 3100"], "port": 3100, "autoPort": false }
+    { "name": "prod", "runtimeExecutable": "sh", "runtimeArgs": ["-c", "export NEXT_PUBLIC_APP_URL=http://localhost:3100 && pnpm build && pnpm start -p 3100"], "port": 3100, "autoPort": false }
   ]
 }

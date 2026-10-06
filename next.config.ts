@@ -39,8 +39,24 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Nothing loads from another site, so everything is 'self'. Scripts keep 'unsafe-inline' for Next's inline
+    // bootstrap (nonces would make every page dynamic); the policy still stops outside scripts, plugins, <base>
+    // tricks, forms posting elsewhere and requests to other hosts. blob:/data: are image previews and fonts.
+    const contentSecurityPolicy = [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self' data:",
+      "media-src 'self'",
+      "connect-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ");
     // Every page: no framing by other sites (clickjacking), no MIME sniffing, no full URLs to other
-    // sites. HSTS is set by nginx on the VPS (docs/deployment-notes.md), where https ends.
+    // sites. HSTS is set by Caddy on the VPS (deploy/Caddyfile), where https ends.
     const siteHeaders = [
       { key: "X-Frame-Options", value: "DENY" },
       { key: "X-Content-Type-Options", value: "nosniff" },
@@ -55,6 +71,8 @@ const nextConfig: NextConfig = {
     ];
     return [
       { source: "/:path*", headers: siteHeaders },
+      // Pages only: a policy on a PDF response can stop the browser's own PDF viewer.
+      { source: "/((?!api/).*)", headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy }] },
       { source: "/portal/:path*", headers: portalHeaders },
       { source: "/access/:path*", headers: portalHeaders },
     ];

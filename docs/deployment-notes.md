@@ -1,174 +1,161 @@
-# Бележки за пускане на сървъра (Hostinger VPS)
+# Сървърът: как е пуснат Pakto
 
-Приложението няма да е на Vercel, а на собствен VPS в Hostinger. Тук записваме **всичко, което трябва да се настрои**, за да не се забрави при миграцията. Файлът се допълва при всяка нова функция.
+Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, IP `187.7.64.36`), на `https://pakto.net`. Тук е всичко, което трябва да се знае, за да се поддържа, деплойва или вдигне отново. **При всяка нова env, cron задача или папка за файлове: обнови този файл.**
 
-> Статус: още не е мигрирано. Засега работи локално, с базата в Supabase (проектът все още се казва `MadeFlow`, ref `mzmvtxjmdqucrfuajimd`, регион eu-central-1).
-
----
-
-## 1. Променливи на средата (`.env` на сървъра)
-
-Задават се в `.env.production` или в systemd/PM2 конфигурацията. **Никога в git.**
-
-| Променлива | Задължителна | Какво е | Бележки |
-|---|---|---|---|
-| `NEXT_PUBLIC_APP_URL` | да | Публичният адрес, напр. `https://pakto.net` | Влиза в линковете към клиента, в имейлите, в auth пренасочванията и в SEO адресите (`robots.txt`, `sitemap.xml`, canonical, JSON-LD). Ако лендингът и приложението са на различни домейни, SEO адресите трябва да сочат към лендинга. **Задава се при build**, защото е `NEXT_PUBLIC_`. |
-| `DATABASE_URL` | да | Postgres connection string (pooler, transaction mode) | Сървърният код чете и пише само оттук. |
-| `DATABASE_MIGRATION_URL` | не | Direct connection (session mode) за миграции | Нужен само ако миграциите се пускат от сървъра. |
-| `DATABASE_SSL` | не | `true` (по подразбиране) | `false` за Postgres контейнера на нашия сървър (вътрешна Docker мрежа без TLS). Supabase иска `true`. Live известията слушат през `DATABASE_MIGRATION_URL` (ако има), защото `LISTEN` не минава през transaction pooler. |
-| `BETTER_AUTH_SECRET` | препоръчително | `openssl rand -hex 32` | Подписва сесиите на служителите (Better Auth). Ако липсва, се извежда от `PORTAL_LINK_SECRET`. Смяната изкарва всички служители от профилите им; клиентските линкове не се засягат. |
-| `FILES_DIR` | да на сървъра | `/data/files` | Папката с качените файлове (Docker volume, влиза в бекъпа). Локално по подразбиране е `.data/files`. Вътре са папките `change-attachments`, `decision-signatures`, `organization-logos`. |
-| `PORTAL_LINK_SECRET` | **да, задай го изрично** | Дълъг случаен низ (`openssl rand -hex 32`) | Ако липсва, кодът взима `SUPABASE_SECRET_KEY` (стара стойност, ако още е зададена), а ако и той липсва, `DATABASE_URL`. **Смяна на стойността обезсилва всички клиентски линкове.** Първо провери каква стойност ползва сегашната среда и я запази. |
-| `CRON_SECRET` | да | Случаен низ, поне 16 знака | Cron задачите го пращат като `Authorization: Bearer …`. |
-| `CRON_DAILY_JOBS` | не | `on` (по подразбиране) или `off` | Само в `/opt/pakto/.env`. `off` спира `purge-accounts` и `offer-reminders` (до cutover). |
-| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | да (сървър) | Cloudflare R2, токен „Object Read & Write“ само за bucket `pakto-backups` | Само в `/opt/pakto/.env`, за контейнера `offsite`. |
-| `RESTIC_PASSWORD` | да (сървър) | Паролата, с която restic криптира бекъпите в R2 | Генерирана на сървъра. **Копие в password manager-а на собственика**: без нея бекъпите в R2 не могат да се отворят. |
-| `SMTP_HOST` | да | `smtp.hostinger.com` | Имейлите излизат през пощата `info@pakto.net` (Hostinger Email Starter, 1000 писма на 24 часа). Ако липсва, кодът пада обратно на Resend. |
-| `SMTP_PORT` | не | `465` (по подразбиране) | 465 е SSL; при 587 връзката минава на STARTTLS. |
-| `SMTP_USER` | да | `info@pakto.net` | Пощенската кутия, от която се праща. |
-| `SMTP_PASSWORD` | да | Паролата на кутията от hPanel → Emails | Тайна. Само в `.env` на сървъра. |
-| `EMAIL_FROM` | да | `Pakto <info@pakto.net>` | Адресът трябва да е същата кутия като `SMTP_USER` (или неин alias), иначе Hostinger отказва писмото. Отговорите към фирмата минават през `Reply-To`. |
-| `EMAIL_DAILY_LIMIT` | не | `1000` (по подразбиране) | Лимитът на кутията за 24 часа. При 90 % известията и напомнянията чакат в опашката; кодовете, линковете и поканите минават винаги. При Standard плана: `3000`. |
-| `RESEND_API_KEY` | не | Ключ от resend.com | Само резервен вариант, докато няма `SMTP_HOST`. Ще се махне при миграцията. |
-| `SUPPORT_EMAIL` | да | напр. `support@pakto.net` | Тук идват сигналите от формата „Връзка с нас“ (`/contact`) заедно със снимките като прикачени файлове. Нищо не се пази в базата. Без него формата показва грешка. |
-| `NODE_ENV` | да | `production` | |
+Подробният план и решенията по преместването от Supabase, Resend и Vercel са в `docs/production-migration-plan.md`.
 
 ---
 
-## 2. Cron задачи (вместо Vercel Cron)
+## 1. Какво тече на сървъра
 
-`vercel.json` ще остане без значение. Задачите се пускат с crontab на VPS-а, като `curl` към приложението:
+Всичко е в `deploy/compose.yml` (Docker Compose, проект `deploy`), в папка `/opt/pakto` на сървъра:
 
-```cron
-# Изтриване на профили след гратисния период: всеки ден в 03:00
-0 3 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://pakto.net/api/cron/purge-accounts > /dev/null
-
-# Напомняния, изтичане на оферти и дневното писмо до клиентите за графика: всеки ден в 07:00 (Europe/Sofia)
-0 7 * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://pakto.net/api/cron/offer-reminders > /dev/null
-
-# Опашката с имейли: повторни опити за известия и напомняния, изчистване на записи по-стари от 30 дни: всяка минута
-* * * * * curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://pakto.net/api/cron/email-outbox > /dev/null
+```
+/opt/pakto/
+  .env            тайните (права 600, никога в git)
+  deploy/         compose.yml, Caddyfile, deploy.sh, cron/, backup/, offsite/, postgres-init/
+  db/             миграциите (dbmate)
+  backups/        нощните дъмпове на базата (14 дни)
 ```
 
-- Провери часовата зона на сървъра (`timedatectl`) и пусни процеса с `TZ=Europe/Sofia`: част от датите в сървърните страници (`document-status-rail`, `document-timeline`, бележки, съобщения, екип, каталог, портал) се форматират без изрична зона и на UTC ще се изместят с 2–3 часа (QA EDGE-07). Горните часове предполагат `Europe/Sofia`. Ако сървърът е на UTC, извади 2–3 часа.
-- `CRON_SECRET` трябва да е достъпен за crontab: сложи го в `/etc/environment` или директно в реда.
-- Когато се добави нова cron задача, запиши я тук.
+| Контейнер | Какво прави |
+|---|---|
+| `caddy` | HTTPS (Let's Encrypt, сам подновява), `www.pakto.net` → `pakto.net`, HSTS, тяло на заявка до 20 MB, без буфериране за `/api/live` (`flush_interval -1`). Единственият с публични портове (80, 443). |
+| `app` | Next.js (`output: "standalone"`), образ `ghcr.io/durantula1/pakto:<sha>`, непривилегирован потребител, healthcheck `/api/health`, `TZ=Europe/Sofia`, `stop_grace_period: 30s` (писмата с `after()` да довършат). Файловете са в тома `files` (`/data/files`). |
+| `postgres` | Postgres 17 с `deploy/postgresql.conf`; портът не е публикуван. Роли: `pakto_owner` (миграции) и `pakto_app` (само четене и писане, от `deploy/postgres-init/01-setup.sh`). |
+| `cron` | `deploy/cron/loop.sh`, виж раздел 3. |
+| `backup` | `deploy/backup/run.sh`: в 01:00 UTC дъмп на базата в `/opt/pakto/backups`, пази 14 дни. |
+| `offsite` | `deploy/offsite/run.sh`: в 01:20 UTC качва дъмповете и тома с файловете в Cloudflare R2 с restic. |
+| `migrate` | dbmate, само при деплой (`--profile tools`). |
+
+Сървърът: потребител `deploy` (sudo, docker), вход само с ключ, root вход изключен, `ufw` (22, 80, 443), fail2ban, unattended-upgrades, 2 GB swap, ротация на Docker логовете (10 MB × 5).
 
 ---
 
-## 3. Reverse proxy (nginx) и HTTPS
+## 2. Променливи на средата
 
-- Next.js върви на `localhost:3000` (PM2 или systemd), а nginx е отпред. SSL е с Let's Encrypt (`certbot --nginx`).
-- **Задължително се подават реалните IP адреси.** Кодът взима IP-то на клиента от `X-Forwarded-For` / `X-Real-IP` (`src/lib/http/client-ip.ts`). То се записва като доказателство при одобрение. Без тези редове всички решения ще са от `127.0.0.1`:
-  ```nginx
-  proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  proxy_set_header X-Forwarded-Proto $scheme;
-  ```
-- `client_max_body_size 20m;`: подписът се праща в server action (до ~400 KB). Прикачените файлове (до 15 MB) отиват на `PUT /api/uploads`, затова лимитът трябва да е поне 16m. Формата `/contact` праща до 3 снимки по 5 MB (общо до 10 MB) в server action, затова лимитът не бива да пада под 12m.
-- Server Actions: ако домейнът зад proxy е различен, провери `experimental.serverActions.allowedOrigins` в `next.config.ts`.
-- **HSTS се слага тук**, не в Next.js, защото https свършва в nginx. `X-Frame-Options`, `nosniff` и `Referrer-Policy` вече идват от `next.config.ts` за всички страници:
-  ```nginx
-  add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-  ```
-  Първо провери, че всички поддомейни са на https; `includeSubDomains` не се връща лесно назад.
-- **Лимити срещу злоупотреби** (приложението има свои само за кодовете, съобщенията, линковете и `/contact`). В `http {}`:
-  ```nginx
-  limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
-  limit_req_zone $binary_remote_addr zone=portal:10m rate=30r/m;
-  ```
-  и в `server {}` `location` блокове за `/sign-in`, `/sign-up`, `/forgot-password` (`zone=auth burst=5 nodelay`) и `/access/` (`zone=portal burst=10 nodelay`). Server Actions минават като POST към същия път, така че лимитът ги хваща.
-- Пред VPS-а е добре да има Cloudflare (безплатният план спира обемни атаки). Тогава реалният IP на клиента идва в `CF-Connecting-IP`: nginx трябва да го приеме само от IP адресите на Cloudflare (`set_real_ip_from` + `real_ip_header CF-Connecting-IP`), иначе в доказателството за решението ще е IP-то на Cloudflare.
+На сървъра са в `/opt/pakto/.env`; `deploy/compose.yml` ги подава на контейнерите (там са и стойностите по подразбиране). Локално: `.env.local` по образеца на `.env.example`.
+
+| Променлива | Къде | Какво е |
+|---|---|---|
+| `NEXT_PUBLIC_APP_URL` | build + app | `https://pakto.net`. Влиза в линковете в имейлите, клиентските линкове, пренасочванията и SEO адресите. **Задава се при build** (в `.github/workflows/deploy.yml`), защото е `NEXT_PUBLIC_`. |
+| `DATABASE_URL` | app | Сглобява се в compose: `pakto_app` към контейнера `postgres`. |
+| `DATABASE_SSL` | app | `false`: базата е във вътрешната Docker мрежа. По подразбиране `true` за външна база. |
+| `POSTGRES_OWNER_PASSWORD`, `POSTGRES_APP_PASSWORD` | `.env` | Паролите на двете роли, генерирани на сървъра. |
+| `PORTAL_LINK_SECRET` | app | Подписва клиентските линкове. **Смяната обезсилва всички изпратени линкове.** Задължителна. |
+| `BETTER_AUTH_SECRET` | app | Подписва сесиите на служителите. Смяната изкарва всички служители. Локално може да липсва (извежда се от `PORTAL_LINK_SECRET`). |
+| `CRON_SECRET` | app + cron | Bearer токенът за `/api/cron/*`, поне 16 знака. |
+| `CRON_DAILY_JOBS` | cron | `on` по подразбиране; `off` спира `purge-accounts` и `offer-reminders` (опашката с писма продължава). |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | app | `smtp.hostinger.com`, `465`, `info@pakto.net`, паролата на кутията от hPanel → Emails. Локално: Mailpit (`127.0.0.1`, `1025`, без потребител). |
+| `EMAIL_FROM` | app | `Pakto <info@pakto.net>`; трябва да е същата кутия като `SMTP_USER`, иначе Hostinger отказва писмото. |
+| `EMAIL_DAILY_LIMIT` | app | `1000` (Email Starter: 1000 писма за 24 часа). При 90 % известията и напомнянията чакат; кодовете, линковете и поканите минават винаги. |
+| `SUPPORT_EMAIL` | app | `info@pakto.net`: тук идват съобщенията от „Връзка с нас“ (`/contact`) със снимките. |
+| `FILES_DIR` | app | `/data/files` (томът `files`); локално `.data/files`. |
+| `APP_TAG` | `.env` | Кой образ тече; пише го `deploy.sh`. |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | offsite | Cloudflare R2, токен „Object Read & Write“ само за bucket `pakto-backups`. |
+| `RESTIC_PASSWORD` | offsite | Криптира бекъпите в R2. **Копие в password manager-а на собственика**: без нея бекъпите не се отварят. |
 
 ---
 
-## 4. Build и стартиране
+## 3. Cron задачи
 
-**Скорост: сървърът трябва да е близо до базата.** Всяка заявка до Supabase (eu-central-1, Франкфурт) е един мрежов обиколен път. От България той е около 45 ms, от VPS във Франкфурт около 1–5 ms. Страниците правят по 3–5 такива последователни кръга, така че регионът на VPS-а решава дали страницата се отваря за 400 ms или за под 100 ms. Избери Hostinger VPS в Германия (Франкфурт) или най-близкия възможен.
+Контейнерът `cron` (`deploy/cron/loop.sh`, часова зона Europe/Sofia) вика приложението вътре в мрежата с `Authorization: Bearer $CRON_SECRET`:
 
-- Кодът държи до 20 връзки към pooler-а (`DATABASE_URL`, transaction mode, порт 6543) и ги пази отворени 30 минути. При старт `src/instrumentation.ts` отваря 16 от тях предварително, защото нова връзка струва около 0,5 s.
-- Стартирай един процес (не cluster с много инстанции): всеки процес има свой pool.
+| Кога | Път | Какво |
+|---|---|---|
+| всяка минута | `/api/cron/email-outbox` | Повторни опити за писма (след 1, 5, 15, 60, 180 мин.), трие записи по-стари от 30 дни. |
+| 03:00 | `/api/cron/purge-accounts` | Изтрива профили след гратисния период. |
+| 07:00 | `/api/cron/offer-reminders` | Напомняния, изтичане на оферти и дневното писмо до клиентите за графика. |
+
+Нова cron задача: ред в `loop.sh` и ред тук.
+
+---
+
+## 4. Деплой
+
+**Автоматично при всеки push в `main`** (`.github/workflows/deploy.yml`), освен ако са пипнати само `docs/` и `.md` файлове:
+
+1. Паралелно: `pnpm typecheck` + `pnpm lint` и `next build` (Turbopack, с пазен `.next/cache`).
+2. `Dockerfile.prebuilt` само копира готовия `.next/standalone` в образа → `ghcr.io/durantula1/pakto:<sha>`.
+3. SSH като `deploy@pakto.net` с ключа от GitHub secret `DEPLOY_SSH_KEY`. В `authorized_keys` ключът е `restrict,command="/opt/pakto/deploy/deploy.sh"`: може да пусне само този скрипт.
+4. `deploy.sh` получава `deploy/` и `db/` и краткотраен токен за GHCR. Ако има нова миграция: бекъп, после миграцията. После сменя `APP_TAG`, пуска `up -d`, рестартира `cron`, `backup` и `offsite` и чака `healthy`. При провал връща предишния образ.
+
+Целият цикъл е около 2–3 минути; сайтът не спира, освен за секундите на смяната.
+
+- **Връщане на стара версия:** на сървъра `sed -i "s/^APP_TAG=.*/APP_TAG=<стар sha>/" /opt/pakto/.env`, после `cd /opt/pakto/deploy && docker compose --env-file ../.env up -d app`. Старите образи стоят в GHCR.
+- **Миграциите са само напред:** връща се образът, не схемата, затова всяка миграция трябва да работи и със стария код.
+- **Ръчен билд на сървъра** (ако GitHub не работи): кодът в `/opt/pakto/src`, `Dockerfile` строи от изходния код.
+- Команди на сървъра се пускат от `/opt/pakto/deploy` с `docker compose --env-file ../.env …`.
+
+---
+
+## 5. Бекъпи и възстановяване
+
+- **Нощно:** 01:00 UTC пълен дъмп на базата (`pg_dump -Fc -Z 0`: некомпресиран, за да може restic да пази само промените), 14 дни в `/opt/pakto/backups`. 01:20 UTC restic качва `/opt/pakto/backups` и тома `files` в R2 (bucket `pakto-backups`), криптирано, с `--compression max`; пази 14 дневни, 8 седмични и 12 месечни копия.
+- **Ръчно:** `docker compose --env-file ../.env exec -e BACKUP_NOW=1 backup bash /run.sh` и `docker compose --env-file ../.env exec -e OFFSITE_NOW=1 offsite sh /run.sh`.
+- **Проверено на 06.10.2026:** възстановяване на дъмпа в празен Postgres (всичките таблици с еднакъв брой редове, хешовете на версиите съвпадат) и сваляне от R2 (еднакви контролни суми).
+
+**Възстановяване на нов сървър:**
+1. Docker, `/opt/pakto` със съдържанието на `deploy/` и `db/` от git и `.env` (паролите от password manager-а).
+2. Свали бекъпа от R2: `docker compose --env-file ../.env run --rm --entrypoint restic -v /opt/pakto/restore:/restore offsite restore latest --target /restore` (идват `backups/` и `data/files/`).
+3. `docker compose --env-file ../.env up -d postgres` (init-скриптът създава `extensions` и `pakto_app`), после `docker compose --env-file ../.env exec -T postgres pg_restore -U pakto_owner -d pakto --clean --if-exists --exit-on-error < /opt/pakto/restore/backups/pakto-<дата>.dump`.
+4. Файловете: `docker run --rm -v deploy_files:/data/files -v /opt/pakto/restore/data/files:/src:ro alpine cp -a /src/. /data/files/`.
+5. `docker compose --env-file ../.env up -d`, DNS към новия IP.
+
+---
+
+## 6. Имейли
+
+- Излизат през `info@pakto.net` (Hostinger Email Starter, SMTP, Nodemailer в `src/lib/email/send.ts`). DNS на `pakto.net` има MX, SPF, DKIM и DMARC `p=none` от Hostinger; след няколко седмици без проблеми DMARC може да мине на `p=quarantine`.
+- Всяко писмо оставя ред в `app.email_outbox` (вид, получател, статус, грешка). Текстът се пази само докато писмото чака повторен опит; кодовете и личните линкове не се пазят. Записите се трият след 30 дни.
+- Известията, напомнянията, дневното писмо и отговорите на въпроси се опитват отново при временна грешка. Кодовете, линковете, поканите, изпратената оферта, разписката и контактната форма се пращат веднага и човекът вижда причината при грешка.
+- Колко са излезли за 24 часа: `select count(*) from app.email_outbox where status = 'sent' and created_at > now() - interval '24 hours';`. Неизпратени: `status in ('queued', 'failed')`.
+
+---
+
+## 7. Вход, файлове, live
+
+- **Служители:** Better Auth (`src/lib/auth/server.ts`), таблици `app.auth_*`, bcrypt пароли. Лимити за опити в паметта на процеса (`src/lib/auth/limits.ts`), по IP от `X-Forwarded-For`, който подава Caddy.
+- **Файлове:** под `FILES_DIR/<папка>/<път>` (`src/lib/storage/`): `change-attachments` (снимки и PDF към оферти, през `/api/attachments/[id]` след проверка на достъпа), `decision-signatures` (подписи на клиенти), `organization-logos` (публични през `/api/logos/...`, кеш за година). Качването е с подписан билет за 10 минути към `PUT /api/uploads`.
+- **Live:** тригерът на `app.staff_notifications` прави `pg_notify('staff_refresh')`, един `LISTEN` на процес (`src/lib/live/hub.ts`), `/api/live` го праща като server-sent events. Порталът на клиента пита `/api/portal/pulse` на интервали.
+- **Пренасочванията от route handlers** се строят от `NEXT_PUBLIC_APP_URL` (`appUrl()`), не от `request.url`: зад Caddy адресът на заявката е този на контейнера (`0.0.0.0:3000`).
+
+---
+
+## 8. Сигурност
+
+- Хедъри от `next.config.ts`: Content-Security-Policy на страниците (всичко от `'self'`, без външни ресурси), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`; порталът е `private, no-store` и `no-referrer`. HSTS (без `includeSubDomains`) идва от Caddy.
+- Лимити в приложението: вход, регистрация, писма за парола, кодове, съобщения, клиентски линкове, `/contact`. Няма лимити в Caddy; ако дойде атака, следващата стъпка е Cloudflare отпред (тогава реалният IP идва в `CF-Connecting-IP`).
+
+---
+
+## 9. Локална разработка
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm build          # next build (Turbopack); NEXT_PUBLIC_* трябва да са зададени ТУК
-pnpm start          # или през PM2: pm2 start "pnpm start" --name pakto
+pnpm db:up          # Postgres 17 + Mailpit (http://localhost:8025)
+pnpm db:migrate     # миграциите
+pnpm db:seed        # демо фирма и оферта; вход demo@pakto.local / pakto-dev-2026
+pnpm db:pull        # или анонимизирано копие на базата от сървъра (-- --files за файловете)
+pnpm dev
 ```
 
-- Node версия: същата като локално (провери с `node -v`) или LTS ≥ 20.
-- PDF-ът ползва шрифтовете в `src/modules/pdf/fonts/`. Те трябва да са на сървъра. `outputFileTracingIncludes` в `next.config.ts` ги включва, ако се ползва `output: "standalone"`.
-- Помисли за `output: "standalone"` за по-лек деплой.
-- **Меко спиране (graceful shutdown).** Имейлите към екипа и отговорите към клиента се пращат с `after()`, след като потребителят вече е получил отговор. При рестарт сървърът трябва да получи `SIGTERM` и да има 10–30 секунди да довърши, иначе имейлите от последните секунди се губят. PM2: `kill_timeout: 30000`. Docker: `stop_grace_period: 30s`.
+Нова миграция: `pnpm db:new <име>` в `db/migrations/` (dbmate), заедно с промяната в `src/db/schema/index.ts`. На сървъра се прилага сама при деплой.
 
 ---
 
-## 5. Вход на служителите (Better Auth)
+## 10. Проверка след голяма промяна
 
-- Входът е в приложението (`src/lib/auth/server.ts`, Better Auth), таблиците са `app.auth_users`, `app.auth_sessions`, `app.auth_accounts`, `app.auth_verifications`. Паролите са bcrypt (пренесени от Supabase Auth на 05.10.2026, без смяна).
-- Линковете в писмата водят към `NEXT_PUBLIC_APP_URL/api/auth/...`, затова той трябва да е точният публичен адрес. Нищо не се настройва във външна услуга.
-- Лимити за опити (`src/lib/auth/limits.ts`, в паметта на процеса): вход 30 на 5 мин. от IP и 10 на 15 мин. за имейл; регистрация 10 на IP и 3 на имейл за 15 мин.; писма (нов линк, забравена парола) 10 на IP и 3 на имейл за 15 мин. Лимитите искат реалния IP в `X-Forwarded-For` от proxy-то.
-- Файловете са на диска на сървъра под `FILES_DIR` (`src/lib/storage/`), в папки с имената на старите buckets:
-  - `change-attachments`: снимки и PDF към оферти; отварят се само през `/api/attachments/[id]` след проверка на достъпа;
-  - `decision-signatures`: рисунки на клиенти при решение, само за PDF и страницата на офертата;
-  - `organization-logos`: фирмени лога, оптимизирани до PNG от сървъра (`sharp`); публични през `/api/logos/...`, кеширани за година, защото името е хеш на съдържанието.
-  - Качването: сървърното действие дава подписан билет за 10 минути (`createUploadTicket`), браузърът праща файла на `PUT /api/uploads`. Този път е изключен от `proxy.ts`, иначе лимитът 12 MB на proxy-то би спрял прикачените файлове до 15 MB. Ако има nginx/Caddy отпред, лимитът за тяло трябва да е поне 16 MB.
-  - Пренос от Supabase Storage: `node --env-file=.env scripts/copy-supabase-files.mjs` (пропуска файловете, които вече са там).
-- Миграциите се прилагат само от `supabase/migrations/` (не от `drizzle/`). Последната е `20260926131713_query_indexes`.
+- [ ] Регистрация → писмо за потвърждение → вход.
+- [ ] Оферта със снимка → изпращане → имейл → клиентският линк отваря портала → код → одобрение → разписка с PDF.
+- [ ] В „Доказателство за решението“ IP-то е реалното, не адрес от Docker мрежата.
+- [ ] Live: въпрос от клиента идва при фирмата без презареждане.
+- [ ] `/api/cron/*` с грешен ключ връща 401.
+- [ ] `/contact` със снимка стига до `SUPPORT_EMAIL`.
 
 ---
 
-## 6. Имейли (SMTP на Hostinger)
+## Дневник
 
-- Пращат се през пощата `info@pakto.net` (Nodemailer, `src/lib/email/send.ts`). DNS на `pakto.net` вече има MX, SPF, DKIM (3 записа) и DMARC `p=none`, сложени от Hostinger. След 2–4 седмици без проблеми DMARC може да мине на `p=quarantine`.
-- Всяко писмо оставя ред в `app.email_outbox` (вид, получател, статус, грешка). Оттам се брои дневният лимит и се виждат неизпратените. Текстът се пази само докато писмото чака повторен опит; кодовете и личните линкове не се пазят изобщо. Записите се трият след 30 дни.
-- Известията към екипа и клиента, напомнянията, дневното писмо за графика и отговорите на въпроси се опитват отново при временна грешка (след 1, 5, 15, 60 и 180 минути) от cron `email-outbox`. Кодовете, линковете, поканите, изпратената оферта, разписката с PDF и контактната форма се пращат веднага и при грешка човекът вижда причината на български.
-- Имейлите, които приложението праща:
-  - **към клиента:** линк към офертата, код за потвърждение, разписка с PDF, „обновена оферта“ с разликите, напомняния (3 дни без решение и 2 дни преди края на срока), отговор на въпрос, записано или коригирано плащане, отговор на оспорване и на „Платих“, анулирана или изтекла оферта, искане за приемане на работата, едно дневно писмо за промени в графика на клиент, с раздел за всеки негов обект (от cron `offer-reminders`); темите на имейлите към клиента започват с „[име на обекта]“;
-  - **към теб (собственика на Pakto):** всяко съобщение от формата „Връзка с нас“ (`/contact`). Отива на адреса от **`SUPPORT_EMAIL`**, който трябва да се настрои при миграцията (напр. `support@pakto.net` или личната ти поща). Ако е на собствения домейн, първо създай пощенската кутия (или пренасочване) в Hostinger, иначе запитванията няма къде да пристигнат. Бутонът „Отговор“ в имейла отговаря директно на подателя (`Reply-To`);
-  - **към екипа:** одобрение, отказ, искане на промяна, оспорване, въпрос от клиента, изтекла оферта, оспорено плащане, „Платих“ от клиента, приета работа или забележки, потвърден имейл на клиента. Всеки служител избира кои иска в Настройки → Известия.
-- Колко писма са излезли за последните 24 часа: `select count(*) from app.email_outbox where status = 'sent' and created_at > now() - interval '24 hours';` Неизпратените: `status in ('queued', 'failed')`.
-
----
-
-## 7. Проверка след пускане
-
-- [ ] Вход и регистрация работят (auth callback към новия домейн).
-- [ ] Нова оферта → изпращане → имейлът стига и линкът отваря портала.
-- [ ] В портала: код на имейла → подпис → одобрение. Подписът се вижда в PDF-а.
-- [ ] В „Доказателство за решението“ IP адресът е реалният, не `127.0.0.1`.
-- [ ] `curl` към двата cron endpoint-а с грешен ключ връща 401, а с верния връща JSON.
-- [ ] Старите клиентски линкове (от преди миграцията) още работят (`PORTAL_LINK_SECRET` е същият).
-- [ ] Известията на живо (`/api/live`, Postgres `LISTEN/NOTIFY`) идват без презареждане. Proxy-то не бива да буферира `text/event-stream`.
-- [ ] `SUPPORT_EMAIL` е зададен и кутията съществува: изпрати тестово съобщение от `/contact` със снимка, то трябва да пристигне с прикачения файл, а „Отговор“ да отиде до подателя.
-
----
-
-## Дневник на промените в този файл
-
-- **05.10.2026**: собствен Postgres 17 в Docker на VPS-а (`deploy/compose.yml`, папка `/opt/pakto`). Файл `/opt/pakto/.env` с `POSTGRES_OWNER_PASSWORD` и `POSTGRES_APP_PASSWORD` (генерирани на сървъра, права 600, никога в git). `DATABASE_URL` на приложението ще е `postgres://pakto_app:<парола>@postgres:5432/pakto` с `DATABASE_SSL=false`, `DATABASE_MIGRATION_URL` с `pakto_owner`. Миграциите са в `db/migrations/` (dbmate): `docker compose --env-file ../.env --profile tools run --rm migrate`. Портът на базата не е публикуван. Приложението още не е на сървъра.
-- **05.10.2026**: входът на служителите минава през Better Auth вместо Supabase Auth (раздел 5); live известията през `LISTEN/NOTIFY` и `/api/live` вместо Supabase Realtime. Нови env `BETTER_AUTH_SECRET`, `DATABASE_SSL`; махнати `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. Нови таблици `app.auth_*`. Без нов cron или папка за файлове.
-- **05.10.2026**: файловете се пазят на диска (`FILES_DIR`, нова env) вместо в Supabase Storage. Нови маршрути `PUT /api/uploads` и `GET /api/logos/...`; скрипт `scripts/copy-supabase-files.mjs`. `SUPABASE_SECRET_KEY` остава само за Auth. Без нов cron.
-- **05.10.2026**: имейлите минават през SMTP на Hostinger (`info@pakto.net`) вместо Resend. Нови env `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_DAILY_LIMIT`; `RESEND_API_KEY` става резерва. Нова таблица `app.email_outbox`, нов cron `email-outbox` всяка минута. Без нов bucket.
-- **05.10.2026**: домейнът е `pakto.net` (не `pakto.eu`), всичко на един домейн (`https://pakto.net`, приложението на `/app`). Пълната нова схема (Docker, Caddy, SMTP) е в `docs/production-migration-plan.md`; този файл ще се пренапише при миграцията.
-
-- **29.09.2026**: хедъри за сигурност на всички страници (`next.config.ts`); HSTS, лимити в nginx и Cloudflare описани в раздел 3; проверка на лимитите в Supabase Auth (раздел 5). Без нови env, cron или bucket.
-
-- **28.09.2026**: форма „Връзка с нас“ (`/contact`). Нова env `SUPPORT_EMAIL`: адресът, на който идват запитванията (**задължително се настройва при миграцията**). Server actions и proxy приемат до 12 MB заради снимките. Няма нови таблици, cron и buckets.
-
-- **26.09.2026**: бързодействие. Pool 20 връзки с 30 мин. живот, предварително отваряне при старт (`src/instrumentation.ts`), миграция `20260926131713_query_indexes`. Бележка за региона на VPS-а (Франкфурт).
-
-- **26.09.2026**: няколко оферти в един обект, условия за плащане, приемане на работата, „Платих“, жизнен цикъл на обекта и контактите. Шест нови миграции (последната `20260926121444_multiple_offers_per_project`). Няма нови env и buckets; `offer-reminders` праща и дневното писмо до клиентите, повече имейли към клиента (провери лимита в Resend).
-
-- **24.09.2026**: Фаза D. Таблици за каталог и шаблони, колони за отстъпка. Тригерът за замразени версии пази и отстъпката. Няма нови env/cron.
-- **29.09.2026**: телефон на фирмата (`organizations.phone`); съобщенията са само по оферти (`document_messages.change_order_id` not null, общите тестови съобщения изтрити). Без нови env, cron или bucket.
-- **26.09.2026**: размер на логото (`organizations.logo_size`) и индикатор за сваляне на файлове.
-- **26.09.2026**: фирмено лого. Нов public bucket `organization-logos`, колона `change_order_revisions.logo_storage_path`, зависимост `sharp`.
-- **24.09.2026**: Фаза C. Имейл известия към екипа с `after()` (нужно е меко спиране), нови таблици за бележки, разговори и настройки за известия, bucket `decision-signatures` в изтриването на фирма.
-- **24.09.2026**: първа версия. Добавени cron `offer-reminders`, bucket `decision-signatures`, бележка за `PORTAL_LINK_SECRET` и `X-Forwarded-For`.
-- **06.10.2026**: приложението работи на сървъра. Всичко е в `deploy/compose.yml` (проект `deploy`): `postgres`, `app` (образ от `Dockerfile`, Next standalone, непривилегирован потребител, healthcheck `/api/health`), `caddy` (HTTPS, `www` → без `www`, `flush_interval -1` за SSE, тяло до 20 MB), `cron` (`deploy/cron/loop.sh`: имейл опашка всяка минута, `purge-accounts` в 03:00, `offer-reminders` в 07:00 по София, с `CRON_SECRET`), `backup` (`deploy/backup/run.sh`: 01:00 UTC `pg_dump` + архив на файловете в `/opt/pakto/backups`, 14 дни; ръчно: `docker compose exec -e BACKUP_NOW=1 backup sh /run.sh`). Деплой на ръка: `rsync` на кода в `/opt/pakto/src`, после `cd /opt/pakto/deploy && docker compose --env-file ../.env build app && docker compose --env-file ../.env up -d`. Миграции: `docker compose --env-file ../.env --profile tools run --rm migrate`. Още няма офсайт бекъп, външен монитор и GitHub Actions деплой.
-- **06.10.2026**: автоматичен деплой (`.github/workflows/deploy.yml`). При всеки push в `main` (без такъв, който пипа само `docs/` и `.md`): `pnpm typecheck` и `pnpm lint` паралелно с билда (`next build` с Turbopack направо в GitHub с пазен `.next/cache`, после `Dockerfile.prebuilt` само копира резултата в образа), публикуване в `ghcr.io/durantula1/pakto` (етикети `<sha>` и `latest`), после SSH към `deploy@pakto.net`. Ключът за деплой (GitHub secret `DEPLOY_SSH_KEY`) в `authorized_keys` е с `restrict,command="/opt/pakto/deploy/deploy.sh"`: може да изпълни само този скрипт, няма shell и пренасочване на портове. Скриптът получава през stdin архив с `deploy/` и `db/` и краткотраен токен за GHCR (не се пази на сървъра), ако има нова миграция: бекъп и миграцията, после сменя образа (`APP_TAG` в `/opt/pakto/.env`), чака `healthy` и при провал връща предишния образ. Връщане на ръка: на сървъра `sed -i "s/^APP_TAG=.*/APP_TAG=<стар sha>/" /opt/pakto/.env` и `docker compose --env-file ../.env up -d app` (старите образи се пазят в GHCR). Миграциите са само напред: връща се образът, не схемата, затова миграциите трябва да са съвместими със стария код.
-- **06.10.2026**: бекъпът е **пълен дъмп на базата** (`pg_dump -Fc` без `--schema=app`): дотогава в него липсваха схемата `extensions` (`pg_trgm`) и `public.schema_migrations`, и възстановяване в чиста база падаше на индекса `customers_name_trgm_idx`. Проба: дъмпът е възстановен в празен Postgres 17 с нашия `postgres-init`, всичките 60 таблици са с еднакъв брой редове, хешовете на версиите съвпадат, `pakto_app` чете. **Възстановяване при авария** (нов сървър или празен том): `docker compose --env-file ../.env up -d postgres` (init-скриптът създава `extensions` и `pakto_app`), после `docker compose --env-file ../.env exec -T postgres pg_restore -U pakto_owner -d pakto --clean --if-exists --exit-on-error < /opt/pakto/backups/pakto-<дата>.dump`, файловете: `docker run --rm -v deploy_files:/data/files -v /opt/pakto/backups:/b alpine tar xzf /b/files-<дата>.tar.gz -C /data/files`, накрая `up -d`. Паролата на `pakto_app` идва от `.env`, затова `.env` трябва да е запазен отделно (не е в бекъпа).
-- **06.10.2026**: `CRON_DAILY_JOBS` (само в `/opt/pakto/.env`, по подразбиране `on`). До cutover е `off`: на сървъра стои копие на данните, и `offer-reminders`/`purge-accounts` биха пращали реални писма и трили по него. Опашката с писма (`email-outbox`) работи винаги. **При cutover: махни реда или го направи `on`, после `docker compose --env-file ../.env up -d cron`.**
-- **06.10.2026**: офсайт бекъп. Контейнер `offsite` (`restic/restic`, `deploy/offsite/run.sh`) в 01:20 UTC качва `/opt/pakto/backups` в Cloudflare R2 (bucket `pakto-backups`, Eastern Europe, Standard), криптирано с `RESTIC_PASSWORD`; пази 14 дневни, 8 седмични и 12 месечни snapshot-а. Ръчно: `docker compose --env-file ../.env exec -e OFFSITE_NOW=1 offsite sh /run.sh`. Проверено: първото качване (1.6 MiB), сваляне на последния snapshot с еднакви контролни суми на всички 12 файла, `restic check`. **Сваляне при загубен сървър:** на новия сървър `.env` с `R2_*` и `RESTIC_PASSWORD` (от password manager-а), `docker compose --env-file ../.env run --rm --entrypoint restic -v /opt/pakto/restore:/restore offsite restore latest --target /restore`, после възстановяването на базата и файловете по-горе с файловете от `/opt/pakto/restore/backups/`.
-- **06.10.2026**: по-малки бекъпи. Дъмпът на базата е некомпресиран (`pg_dump -Fc -Z 0`): restic го компресира (`--compression max`) и при голяма база пази само частите, променени от предния ден (компресиран дъмп се променя целият и би се качвал целият всяка нощ). Файловете (снимки, подписи, логота) вече **не** се архивират всяка нощ в `/opt/pakto/backups`: `offsite` качва директно тома `files`, а restic добавя само новите файлове. Мярка днес: 3 snapshot-а заемат 450 KiB в R2 (компресия 5×), локално 14 дъмпа на базата. **Възстановяване на файловете** (заменя `files-<дата>.tar.gz` по-горе): свали snapshot-а в `/opt/pakto/restore` (командата за R2 по-горе, проверена: идват `backups/` и `data/files/`), после `docker run --rm -v deploy_files:/data/files -v /opt/pakto/restore/data/files:/src:ro alpine cp -a /src/. /data/files/`.
+- **06.10.2026**: преместването е завършено. Сървърът, деплоят, бекъпите (локални и R2) и имейлите са описани по-горе; Supabase, Resend и Vercel са махнати от кода (`@supabase/supabase-js`, `resend`, `drizzle-kit`, `vercel.json`, `supabase/`, `drizzle/`, `src/instrumentation.ts`). Базата на сървъра е започната на чисто (данните в Supabase бяха само тестови). Добавени CSP и `db/seed.sql`. Поправени: пренасочвания към `0.0.0.0:3000`, контактната форма (искаше `RESEND_API_KEY`), `db:pull` (историята на миграциите и `--files`).
+- **05.10.2026**: имейли през SMTP с опашка, файлове на диска, Better Auth, live през `LISTEN/NOTIFY`, собствен Postgres. Подробно в `docs/production-migration-plan.md`.
+- По-старите записи (Vercel/Supabase периода) са в историята на git.

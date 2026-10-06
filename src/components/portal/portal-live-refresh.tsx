@@ -11,7 +11,7 @@ function delayFor(idleMs: number) {
 }
 
 /**
- * Clients have no Supabase account, so no realtime channel like the workspace. While the portal is on
+ * Clients have no account, so no live stream (/api/live) like the workspace. While the portal is on
  * screen it asks a small endpoint for a stamp of what the client sees, and re-reads the page only when
  * the stamp moved: new answers, the unread badge and new offers show up without a reload, and a quiet
  * page costs one tiny query instead of a full render. Typed input survives a refresh. The rhythm slows

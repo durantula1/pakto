@@ -6,8 +6,7 @@ import { LOGO_BUCKET } from "@/modules/organizations/logo";
 export const runtime = "nodejs";
 
 /**
- * Company logos, public like the Supabase bucket they came from: they appear on client pages without a
- * session. The file name is the PNG's hash, so a new logo gets a new URL and this one can be cached for good.
+ * Company logos are public: they appear on client pages without a session. The file name is the PNG's hash, so a new logo gets a new URL and this one can be cached for good.
  */
 export async function GET(_request: Request, { params }: RouteContext<"/api/logos/[...path]">) {
   const { path } = await params;

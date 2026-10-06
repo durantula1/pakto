@@ -4,25 +4,25 @@ Mobile-first пилот за договорени оферти, промени, 
 по строителни и ремонтни обекти.
 
 Основният поток е: обект → чернова → замразена версия → защитен линк →
-одобрение, искане за промяна или отказ. Клиентът няма Supabase Auth акаунт;
+одобрение, искане за промяна или отказ. Клиентът няма акаунт;
 bootstrap линкът създава отделна HttpOnly portal session.
 
 ## Стек
 
 - Next.js 16.3.5, React 19.2 и TypeScript 5.9;
 - Tailwind CSS 4 и shadcn с React Aria primitives;
-- Supabase Auth, PostgreSQL и private Storage;
-- Drizzle ORM и `postgres.js` за trusted server access.
+- PostgreSQL 17, Drizzle ORM и `postgres.js` (само от сървъра), миграции с dbmate;
+- Better Auth за служителите, файлове на диска на сървъра, имейли през SMTP;
+- Docker Compose на Hostinger VPS: Caddy, приложението, Postgres, cron, бекъпи (виж `docs/deployment-notes.md`).
 
 ## Локално стартиране
 
 Изисква Node 24.19+ и pnpm 11.21.
 
-1. Копирай `.env.example` като `.env.local`.
-2. Създай отделен Supabase проект за Pakto.
-3. Попълни publishable URL/key, server-only `DATABASE_URL` и постоянен `PORTAL_LINK_SECRET`.
-4. Приложи миграциите от `drizzle/` (или еквивалентната Supabase migration).
-5. Стартирай `pnpm dev`.
+1. Копирай `.env.example` като `.env.local` и попълни `PORTAL_LINK_SECRET` и `CRON_SECRET`.
+2. `pnpm db:up` (Postgres и Mailpit в Docker), после `pnpm db:migrate`.
+3. По желание `pnpm db:pull` за анонимизирано копие на базата от сървъра.
+4. Стартирай `pnpm dev`. Писмата се виждат в Mailpit: http://localhost:8025.
 
 ```bash
 pnpm install
@@ -36,7 +36,7 @@ pnpm build
 - raw bootstrap и session tokens никога не се записват — пази се SHA-256 hash;
 - portal cookie е HttpOnly, Secure в production и SameSite=Lax; клиентският PDF маршрут проверява същата сесия;
 - portal страниците са `private, no-store`, `no-referrer` и не са frame-able;
-- browser-ът не чете business таблиците през Supabase Data API;
+- browser-ът никога не чете базата директно: всичко минава през сървъра;
 - изпратената версия пази canonical content hash и съдържанието ѝ е защитено
   от database trigger;
 - решенията и timeline events са append-only и idempotent.

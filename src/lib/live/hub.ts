@@ -10,7 +10,6 @@ type Listener = (event: StaffRefresh) => void;
 /**
  * One LISTEN connection per server process fans `staff_refresh` notifications (see the
  * app.broadcast_staff_refresh trigger) out to the open /api/live streams of that user.
- * LISTEN needs a session connection, so it uses the direct/session URL rather than the transaction pooler.
  * Kept on globalThis so dev reloads reuse the connection instead of opening another.
  */
 const hub = globalThis as unknown as { paktoLiveV1?: { listeners: Map<string, Set<Listener>>; started?: Promise<void> } };
@@ -24,8 +23,7 @@ function start() {
   const current = state();
   current.started ??= (async () => {
     const environment = getServerEnvironment();
-    const url = environment.DATABASE_MIGRATION_URL ?? environment.DATABASE_URL;
-    const sql = postgres(url, { max: 1, prepare: false, idle_timeout: 0, connect_timeout: 10, ssl: environment.DATABASE_SSL ? "require" : false });
+    const sql = postgres(environment.DATABASE_URL, { max: 1, prepare: false, idle_timeout: 0, connect_timeout: 10, ssl: environment.DATABASE_SSL ? "require" : false });
     // postgres.js re-runs LISTEN after a reconnect; events sent while it was down are caught up by the client's refresh on reconnect.
     await sql.listen("staff_refresh", (payload) => {
       let event: StaffRefresh & { user_id?: string };

@@ -5,8 +5,7 @@ import { headers } from "next/headers";
 import { clientIp } from "@/lib/http/client-ip";
 
 /**
- * Attempt limits for sign-in, sign-up and password reset (Supabase Auth used to enforce these). Kept in
- * memory: the app runs as one process, and a restart only forgives a few failed attempts.
+ * Attempt limits for sign-in, sign-up and password reset. Kept in memory: the app runs as one process, and a restart only forgives a few failed attempts.
  */
 const store = globalThis as unknown as { paktoAuthLimitsV1?: Map<string, number[]> };
 const buckets = (store.paktoAuthLimitsV1 ??= new Map<string, number[]>());

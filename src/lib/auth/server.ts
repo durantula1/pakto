@@ -19,12 +19,12 @@ import { getPublicEnvironment } from "@/lib/env/public";
 export const AUTH_COOKIE_PREFIX = "pakto";
 
 /**
- * BETTER_AUTH_SECRET signs the session cookies. Without it a key is derived from the portal link secret,
- * so a server needs one secret less; changing either signs everyone out (client links are separate).
+ * BETTER_AUTH_SECRET signs the session cookies. Without it (local development) a key is derived from the portal
+ * link secret; changing either signs everyone out (client links are separate).
  */
 function authSecret() {
   if (process.env.BETTER_AUTH_SECRET) return process.env.BETTER_AUTH_SECRET;
-  const base = process.env.PORTAL_LINK_SECRET ?? process.env.DATABASE_URL;
+  const base = process.env.PORTAL_LINK_SECRET;
   if (!base) throw new Error("Липсва BETTER_AUTH_SECRET.");
   return createHmac("sha256", base).update("pakto:better-auth").digest("hex");
 }
@@ -50,7 +50,7 @@ export const auth = betterAuth({
   }),
   advanced: {
     cookiePrefix: AUTH_COOKIE_PREFIX,
-    // UUIDs like the Supabase users they replace, so profiles.id and every user_id keep matching.
+    // UUIDs, the type of profiles.id and of every user_id column.
     database: { generateId: "uuid" },
     ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },
   },
@@ -69,7 +69,6 @@ export const auth = betterAuth({
     autoSignIn: false,
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: 60 * 60,
-    // Supabase stored bcrypt hashes; keeping bcrypt means every existing password still works.
     password: {
       hash: (password) => bcrypt.hash(password, 11),
       verify: ({ hash, password }) => bcrypt.compare(password, hash),
