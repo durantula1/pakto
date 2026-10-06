@@ -133,7 +133,7 @@ export function SiteFooter() {
       {/* The product definition stays on the page: the meta description repeats it word for word. */}
       <div className="mx-auto mt-16 flex max-w-[93.75rem] flex-col gap-4 border-t border-white/10 pt-6 text-xs leading-5 text-[#7f9a9c] lg:mt-24 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
         <p className="max-w-2xl">{productDefinition}</p>
-        <p className="shrink-0">© 2026 Pakto · София</p>
+        <p className="shrink-0">© 2026 Pakto</p>
       </div>
     </footer>
   );
