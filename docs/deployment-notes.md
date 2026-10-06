@@ -107,7 +107,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 
 ## 6. Имейли
 
-- Излизат през `info@pakto.net` (Hostinger Email Starter, SMTP, Nodemailer в `src/lib/email/send.ts`). DNS на `pakto.net` има MX, SPF, DKIM и DMARC `p=none` от Hostinger; след няколко седмици без проблеми DMARC може да мине на `p=quarantine`.
+- Излизат през `info@pakto.net` (Hostinger Email Starter, SMTP, Nodemailer в `src/lib/email/send.ts`). DNS (в Cloudflare, записите са DNS only) има MX и autodiscover/autoconfig към Hostinger, SPF, DKIM (`hostingermail-a/b/c._domainkey`) и DMARC `p=quarantine`. Ако тези записи станат Proxied (оранжеви), пощата и подписите спират.
 - Всяко писмо оставя ред в `app.email_outbox` (вид, получател, статус, грешка). Текстът се пази само докато писмото чака повторен опит; кодовете и личните линкове не се пазят. Записите се трият след 30 дни.
 - Известията, напомнянията, дневното писмо и отговорите на въпроси се опитват отново при временна грешка. Кодовете, линковете, поканите, изпратената оферта, разписката и контактната форма се пращат веднага и човекът вижда причината при грешка.
 - Колко са излезли за 24 часа: `select count(*) from app.email_outbox where status = 'sent' and created_at > now() - interval '24 hours';`. Неизпратени: `status in ('queued', 'failed')`.
@@ -128,11 +128,21 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 - Хедъри от `next.config.ts`: Content-Security-Policy на страниците (всичко от `'self'`, без външни ресурси), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`; порталът е `private, no-store` и `no-referrer`. HSTS (без `includeSubDomains`) идва от Caddy.
 - Лимити в приложението (в паметта, нулират се при рестарт): вход, регистрация, писма за парола, кодове, съобщения, клиентски линкове (`/access/[token]`: до 20 нови сесии на IP за 10 мин.; повторно отваряне на същото устройство ползва старата сесия), „Изпрати ми нови линкове“, `/contact`.
 - Better Auth: HTTP пътищата, които браузърът не ползва (`/sign-up/email`, `/sign-in/email`, `/request-password-reset`, `/send-verification-email` и т.н.), връщат 404 (`disabledPaths` в `src/lib/auth/server.ts`), за да не заобикалят лимитите. Server actions викат `auth.api` директно. Отворени остават линковете от писмата и `/callback/google`.
-- **Cloudflare** (безплатен план) стои пред сайта: DNS на `pakto.net` е в Cloudflare, `pakto.net` и `www` са Proxied (оранжево), пощенските записи (MX, DKIM, autodiscover/autoconfig, SPF/DMARC) са DNS only. SSL/TLS: Full (strict); Caddy продължава да издава сертификата (HTTP-01 минава през Cloudflare). Мрежовата и L7 DDoS защита са на Cloudflare; Hostinger филтрира само мрежовите атаки.
-- **Реалният IP:** Caddy вярва на `CF-Connecting-IP` само от IP диапазоните на Cloudflare (`trusted_proxies` в `deploy/Caddyfile`; списъкът е от https://www.cloudflare.com/ips/, проверявай го веднъж годишно) и праща на приложението `X-Forwarded-For` с един адрес. Пряка заявка до сървъра запазва собствения си адрес, затова фалшив header не сменя IP-то за лимитите.
 - `deploy.sh` рестартира Caddy, когато Caddyfile се е сменил (`/opt/pakto/.caddyfile.sha256`): новият файл не се вижда през bind mount-а без рестарт.
-- DMARC: `p=quarantine`.
-- **pakto.io** (Hostinger, DNS в Cloudflare): само пренасочва. `@` и `www` са A `192.0.2.1` (фиктивен адрес, Proxied), Redirect Rule „All incoming requests“ → `concat("https://pakto.net", http.request.uri.path)`, 301, със query string. Не стига до сървъра. Няма поща: SPF `v=spf1 -all`, DMARC `p=reject`, за да не може да се праща от името на домейна.
+
+### Cloudflare
+
+От 06.10.2026 Cloudflare (безплатен план, акаунтът на собственика) държи DNS-а на `pakto.net` и `pakto.io` и стои пред сайта. Домейните остават регистрирани в Hostinger; там са сменени само nameservers на `april.ns.cloudflare.com` и `troy.ns.cloudflare.com`.
+
+- **DNS на `pakto.net`:** `A @ → 187.7.64.36` и `CNAME www → pakto.net` са Proxied (оранжево); всички пощенски записи са DNS only (виж „Имейли“). Нов запис за сайта: Proxied; за поща или друга услуга: DNS only.
+- **SSH не минава през Cloudflare** (проксито пренася само HTTP/HTTPS): деплоят, `scripts/db-pull.sh` и ръчният вход ползват IP-то `187.7.64.36`.
+- **Настройки в dashboard-а:** SSL/TLS „Automatic“ (избира Full (strict), Caddy има валиден сертификат; никога Flexible: зацикля пренасочването към https); Bot Fight Mode включен; AI crawl политиките по подразбиране (Allow), Bot Preference Sync включен (добавя редове в началото на robots.txt). Leaked credentials mitigation не е включен: безплатният план има едно rate limiting правило и то е за нас.
+- **Bot Fight Mode** спира автоматизирани клиенти без изключение (на безплатния план не може да се добави). Външен uptime монитор към `https://pakto.net/api/health` може да започне да вижда „down“; вътрешните неща (cron, бекъпи, health check на контейнера) не минават през Cloudflare.
+- **Реалният IP:** Caddy вярва на `CF-Connecting-IP` само от IP диапазоните на Cloudflare (`trusted_proxies` в `deploy/Caddyfile`; списъкът е от https://www.cloudflare.com/ips/, проверявай го веднъж годишно) и праща на приложението `X-Forwarded-For` с един адрес. Пряка заявка до сървъра запазва собствения си адрес, затова фалшив header не сменя IP-то за лимитите.
+- **При атака:** Overview на `pakto.net` → Under Attack Mode (всеки посетител минава кратка проверка). След атаката се изключва.
+- **Връщане без Cloudflare:** в Hostinger nameservers на `pakto.net` обратно на `horizon.dns-parking.com` и `orbit.dns-parking.com` (на `pakto.io`: `aster` и `helios.dns-parking.com`); зоната в Hostinger още има старите записи, но DMARC там е `p=none` и трябва да се вдигне. Ако firewall-ът по-долу е включен, първо той се изключва, иначе сайтът спира.
+- **Предстои** (след като nameservers се разпространят, около 07.10.2026): Hostinger VPS firewall, който пуска 80/443 само от IP диапазоните на Cloudflare (22 остава за всички, деплоят идва от различни адреси на GitHub); Docker заобикаля `ufw`, затова е firewall-ът на Hostinger. И едно rate limiting правило в Cloudflare за `/access/*`, `/api/*` и `/sign-*`.
+- **pakto.io:** само пренасочва. `@` и `www` са A `192.0.2.1` (фиктивен адрес, Proxied), Redirect Rule „All incoming requests“ → `concat("https://pakto.net", http.request.uri.path)`, 301, със query string. Не стига до сървъра. Няма поща: SPF `v=spf1 -all`, DMARC `p=reject`, за да не може да се праща от името на домейна.
 
 ---
 
@@ -163,6 +173,7 @@ pnpm dev
 
 ## Дневник
 
+- **06.10.2026**: Cloudflare пред `pakto.net` (и `pakto.io`, което пренасочва), DMARC `p=quarantine`, деплоят по SSH към IP-то. Security проверка: Next 16.3.6, лимити за клиентските линкове и „нови линкове“, затворени HTTP пътища на Better Auth, Caddy с реалния IP. Вход с Google (`GOOGLE_CLIENT_ID/SECRET`). Lighthouse: текстов корал `--primary-ink`, `/contact` се индексира.
 - **06.10.2026**: махнат старият модел „паспорт“ от MadeFlow: 19 празни таблици, 12 типа, 2 функции и 6 колони (`20261006120000_drop_legacy_madeflow.sql`, необратима: връщане само от бекъп), папката `order-files` от списъка за файлове; `purge_organization` вече не ги чисти.
 - **06.10.2026**: преместването е завършено. Сървърът, деплоят, бекъпите (локални и R2) и имейлите са описани по-горе; Supabase, Resend и Vercel са махнати от кода (`@supabase/supabase-js`, `resend`, `drizzle-kit`, `vercel.json`, `supabase/`, `drizzle/`, `src/instrumentation.ts`). Базата на сървъра е започната на чисто (данните в Supabase бяха само тестови). Добавени CSP и `db/seed.sql`. Поправени: пренасочвания към `0.0.0.0:3000`, контактната форма (искаше `RESEND_API_KEY`), `db:pull` (историята на миграциите и `--files`).
 - **05.10.2026**: имейли през SMTP с опашка, файлове на диска, Better Auth, live през `LISTEN/NOTIFY`, собствен Postgres. Подробно в `docs/production-migration-plan.md`.
