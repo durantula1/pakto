@@ -45,7 +45,7 @@ services:
     command: ["--wait", "up"]
 
   app:
-    image: pakto-app:${APP_TAG:-local}
+    image: ghcr.io/durantula1/pakto:${APP_TAG:-latest}
     build:
       context: ../src
       args:
