@@ -130,6 +130,13 @@ export const auth = betterAuth({
   },
   // Sign-in, sign-up and reset run through server actions, which have their own limits (src/lib/auth/limits.ts).
   rateLimit: { enabled: true, window: 60, max: 60 },
+  // The same endpoints over HTTP would skip those limits (and the consent record of a sign-up), so they answer 404.
+  // Server actions call auth.api directly and are not affected. The links in emails (verify-email, the GET
+  // /reset-password/:token) and the Google callback stay open.
+  disabledPaths: [
+    "/sign-up/email", "/sign-in/email", "/sign-in/social", "/request-password-reset", "/send-verification-email",
+    "/reset-password", "/change-password", "/change-email",
+  ],
   plugins: [nextCookies()],
 });
 

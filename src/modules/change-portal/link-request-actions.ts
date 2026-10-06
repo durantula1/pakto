@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, gt, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { headers } from "next/headers";
 import { after } from "next/server";
 import { z } from "zod";
 import "@/lib/zod-messages";
@@ -8,7 +9,9 @@ import "@/lib/zod-messages";
 import { getDatabase } from "@/db";
 import { organizations, portalGrants, projectContacts, projects, timelineEvents } from "@/db/schema";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
+import { clientIp } from "@/lib/http/client-ip";
 import { portalLinkFor } from "@/modules/change-portal/links";
+import { allowHit } from "@/modules/support/limits";
 
 export type LinkRequestState = { error?: string; sent?: boolean };
 
@@ -23,6 +26,9 @@ export async function requestNewLinksAction(_: LinkRequestState, formData: FormD
   const parsed = z.object({ email: z.email("Въведете валиден имейл.") }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Въведете валиден имейл." };
   const email = parsed.data.email.trim().toLowerCase();
+  // The per-contact limit below needs a database read; this stops one IP from asking in a loop first.
+  const ip = clientIp(await headers());
+  if (!allowHit(`portal-links:${ip ?? "unknown"}`, 10, RESEND_WINDOW_MS)) return { error: "Твърде много заявки за кратко време. Опитайте отново след 15 минути." };
 
   // The lookup and the emails run after the answer, so its timing does not tell a known email apart.
   after(() => sendNewLinks(email).catch((cause) => console.error("[portal] new links", cause)));

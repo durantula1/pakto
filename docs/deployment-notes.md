@@ -126,7 +126,12 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 ## 8. Сигурност
 
 - Хедъри от `next.config.ts`: Content-Security-Policy на страниците (всичко от `'self'`, без външни ресурси), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`; порталът е `private, no-store` и `no-referrer`. HSTS (без `includeSubDomains`) идва от Caddy.
-- Лимити в приложението: вход, регистрация, писма за парола, кодове, съобщения, клиентски линкове, `/contact`. Няма лимити в Caddy; ако дойде атака, следващата стъпка е Cloudflare отпред (тогава реалният IP идва в `CF-Connecting-IP`).
+- Лимити в приложението (в паметта, нулират се при рестарт): вход, регистрация, писма за парола, кодове, съобщения, клиентски линкове (`/access/[token]`: до 20 нови сесии на IP за 10 мин.; повторно отваряне на същото устройство ползва старата сесия), „Изпрати ми нови линкове“, `/contact`.
+- Better Auth: HTTP пътищата, които браузърът не ползва (`/sign-up/email`, `/sign-in/email`, `/request-password-reset`, `/send-verification-email` и т.н.), връщат 404 (`disabledPaths` в `src/lib/auth/server.ts`), за да не заобикалят лимитите. Server actions викат `auth.api` директно. Отворени остават линковете от писмата и `/callback/google`.
+- **Cloudflare** (безплатен план) стои пред сайта: DNS на `pakto.net` е в Cloudflare, `pakto.net` и `www` са Proxied (оранжево), пощенските записи (MX, DKIM, autodiscover/autoconfig, SPF/DMARC) са DNS only. SSL/TLS: Full (strict); Caddy продължава да издава сертификата (HTTP-01 минава през Cloudflare). Мрежовата и L7 DDoS защита са на Cloudflare; Hostinger филтрира само мрежовите атаки.
+- **Реалният IP:** Caddy вярва на `CF-Connecting-IP` само от IP диапазоните на Cloudflare (`trusted_proxies` в `deploy/Caddyfile`; списъкът е от https://www.cloudflare.com/ips/, проверявай го веднъж годишно) и праща на приложението `X-Forwarded-For` с един адрес. Пряка заявка до сървъра запазва собствения си адрес, затова фалшив header не сменя IP-то за лимитите.
+- `deploy.sh` рестартира Caddy, когато Caddyfile се е сменил (`/opt/pakto/.caddyfile.sha256`): новият файл не се вижда през bind mount-а без рестарт.
+- DMARC: `p=quarantine`.
 
 ---
 

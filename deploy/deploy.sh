@@ -34,6 +34,12 @@ fi
 set_tag "$TAG"
 "${COMPOSE[@]}" up -d --remove-orphans < /dev/null
 "${COMPOSE[@]}" restart cron backup offsite < /dev/null
+# The new Caddyfile is a new file, which Caddy's bind mount does not see: restart Caddy when it changed
+# since the last restart this script made (a few seconds without https).
+CADDY_SUM="$(sha256sum Caddyfile | cut -d' ' -f1)"
+if [ "$CADDY_SUM" != "$(cat ../.caddyfile.sha256 2>/dev/null || true)" ]; then
+  "${COMPOSE[@]}" restart caddy < /dev/null && echo "$CADDY_SUM" > ../.caddyfile.sha256
+fi
 
 for _ in $(seq 1 30); do
   state="$(docker inspect -f '{{.State.Health.Status}}' deploy-app-1 2>/dev/null || true)"

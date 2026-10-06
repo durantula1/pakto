@@ -16,6 +16,11 @@ import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { clientIp } from "@/lib/http/client-ip";
 import { CLIENT_IDLE_MS, PORTAL_COOKIE, clientCookieName } from "@/modules/change-portal/session";
 import { appUrl } from "@/lib/env/public";
+import { allowHit } from "@/modules/support/limits";
+
+/** New portal sessions per IP: plenty for a family on one Wi-Fi, little for a script replaying a link. */
+const NEW_SESSIONS_PER_IP = 20;
+const NEW_SESSIONS_WINDOW_MS = 10 * 60_000;
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -54,9 +59,29 @@ export async function GET(
   const offer = request.nextUrl.searchParams.get("offer");
   const target = appUrl(offer && uuidPattern.test(offer) ? `/portal/${grant.publicId}/changes/${offer}` : `/portal/${grant.publicId}`);
 
+  const reuse = async () => {
+    await database.update(portalGrants).set({ lastExchangedAt: new Date() }).where(eq(portalGrants.id, grant.id));
+    const response = NextResponse.redirect(target);
+    response.headers.set("Referrer-Policy", "no-referrer");
+    response.headers.set("Cache-Control", "private, no-store");
+    return response;
+  };
+
+  // Reopening a link on the same device keeps its session instead of starting another one.
+  const existing = request.cookies.get(cookieName)?.value;
+  if (existing && !grant.clientId) {
+    const [open] = await database.select({ id: portalSessions.id }).from(portalSessions)
+      .where(and(
+        eq(portalSessions.sessionHash, hashPortalToken(existing)),
+        eq(portalSessions.portalGrantId, grant.id),
+        isNull(portalSessions.revokedAt),
+        gt(portalSessions.expiresAt, new Date()),
+      ))
+      .limit(1);
+    if (open) return reuse();
+  }
   // Another link of the same client on this device joins the session already open here, so a
   // confirmed code keeps the client's other projects open.
-  const existing = grant.clientId ? request.cookies.get(cookieName)?.value : undefined;
   if (existing && grant.clientId) {
     // An unconfirmed session only covers its own project; a link to another one starts afresh.
     const [open] = await database.select({ id: portalSessions.id }).from(portalSessions)
@@ -71,13 +96,16 @@ export async function GET(
         gt(portalSessions.lastSeenAt, new Date(Date.now() - CLIENT_IDLE_MS)),
       ))
       .limit(1);
-    if (open) {
-      await database.update(portalGrants).set({ lastExchangedAt: new Date() }).where(eq(portalGrants.id, grant.id));
-      const response = NextResponse.redirect(target);
-      response.headers.set("Referrer-Policy", "no-referrer");
-      response.headers.set("Cache-Control", "private, no-store");
-      return response;
-    }
+    if (open) return reuse();
+  }
+
+  // Every new session is a few rows; one IP opening links in a loop is stopped here.
+  const ip = clientIp(request.headers);
+  if (!allowHit(`portal-access:${ip ?? "unknown"}`, NEW_SESSIONS_PER_IP, NEW_SESSIONS_WINDOW_MS)) {
+    return new NextResponse("Твърде много отваряния за кратко време. Опитайте отново след няколко минути.", {
+      status: 429,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Retry-After": "600", "Cache-Control": "no-store" },
+    });
   }
 
   const sessionSecret = randomBytes(32).toString("base64url");
@@ -90,7 +118,7 @@ export async function GET(
       clientId: grant.clientId,
       sessionHash: hashPortalToken(sessionSecret),
       expiresAt,
-      createdIp: clientIp(request.headers),
+      createdIp: ip,
       userAgent: request.headers.get("user-agent"),
     });
     await transaction
