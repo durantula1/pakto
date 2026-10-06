@@ -8,10 +8,9 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
     // Hover upgrades a partial prefetch to the full dynamic payload, so the click paints from cache.
     dynamicOnHover: true,
-    // CSS arrives inside the HTML, so the first paint does not wait for a stylesheet round trip
-    // (Lighthouse mobile: FCP 1.5 s → see docs). Costs ~30 KB on each full page load; client-side
-    // navigations do not re-download it.
-    inlineCss: true,
+    // Off: with CSS inlined into the streamed HTML, pages behind a real network (not localhost) hydrated before
+    // the stream finished and broke it (React #418, "$RS … parentNode", streamed sections left hidden).
+    inlineCss: false,
     // "Връзка с нас" sends up to 10 MB of screenshots in one action (plus multipart overhead);
     // the proxy buffers the same body, so both limits move together.
     serverActions: { bodySizeLimit: "12mb" },
