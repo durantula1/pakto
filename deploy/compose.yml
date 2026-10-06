@@ -126,8 +126,28 @@ services:
     command: ["bash", "/run.sh"]
     logging: *logging
 
+  # Copies /opt/pakto/backups to Cloudflare R2 every night (restic, encrypted). Restore: see docs/deployment-notes.md.
+  offsite:
+    image: restic/restic:0.18.1
+    restart: unless-stopped
+    entrypoint: ["sh", "/run.sh"]
+    environment:
+      TZ: UTC
+      RESTIC_REPOSITORY: s3:https://${R2_ACCOUNT_ID:?set in .env}.r2.cloudflarestorage.com/pakto-backups
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?set in .env}
+      AWS_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?set in .env}
+      AWS_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?set in .env}
+      AWS_DEFAULT_REGION: auto
+      RESTIC_CACHE_DIR: /cache
+    volumes:
+      - ./offsite/run.sh:/run.sh:ro
+      - ../backups:/backups:ro
+      - restic_cache:/cache
+    logging: *logging
+
 volumes:
   pgdata:
   files:
   caddy_data:
   caddy_config:
+  restic_cache:

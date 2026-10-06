@@ -33,7 +33,7 @@ fi
 
 set_tag "$TAG"
 "${COMPOSE[@]}" up -d --remove-orphans < /dev/null
-"${COMPOSE[@]}" restart cron backup < /dev/null
+"${COMPOSE[@]}" restart cron backup offsite < /dev/null
 
 for _ in $(seq 1 30); do
   state="$(docker inspect -f '{{.State.Health.Status}}' deploy-app-1 2>/dev/null || true)"
