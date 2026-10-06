@@ -34,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {/* Kept out of `metadata`: Next swaps its head tags on every navigation, and a re-added icon link makes the tab icon blink. */}
       <head>
         <link rel="icon" href="/icon.svg" sizes="any" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
         {/* Before the first paint: marks <html data-auth> so the marketing pages show the right buttons (no flash).
             The root layout is never rendered again on the client, so this runs once per page load; `AuthHint` covers client navigations. */}

@@ -16,20 +16,17 @@ export function SubpageHeader() {
       <div className="mx-auto flex max-w-[93.75rem] items-center justify-between">
         <Link
           href="/"
-          className="group flex items-center gap-2.5"
+          className="flex items-center"
           aria-label="Pakto, към началото"
         >
           <Image
-            src="/pakto-mark.svg"
+            src="/pakto-logo.svg"
             alt=""
-            width={36}
-            height={36}
+            width={97}
+            height={32}
             loading="eager"
-            className="size-9 transition-transform group-hover:-rotate-6"
+            className="h-8 w-auto"
           />
-          <span className="text-[0.9375rem] font-black tracking-[-0.04em]">
-            Pakto
-          </span>
         </Link>
         <div className="flex items-center gap-2">
           <Link
@@ -88,19 +85,16 @@ export function SiteFooter() {
         <div className="max-w-[40rem]">
           <Link
             href="/"
-            className="group inline-flex items-center gap-2.5"
+            className="inline-flex items-center"
             aria-label="Pakto"
           >
             <Image
-              src="/pakto-mark.svg"
+              src="/pakto-logo-dark.svg"
               alt=""
-              width={36}
-              height={36}
-              className="size-9 rounded-[0.625rem] ring-1 ring-white/15 transition-transform group-hover:-rotate-6"
+              width={97}
+              height={32}
+              className="h-8 w-auto"
             />
-            <span className="text-[0.9375rem] font-black tracking-[-0.04em] text-[#fbf7ec]">
-              Pakto
-            </span>
           </Link>
           {/* Where the name comes from. */}
           <p className="mt-10 font-serif text-3xl leading-tight tracking-[-0.02em] text-[#fbf7ec] sm:text-4xl">

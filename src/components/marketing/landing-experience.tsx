@@ -98,22 +98,15 @@ export function LandingExperience() {
           >
             {/* A floating glass pill, as wide as the page content. */}
             <div className="mf-glass pointer-events-auto mx-auto flex max-w-[93.75rem] items-center justify-between rounded-full py-2 pl-4 pr-2 sm:pl-5">
-              <Link
-                href="/"
-                className="group flex items-center gap-2.5"
-                aria-label="Pakto"
-              >
+              <Link href="/" className="flex items-center" aria-label="Pakto">
                 <Image
-                  src="/pakto-mark.svg"
+                  src="/pakto-logo.svg"
                   alt=""
-                  width={36}
-                  height={36}
+                  width={97}
+                  height={32}
                   loading="eager"
-                  className="size-9 transition-transform group-hover:-rotate-6"
+                  className="h-8 w-auto"
                 />
-                <span className="text-[0.9375rem] font-black tracking-[-0.04em]">
-                  Pakto
-                </span>
               </Link>
               <nav
                 aria-label="Основна навигация"

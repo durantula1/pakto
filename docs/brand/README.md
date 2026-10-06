@@ -1,6 +1,6 @@
 # Pakto brand: logo
 
-Decided with Mitko on 06.10.2026 (project thread "logo suggestions" in the Pakto Claude project). The files here are the final versions; the app itself still uses the old P mark (`public/pakto-mark.svg`, `public/icon.svg`) until they are swapped in.
+Decided with Mitko on 06.10.2026 (project thread "logo suggestions" in the Pakto Claude project). The files here are the final versions. In the app: `public/pakto-logo.svg` / `pakto-logo-dark.svg` (wordmark, used by `Wordmark` and the marketing nav/footer), `public/pakto-mark.svg` and `public/icon.svg` (icon, favicon, PWA), `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, and the email logo PNG in `src/lib/email/logo.ts`.
 
 ![Preview](pregled-final.png)
 

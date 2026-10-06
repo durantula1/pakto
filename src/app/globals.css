@@ -107,7 +107,7 @@
   --chart-4: #bceba8;
   --chart-5: #102b38;
   --radius: 0.85rem;
-  /* The light green of the P mark (public/pakto-mark.svg). */
+  /* Light green of the palette (the old P mark); the new mark is navy, cream and coral (docs/brand). */
   --brand-green: #bceba8;
   /* Light blue of the palette (same as --chart-3); the download tray uses it on navy. */
   --brand-blue: #a6d8df;
