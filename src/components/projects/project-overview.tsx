@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { sofiaTodayIso } from "@/lib/sofia-today";
 
 import { Badge } from "@/components/ui/badge";
-import { PaidBar } from "@/components/projects/offer-cards";
+import { PaidBar } from "@/components/projects/paid-bar";
 import { ClaimPaymentRow, DisputeReceiptRow } from "@/components/portal/inline-forms";
 import { BillLine, PaperLabel, Quote } from "@/components/portal/paper";
 import { cn } from "@/lib/utils";

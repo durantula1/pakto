@@ -10,7 +10,7 @@ import { formatDay } from "@/modules/change-orders/labels";
 import { documentCode } from "@/modules/change-orders/labels";
 import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
 import { cents, formatCents, type ProjectState } from "@/modules/projects/state";
-import { Meter, PaidBar } from "@/components/projects/offer-cards";
+import { Meter, PaidBar } from "@/components/projects/paid-bar";
 
 type Milestone = ProjectState["milestones"][number];
 

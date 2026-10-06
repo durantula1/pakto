@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/workspace/data-table";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
-import { PaidBar } from "@/components/projects/offer-cards";
+import { PaidBar } from "@/components/projects/paid-bar";
 import { InstallmentActions, ReceiptsTable, SectionHeader, StageActions, StageDue, offerWorkOptions } from "@/components/projects/offer-execution";
 import { RecordPaymentDialog } from "@/components/projects/project-controls";
 import { paymentLabels, stageLabels } from "@/components/projects/project-dashboard";
