@@ -1,10 +1,14 @@
-# Every push to main: check, build the image, push it to GHCR, deploy it to the VPS (deploy/deploy.sh over SSH).
+# Every push to main: checks and the image build run side by side; the image goes to GHCR, and the VPS gets it
+# (deploy/deploy.sh over SSH) only after both pass. A push that changes only docs or Markdown deploys nothing.
 # Needs one secret: DEPLOY_SSH_KEY (private key whose public half is in the server's authorized_keys with a forced command).
 name: Deploy
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 concurrency:
@@ -35,8 +39,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
 
-  deploy:
-    needs: check
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +49,22 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # The Dockerfile's cache mounts (pnpm store, .next/cache) live in the builder, which is new on every run:
+      # these two steps save them to the Actions cache and put them back.
+      - uses: actions/cache@v4
+        id: buildkit-cache
+        with:
+          path: buildkit-cache
+          key: buildkit-${{ github.sha }}
+          restore-keys: buildkit-
+      - uses: reproducible-containers/buildkit-cache-dance@v3
+        with:
+          cache-map: |
+            {
+              "buildkit-cache/pnpm-store": "/root/.local/share/pnpm/store",
+              "buildkit-cache/next-cache": "/app/.next/cache"
+            }
+          skip-extraction: ${{ steps.buildkit-cache.outputs.cache-hit }}
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -57,6 +76,16 @@ jobs:
             ${{ env.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            deploy
+            db
       - name: Deploy
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
