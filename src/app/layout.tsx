@@ -20,7 +20,10 @@ export const metadata: Metadata = {
     description: "Оферти и промени по обекта, одобрени с код от клиента.",
     locale: "bg_BG",
     type: "website",
+    siteName: "Pakto",
   },
+  // The picture is src/app/opengraph-image.png; X/Twitter reads it from og:image.
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

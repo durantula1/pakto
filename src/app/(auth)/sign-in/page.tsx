@@ -5,7 +5,8 @@ import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { inviteEmailFor } from "@/lib/auth/invite-email";
 import { getSessionUser, googleSignInEnabled } from "@/lib/auth/server";
-export const metadata: Metadata = { title: "Вход" };
+// "?next=" and "?account=" only change a notice on the same form: one indexed address.
+export const metadata: Metadata = { title: "Вход", alternates: { canonical: "/sign-in" } };
 /** Codes Better Auth adds to /sign-in?error= when the Google sign-in fails. */
 const GOOGLE_ERRORS: Record<string, string> = {
   google: "Входът с Google не успя. Опитай пак или влез с имейл и парола.",

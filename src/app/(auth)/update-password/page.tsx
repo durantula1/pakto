@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PasswordForm } from "@/components/auth/password-form";
 
-export const metadata: Metadata = { title: "Нова парола" };
+export const metadata: Metadata = { title: "Нова парола", robots: { index: false, follow: false } };
 
 /** Opened from the reset email: Better Auth checks the link and sends ?token= (or ?error= when it is no longer valid). */
 export default async function UpdatePasswordPage({ searchParams }: PageProps<"/update-password">) {
