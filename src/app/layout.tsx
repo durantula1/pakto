@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <LocaleProvider>{children}</LocaleProvider>
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" visibleToasts={3} />
       </body>
     </html>
   );

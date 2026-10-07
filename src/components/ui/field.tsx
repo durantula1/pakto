@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -69,19 +69,61 @@ const fieldVariants = cva(
   }
 )
 
+type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
+function isControl(target: EventTarget): target is Control {
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
+}
+
+/** The browser's verdict on a control, in Bulgarian (the native bubbles are English and off with `noValidate`). */
+function invalidMessage(control: Control) {
+  const validity = control.validity
+  if (validity.valueMissing) return "Попълни това поле."
+  if (validity.typeMismatch) return control.type === "email" ? "Провери имейла, нещо в него не е наред." : "Провери стойността."
+  if (validity.tooShort && "minLength" in control) return `Поне ${control.minLength} символа.`
+  if (validity.tooLong && "maxLength" in control) return `Най-много ${control.maxLength} символа.`
+  if (validity.rangeUnderflow && "min" in control) return `Най-малко ${control.min}.`
+  if (validity.rangeOverflow && "max" in control) return `Най-много ${control.max}.`
+  return "Провери стойността."
+}
+
+/**
+ * One label, control and message. When the form checks itself before sending (`ActionForm`), an invalid
+ * control gets a red border and its message right under it; typing a valid value clears both.
+ */
 function Field({
   className,
   orientation = "vertical",
+  children,
+  onInvalidCapture,
+  onInputCapture,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+  const [error, setError] = useState<string | null>(null)
   return (
     <div
       role="group"
       data-slot="field"
       data-orientation={orientation}
       className={cn(fieldVariants({ orientation }), className)}
+      onInvalidCapture={(event) => {
+        onInvalidCapture?.(event)
+        if (!isControl(event.target)) return
+        event.preventDefault()
+        event.target.setAttribute("aria-invalid", "true")
+        setError(invalidMessage(event.target))
+      }}
+      onInputCapture={(event) => {
+        onInputCapture?.(event)
+        if (!isControl(event.target) || !event.target.validity.valid) return
+        if (event.target.getAttribute("aria-invalid") === "true") event.target.removeAttribute("aria-invalid")
+        setError(null)
+      }}
       {...props}
-    />
+    >
+      {children}
+      {error ? <FieldError>{error}</FieldError> : null}
+    </div>
   )
 }
 

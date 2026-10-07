@@ -283,3 +283,10 @@ html[data-navigating] #workspace-shell main {
     transition: none;
   }
 }
+
+/* A required field marks its label with a red "*", so no form has to add it by hand. */
+[data-slot="field"]:has(:is(input, textarea, select)[required]:not([type="hidden"])) > [data-slot="field-label"]::after {
+  content: "*";
+  margin-inline-start: -0.25rem;
+  color: var(--destructive);
+}
