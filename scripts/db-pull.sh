@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Copies the production database to the LOCAL Postgres (docker-compose.dev.yml), for reproducing a problem
-# with real data. The local app never connects to production. See docs/production-migration-plan.md, 3.11.
+# with real data. The local app never connects to production.
 #
 #   pnpm db:pull                 anonymized copy (emails, phones, names, IPs, client links)
 #   pnpm db:pull -- --raw        no anonymization (only when the problem depends on the exact data)

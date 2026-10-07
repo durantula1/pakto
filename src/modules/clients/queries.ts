@@ -8,7 +8,7 @@ import { seesAllProjects } from "@/lib/authz/project-access";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { normalizePhone } from "@/modules/clients/operations";
 
-/** Projects the caller may see; a client exists for them only through these (docs/clients-plan.md, 8). */
+/** Projects the caller may see; a client exists for them only through these. */
 function visibleProject(context: TenantContext): SQL | undefined {
   if (seesAllProjects(context)) return undefined;
   const db = getDatabase();

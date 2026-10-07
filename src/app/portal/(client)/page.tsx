@@ -13,7 +13,7 @@ import { clientVerifiedEmail, getClientPortal } from "@/modules/change-portal/se
 import { cents, formatCents } from "@/modules/projects/state";
 
 /**
- * The client's dashboard (docs/portal-simplify-plan.md, Б2): what waits for them first, then one card
+ * The client's dashboard: what waits for them first, then one card
  * per project. A client with a single project goes straight into it.
  */
 export default async function ClientPortalHome({ searchParams }: PageProps<"/portal">) {

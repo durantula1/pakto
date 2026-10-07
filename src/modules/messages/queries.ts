@@ -15,7 +15,7 @@ export type ThreadMessage = { id: number; authorType: "staff" | "portal_contact"
 
 const messageRevision = alias(changeOrderRevisions, "message_revision");
 
-/** Every message belongs to one offer (docs/chat-narrowing-plan.md): its questions and the answers. */
+/** Every message belongs to one offer: its questions and the answers. */
 function threadScope(changeOrderId: string) {
   return eq(documentMessages.changeOrderId, changeOrderId);
 }

@@ -16,7 +16,7 @@ const dateTime = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "shor
 /**
  * "Въпроси по тази оферта": the client's questions and the company's answers as part of the offer's
  * record, each marked with the version it was about, oldest first. Not a chat: no bubbles, no live
- * typing; a question never changes the offer's status (docs/chat-narrowing-plan.md, part 2).
+ * typing; a question never changes the offer's status.
  */
 export function OfferQuestions({ messages, projectPublicId, changeOrderId, organizationName, revisionNumber, waiting, canAsk, isChange = false }: {
   messages: ThreadMessage[];

@@ -53,7 +53,7 @@ export async function getDisputeTarget(decisionId: number) {
   const [disputed] = await db.select({ id: timelineEvents.id }).from(timelineEvents)
     .where(and(eq(timelineEvents.revisionId, target.revisionId), eq(timelineEvents.eventType, "decision_disputed")))
     .limit(1);
-  // Someone removed from the project can no longer dispute from an old email (docs/clients-plan.md, 14.2).
+  // Someone removed from the project can no longer dispute from an old email.
   const { contactRemovedAt, ...rest } = target;
   return { ...rest, accessRevoked: !!contactRemovedAt, disputed: !!disputed };
 }

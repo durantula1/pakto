@@ -157,7 +157,7 @@ export async function mergeClientsAction(formData: FormData): Promise<ActionResu
 /**
  * On a personal data request, once no project of the client is active: name and contacts are erased
  * from the client and every invitation, and their links stop working. Decisions keep the typed name
- * and confirmed email as the legal record of what was agreed (docs/portal-simplify-plan.md, В3).
+ * and confirmed email as the legal record of what was agreed.
  */
 export async function anonymizeClientAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {

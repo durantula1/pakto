@@ -20,7 +20,7 @@ import { maskEmail } from "@/lib/email/send";
 import { getSessionUser } from "@/lib/auth/server";
 
 export const PORTAL_COOKIE = "sitechange_portal";
-/** One cookie per organization for a client-wide session (docs/clients-plan.md, 6). */
+/** One cookie per organization for a client-wide session. */
 const CLIENT_COOKIE_PREFIX = `${PORTAL_COOKIE}_c_`;
 export const clientCookieName = (organizationId: string) => `${CLIENT_COOKIE_PREFIX}${organizationId}`;
 /** A client session also ends after this long without a visit, since it opens several projects. */

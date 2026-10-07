@@ -22,7 +22,7 @@ export function useDecisionIntent() {
 }
 
 /**
- * An offer or change waiting for the client's decision (docs/portal-simplify-plan.md, Б5): the
+ * An offer or change waiting for the client's decision: the
  * document in one column, read top to bottom, with the amount and the decision beside it on desktop;
  * on phones a bar at the bottom opens the decision in a sheet. After a decision the page is one plain column.
  */

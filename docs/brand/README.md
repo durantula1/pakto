@@ -1,6 +1,6 @@
 # Pakto brand: logo
 
-Decided with Mitko on 06.10.2026 (project thread "logo suggestions" in the Pakto Claude project). The files here are the final versions. In the app: `public/pakto-logo.svg` / `pakto-logo-dark.svg` (wordmark, used by `Wordmark` and the marketing nav/footer), `public/pakto-mark.svg` and `public/icon.svg` (icon, favicon, PWA), `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, and the email logo PNG in `src/lib/email/logo.ts`.
+Decided on 06.10.2026 (project thread "logo suggestions" in the Pakto Claude project). The files here are the final versions. In the app: `public/pakto-logo.svg` / `pakto-logo-dark.svg` (wordmark, used by `Wordmark` and the marketing nav/footer), `public/pakto-mark.svg` and `public/icon.svg` (icon, favicon, PWA), `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, and the email logo PNG in `src/lib/email/logo.ts`.
 
 ![Preview](pregled-final.png)
 
@@ -23,6 +23,3 @@ Decided with Mitko on 06.10.2026 (project thread "logo suggestions" in the Pakto
 
 Unchanged from `src/app/globals.css`: navy `#18394C` / `#102b38`, coral `#FF765F`, cream `#f4efe4`, green `#BCEBA8`, blue `#A6D8DF`.
 
-## Rejected directions
-
-`concepts/` holds the explorations (symbol ideas, font and colour variants, icon variants) for reference.

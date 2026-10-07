@@ -225,7 +225,7 @@ export const attachmentVisibility = appSchema.enum("attachment_visibility", [
   "client",
 ]);
 
-/** A natural person the organization works for; may have several projects (docs/clients-plan.md). */
+/** A natural person the organization works for; may have several projects. */
 export const clients = appSchema.table(
   "clients",
   {
@@ -1026,7 +1026,7 @@ export const documentMessages = appSchema.table(
     id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
     organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
     projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-    /** Every message is about one offer or change (docs/chat-narrowing-plan.md). */
+    /** Every message is about one offer or change. */
     changeOrderId: uuid("change_order_id").notNull().references(() => changeOrders.id, { onDelete: "cascade" }),
     revisionId: bigint("revision_id", { mode: "number" }).references(() => changeOrderRevisions.id, { onDelete: "set null" }),
     authorType: text("author_type", { enum: ["staff", "portal_contact"] }).notNull(),

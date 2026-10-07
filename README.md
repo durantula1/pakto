@@ -9,7 +9,7 @@ bootstrap линкът създава отделна HttpOnly portal session.
 
 ## Стек
 
-- Next.js 16.3.5, React 19.2 и TypeScript 5.9;
+- Next.js 16.3.6, React 19.2 и TypeScript 5.9;
 - Tailwind CSS 4 и shadcn с React Aria primitives;
 - PostgreSQL 17, Drizzle ORM и `postgres.js` (само от сървъра), миграции с dbmate;
 - Better Auth за служителите, файлове на диска на сървъра, имейли през SMTP;
@@ -41,6 +41,5 @@ pnpm build
   от database trigger;
 - решенията и timeline events са append-only и idempotent.
 
-Пилотът не издава фактури. Старите passport маршрути (от предишния продукт MadeFlow) са достъпни
-само за owner, докато бъдат премахнати след пилота. Подробните стъпки за
-приемане са в `docs/implementation-plan.md`.
+Пилотът не издава фактури. Подробните стъпки за приемане са в
+`docs/implementation-plan.md`.

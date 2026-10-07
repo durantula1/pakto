@@ -1,6 +1,6 @@
 # Pakto architecture decisions
 
-Status: accepted for demo implementation, 2026-09-22.
+Status: accepted 2026-09-22, обновено 07.10.2026. Тук са решенията, които важат; работните планове по фази са в историята на git.
 
 ## Product boundary
 
@@ -18,7 +18,7 @@ Status: accepted for demo implementation, 2026-09-22.
 - Server Components четат през domain query modules.
 - Server Actions обработват staff и portal mutations.
 - `/access/[token]` обменя bootstrap secret за scoped device session.
-- Portal browser-ът никога не използва Supabase client за business data.
+- Browser-ът (и на фирмата, и на клиента) никога не чете базата директно: всичко минава през сървъра (Drizzle, `server-only`).
 
 ## Data and immutability
 
@@ -45,7 +45,7 @@ Status: accepted for demo implementation, 2026-09-22.
 
 ## Изпълнението живее в офертата (2026-10-04)
 
-Вижте `docs/offer-centric-plan.md`. Офертата е договорката, която клиентът одобрява, затова:
+Офертата е договорката, която клиентът одобрява, затова:
 
 - Етапите, вноските, плащанията и приемането на работата се гледат и управляват от
   страницата на офертата (табове „Етапи“ и „Плащания“). Етапите и вноските на одобрена промяна
@@ -82,16 +82,11 @@ Status: accepted for demo implementation, 2026-09-22.
 
 ## Access model
 
-- Staff identity идва от Supabase Auth и active organization membership.
-- Portal contact не е `auth.users` и няма login.
+- Staff identity идва от Better Auth (`app.auth_*`) и active organization membership.
+- Portal contact няма профил и login.
 - Bootstrap grants и device sessions имат отделни hashes, expiry и revocation.
-- Data API ролите нямат grants върху business таблиците; trusted server code
+- Ролята на приложението (`pakto_app`) не може да променя схемата; trusted server code
   връща allow-listed DTO-та.
-
-## Transitional boundary
-
-Legacy passport таблиците (от предишния продукт MadeFlow) и routes са запазени временно за миграция и rollback.
-Новата навигация и продуктови потоци използват само модулите на Pakto.
 
 ## Clients own projects (2026-09-26)
 
@@ -112,8 +107,6 @@ Legacy passport таблиците (от предишния продукт MadeF
   Всичко останало се слива ръчно.
 - Append-only записите (решения, плащания, събития) не се пренаписват; връзката
   с клиента минава през `project_contacts.client_id`.
-- Планът по фази, одобреният макет на портала и статусът са в
-  `docs/clients-plan.md`.
 - Лични данни за един клиент: собственикът изнася всичко за него (JSON) и може
   да го анонимизира, когато няма активен обект. Името, контактите и бележките
   се изтриват от клиента и поканите му, а линковете му спират. Решенията
@@ -121,10 +114,9 @@ Legacy passport таблиците (от предишния продукт MadeF
   за договореното).
 - Порталът (2026-09-27): едно потвърждение на имейла за клиента, решение с име
   и код без нарисуван подпис, всеки код отключва всички обекти на клиента в
-  сесията. Подробности в `docs/portal-simplify-plan.md`.
+  сесията.
 - Въпросите (2026-09-29): няма общ разговор за обекта. Всяко съобщение е към
   една оферта или промяна (`document_messages.change_order_id` е задължително)
   и носи версията, към която е писано. Клиентът ги вижда под офертата, а
   отговорът му идва по имейл с линк към тях. За всичко друго порталът показва
   телефона на фирмата (`organizations.phone`) като бутони за обаждане и Viber.
-  Подробности в `docs/chat-narrowing-plan.md`.

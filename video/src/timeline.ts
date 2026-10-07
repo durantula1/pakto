@@ -1,7 +1,7 @@
 import { seconds } from "./theme";
 
 /**
- * The story, beat by beat (docs/landing-video-plan.md). Both clips, phone and desktop, share these
+ * The story, beat by beat. Both clips, phone and desktop, share these
  * beats, so the same moment happens at the same second in either one. Each screen keeps its own
  * local timing (a press at local frame 160 and so on), which is why the lengths are fixed here.
  */

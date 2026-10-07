@@ -14,7 +14,7 @@ import { confirmUnlockCodeAction, requestUnlockCodeAction, type UnlockState } fr
 
 /**
  * In the project header: "← Вашите обекти" once the session is unlocked, else one quiet row that
- * sends a code to the confirmed email (docs/clients-plan.md, 6.3). It never names the other projects.
+ * sends a code to the confirmed email. It never names the other projects.
  */
 export function ClientProjectsBar({ projectPublicId, organizationName, navigation }: {
   projectPublicId: string;

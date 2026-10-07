@@ -8,8 +8,8 @@ import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
 export const runtime = "nodejs";
 
 /**
- * Everything the company holds about one client, for the owner to hand over on a personal data request
- * (docs/portal-simplify-plan.md, В3): the client, their invitations, decisions, "Платих" and messages.
+ * Everything the company holds about one client, for the owner to hand over on a personal data request:
+ * the client, their invitations, decisions, "Платих" and messages.
  */
 export async function GET(_: Request, { params }: RouteContext<"/api/clients/[clientId]/export">) {
   const context = await getOptionalTenantContext();

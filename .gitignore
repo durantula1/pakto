@@ -42,3 +42,4 @@ next-env.d.ts
 
 # Uploaded files in local development (FILES_DIR)
 /.data/
+!.env.example

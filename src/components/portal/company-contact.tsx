@@ -3,8 +3,8 @@ import { MessageCircle, Phone } from "lucide-react";
 import { normalizePhone } from "@/modules/clients/operations";
 
 /**
- * "Обадете се" and Viber with the company's phone, where the project-wide chat used to be
- * (docs/chat-narrowing-plan.md, part 3). Nothing without a phone in the company settings.
+ * "Обадете се" and Viber with the company's phone, where the project-wide chat used to be.
+ * Nothing without a phone in the company settings.
  */
 export function CompanyContact({ phone, organizationName }: { phone: string | null; organizationName: string }) {
   const number = normalizePhone(phone);

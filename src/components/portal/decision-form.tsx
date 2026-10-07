@@ -26,7 +26,7 @@ const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: 
 const RESEND_SECONDS = 30;
 
 /**
- * The client's decision in two short screens (docs/portal-simplify-plan.md, Г2): first what they
+ * The client's decision in two short screens: first what they
  * decide (approval, or which objection) with their name, then the code from their email. The bar on
  * phones opens it on the right screen; on desktop the client switches with one link.
  */
