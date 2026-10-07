@@ -13,13 +13,15 @@ export function normalizePhone(phone: string | null | undefined) {
   return digits || null;
 }
 
-/** A new client for a person entered on a project; picking an existing client comes with the clients section. */
+/** A new client, entered with a new project or on its own from „Нов клиент“ in the clients section. */
 export async function createClient(tx: Transaction, input: {
   organizationId: string;
   createdBy: string;
   name: string;
   email: string | null;
   phone: string | null;
+  address?: string | null;
+  notes?: string | null;
 }) {
   const [client] = await tx.insert(clients).values({
     organizationId: input.organizationId,
@@ -28,6 +30,8 @@ export async function createClient(tx: Transaction, input: {
     email: input.email,
     phone: input.phone,
     phoneNormalized: normalizePhone(input.phone),
+    address: input.address ?? null,
+    notes: input.notes ?? null,
   }).returning({ id: clients.id });
   if (!client) throw new Error("Клиентът не беше създаден.");
   return client.id;

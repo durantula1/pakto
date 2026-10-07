@@ -8,7 +8,8 @@ import { PageShell } from "@/components/workspace/page/page-shell";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { parsePage } from "@/lib/pagination";
 import Link from "next/link";
-import { seesClients } from "@/modules/clients/access";
+import { NewClientDialog } from "@/components/clients/new-client-dialog";
+import { managesClients, seesClients } from "@/modules/clients/access";
 import { listDuplicateClients } from "@/modules/clients/queries";
 import { ClientsTable, ClientsTableSkeleton } from "./clients-table";
 
@@ -26,7 +27,10 @@ export default async function ClientsPage({ searchParams }: PageProps<"/app/clie
     <PageShell>
       <PageHeader
         page="clients"
-        actions={duplicates ? <Link href="/app/clients/duplicates" className="inline-flex min-h-10 items-center rounded-xl border bg-card px-4 text-sm font-medium hover:bg-muted">Повтарящи се клиенти ({duplicates})</Link> : null}
+        actions={<>
+          {duplicates ? <Link href="/app/clients/duplicates" className="inline-flex min-h-10 items-center rounded-xl border bg-card px-4 text-sm font-medium hover:bg-muted">Повтарящи се клиенти ({duplicates})</Link> : null}
+          {managesClients(context) ? <NewClientDialog /> : null}
+        </>}
       />
       <ListFilters query={query} status={status} statusOptions={[{ value: "active", label: "Активни" }, { value: "archived", label: "В архива" }]} placeholder="Име, имейл или телефон" />
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<ClientsTableSkeleton />}>

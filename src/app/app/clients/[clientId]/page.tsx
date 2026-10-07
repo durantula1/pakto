@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { DataTable, type DataTableColumn } from "@/components/workspace/data-table";
 import { DetailHeader } from "@/components/workspace/detail-header";
-import { PageShell } from "@/components/workspace/page/page-shell";
+import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
 import { can } from "@/lib/authz/permissions";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { managesClients, seesClients } from "@/modules/clients/access";
@@ -32,6 +32,7 @@ const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeSty
 type Totals = { contract: bigint; paid: bigint; remaining: bigint };
 
 function projectsSummary(total: number, active: number) {
+  if (!total) return "Още няма обекти";
   const noun = total === 1 ? "обект" : "обекта";
   if (active === total) return `${total} ${noun}${total === 1 ? ", активен" : ", всички активни"}`;
   return `${total} ${noun} · ${active} ${active === 1 ? "активен" : "активни"}`;
@@ -40,7 +41,7 @@ function projectsSummary(total: number, active: number) {
 export default async function ClientPage({ params }: PageProps<"/app/clients/[clientId]">) {
   const [{ clientId }, context] = await Promise.all([params, requireTenantContext()]);
   if (!seesClients(context) || !/^[0-9a-f-]{36}$/i.test(clientId)) notFound();
-  // Only the projects the caller may see; none of them means no card at all.
+  // Only the projects the caller may see; none of them means no card, unless the caller sees every project.
   const client = await getClient(context, clientId);
   if (!client) notFound();
   const active = client.projects.filter((project) => project.status === "active" && !project.archivedAt).length;
@@ -106,7 +107,9 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
             ? <NewProjectSheet defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
             : null}
         </div>
-        <DataTable
+        {!client.projects.length ? (
+          <EmptyState illustration={false} title="Още няма обекти" description="Добави първия обект с „Нов обект“. Клиентът вече е избран." />
+        ) : <DataTable
           label="Обекти на клиента"
           columns={columns}
           rows={client.projects.map((project) => ({
@@ -120,7 +123,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
               ...(seesMoney ? [remainingCell(remainingByProject.get(project.id))] : []),
             ],
           }))}
-        />
+        />}
       </section>
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">

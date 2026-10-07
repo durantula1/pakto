@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, exists, ilike, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, exists, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import { changeOrders, clients, portalGrants, portalSessions, projectContacts, projectMembers, projects, timelineEvents } from "@/db/schema";
@@ -15,6 +15,17 @@ function visibleProject(context: TenantContext): SQL | undefined {
   return exists(db.select({ id: projectMembers.projectId }).from(projectMembers)
     .where(and(eq(projectMembers.projectId, projects.id), eq(projectMembers.userId, context.userId))));
 }
+
+/**
+ * Whoever sees every project also sees a client with no project yet (added from „Нов клиент“);
+ * everyone else meets a client only through one of their projects. Goes with a left join on `projects`.
+ */
+function visibleClient(context: TenantContext): SQL | undefined {
+  return seesAllProjects(context) ? undefined : isNotNull(projects.id);
+}
+
+/** Latest activity: the newest project change, or when the client was added. */
+const lastActivity = sql<Date>`coalesce(max(${projects.updatedAt}), ${clients.createdAt})`;
 
 function matches(query: string) {
   const phone = normalizePhone(query);
@@ -46,14 +57,14 @@ export async function listClients(context: TenantContext, filters: { query?: str
       projects: sql<number>`count(distinct ${projects.id})::int`,
       activeProjects: sql<number>`count(distinct ${projects.id}) filter (where ${projects.status} = 'active' and ${projects.archivedAt} is null)::int`,
       waiting: sql<number>`count(distinct ${changeOrders.id}) filter (where ${changeOrders.lifecycleStatus} = 'open' and ${changeOrders.archivedAt} is null and exists (select 1 from app.change_order_revisions r where r.id = ${changeOrders.currentRevisionId} and r.status in ('sent', 'viewed')))::int`,
-      lastActivity: sql<Date>`max(${projects.updatedAt})`,
+      lastActivity,
     })
     .from(clients)
-    .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
+    .leftJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
     .leftJoin(changeOrders, eq(changeOrders.projectId, projects.id))
-    .where(clientFilters(context, filters))
+    .where(and(clientFilters(context, filters), visibleClient(context)))
     .groupBy(clients.id)
-    .orderBy(desc(sql`max(${projects.updatedAt})`))
+    .orderBy(desc(lastActivity))
     .limit(filters.limit)
     .offset(filters.offset ?? 0);
 }
@@ -63,12 +74,12 @@ export async function countClients(context: TenantContext, filters: { query?: st
   const [row] = await db
     .select({ total: sql<number>`count(distinct ${clients.id})::int` })
     .from(clients)
-    .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
-    .where(clientFilters(context, filters));
+    .leftJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
+    .where(and(clientFilters(context, filters), visibleClient(context)));
   return row?.total ?? 0;
 }
 
-/** The client card: only the projects the caller may see. No visible project means no card. */
+/** The client card: only the projects the caller may see. No visible project means no card, unless the caller sees every project. */
 export async function getClient(context: TenantContext, clientId: string) {
   const db = getDatabase();
   const [client] = await db
@@ -102,7 +113,7 @@ export async function getClient(context: TenantContext, clientId: string) {
     .where(and(eq(projects.organizationId, context.organizationId), eq(projects.clientId, clientId), visibleProject(context)))
     .groupBy(projects.id)
     .orderBy(asc(sql`${projects.archivedAt} is not null`), desc(projects.updatedAt));
-  if (!rows.length) return null;
+  if (!rows.length && !seesAllProjects(context)) return null;
   const [verified] = await db.select({ id: projectContacts.id }).from(projectContacts)
     .where(and(eq(projectContacts.clientId, clientId), sql`${projectContacts.emailVerifiedAt} is not null`)).limit(1);
   return { ...client, emailVerified: !!verified, projects: rows };
@@ -124,15 +135,16 @@ export async function searchClientOptions(context: TenantContext, query: string,
       projects: count(projects.id),
     })
     .from(clients)
-    .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
+    .leftJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
     .where(and(
       clientFilters(context, { query: term || undefined }),
       excludeProjectId && /^[0-9a-f-]{36}$/i.test(excludeProjectId)
         ? sql`not exists (select 1 from app.project_contacts pc where pc.client_id = ${clients.id} and pc.project_id = ${excludeProjectId}::uuid and pc.removed_at is null)`
         : undefined,
+      visibleClient(context),
     ))
     .groupBy(clients.id)
-    .orderBy(desc(sql`max(${projects.updatedAt})`))
+    .orderBy(desc(lastActivity))
     .limit(20);
 }
 
@@ -142,8 +154,8 @@ export async function findUsableClient(context: TenantContext, clientId: string)
   const [row] = await db
     .select({ id: clients.id, name: clients.name, email: clients.email, phone: clients.phone })
     .from(clients)
-    .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
-    .where(and(eq(clients.id, clientId), clientFilters(context, {})))
+    .leftJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
+    .where(and(eq(clients.id, clientId), clientFilters(context, {}), visibleClient(context)))
     .limit(1);
   return row ?? null;
 }
@@ -157,10 +169,11 @@ export async function findClientDuplicate(context: TenantContext, input: { email
   const [row] = await db
     .select({ id: clients.id, name: clients.name, projects: count(projects.id) })
     .from(clients)
-    .innerJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
+    .leftJoin(projects, and(eq(projects.clientId, clients.id), eq(projects.organizationId, clients.organizationId), visibleProject(context)))
     .where(and(
       clientFilters(context, {}),
       or(email ? eq(clients.emailNormalized, email) : undefined, phone ? eq(clients.phoneNormalized, phone) : undefined),
+      visibleClient(context),
     ))
     .groupBy(clients.id)
     .limit(1);

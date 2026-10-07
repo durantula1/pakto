@@ -30,7 +30,7 @@ export async function ClientsTable({ context, filters, page, searchState }: {
   if (!clients.length) {
     return filters.query || filters.archived
       ? <EmptyState title="Няма намерени клиенти" description="Опитай с друго име, имейл или телефон." />
-      : <EmptyState title="Още няма клиенти" description="Клиентът се добавя, когато създадеш обект за него." />;
+      : <EmptyState title="Още няма клиенти" description="Добави клиент с „Нов клиент“ или направо с нов обект." />;
   }
   return <DataTable
     label={label}

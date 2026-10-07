@@ -2,6 +2,7 @@
 
 import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
@@ -10,7 +11,8 @@ import { clients, portalGrants, portalSessions, projectContacts, projects, timel
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { managesClients } from "@/modules/clients/access";
-import { normalizePhone } from "@/modules/clients/operations";
+import { createClient, normalizePhone } from "@/modules/clients/operations";
+import { findClientDuplicate } from "@/modules/clients/queries";
 
 const clientSchema = z.object({
   clientId: z.uuid(),
@@ -20,6 +22,30 @@ const clientSchema = z.object({
   address: z.string().trim().max(300).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
+
+/** „Нов клиент“: a client before any project, opened on their card so the first project can follow. */
+export async function createClientAction(formData: FormData): Promise<ActionResult | void> {
+  const parsed = clientSchema.omit({ clientId: true }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Провери полетата." };
+  const data = parsed.data;
+  const context = await requireTenantContext();
+  if (!managesClients(context)) return { error: "Ролята ти не включва добавяне на клиенти. Попитай собственика на фирмата." };
+  const email = data.email?.trim().toLowerCase() || null;
+  const phone = data.phone || null;
+  const duplicate = await findClientDuplicate(context, { email, phone });
+  if (duplicate) return { error: `Клиент с този имейл или телефон вече съществува: ${duplicate.name}.` };
+  const clientId = await getDatabase().transaction((tx) => createClient(tx, {
+    organizationId: context.organizationId,
+    createdBy: context.userId,
+    name: data.name,
+    email,
+    phone,
+    address: data.address || null,
+    notes: data.notes || null,
+  }));
+  revalidatePath("/app/clients");
+  redirect(`/app/clients/${clientId}`);
+}
 
 /**
  * Name, phone, address and notes can always be fixed; they are copied into the client's current
