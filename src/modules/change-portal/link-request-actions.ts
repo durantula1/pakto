@@ -89,8 +89,8 @@ async function sendNewLinks(email: string) {
       kind: "portal_links",
       to: email,
       subject: `Вашите линкове към ${entry.name}`,
-      text: `Поискахте нови линкове към обектите си при ${entry.name}:\n\n${entry.links.map((link) => `${link.projectName}: ${link.url}`).join("\n")}\n\nАко не сте ги поискали Вие, не препращайте този имейл.`,
-      html: `<p>Поискахте нови линкове към обектите си при ${escapeHtml(entry.name)}:</p><ul>${list}</ul><p style="color:#71717a">Ако не сте ги поискали Вие, не препращайте този имейл.</p>`,
+      text: `Поискахте нови линкове към обектите си при ${entry.name}:\n\n${entry.links.map((link) => `${link.projectName}: ${link.url}`).join("\n")}\n\nАко не сте поискали нови линкове, игнорирайте това писмо.`,
+      html: `<p>Поискахте нови линкове към обектите си при ${escapeHtml(entry.name)}:</p><ul>${list}</ul><p style="color:#71717a">Ако не сте поискали нови линкове, игнорирайте това писмо.</p>`,
     });
     await db.insert(timelineEvents).values(entry.links.map((link) => ({
       organizationId, projectId: link.projectId, actorType: "portal_contact" as const,

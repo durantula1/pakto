@@ -64,7 +64,7 @@ function Command({
 
 function CommandDialog({
   title = "Command Palette",
-  description = "Search for a command to run...",
+  description = "Търсене на команда…",
   children,
   open,
   onOpenChange,
@@ -108,7 +108,7 @@ function CommandInput({ className, ...props }: InputProps) {
   return (
     <SearchField
       autoFocus
-      aria-label={props.placeholder || "Search"}
+      aria-label={props.placeholder || "Търсене"}
       data-slot="command-input-wrapper"
       className="p-1 pb-0"
     >

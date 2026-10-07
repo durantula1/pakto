@@ -8,7 +8,7 @@ import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { listDuplicateClients } from "@/modules/clients/queries";
 
-export const metadata: Metadata = { title: "Възможни дубликати" };
+export const metadata: Metadata = { title: "Повтарящи се клиенти" };
 
 export default async function DuplicateClientsPage() {
   const context = await requireTenantContext();
@@ -16,17 +16,17 @@ export default async function DuplicateClientsPage() {
   const pairs = await listDuplicateClients(context);
   return (
     <PageShell width="narrow">
-      <BreadcrumbCurrent label="Възможни дубликати" />
+      <BreadcrumbCurrent label="Повтарящи се клиенти" />
       <DetailHeader
         inBreadcrumb
         backHref="/app/clients"
         backLabel="Клиенти"
-        title="Възможни дубликати"
+        title="Повтарящи се клиенти"
         metadata={<span>Клиенти с еднакъв имейл или телефон. Провери дали са един човек, преди да ги слееш.</span>}
       />
       {pairs.length
         ? pairs.map((pair) => <MergePair key={`${pair.a.id}-${pair.b.id}`} pair={pair} />)
-        : <EmptyState title="Няма възможни дубликати" description="Не открихме клиенти с еднакъв имейл или телефон." />}
+        : <EmptyState title="Няма повтарящи се клиенти" description="Не открихме клиенти с еднакъв имейл или телефон." />}
     </PageShell>
   );
 }

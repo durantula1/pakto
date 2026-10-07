@@ -1236,7 +1236,7 @@ export function DeskRequest() {
               top: REQUEST_BUTTON.y - 142 - 26,
             }}
           >
-            <Button scale={press(frame, 146)}>Изпрати ми код</Button>
+            <Button scale={press(frame, 146)}>Изпратете ми код</Button>
           </div>
         </div>
       ) : (
@@ -1536,7 +1536,7 @@ export function DeskApprove() {
                 top: top(APPROVE_CODE.y) - 26,
               }}
             >
-              <Button scale={press(frame, 122)}>Изпрати ми код</Button>
+              <Button scale={press(frame, 122)}>Изпратете ми код</Button>
             </div>
           </>
         )}

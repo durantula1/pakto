@@ -33,7 +33,7 @@ const channels: Channel[] = [
     x: 140,
   },
   {
-    title: "Екипът разбира на момента",
+    title: "Екипът научава веднага",
     text: "Одобрение, искане за промяна или отказ се виждат веднага от всички по обекта, както и кога клиентът е отворил офертата.",
     event: "Мария Георгиева одобри офертата",
     node: "Екип",
@@ -41,7 +41,7 @@ const channels: Channel[] = [
     x: 300,
   },
   {
-    title: "Въпросите стоят до офертата",
+    title: "Въпросите остават към офертата",
     text: "Клиентът пита под офертата, ти отговаряш на същото място, а той получава отговора по имейл.",
     event: "Нов въпрос от клиента",
     node: "Разговор",
@@ -76,7 +76,7 @@ function Preview({ index }: { index: number }) {
           Версия 2 · +260 € с ДДС · валидна до 30.09
         </p>
         <span className="mt-3 block rounded-lg bg-[#102b38] py-2 text-center text-xs font-bold text-[#fffaf0]">
-          Прегледай и реши
+          Прегледайте и решете
         </span>
       </div>
     );
@@ -129,12 +129,12 @@ export function UpdatesSection() {
       >
         <Reveal className="lg:col-span-5">
           <p className="mf-kicker flex items-center gap-3 text-[#17485a]">
-            <span className="h-px w-8 bg-current" /> ИЗВЕСТИЯ И СЪОБЩЕНИЯ
+            <span className="h-px w-8 bg-current" /> ИЗВЕСТИЯ
           </p>
-          <h2 className="mf-section-title mt-6">Всички са в течение.</h2>
+          <h2 className="mf-section-title mt-6">Всеки научава навреме.</h2>
           <p className="mt-6 max-w-md text-base leading-7 text-[#35535e]">
-            Всяка промяна стига до точния човек сама: без обаждания и без
-            препращане на снимки във Viber.
+            Всяка промяна стига до точния човек сама – без обаждания и без
+            препращане на снимки в чата.
           </p>
 
           <ul className="mt-10 border-t border-[#102b38]/15">

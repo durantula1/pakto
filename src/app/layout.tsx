@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   ),
   title: {
-    default: "Pakto — допълнителната работа, одобрена преди да започне",
+    default: "Pakto – оферти и промени, одобрени от клиента преди работата",
     template: "%s · Pakto",
   },
   description: productDefinition,

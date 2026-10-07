@@ -58,10 +58,10 @@ export function HeroScene() {
                   ПР-042 ·
                   <span className="inline-grid">
                     <span className="mf-sc-off-10 col-start-1 row-start-1 opacity-0">
-                      v1
+                      в. 1
                     </span>
                     <span className="mf-sc-on-10 col-start-1 row-start-1">
-                      v2
+                      в. 2
                     </span>
                   </span>
                 </p>
@@ -182,7 +182,7 @@ export function HeroScene() {
                 <p className="font-mono demo-text-9 font-bold tracking-[0.1em] text-[#52707d]">
                   pakto.net
                 </p>
-                <p className="mt-2 demo-text-9 text-[#b5412d]">ПР-042 · v2</p>
+                <p className="mt-2 demo-text-9 text-[#b5412d]">ПР-042 · версия 2</p>
                 <p className="demo-text-14 font-black tracking-[-0.03em]">
                   Кухня · Лозенец
                 </p>

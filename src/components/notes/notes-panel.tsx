@@ -139,7 +139,7 @@ function NoteRow({ note, showDocument, canEdit, canDelete, onRemove }: { note: N
           <input type="hidden" name="noteId" value={note.id} />
           <Textarea name="body" defaultValue={note.body} required maxLength={4000} autoFocus className="min-h-20 text-base sm:text-sm" />
           <div className="flex gap-2 sm:justify-end">
-            <Button type="button" variant="outline" className="h-10 flex-1 sm:h-8 sm:flex-none" onPress={() => setEditing(false)}>Откажи</Button>
+            <Button type="button" variant="outline" className="h-10 flex-1 sm:h-8 sm:flex-none" onPress={() => setEditing(false)}>Отказ</Button>
             <Button type="submit" isDisabled={saving} className="h-10 flex-1 sm:h-8 sm:flex-none">Запази</Button>
           </div>
         </form>

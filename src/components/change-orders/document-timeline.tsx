@@ -47,7 +47,7 @@ export const eventLabels: Record<string, string> = {
   approver_changed: "Сменен одобряващ",
   payment_claimed: "Клиентът отбеляза плащане",
   payment_disputed: "Клиентът оспори плащане",
-  client_merged: "Клиентът е слят с дубликат",
+  client_merged: "Клиентът е обединен с повтарящ се запис",
   client_anonymized: "Клиентът е анонимизиран",
   client_message: "Съобщение от клиента",
   contact_added: "Добавен контакт",

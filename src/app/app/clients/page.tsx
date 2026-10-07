@@ -26,7 +26,7 @@ export default async function ClientsPage({ searchParams }: PageProps<"/app/clie
     <PageShell>
       <PageHeader
         page="clients"
-        actions={duplicates ? <Link href="/app/clients/duplicates" className="inline-flex min-h-10 items-center rounded-xl border bg-card px-4 text-sm font-medium hover:bg-muted">Възможни дубликати ({duplicates})</Link> : null}
+        actions={duplicates ? <Link href="/app/clients/duplicates" className="inline-flex min-h-10 items-center rounded-xl border bg-card px-4 text-sm font-medium hover:bg-muted">Повтарящи се клиенти ({duplicates})</Link> : null}
       />
       <ListFilters query={query} status={status} statusOptions={[{ value: "active", label: "Активни" }, { value: "archived", label: "В архива" }]} placeholder="Име, имейл или телефон" />
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<ClientsTableSkeleton />}>

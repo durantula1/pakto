@@ -34,7 +34,7 @@ export function DocumentMoreMenu({ changeOrderId, kind, title, pdfHref, canCopy,
   const [cancelOpen, setCancelOpen] = useState(false);
   const [renegotiateOpen, setRenegotiateOpen] = useState(false);
   const items = [
-    ...(renegotiateHref ? [{ id: "renegotiate", label: "Предоговори офертата", icon: FilePen }] : []),
+    ...(renegotiateHref ? [{ id: "renegotiate", label: "Нова версия на одобрената оферта", icon: FilePen }] : []),
     ...(canCopy ? [{ id: "copy", label: "Дублирай като нова оферта", icon: Copy }, { id: "template", label: "Запази като шаблон", icon: LayoutTemplate }] : []),
     ...(pdfHref ? [{ id: "pdf", label: "Свали PDF", icon: Download }] : []),
     ...(cancel ? [{ id: "cancel", label: cancel.partial ? "Оттегли новата версия" : "Анулирай", icon: Ban }] : []),

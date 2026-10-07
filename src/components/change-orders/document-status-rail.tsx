@@ -187,7 +187,7 @@ export function DocumentStatusCard({
       <Link href={editHref} className={primaryClassName}>
         <PencilLine className="size-4" />{" "}
         {status === "expired"
-          ? "Нов срок / коригирай"
+          ? "Изпрати отново"
           : "Коригирай и изпрати отново"}
       </Link>
     );
@@ -254,7 +254,7 @@ export function DocumentStatusCard({
                 {dateTime(change.disputeEvent.createdAt)}
               </p>
               <p className="mt-2 opacity-90">
-                Решението остава в сила. Свържи се с клиента. Ако не е вярно, анулирай документа и изпрати нов. Когато е уредено, отбележи го.
+                Решението остава в сила. Свържи се с клиента. Ако е грешно, анулирай офертата и изпрати нова. Когато е уредено, отбележи го.
               </p>
               {canSend ? <ResolveDecisionDisputeDialog changeOrderId={change.id} revisionId={change.revisionId} /> : null}
             </div>
@@ -395,7 +395,7 @@ export function DocumentFacts({
             <span className="text-muted-foreground">
               {change.documentKind === "offer"
                 ? "Срок"
-                : "Отражение върху срока"}
+                : "Промяна в срока"}
               :
             </span>
             <span className="font-medium">

@@ -152,14 +152,14 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
       </div> : <EmptyResult className="rounded-xl border border-dashed" title="Още няма договорено." description="Сумите и вноските се появяват след одобрена оферта. Получени пари преди това също можеш да запишеш." />}
     </section>
     {looseReceipts.length || state.unassigned.receiptsCount ? <section className="flex flex-col gap-3">
-      <SectionHeader title="Получени, но още не отнесени към оферта" description="Разпредели ги към оферта, за да влязат в нейната сметка. Клиентът ги вижда като получени." />
+      <SectionHeader title="Получени, но още не отнесени към оферта" description="Свържи ги с оферта, за да влязат в нейната сметка. Клиентът ги вижда като получени." />
       <ReceiptsTable projectId={projectId} state={state} receipts={looseReceipts} disputes={inbox.disputes} canRecord={canRecord} />
     </section> : null}
     {looseInstallments.length ? <section className="flex flex-col gap-3">
       <SectionHeader title="Вноски без оферта" description="Всяка вноска е към оферта. Избери към коя е всяка от тези." />
       <DataTable
         label="Вноски без оферта"
-        columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Падеж" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
+        columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Срок за плащане" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
         rows={looseInstallments.map((item) => ({
           id: item.id,
           cells: [

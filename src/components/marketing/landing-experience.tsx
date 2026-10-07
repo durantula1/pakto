@@ -48,8 +48,8 @@ const HEADER_STEP = 8;
 
 const heroBenefits = [
   { icon: Lock, text: "ИЗПРАТЕНАТА ВЕРСИЯ Е ЗАКЛЮЧЕНА" },
-  { icon: MailCheck, text: "ОДОБРЕНИЕ С КОД, БЕЗ ПРОФИЛ" },
-  { icon: GitCompareArrows, text: "ВСЯКА ПРОМЯНА Е НОВА ВЕРСИЯ" },
+  { icon: MailCheck, text: "ОДОБРЕНИЕ С КОД, БЕЗ РЕГИСТРАЦИЯ" },
+  { icon: GitCompareArrows, text: "ИСТОРИЯ НА ВСИЧКИ ВЕРСИИ" },
   { icon: CalendarCheck, text: "ПЛАЩАНИЯ И СРОКОВЕ ПО ЕТАПИ" },
 ] as const;
 
@@ -113,7 +113,7 @@ export function LandingExperience() {
                 className="hidden items-center gap-8 font-mono text-[0.6875rem] font-bold tracking-[0.12em] md:flex"
               >
                 <a
-                  href="#workflow"
+                  href="#versions"
                   className="py-2 transition-colors hover:text-[#e85f48]"
                 >
                   КАК РАБОТИ
@@ -122,7 +122,7 @@ export function LandingExperience() {
                   href="#product"
                   className="py-2 transition-colors hover:text-[#e85f48]"
                 >
-                  ФУНКЦИИ
+                  ВЪЗМОЖНОСТИ
                 </a>
                 <a
                   href="#security"
@@ -169,17 +169,18 @@ export function LandingExperience() {
                 </HeroReveal>
                 <HeroReveal solid delay={0.06}>
                   <h1 className="mf-hero-title relative z-20">
-                    <span className="mf-quote-open">„</span>ДОГОВОРИХМЕ
+                    ВСЯКА ПРОМЯНА
                     <br />
-                    СЕ НА ДУМИ<span className="mf-quote-close">“</span>
+                    С ЦЕНА, СРОК И
                     <br />
-                    <i className="mf-swoosh">не стига.</i>
+                    <i className="mf-swoosh">„да“ от клиента.</i>
                   </h1>
                 </HeroReveal>
                 <HeroReveal delay={0.14} className="relative z-20 mt-10">
                   <p className="max-w-[28rem] text-pretty text-lg leading-8 text-[#284955] lg:text-xl">
-                    Изпращаш офертата с линк. Клиентът я одобрява от телефона си
-                    с код от имейла. Остава запис коя версия е приел и кога.
+                    Офертите и допълнителната работа стават ясни версии, които
+                    клиентът одобрява от телефона си. Без регистрация за клиента и
+                    без спорове след това.
                   </p>
                   <div
                     id="hero-cta"
@@ -196,15 +197,15 @@ export function LandingExperience() {
                       ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
                     </Link>
                     <a
-                      href="#workflow"
+                      href="#versions"
                       className="inline-flex items-center gap-2 border-b border-[#102b38] pb-1 pt-1.5 font-mono text-[0.6875rem] font-bold tracking-[0.12em] transition-colors hover:border-[#e85f48] hover:text-[#e85f48]"
                     >
                       ВИЖ КАК РАБОТИ <ArrowDown className="size-3.5" />
                     </a>
                   </div>
                   <p className="mt-6 flex items-center gap-2 text-sm text-[#46636e]">
-                    <ShieldCheck className="size-4 shrink-0" /> Безплатно в бета
-                    · без карта · клиентът не си прави профил
+                    <ShieldCheck className="size-4 shrink-0" /> Безплатно по време на
+                    бетата · Без банкова карта · Без регистрация за клиента
                   </p>
                 </HeroReveal>
               </div>
@@ -214,12 +215,12 @@ export function LandingExperience() {
               </div>
             </div>
 
-            {/* Why it holds up, in four short lines; desktop only, quiet on purpose. */}
+            {/* Why it holds up, in four short lines: two by two on a phone, one row on a desktop. */}
             <HeroReveal
               delay={0.5}
-              className="relative z-10 mx-auto mt-6 hidden w-full max-w-[93.75rem] lg:block"
+              className="relative z-10 mx-auto mt-10 w-full max-w-[93.75rem] lg:mt-6"
             >
-              <ul className="grid grid-cols-4 gap-6 border-t border-[#102b38]/10 pt-5">
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-[#102b38]/10 pt-5 lg:grid-cols-4 lg:gap-6">
                 {heroBenefits.map(({ icon: Icon, text }) => (
                   <li
                     key={text}
@@ -241,9 +242,9 @@ export function LandingExperience() {
             <ProblemSection />
           </div>
 
-          <div className="mf-defer">
-            <VersionScene />
-          </div>
+          {/* Not deferred: a skipped subtree takes the 50rem placeholder height instead of its 300svh, which
+              makes the page jump, and observers stop hearing when it leaves the screen. */}
+          <VersionScene />
 
           <div className="mf-defer">
             <ProcessVideo />
@@ -275,7 +276,7 @@ export function LandingExperience() {
             <div className="relative z-10 mx-auto max-w-[93.75rem]">
               <Reveal>
                 <div className="mf-kicker flex items-center gap-3">
-                  <ShieldCheck className="size-4" /> БЕТА · БЕЗПЛАТНО, БЕЗ КАРТА
+                  <ShieldCheck className="size-4" /> БЕЗПЛАТНО ПО ВРЕМЕ НА БЕТАТА
                 </div>
                 <h2 className="mf-cta-title mt-8">
                   <span className="lg:whitespace-nowrap">
@@ -283,11 +284,11 @@ export function LandingExperience() {
                     <span className="mf-quote-close">“</span>
                   </span>
                   <br />
-                  <i>— писмено.</i>
+                  <i>– записано.</i>
                   {/* The hero's ink seal (`#mf-ink` lives in hero-scene.tsx), pressed once more as the page closes. */}
                   <m.span
                     aria-hidden="true"
-                    className="relative ml-[0.3em] hidden rounded-lg border-[0.3125rem] border-[#102b38] px-5 py-3 text-center align-middle font-mono normal-case leading-normal tracking-normal text-[#102b38] mix-blend-multiply [filter:url(#mf-ink)] lg:inline-block"
+                    className="relative mt-4 inline-block rounded-lg border-[0.25rem] border-[#102b38] px-3 py-2 lg:ml-[0.3em] lg:mt-0 lg:border-[0.3125rem] lg:px-5 lg:py-3 text-center align-middle font-mono normal-case leading-normal tracking-normal text-[#102b38] mix-blend-multiply [filter:url(#mf-ink)]"
                     initial={{ opacity: 0, scale: 1.7, rotate: -18 }}
                     whileInView={{ opacity: 0.9, scale: 1, rotate: -7 }}
                     viewport={{ once: true, amount: 0.8 }}
@@ -298,7 +299,7 @@ export function LandingExperience() {
                     }}
                   >
                     <span className="absolute inset-[0.3125rem] rounded-sm border-2 border-[#102b38]" />
-                    <span className="block text-2xl font-black tracking-[0.14em]">
+                    <span className="block text-lg font-black tracking-[0.14em] lg:text-2xl">
                       ОДОБРЕНО
                     </span>
                     <span className="block text-xs font-bold tracking-[0.12em]">
@@ -309,8 +310,7 @@ export function LandingExperience() {
                 <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-base leading-7">
                     Регистрираш фирмата, създаваш обект и изпращаш първата
-                    оферта още днес. Клиентът одобрява от телефона си с код от
-                    имейла.
+                    оферта още днес. Клиентът я одобрява от телефона си.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">
                     КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />
@@ -329,7 +329,7 @@ export function LandingExperience() {
 
           <SiteFooter />
 
-          <MobileCtaBar heroId="hero-cta" finalId="beta" />
+          <MobileCtaBar heroId="hero-cta" finalId="beta" quietIds={["versions"]} />
         </main>
       </LazyMotion>
     </MotionConfig>

@@ -113,7 +113,7 @@ export function RecordPaymentDialog({ projectId, offerOptions, installments, rem
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value="deposit" options={paymentKinds} /></Field>
         <PaymentAmountField remaining={remaining} />
         <Field><FieldLabel htmlFor="receipt-date">Дата</FieldLabel><DatePicker id="receipt-date" name="receivedOn" defaultValue={today()} required max="today" aria-label="Дата на получаване" /></Field>
-        <Field><FieldLabel>Метод</FieldLabel><FilterSelect name="method" value="bank" options={methods} /></Field>
+        <Field><FieldLabel>Начин на плащане</FieldLabel><FilterSelect name="method" value="bank" options={methods} /></Field>
         {installments.length ? <Field className="sm:col-span-2"><FieldLabel>За вноска</FieldLabel><FilterSelect name="installmentId" value="none" options={installmentOptions} /></Field> : null}
         <OfferField options={offerOptions} hint={installments.length ? "Ако е избрана вноска, плащането отива към нейната оферта." : undefined} />
         <Field className="sm:col-span-2"><FieldLabel htmlFor="receipt-note">Бележка</FieldLabel><Input id="receipt-note" name="note" maxLength={500} /></Field>
@@ -159,7 +159,7 @@ export function InstallmentDialog({ projectId, offerOptions, stages, installment
         {installment ? <input type="hidden" name="installmentId" value={installment.id} /> : null}
         <Field className="sm:col-span-2"><FieldLabel htmlFor={`installment-title-${key}`}>Име</FieldLabel><Input id={`installment-title-${key}`} name="title" required minLength={2} maxLength={180} defaultValue={installment?.title} placeholder="Напр. Аванс за материали" autoFocus /></Field>
         <Field><FieldLabel htmlFor={`installment-amount-${key}`}>Сума (EUR)</FieldLabel><Input id={`installment-amount-${key}`} type="number" name="amount" min="0.01" step="0.01" defaultValue={installment ? Number(installment.amount).toFixed(2) : undefined} required /></Field>
-        <Field><FieldLabel htmlFor={`installment-due-${key}`}>Падеж</FieldLabel><DatePicker id={`installment-due-${key}`} name="dueOn" defaultValue={installment?.dueOn ?? today()} required aria-label="Падеж" /></Field>
+        <Field><FieldLabel htmlFor={`installment-due-${key}`}>Срок за плащане</FieldLabel><DatePicker id={`installment-due-${key}`} name="dueOn" defaultValue={installment?.dueOn ?? today()} required aria-label="Срок за плащане" /></Field>
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value={installment?.kind ?? "progress"} options={paymentKinds} /></Field>
         {stages.length ? <Field><FieldLabel>След етап</FieldLabel><FilterSelect name="milestoneId" value={installment?.milestoneId ?? "none"} options={stageOptions} /></Field> : null}
         <OfferField options={offerOptions} value={installment ? installment.offerId ?? "none" : undefined} />
@@ -191,7 +191,7 @@ export function ReceiptActions({ projectId, receipt, receipts, dispute, assignOp
 
 function AssignReceiptDialog({ projectId, receipt, options }: { projectId: string; receipt: Receipt; options: OfferOption[] }) {
   return <DialogTrigger>
-    <Button type="button" variant="outline" size="sm">Разпредели</Button>
+    <Button type="button" variant="outline" size="sm">Свържи с оферта</Button>
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Към коя оферта е плащането?</DialogTitle>
@@ -201,7 +201,7 @@ function AssignReceiptDialog({ projectId, receipt, options }: { projectId: strin
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="receiptId" value={receipt.id} />
         <Field><FieldLabel>Оферта</FieldLabel><FilterSelect name="offerId" value={options[0]!.value} options={options} /></Field>
-        <div className="flex justify-end gap-2"><DialogClose>Отказ</DialogClose><ActionSubmit>Разпредели</ActionSubmit></div>
+        <div className="flex justify-end gap-2"><DialogClose>Отказ</DialogClose><ActionSubmit>Свържи с оферта</ActionSubmit></div>
       </ActionForm>
     </Dialog>
   </DialogTrigger>;
@@ -215,7 +215,7 @@ function CorrectReceiptDialog({ projectId, receipt }: { projectId: string; recei
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Коригирай плащане</DialogTitle>
-        <DialogDescription>Записът не се изтрива. Добавяме сторно и нов запис с вярната сума, а клиентът вижда корекцията. Ако плащането не е получено изобщо, въведи 0.</DialogDescription>
+        <DialogDescription>Записът не се изтрива. Добавяме отменящ запис и нов запис с вярната сума, а клиентът вижда корекцията. Ако плащането не е получено изобщо, въведи 0.</DialogDescription>
       </DialogHeader>
       <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${formatAmount(receipt.amount)} ${receipt.currency}`} className="border-y border-dashed py-2.5" />
       <ActionForm action={correctReceiptAction} success="Плащането е коригирано" className="grid gap-3">

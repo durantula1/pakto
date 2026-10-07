@@ -32,7 +32,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
         <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-sidebar px-3.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите обекти</Link>
         {navigation.unlocked && navigation.projects.length > 1 ? (
           <DropdownMenuTrigger>
-            <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Смени обект</Button>
+            <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Изберете обект</Button>
             <DropdownMenu
               placement="bottom start"
               className="min-w-64"
@@ -58,7 +58,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-        <Building2 className="size-4" /> Покажи всичките ми обекти
+        <Building2 className="size-4" /> Покажете всички мои обекти
       </button>
     );
   }
@@ -70,7 +70,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
         <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>
         <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={navigation.maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
       </div>
-      <button type="button" onClick={() => setOpen(false)} aria-label="Затвори" className="-m-2 grid size-11 place-items-center rounded text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
+      <button type="button" onClick={() => setOpen(false)} aria-label="Затворете" className="-m-2 grid size-11 place-items-center rounded text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
     </div>
   );
 }
@@ -100,7 +100,7 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
       ) : (
         <form action={request} className="mt-2 flex flex-wrap items-center gap-2">
           <input type="hidden" name="projectPublicId" value={projectPublicId} />
-          <Button type="submit" isDisabled={requesting} className="h-11 px-5 text-sm">{requesting ? "Изпращане…" : "Изпрати код"}</Button>
+          <Button type="submit" isDisabled={requesting} className="h-11 px-5 text-sm">{requesting ? "Изпращане…" : "Изпратете код"}</Button>
           <span className="text-sidebar-foreground/60">{maskedEmail}</span>
         </form>
       )}

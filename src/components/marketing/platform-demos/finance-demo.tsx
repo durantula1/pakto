@@ -9,7 +9,7 @@ import { DemoFrame, StatusChip, useDemoLoop } from "./demo-frame";
 /** Offer ОФ-014 (3 444 € with VAT) plus the approved change ПР-042 (384 €). */
 const total = 3828;
 const payments = [
-  { label: "Капаро", method: "банков превод", date: "02.09", amount: 1500 },
+  { label: "Аванс", method: "банков превод", date: "02.09", amount: 1500 },
   { label: "Междинно", method: "в брой", date: "16.09", amount: 1000 },
   { label: "Промяна ПР-042", method: "карта", date: "25.09", amount: 384 },
 ] as const;
@@ -25,7 +25,7 @@ export function FinanceDemo() {
     <DemoFrame
       frameRef={ref}
       crumb="ПЛАЩАНИЯ / КУХНЯ · ЛОЗЕНЕЦ"
-      title="Договор + одобрени промени"
+      title="Оферта + одобрени промени"
       status={<StatusChip tone="info">{format(total)}</StatusChip>}
     >
       <div className="rounded-xl bg-[#102b38] p-4 text-[#fffaf0]">
@@ -86,7 +86,7 @@ export function FinanceDemo() {
           <p className="demo-text-13 font-black">Септември 2026</p>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {["Период", "Обект", "Вид плащане", "Метод"].map((filter) => (
+          {["Период", "Обект", "Вид плащане", "Начин"].map((filter) => (
             <span
               key={filter}
               className="flex items-center gap-1 rounded-full bg-[#c5e3e5]/70 px-2.5 py-1 demo-text-9 font-bold"

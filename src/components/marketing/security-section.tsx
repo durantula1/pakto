@@ -1,28 +1,9 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 import { Reveal } from "./reveal";
-import {
-  CodeArt,
-  LinkArt,
-  RecordArt,
-  SealArt,
-  VersionsArt,
-} from "./security-art";
-
-const fineprint = [
-  {
-    label: "ЕКИПЪТ",
-    text: "Отделни права и достъп само до избрани обекти. Бележките и финансите са видими само за тези, които имат нужда от тях.",
-  },
-  {
-    label: "ТВОИТЕ ДАННИ",
-    text: "Изход от всички устройства с един бутон, експорт на данните и изтриване на профила с 30 дни за размисъл.",
-  },
-  {
-    label: "КЛИЕНТСКИЯТ ПОРТАЛ",
-    text: "Страниците на клиента не се запазват в браузъра, не издават адреса си на други сайтове и не могат да се вграждат в чужд сайт.",
-  },
-] as const;
+import { CodeArt, LinkArt, RecordArt, SealArt } from "./security-art";
 
 /** One bento tile: a product detail on top, then a single sentence with a bright lead-in. */
 function Tile({
@@ -70,7 +51,7 @@ export function SecuritySection() {
             <h2 className="mf-section-title mt-6">
               Всяко „да“
               <br />
-              има история.
+              остава доказуемо.
             </h2>
           </div>
           <p className="max-w-md text-base leading-7 text-[#c6d9da] lg:col-span-5 lg:justify-self-end">
@@ -80,46 +61,38 @@ export function SecuritySection() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-4 md:grid-cols-6 lg:mt-20">
-          <Reveal className="md:col-span-6 lg:col-span-3">
+        {/* Four tiles, two by two. The locked version is not repeated here: the version scene above shows it. */}
+        <div className="mt-14 grid gap-4 md:grid-cols-2 lg:mt-20">
+          <Reveal>
             <Tile
               title="Кой, кога и какво одобри."
               text="Записваме изписаното име, точния час и отпечатък на версията. Ако текстът се промени след одобрението, отпечатъкът вече не съвпада."
-              visualClassName="h-[23rem]"
+              visualClassName="h-64 md:h-[23rem]"
             >
               <RecordArt />
             </Tile>
           </Reveal>
-          <Reveal className="md:col-span-6 lg:col-span-3" delay={0.06}>
+          <Reveal delay={0.06}>
             <Tile
               title="Без кода няма „да“."
               text="Одобрението минава само с 6-цифрен код от имейла на клиента. Опитите са ограничени, затова кодът не може да се налучка."
-              visualClassName="h-[23rem]"
+              visualClassName="h-64 md:h-[23rem]"
             >
               <CodeArt />
             </Tile>
           </Reveal>
-          <Reveal className="md:col-span-2" delay={0.1}>
+          <Reveal delay={0.1}>
             <Tile
-              visualClassName="h-64"
+              visualClassName="h-56 md:h-64"
               title="Линк, който можеш да спреш."
               text="Всеки клиент има свой линк, който не може да се налучка. Сменяш го с един бутон и старият спира веднага."
             >
               <LinkArt />
             </Tile>
           </Reveal>
-          <Reveal className="md:col-span-2" delay={0.14}>
+          <Reveal delay={0.14}>
             <Tile
-              visualClassName="h-64"
-              title="Изпратеното не се пренаписва."
-              text="Изпратената версия се заключва и в самата база данни. Всяка промяна е нова версия, а старата остава."
-            >
-              <VersionsArt />
-            </Tile>
-          </Reveal>
-          <Reveal className="md:col-span-2" delay={0.18}>
-            <Tile
-              visualClassName="h-64"
+              visualClassName="h-56 md:h-64"
               title="Разписка за клиента."
               text="След решението клиентът получава разписка по имейл. Ако нещо не е наред, може да я оспори и ти го виждаш веднага."
             >
@@ -128,13 +101,17 @@ export function SecuritySection() {
           </Reveal>
         </div>
 
-        <Reveal className="mt-16 grid gap-8 border-t border-white/10 pt-8 md:grid-cols-3 lg:mt-20">
-          {fineprint.map(({ label, text }) => (
-            <div key={label}>
-              <p className="mf-kicker text-[#b8ecda]">{label}</p>
-              <p className="mt-3 text-sm leading-6 text-[#b8ced2]">{text}</p>
-            </div>
-          ))}
+        {/* The details (team rights, your data, the client pages) live in the FAQ. */}
+        <Reveal className="mt-10 border-t border-white/10 pt-6 lg:mt-14">
+          <Link
+            href="/faq#data"
+            className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-6 text-[#b8ced2] transition-colors hover:text-[#fbf7ec]"
+          >
+            Екип и права · Твоите данни · Защита на страниците за клиента
+            <span className="inline-flex items-center gap-1 font-bold text-[#b8ecda]">
+              Подробно във „Въпроси“ <ArrowUpRight className="size-4" />
+            </span>
+          </Link>
         </Reveal>
       </div>
     </section>

@@ -1,585 +1,442 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Lock, Mail, MessageSquareText } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { ArrowRight, Check, Lock, Plus } from "lucide-react";
 import {
   m,
   useMotionValue,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
+  useSpring,
   useTransform,
   type MotionValue,
 } from "motion/react";
 
-import { Reveal } from "./reveal";
-
 /**
- * The scroll tells one story on one card: the sent offer is locked, the client asks for a change,
- * version 2 replaces it and the client approves. It is the hero's card told slowly. The section is
- * tall and its stage is sticky, so scroll progress picks the step. Reduced motion skips the
- * stage and shows the last step in place.
+ * „Всяка промяна е нова версия“, told on one sticky stage that follows the scroll smoothly: the offer
+ * locks, the client types a change request on the phone, version 2 changes row by row and the total
+ * rolls to 384 €, then the client approves with a code and the stamp lands. Every beat has its own
+ * slice of the scroll and the slices overlap, so something is always moving.
  */
+
 const steps = [
   {
     kicker: "1 · ИЗПРАЩАШ",
-    title: "Офертата е изпратена и се заключва.",
-    text: "Клиентът отваря линк от имейла си, без профил. От този момент версията не може да се редактира: всяка промяна е нова версия.",
+    title: "Изпратената оферта се заключва.",
+    text: "Клиентът я отваря с личен линк, без регистрация. От този момент тя не може да се редактира.",
+    at: 0.07,
   },
   {
     kicker: "2 · КЛИЕНТЪТ ИСКА ПРОМЯНА",
-    title: "Не одобрява, а иска друго.",
-    text: "Вместо „не сме се разбрали така“ след три седмици получаваш конкретно искане още сега, записано към същата оферта.",
+    title: "Искането идва писмено, към същата оферта.",
+    text: "Вместо спор след три седмици получаваш конкретно искане още сега.",
+    at: 0.28,
   },
   {
-    kicker: "3 · НОВА ВЕРСИЯ",
-    title: "Не пипаш изпратеното. Правиш версия 2.",
-    text: "Версия 1 остава непокътната. Клиентът вижда какво е добавено, махнато и променено и колко струва това.",
+    kicker: "3 · ВЕРСИЯ 2",
+    title: "Изпратеното остава. Създаваш версия 2.",
+    text: "Клиентът вижда какво е добавено, махнато и променено – и колко струва.",
+    at: 0.53,
   },
   {
     kicker: "4 · ОДОБРЯВА С КОД",
     title: "Едно „да“, което остава записано.",
-    text: "Клиентът одобрява с код от имейла си. Решението, часът и отпечатъкът на версията се запазват в историята на обекта.",
+    text: "Решението, часът и отпечатъкът на версията се пазят в историята на обекта.",
+    at: 0.8,
   },
 ] as const;
 
-// Scroll progress (0 to 1) at which each step takes over. The card follows the scroll continuously:
-// the rows morph from v1 to v2 between MORPH_FROM and MORPH_TO, and the stamp lands after STAMP_FROM.
-const STEP_AT = [0, 0.25, 0.5, 0.78] as const;
-const MORPH_FROM = 0.47;
-const MORPH_TO = 0.6;
-const STAMP_FROM = 0.78;
-const STAMP_TO = 0.84;
-// Half-width of the cross-fade between two texts.
-const FADE = 0.03;
+const REQUEST = "Само два контакта, без този за хладилника. И добавете един за фурната.";
+const CODE = "482913";
 
-function stepAt(progress: number) {
-  let step = 0;
-  STEP_AT.forEach((from, index) => {
-    if (progress >= from) step = index;
-  });
-  return step;
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const slice = (v: number, from: number, to: number) => clamp01((v - from) / (to - from));
+const ease = (t: number) => 1 - (1 - t) ** 3;
+const euro = (n: number) => `${Math.round(n)} €`;
+
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 64rem)");
+    const sync = () => setDesktop(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  return desktop;
 }
 
-/**
- * How visible text `index` is at scroll progress `p`, from 0 to 1: it fades in around its own start and
- * out around the next step's start, so two texts cross-fade instead of swapping.
- */
-function textVisibility(index: number, p: number) {
-  const fadeIn =
-    index === 0 ? 1 : clamp01((p - (STEP_AT[index] - FADE)) / (2 * FADE));
-  const fadeOut =
-    index === steps.length - 1
-      ? 0
-      : clamp01((p - (STEP_AT[index + 1] - FADE)) / (2 * FADE));
-  return fadeIn * (1 - fadeOut);
-}
-
-function clamp01(value: number) {
-  return Math.min(1, Math.max(0, value));
-}
-
-/** One of the four texts, cross-fading with its neighbours as the scroll passes the step boundaries. */
-function StepText({
-  item,
-  index,
-  progress,
-  active,
-  reduceMotion,
-}: {
-  item: (typeof steps)[number];
-  index: number;
-  progress: MotionValue<number>;
-  active: boolean;
-  reduceMotion: boolean;
-}) {
-  const opacity = useTransform(progress, (p) => textVisibility(index, p));
-  // It rises into place on the way in and lifts away on the way out.
-  const y = useTransform(progress, (p) => {
-    const fadeIn =
-      index === 0 ? 1 : clamp01((p - (STEP_AT[index] - FADE)) / (2 * FADE));
-    const fadeOut =
-      index === steps.length - 1
-        ? 0
-        : clamp01((p - (STEP_AT[index + 1] - FADE)) / (2 * FADE));
-    return `${(1 - fadeIn) * 1.25 - fadeOut * 1.25}rem`;
-  });
-
+/** A step in the list: bright near its own point of the scroll, dimmed elsewhere, never hidden. */
+function StepItem({ p, index, still }: { p: MotionValue<number>; index: number; still: boolean }) {
+  const step = steps[index]!;
+  const near = useTransform(p, (v) => clamp01(1 - Math.abs(v - step.at) * 6));
+  const opacity = useTransform(near, (n) => (still ? 1 : 0.28 + 0.72 * n));
+  const x = useTransform(near, (n) => `${(still ? 0 : 1 - n) * -0.5}rem`);
   return (
-    <m.div
-      aria-hidden={!active}
-      style={reduceMotion ? { opacity: index === steps.length - 1 ? 1 : 0 } : { opacity, y }}
-      className="col-start-1 row-start-1"
-    >
-      <p className="font-mono text-[0.6875rem] font-bold tracking-[0.12em] text-[#b8ecda]">
-        {item.kicker}
-      </p>
-      <p className="mt-2 text-balance text-[clamp(1.5rem,3.4vw,3.25rem)] font-black leading-[1.02] tracking-[-0.04em] lg:mt-4">
-        {item.title}
-      </p>
-      <p className="mt-3 max-w-md text-sm leading-6 text-[#f4efe4]/70 lg:mt-5 lg:text-base lg:leading-7">
-        {item.text}
-      </p>
+    <m.li style={{ opacity, x }} className="py-4">
+      <p className="font-mono text-[0.6875rem] font-bold tracking-[0.12em] text-[#b8ecda]">{step.kicker}</p>
+      <p className="mt-1.5 text-[clamp(1.375rem,2.2vw,2rem)] font-black leading-[1.05] tracking-[-0.04em]">{step.title}</p>
+      <p className="mt-2 max-w-md text-[0.9375rem] leading-7 text-[#f4efe4]/70">{step.text}</p>
+    </m.li>
+  );
+}
+
+/** Phone layout: only the current step's title, sliding in from below as it takes over. */
+function StepCaption({ p, index }: { p: MotionValue<number>; index: number }) {
+  const step = steps[index]!;
+  const near = useTransform(p, (v) => clamp01(1 - Math.abs(v - step.at) * 9));
+  const y = useTransform(near, (n) => `${(1 - n) * 0.75}rem`);
+  return (
+    <m.div style={{ opacity: near, y }} className="col-start-1 row-start-1">
+      <p className="font-mono text-[0.625rem] font-bold tracking-[0.12em] text-[#b8ecda]">{step.kicker}</p>
+      <p className="mt-1 text-xl font-black leading-tight tracking-[-0.04em]">{step.title}</p>
     </m.div>
   );
 }
 
-/** Two values stacked in one cell; `morph` 0 shows `from`, 1 shows `to`, in between they cross-fade. */
-function Cross({
-  morph,
-  from,
-  to,
-  className = "",
-}: {
-  morph: MotionValue<number>;
-  from: React.ReactNode;
-  to: React.ReactNode;
-  className?: string;
-}) {
-  const fromOpacity = useTransform(morph, (v) => 1 - v);
-  const toOpacity = useTransform(morph, (v) => v);
+function Segment({ p, from, to }: { p: MotionValue<number>; from: number; to: number }) {
+  const scaleX = useTransform(p, (v) => slice(v, from, to));
   return (
-    <span className="grid min-w-0">
-      <m.span
-        style={{ gridArea: "1 / 1", opacity: fromOpacity }}
-        className={className}
-      >
+    <span className="h-1 flex-1 overflow-hidden rounded-full bg-[#f4efe4]/15">
+      <m.span style={{ scaleX, transformOrigin: "0% 50%" }} className="block h-full bg-[#ff765f]" />
+    </span>
+  );
+}
+
+/** Two values in one cell; the new one rolls up from below as the old one leaves. */
+function Roll({ t, from, to, className = "" }: { t: MotionValue<number>; from: ReactNode; to: ReactNode; className?: string }) {
+  const outY = useTransform(t, (v) => `${-110 * ease(v)}%`);
+  const inY = useTransform(t, (v) => `${110 * (1 - ease(v))}%`);
+  return (
+    <span className={`relative inline-grid overflow-hidden align-bottom ${className}`}>
+      <m.span style={{ y: outY }} className="col-start-1 row-start-1">
         {from}
       </m.span>
-      <m.span
-        style={{ gridArea: "1 / 1", opacity: toOpacity }}
-        className={className}
-      >
+      <m.span style={{ y: inY }} className="col-start-1 row-start-1">
         {to}
       </m.span>
     </span>
   );
 }
 
-const markStyles = {
-  added: "bg-[#d9f3cf] text-[#16623f]",
-  changed: "bg-[#ffe7a8] text-[#755710]",
-  removed: "bg-[#102b38]/[0.06] text-[#102b38]/50",
-} as const;
-const markSigns = { added: "+", changed: "~", removed: "−" } as const;
-
-/** The round badge at the start of a row: a plain dot in v1, a +, ~ or − once v2 is shown. */
-function Mark({
-  morph,
-  kind,
+function Row({
+  title,
+  sub,
+  sum,
+  highlight,
+  children,
 }: {
-  morph: MotionValue<number>;
-  kind: keyof typeof markStyles;
+  title: ReactNode;
+  sub: ReactNode;
+  sum: ReactNode;
+  highlight?: MotionValue<number>;
+  children?: ReactNode;
 }) {
-  const plainOpacity = useTransform(morph, (v) => 1 - v);
-  const markOpacity = useTransform(morph, (v) => v);
-  const base =
-    "col-start-1 row-start-1 grid size-5 place-items-center rounded-md font-mono demo-text-12 font-bold";
   return (
-    <span className="grid">
-      <m.span
-        style={{ opacity: plainOpacity }}
-        className={`${base} bg-[#102b38]/[0.05] text-[#52707d]`}
-      >
-        •
-      </m.span>
-      <m.span
-        style={{ opacity: markOpacity }}
-        className={`${base} ${markStyles[kind]}`}
-      >
-        {markSigns[kind]}
-      </m.span>
-    </span>
-  );
-}
-
-const rowClass =
-  "grid grid-cols-[auto_1fr_auto] items-center gap-x-3 py-2 sm:py-2.5";
-const sumClass = "text-right font-mono demo-text-13 tabular-nums";
-
-/** The card's rows. Everything is driven by `morph`, so v1 turns into v2 as the page scrolls. */
-function VersionRows({ morph }: { morph: MotionValue<number> }) {
-  const outletsSum = useTransform(morph, (v) => `${Math.round(255 - 85 * v)} €`);
-  const outletsWas = useTransform(morph, (v) => Math.max(0, (v - 0.3) / 0.7));
-  const fridgeStrike = useTransform(morph, (v) => `${v * 100}% 0.08em`);
-  const fridgeFade = useTransform(morph, (v) => 1 - 0.45 * v);
-  const ovenRows = useTransform(morph, (v) => `${v}fr`);
-  const ovenOpacity = useTransform(morph, (v) => Math.max(0, (v - 0.2) / 0.8));
-  const deadlineWas = useTransform(morph, (v) => Math.max(0, (v - 0.3) / 0.7));
-  const border = "border-t border-[#102b38]/[0.07] first:border-0";
-
-  return (
-    <ul>
-      <li className={border}>
-        <div className={rowClass}>
-          <Mark morph={morph} kind="changed" />
-          <div className="min-w-0">
-            <p className="truncate demo-text-13 font-bold">
-              Преместване на контакти
-            </p>
-            <p className="truncate demo-text-11 text-[#52707d]">
-              <Cross morph={morph} from="3 бр × 85 €" to="3 → 2 бр × 85 €" />
-            </p>
-          </div>
-          <p className={sumClass}>
-            <m.span>{outletsSum}</m.span>
-            <m.s
-              style={{ opacity: outletsWas }}
-              className="block demo-text-10 text-[#52707d]"
-            >
-              255 €
-            </m.s>
-          </p>
-        </div>
-      </li>
-
-      {/* v2 adds a row: it opens up (0fr to 1fr) instead of popping in. */}
-      <m.li
-        style={{ gridTemplateRows: ovenRows, opacity: ovenOpacity }}
-        className="grid"
-      >
-        <div className={`min-h-0 overflow-hidden ${border}`}>
-          <div className={rowClass}>
-            <Mark morph={morph} kind="added" />
-            <div className="min-w-0">
-              <p className="truncate demo-text-13 font-bold">
-                Нова линия за фурната
-              </p>
-              <p className="truncate demo-text-11 text-[#52707d]">
-                1 бр × 150 €
-              </p>
-            </div>
-            <p className={sumClass}>150 €</p>
-          </div>
-        </div>
-      </m.li>
-
-      <li className={border}>
-        <div className={rowClass}>
-          <Mark morph={morph} kind="removed" />
-          <div className="min-w-0">
-            <m.p
-              style={{ opacity: fridgeFade }}
-              className="truncate demo-text-13 font-bold"
-            >
-              <m.span
-                style={{ backgroundSize: fridgeStrike }}
-                className="bg-gradient-to-r from-[#52707d] to-[#52707d] bg-[length:0%_0.08em] bg-[position:0_58%] bg-no-repeat"
-              >
-                Контакт за хладилника
-              </m.span>
-            </m.p>
-            <p className="truncate demo-text-11 text-[#52707d]">
-              <Cross
-                morph={morph}
-                from="1 бр × 120 €"
-                to="махнат по искане на клиента"
-              />
-            </p>
-          </div>
-          <m.p style={{ opacity: fridgeFade }} className={sumClass}>
-            120 €
-          </m.p>
-        </div>
-      </li>
-
-      <li className={border}>
-        <div className={rowClass}>
-          <Mark morph={morph} kind="changed" />
-          <div className="min-w-0">
-            <p className="truncate demo-text-13 font-bold">Краен срок</p>
-            <p className="truncate demo-text-11 text-[#52707d]">
-              <Cross
-                morph={morph}
-                from="договорен в оферта"
-                to="6 дни повече за новата линия"
-              />
-            </p>
-          </div>
-          <p className={sumClass}>
-            <Cross morph={morph} from="10.10" to="16.10" />
-            <m.s
-              style={{ opacity: deadlineWas }}
-              className="block demo-text-10 text-[#52707d]"
-            >
-              10.10
-            </m.s>
-          </p>
-        </div>
-      </li>
-    </ul>
+    <div className="relative grid grid-cols-[1fr_auto] items-center gap-3 rounded-xl px-3 py-2.5">
+      {highlight ? (
+        <m.span
+          aria-hidden="true"
+          style={{ scaleX: highlight, transformOrigin: "0% 50%" }}
+          className="absolute inset-0 rounded-xl bg-[#ffe7a8]"
+        />
+      ) : null}
+      <div className="relative min-w-0">
+        <p className="truncate text-[0.875rem] font-bold">{title}</p>
+        <p className="font-mono text-[0.6875rem] text-[#52707d]">{sub}</p>
+      </div>
+      <p className="relative text-right font-mono text-[0.8125rem] tabular-nums">{sum}</p>
+      {children}
+    </div>
   );
 }
 
 export function VersionScene() {
-  const sectionRef = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion() ?? false;
-  const [scrollStep, setScrollStep] = useState(0);
-  const [scrollTotal, setScrollTotal] = useState(450);
+  const desktop = useIsDesktop();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const smooth = useSpring(scrollYProgress, { stiffness: 170, damping: 30, mass: 0.35 });
   const done = useMotionValue(1);
+  const p = reduceMotion ? done : smooth;
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
+  // 1 · The draft locks when it is sent.
+  const draft = useTransform(p, (v) => 1 - slice(v, 0.03, 0.1));
+  const lockScale = useTransform(p, (v) => 0.6 + 0.4 * ease(slice(v, 0.05, 0.11)));
+  const lockOpacity = useTransform(p, (v) => slice(v, 0.05, 0.1));
+  const sentPill = useTransform(p, (v) => slice(v, 0.05, 0.11));
+
+  // 2 · The client's phone comes in and the request is typed out with the scroll.
+  const phoneIn = useTransform(p, (v) => {
+    const first = ease(slice(v, 0.13, 0.2)) * (1 - ease(slice(v, 0.4, 0.46)));
+    const second = ease(slice(v, 0.65, 0.71)) * (1 - ease(slice(v, 0.88, 0.94)));
+    return Math.max(first, second);
   });
-  const total = useTransform(
-    scrollYProgress,
-    [MORPH_FROM, MORPH_TO],
-    [450, 384],
-    { clamp: true },
-  );
-  const scrolledMorph = useTransform(
-    scrollYProgress,
-    [MORPH_FROM, MORPH_TO],
-    [0, 1],
-    { clamp: true },
-  );
-  const scrolledStamp = useTransform(
-    scrollYProgress,
-    [STAMP_FROM, STAMP_TO],
-    [0, 1],
-    { clamp: true },
-  );
-  // With reduced motion the last step is shown in place, so both values sit at their end.
-  const morph = reduceMotion ? done : scrolledMorph;
-  const stamp = reduceMotion ? done : scrolledStamp;
-  const stampOpacity = useTransform(stamp, (v) => 0.92 * v);
-  const stampScale = useTransform(stamp, (v) => 1.7 - 0.7 * v);
-  const stampRotate = useTransform(stamp, (v) => -18 + 12 * v);
-  const v2ChipOpacity = useTransform(morph, (v) => v);
+  const phoneX = useTransform(phoneIn, (v) => (desktop ? `${(1 - v) * 120}%` : "0%"));
+  const phoneY = useTransform(phoneIn, (v) => (desktop ? "0%" : `${(1 - v) * 130}%`));
+  const phoneOpacity = useTransform(phoneIn, (v) => (desktop ? clamp01(v * 1.6) : 1));
+  const typed = useTransform(p, (v) => REQUEST.slice(0, Math.round(REQUEST.length * slice(v, 0.2, 0.32))));
+  const caret = useTransform(p, (v) => (v > 0.2 && v < 0.33 ? 1 : 0));
+  const requestSent = useTransform(p, (v) => slice(v, 0.33, 0.36));
+  const requestPanel = useTransform(p, (v) => 1 - slice(v, 0.62, 0.66));
+  const codePanel = useTransform(p, (v) => slice(v, 0.62, 0.66));
+  const markContacts = useTransform(p, (v) => ease(slice(v, 0.33, 0.37)) * (1 - slice(v, 0.44, 0.5)));
+  const markFridge = useTransform(p, (v) => ease(slice(v, 0.35, 0.39)) * (1 - slice(v, 0.5, 0.55)));
+  const askPill = useTransform(p, (v) => slice(v, 0.34, 0.37) * (1 - slice(v, 0.4, 0.44)));
 
-  // The progress bar below is a motion.div bound to the same value, and a change can fire while it
-  // renders. Setting this component's state then is a React error, so changes are applied on the next
-  // animation frame (coalesced to one update per frame), never inside the change callback itself.
-  useEffect(() => {
-    let pending = 0;
-    const sync = () => {
-      setScrollStep(stepAt(scrollYProgress.get()));
-      setScrollTotal(Math.round(total.get()));
-    };
-    const schedule = () => {
-      if (!pending)
-        pending = requestAnimationFrame(() => {
-          pending = 0;
-          sync();
-        });
-    };
-    sync();
-    const stops = [
-      scrollYProgress.on("change", schedule),
-      total.on("change", schedule),
-    ];
-    return () => {
-      stops.forEach((stop) => stop());
-      cancelAnimationFrame(pending);
-    };
-  }, [scrollYProgress, total]);
+  // 3 · Version 2, one change at a time, with the total following each one.
+  const v2 = useTransform(p, (v) => ease(slice(v, 0.4, 0.45)));
+  const contacts = useTransform(p, (v) => slice(v, 0.45, 0.5));
+  const fridge = useTransform(p, (v) => slice(v, 0.5, 0.55));
+  const oven = useTransform(p, (v) => ease(slice(v, 0.54, 0.59)));
+  const deadline = useTransform(p, (v) => slice(v, 0.58, 0.62));
+  const ovenX = useTransform(oven, (v) => `${(1 - v) * -1.25}rem`);
+  const fridgeRow = useTransform(fridge, (v) => 1 - 0.55 * v);
+  const contactsSum = useTransform(contacts, (v) => euro(255 - 85 * ease(v)));
+  const total = useTransform(p, (v) => {
+    const c = 255 - 85 * ease(slice(v, 0.45, 0.5));
+    const f = 120 * (1 - ease(slice(v, 0.5, 0.55)));
+    const o = 150 * ease(slice(v, 0.54, 0.59));
+    return euro((c + f + o) * 1.2);
+  });
+  const was = useTransform(p, (v) => slice(v, 0.6, 0.64));
+  const versionChip = useTransform(v2, (v) => `${(1 - v) * -0.75}rem`);
 
-  const step = reduceMotion ? steps.length - 1 : scrollStep;
-  const shownTotal = reduceMotion ? 384 : scrollTotal;
-  const second = step >= 2;
-  const approved = step === 3;
+  // 4 · The code fills digit by digit, then the stamp lands once (a trigger, not a scrub).
+  const digits = CODE.split("").map((_, index) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useTransform(p, (v) => slice(v, 0.7 + index * 0.017, 0.71 + index * 0.017)),
+  );
+  const footer = useTransform(p, (v) => ease(slice(v, 0.82, 0.88)));
+  const approvedPill = useTransform(p, (v) => slice(v, 0.81, 0.84));
+  const cta = useTransform(p, (v) => slice(v, 0.92, 0.98));
+  // Hidden (not just transparent) until it shows, so the keyboard never lands on an invisible link.
+  const ctaVisibility = useTransform(cta, (v) => (v > 0.05 ? "visible" : "hidden"));
+  const [stamped, setStamped] = useState(false);
+  useMotionValueEvent(p, "change", (v) => {
+    const next = v > 0.8 ? true : v < 0.76 ? false : null;
+    if (next !== null) requestAnimationFrame(() => setStamped(next));
+  });
+
+  const sentOnly = useTransform(
+    [sentPill, askPill, approvedPill],
+    ([sent, ask, approved]: number[]) => sent! * (1 - ask!) * (1 - approved!),
+  );
+  const footerWaiting = useTransform(footer, (v) => 1 - v);
+  const requestUnsent = useTransform(requestSent, (v) => 1 - v);
+
+  const cardTilt = useTransform(p, [0, 0.5, 1], [-1, 0.6, 0]);
+  const rail = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   return (
     <section
-      ref={sectionRef}
-      aria-labelledby="version-scene-title"
-      className="relative bg-[#102b38] text-[#f4efe4] motion-safe:h-[360svh] lg:motion-safe:h-[400svh]"
+      ref={ref}
+      id="versions"
+      className={`relative bg-[#102b38] text-[#f4efe4] ${reduceMotion ? "py-24" : "h-[300svh] lg:h-[340svh]"}`}
     >
-      <div className="top-0 flex min-h-svh flex-col justify-center px-[6vw] pb-8 pt-20 motion-safe:sticky motion-safe:h-svh motion-safe:overflow-hidden motion-reduce:py-[14vh] lg:pb-10 lg:pt-24">
-        <div className="mx-auto grid w-full max-w-[93.75rem] items-center gap-5 lg:grid-cols-[1fr_1fr] lg:gap-16">
+      {/* With reduced motion there is nothing to scrub: the section is as tall as its content and shows the end. */}
+      <div className={reduceMotion ? "flex flex-col justify-center" : "sticky top-0 flex h-svh flex-col justify-center overflow-hidden"}>
+        <div className="mx-auto grid w-full max-w-[93.75rem] gap-5 px-[6vw] lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
+          {/* Text: the full list on desktop, one caption and four bars on a phone. */}
           <div>
-            <Reveal>
-              <p className="mf-kicker !text-[#ff765f]">
-                ВСЯКА ПРОМЯНА Е НОВА ВЕРСИЯ
-              </p>
-              <h2 id="version-scene-title" className="sr-only">
-                Как една оферта минава през версии и одобрение
-              </h2>
-            </Reveal>
-
-            {/* All four texts share one cell, so the column never changes height while they swap. */}
-            <div className="mt-4 grid lg:mt-8">
-              {steps.map((item, index) => (
-                <StepText
-                  key={item.kicker}
-                  item={item}
-                  index={index}
-                  progress={scrollYProgress}
-                  active={index === step}
-                  reduceMotion={reduceMotion}
-                />
-              ))}
-            </div>
-
-            {/* Progress: the line fills with the scroll, the dots light up as each step is reached. */}
-            <div
-              aria-hidden="true"
-              className="relative mt-5 hidden h-3 items-center motion-safe:flex lg:mt-10"
-            >
-              <div className="absolute inset-x-0 h-px bg-[#f4efe4]/20" />
-              <m.div
-                style={{ scaleX: scrollYProgress }}
-                className="absolute inset-x-0 h-px origin-left bg-[#ff765f]"
+            <h2 className="mf-kicker text-[#ff765f]">ВСЯКА ПРОМЯНА Е НОВА ВЕРСИЯ</h2>
+            <p className="sr-only">
+              Пример: офертата за кухня в Лозенец е изпратена за 450 € и се заключва. Клиентът иска два контакта
+              вместо три, без контакта за хладилника и с нов контакт за фурната. Версия 2 е 384 € с ДДС и нов краен
+              срок 16.10, а версия 1 остава непокътната. Клиентът одобрява версия 2 с код от имейла.
+            </p>
+            <div className="relative mt-6 hidden lg:block">
+              <span className="absolute inset-y-4 left-0 w-px bg-[#f4efe4]/15" />
+              <m.span
+                style={{ scaleY: rail, transformOrigin: "50% 0%" }}
+                className="absolute inset-y-4 left-0 w-px bg-[#ff765f]"
               />
-              {STEP_AT.map((at, index) => (
-                <span
-                  key={at}
-                  style={{ left: `${(index / (STEP_AT.length - 1)) * 100}%` }}
-                  className={`absolute size-3 -translate-x-1/2 rounded-full border transition-colors duration-300 ${
-                    index <= step
-                      ? "border-[#ff765f] bg-[#ff765f]"
-                      : "border-[#f4efe4]/30 bg-[#102b38]"
-                  }`}
-                />
-              ))}
+              <ol className="pl-7">
+                {steps.map((step, index) => (
+                  <StepItem key={step.kicker} p={p} index={index} still={reduceMotion} />
+                ))}
+              </ol>
+            </div>
+            <div className="mt-3 lg:hidden">
+              <div className="flex gap-1.5">
+                <Segment p={p} from={0} to={0.14} />
+                <Segment p={p} from={0.14} to={0.4} />
+                <Segment p={p} from={0.4} to={0.66} />
+                <Segment p={p} from={0.66} to={0.9} />
+              </div>
+              <div className="mt-3 grid min-h-[3.75rem]">
+                {steps.map((step, index) => (
+                  <StepCaption key={step.kicker} p={p} index={index} />
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[26rem] [--demo-size:0.875rem] sm:[--demo-size:1rem] lg:mr-0 lg:max-w-[29rem]">
-            <p className="sr-only">
-              Оферта ПР-042 „Кухня · Лозенец“: версия 1 е 450 €, клиентът иска
-              два контакта вместо три и без контакта за хладилника, версия 2 е
-              384 € с ДДС и е одобрена с код от имейла.
-            </p>
-            <article
+          {/* Stage: the offer card, with the client's phone sliding over its right edge (or up from below). */}
+          <div className="relative mx-auto w-full max-w-[30rem] lg:mr-[8rem] lg:ml-0 lg:max-w-[34rem]">
+            <m.article
               aria-hidden="true"
-              className="relative rounded-[1.25rem] border border-[#102b38]/10 bg-[#fffdf7] text-[#102b38] shadow-[0_30px_70px_-20px_rgb(0_0_0/55%)]"
+              style={{ rotate: cardTilt }}
+              className="relative rounded-[1.25rem] bg-[#fffdf7] text-[#102b38] shadow-[0_30px_70px_-20px_rgb(0_0_0/55%)]"
             >
-              <header className="flex items-start justify-between gap-3 px-5 pt-4 sm:px-6 sm:pt-5">
+              <m.span
+                style={{ opacity: draft }}
+                className="pointer-events-none absolute -inset-1.5 rounded-[1.5rem] border-2 border-dashed border-[#ff765f]"
+              />
+              <header className="flex items-start justify-between gap-3 px-5 pt-4">
                 <div className="min-w-0">
-                  <p className="flex items-center gap-1.5 font-mono demo-text-10 font-bold tracking-[0.08em] text-[#b5412d]">
-                    <Lock className="size-3.5" />
+                  <p className="flex items-center gap-1.5 font-mono text-[0.6875rem] font-bold tracking-[0.08em] text-[#b5412d]">
+                    <m.span style={{ scale: lockScale, opacity: lockOpacity }} className="inline-flex">
+                      <Lock className="size-3.5" />
+                    </m.span>
                     ПР-042
                   </p>
-                  <p className="mt-1 truncate demo-text-19 font-black tracking-[-0.04em]">
-                    Кухня · Лозенец
-                  </p>
+                  <p className="mt-0.5 text-lg font-black tracking-[-0.04em]">Кухня · Лозенец</p>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 demo-text-11 font-bold transition-colors duration-500 ${
-                    approved
-                      ? "bg-[#d9f3cf] text-[#16623f]"
-                      : "bg-[#ffe7a8] text-[#755710]"
-                  }`}
-                >
-                  {approved
-                    ? "Одобрена"
-                    : step === 1
-                      ? "Иска промяна"
-                      : "При клиента"}
+                <span className="relative grid shrink-0 text-xs font-bold">
+                  <m.span style={{ opacity: draft }} className="col-start-1 row-start-1 rounded-full bg-[#102b38]/[0.08] px-2.5 py-1 text-[#52707d]">
+                    Чернова
+                  </m.span>
+                  <m.span
+                    style={{ opacity: sentOnly }}
+                    className="col-start-1 row-start-1 rounded-full bg-[#c5e3e5] px-2.5 py-1 text-center text-[#17485a]"
+                  >
+                    Изпратена
+                  </m.span>
+                  <m.span style={{ opacity: askPill }} className="col-start-1 row-start-1 rounded-full bg-[#ffe7a8] px-2.5 py-1 text-center text-[#755710]">
+                    Иска промяна
+                  </m.span>
+                  <m.span style={{ opacity: approvedPill }} className="col-start-1 row-start-1 rounded-full bg-[#d9f3cf] px-2.5 py-1 text-center text-[#16623f]">
+                    Одобрена
+                  </m.span>
                 </span>
               </header>
 
-              <ol className="mt-3 flex items-center gap-1.5 px-5 sm:mt-4 sm:px-6">
-                <li>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-md px-2 py-1 font-mono demo-text-10 transition-colors duration-500 ${
-                      second
-                        ? "bg-[#102b38]/[0.05] text-[#52707d]"
-                        : "bg-[#102b38] font-bold text-[#f4efe4]"
-                    }`}
-                  >
-                    {second ? <Lock className="size-3" /> : null}v1 · 18.09
-                  </span>
-                </li>
-                <m.li
-                  style={{ opacity: v2ChipOpacity }}
-                  className="flex items-center gap-1.5"
-                >
-                  <span className="h-px w-3 bg-[#102b38]/20 sm:w-5" />
-                  <span className="rounded-md bg-[#102b38] px-2 py-1 font-mono demo-text-10 font-bold text-[#f4efe4]">
-                    v2 · 24.09
-                  </span>
-                </m.li>
-              </ol>
-
-              <div className="mt-3 border-t border-[#102b38]/10 px-5 sm:mt-4 sm:px-6">
-                <p className="pt-2.5 demo-text-11 text-[#52707d] sm:pt-3">
-                  <Cross
-                    morph={morph}
-                    from="Съдържание на v1"
-                    to="Какво се промени спрямо v1"
-                  />
-                </p>
-                <VersionRows morph={morph} />
+              <div className="mt-3 flex items-center gap-1.5 px-5 font-mono text-[0.6875rem]">
+                <span className="rounded-md bg-[#102b38]/[0.06] px-2 py-1 text-[#52707d]">версия 1 · 18.09</span>
+                <m.span style={{ opacity: v2, x: versionChip }} className="flex items-center gap-1.5">
+                  <span className="h-px w-4 bg-[#102b38]/25" />
+                  <span className="rounded-md bg-[#102b38] px-2 py-1 font-bold text-[#f4efe4]">версия 2 · 24.09</span>
+                </m.span>
               </div>
 
-              <div className="flex items-center justify-between gap-4 border-t border-[#102b38]/10 px-5 py-3 sm:py-4 sm:px-6">
-                <m.div
-                  style={{
-                    opacity: stampOpacity,
-                    scale: stampScale,
-                    rotate: stampRotate,
-                  }}
-                  className="pointer-events-none relative shrink-0 rounded-md border-[0.1875rem] border-[#d14b35] px-2.5 py-1.5 text-center font-mono text-[#d14b35] [filter:url(#mf-ink)]"
-                >
-                  <span className="absolute inset-[0.1875rem] rounded-sm border border-[#d14b35]" />
-                  <span className="block demo-text-14 font-black tracking-[0.14em]">
-                    ОДОБРЕНО
-                  </span>
-                  <span className="block demo-text-9 font-bold tracking-[0.1em]">
-                    24.09 · КОД ✓
-                  </span>
+              <div className="mt-3 space-y-0.5 px-2">
+                <Row
+                  title="Преместване на контакти"
+                  sub={<Roll t={contacts} from="3 бр × 85 €" to="2 бр × 85 €" />}
+                  sum={<m.span>{contactsSum}</m.span>}
+                  highlight={markContacts}
+                />
+                <m.div style={{ opacity: fridgeRow }}>
+                  <Row title="Контакт за хладилника" sub="1 бр × 120 €" sum="120 €" highlight={markFridge}>
+                    <m.span
+                      aria-hidden="true"
+                      style={{ scaleX: fridge, transformOrigin: "0% 50%" }}
+                      className="pointer-events-none absolute inset-x-3 top-1/2 h-0.5 bg-[#b5412d]"
+                    />
+                  </Row>
                 </m.div>
-                <div className="text-right">
-                  <p className="demo-text-10 text-[#52707d]">
-                    С ДДС 20%
-                    {second ? (
-                      <>
-                        {" "}
-                        · беше <s>450 €</s>
-                      </>
-                    ) : null}
-                  </p>
-                  <p className="mt-1 demo-text-30 font-black leading-none tracking-[-0.05em] tabular-nums">
-                    {shownTotal} €
-                  </p>
-                </div>
+                <m.div style={{ opacity: oven, x: ovenX }}>
+                  <Row
+                    title={
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="grid size-4 place-items-center rounded-full bg-[#bceba8]">
+                          <Plus className="size-2.5" />
+                        </span>
+                        Контакт за фурната
+                      </span>
+                    }
+                    sub="1 бр × 150 €"
+                    sum="150 €"
+                  />
+                </m.div>
+                <Row title="Краен срок" sub="договорен в офертата" sum={<Roll t={deadline} from="10.10" to="16.10" />} />
               </div>
 
-              {/* What happens at this step: the client's ask, then the client's "yes". */}
-              <footer
-                className={`flex items-center gap-3 rounded-b-[1.25rem] px-5 py-3 transition-colors duration-500 sm:px-6 ${
-                  step === 1 || approved
-                    ? "bg-[#102b38] text-[#f4efe4]"
-                    : "bg-[#102b38]/[0.06] text-[#52707d]"
-                }`}
-              >
-                <span
-                  className={`grid size-7 shrink-0 place-items-center rounded-full ${
-                    approved
-                      ? "bg-[#bceba8] text-[#102b38]"
-                      : step === 1
-                        ? "bg-[#ffe7a8] text-[#102b38]"
-                        : "bg-[#102b38]/10"
-                  }`}
-                >
-                  {step === 1 ? (
-                    <MessageSquareText className="size-3.5" />
-                  ) : (
-                    <Mail className="size-3.5" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate demo-text-12 font-bold">
-                    {approved
-                      ? "Иван Петров одобри с код от имейла"
-                      : step === 1
-                        ? "„Два контакта и без този за хладилника.“"
-                        : second
-                          ? "Версия 2 е изпратена на Иван Петров"
-                          : "Изпратена на Иван Петров по имейл"}
-                  </span>
-                  <span className="block truncate font-mono demo-text-10">
-                    {approved
-                      ? "14:32 · отпечатък 3f9a8c…dc21e"
-                      : step === 1
-                        ? "Искане за промяна · записано към ПР-042"
-                        : "Чака одобрение"}
-                  </span>
-                </span>
+              <div className="mt-2 flex items-end justify-between gap-3 border-t border-[#102b38]/10 px-5 py-4">
+                <m.p style={{ opacity: was }} className="font-mono text-[0.6875rem] text-[#52707d]">
+                  С ДДС 20% · беше <s>450 €</s>
+                </m.p>
+                <p className="text-[2rem] font-black leading-none tracking-[-0.05em] tabular-nums">
+                  <m.span>{total}</m.span>
+                </p>
+              </div>
+
+              <footer className="relative overflow-hidden rounded-b-[1.25rem] bg-[#102b38]/[0.06] px-5 py-3">
+                <m.span style={{ scaleX: footer, transformOrigin: "0% 50%" }} className="absolute inset-0 bg-[#1e765d]" />
+                <m.p style={{ opacity: footerWaiting }} className="relative font-mono text-[0.6875rem] text-[#52707d]">
+                  Изпратена на Иван Петров · чака решение
+                </m.p>
+                <m.p style={{ opacity: footer }} className="absolute inset-0 flex items-center gap-2 px-5 font-mono text-[0.6875rem] font-bold text-white">
+                  <Check className="size-3.5" /> Одобрена с код · 24.09 · 14:32 · отпечатък 3f9a…dc21
+                </m.p>
               </footer>
-            </article>
+
+              {/* The stamp: one deliberate slam when the approval lands, played back if you scroll up. */}
+              <m.div
+                initial={false}
+                animate={stamped || reduceMotion ? { opacity: 0.9, scale: 1, rotate: -9 } : { opacity: 0, scale: 1.8, rotate: -20 }}
+                transition={stamped || reduceMotion ? { type: "spring", stiffness: 520, damping: 22 } : { duration: 0.2 }}
+                className="pointer-events-none absolute right-6 top-[46%] rounded-lg border-[0.1875rem] border-double border-[#1e765d] px-3 py-1.5 font-mono text-sm font-black tracking-[0.14em] text-[#1e765d] mix-blend-multiply"
+              >
+                ОДОБРЕНО · КОД
+              </m.div>
+            </m.article>
+
+            {/* The client's phone: the portal, not a chat app. */}
+            <m.div
+              aria-hidden="true"
+              style={{ x: phoneX, y: phoneY, opacity: phoneOpacity }}
+              className="absolute inset-x-3 bottom-[-1rem] z-10 rounded-[1.5rem] border-[0.375rem] border-[#0b1f29] bg-[#fffdf7] p-4 text-[#102b38] shadow-[0_30px_70px_-20px_rgb(0_0_0/70%)] lg:inset-x-auto lg:bottom-auto lg:-right-[8rem] lg:top-[4.5rem] lg:w-[16rem]"
+            >
+              <p className="font-mono text-[0.625rem] tracking-[0.12em] text-[#52707d]">ПОРТАЛ · ПР-042 · ВЕРСИЯ 1</p>
+              <div className="relative mt-2 grid">
+                <m.div style={{ opacity: requestPanel }} className="col-start-1 row-start-1">
+                  <p className="text-sm font-black tracking-[-0.02em]">Искам промяна</p>
+                  <div className="mt-2 min-h-[5.25rem] rounded-xl border border-[#102b38]/15 bg-white p-2.5 text-[0.8125rem] leading-snug">
+                    <m.span>{typed}</m.span>
+                    <m.span style={{ opacity: caret }} className="ml-px inline-block h-3.5 w-px translate-y-0.5 bg-[#102b38]" />
+                  </div>
+                  <div className="relative mt-2 grid">
+                    <m.span
+                      style={{ opacity: requestUnsent }}
+                      className="col-start-1 row-start-1 rounded-lg bg-[#102b38] py-2 text-center text-xs font-bold text-[#fffdf7]"
+                    >
+                      Изпратете искането
+                    </m.span>
+                    <m.span
+                      style={{ opacity: requestSent }}
+                      className="col-start-1 row-start-1 inline-flex items-center justify-center gap-1 rounded-lg bg-[#d9f3cf] py-2 text-xs font-bold text-[#16623f]"
+                    >
+                      <Check className="size-3.5" /> Изпратено към ПР-042
+                    </m.span>
+                  </div>
+                </m.div>
+                <m.div style={{ opacity: codePanel }} className="col-start-1 row-start-1">
+                  <p className="text-sm font-black tracking-[-0.02em]">Одобрявам версия 2 · 384 €</p>
+                  <p className="mt-1 text-[0.6875rem] text-[#52707d]">Кодът е изпратен на имейла ви.</p>
+                  <div className="mt-2 grid grid-cols-6 gap-1">
+                    {CODE.split("").map((digit, index) => (
+                      <span key={index} className="grid h-9 place-items-center rounded-lg border border-[#102b38]/15 bg-white font-mono text-base font-bold">
+                        <m.span style={{ opacity: digits[index] }}>{digit}</m.span>
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2 rounded-lg bg-[#1e765d] py-2 text-center text-xs font-bold text-white">Потвърдете</p>
+                </m.div>
+              </div>
+            </m.div>
+
+            <m.div style={{ opacity: cta, visibility: ctaVisibility }} className="mt-10 flex justify-center lg:justify-start">
+              <Link href="/app" className="mf-when-in mf-primary-button">
+                КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
+              </Link>
+              <Link href="/sign-up" prefetch={false} className="mf-when-out mf-primary-button">
+                ИЗПРАТИ ПЪРВАТА СИ ОФЕРТА <ArrowRight className="size-4" />
+              </Link>
+            </m.div>
           </div>
         </div>
       </div>

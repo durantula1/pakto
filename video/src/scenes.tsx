@@ -271,7 +271,7 @@ export function ChatScene() {
           }}
         >
           <span style={{ position: "relative" }}>
-            Става, после ще сметнем.
+            Добре, после ще сметнем.
             <span
               style={{
                 position: "absolute",
@@ -728,7 +728,7 @@ export function RequestScene() {
               {typed(comment, frame, 70, 1.3)}
               {frame >= 70 && frame < 125 ? <Caret frame={frame} /> : null}
             </div>
-            <Button scale={press(frame, 146)}>Изпрати ми код</Button>
+            <Button scale={press(frame, 146)}>Изпратете ми код</Button>
           </>
         ) : (
           <>
@@ -1100,7 +1100,7 @@ export function ApproveScene() {
                 крайната сума.
               </span>
             </div>
-            <Button scale={press(frame, 122)}>Изпрати ми код</Button>
+            <Button scale={press(frame, 122)}>Изпратете ми код</Button>
           </>
         )}
       </Sheet>

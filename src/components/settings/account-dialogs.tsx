@@ -154,7 +154,7 @@ export function ConsentBanner() {
     <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm">
         <span className="font-semibold">Потвърди текущите условия.</span>{" "}
-        <span className="text-muted-foreground">Прочети <a href="/terms" target="_blank" className="underline underline-offset-4">Условията за ползване</a> и <a href="/privacy" target="_blank" className="underline underline-offset-4">Политиката за поверителност</a> и ги приеми, за да продължиш спокойно.</span>
+        <span className="text-muted-foreground">Прочети <a href="/terms" target="_blank" className="underline underline-offset-4">Условията за ползване</a> и <a href="/privacy" target="_blank" className="underline underline-offset-4">Политиката за поверителност</a> и ги приеми, за да продължиш.</span>
       </p>
       <ActionForm action={acceptLegalDocumentsAction} success="Записахме съгласието ти" className="shrink-0">
         <ActionSubmit className="h-10">Приемам</ActionSubmit>

@@ -11,7 +11,7 @@ export default function NotFound() {
       <NotFoundArt className="mx-auto mb-4 max-w-[20rem]" />
       <h1 className="text-2xl font-semibold tracking-tight">Страницата не е намерена</h1>
       <p className="text-muted-foreground">
-        Адресът може да е грешен или линкът вече да не е активен. Ако си клиент, отвори линка от последния имейл.
+        Адресът може да е грешен или линкът вече да не е активен. Ако сте клиент, отворете линка от последния имейл от фирмата.
       </p>
       <Link href="/" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
         Към началото

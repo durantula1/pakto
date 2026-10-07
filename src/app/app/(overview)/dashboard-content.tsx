@@ -40,7 +40,7 @@ function StagesHeader({ total }: { total?: number }) {
     <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
       <div className="min-w-0">
         <h2 className="text-base font-semibold">{stagesLabel}</h2>
-        <p className="text-sm text-muted-foreground">Просрочени етапи и такива, на които срокът наближава.</p>
+        <p className="text-sm text-muted-foreground">Просрочени и наближаващи етапи.</p>
       </div>
       <Link href="/app/work" className="shrink-0 rounded-md text-sm font-medium text-primary-ink underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{total && total > stageLimit ? `Всички ${total} етапа →` : "Всички етапи →"}</Link>
     </div>
@@ -83,7 +83,7 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
       <StagesHeader total={counts.overdueMilestones + counts.dueSoonMilestones} />
       {stages.length
         ? <DataTable label={stagesLabel} columns={stageColumns} rows={stageRows(stages)} />
-        : <p className="rounded-xl border bg-card px-4 py-5 text-sm text-muted-foreground">Няма просрочени етапи и такива със срок в следващите {counts.stageWarningDays} дни.</p>}
+        : <p className="rounded-xl border bg-card px-4 py-5 text-sm text-muted-foreground">Няма просрочени етапи, нито етапи със срок в следващите {counts.stageWarningDays} дни.</p>}
     </section>
     {changes.length ? <section className="flex flex-col gap-3">
       <RecentHeader />

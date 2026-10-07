@@ -24,7 +24,7 @@ import { countTeamMembers, getTeamCounters, listPendingOwnerRequests, listPendin
 import { memberColumns, membersLabel, searchLabel } from "./team-sections";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const roles: Record<string, string> = { owner: "Собственик", office: PRESETS.office.label, field: PRESETS.field.label, admin: "Администратор" };
+const roles: Record<string, string> = { owner: "Собственик", office: PRESETS.office.label, field: PRESETS.field.label, admin: "Собственик" };
 
 export const metadata: Metadata = { title: "Екип" };
 
@@ -49,9 +49,9 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   return <PageShell>
     <PageHeader page="team" actions={
       <SheetTrigger>
-        <Button type="button"><MailPlus data-icon="inline-start" /> Покани човек</Button>
+        <Button type="button"><MailPlus data-icon="inline-start" /> Покани служител</Button>
         <SheetContent className="overflow-y-auto" side="right">
-          <SheetHeader><SheetTitle>Покани човек</SheetTitle><SheetDescription>Изпращаме линк на имейла. Приема се само с профил на същия имейл.</SheetDescription></SheetHeader>
+          <SheetHeader><SheetTitle>Покани служител</SheetTitle><SheetDescription>Изпращаме линк на имейла. Приема се само с профил на същия имейл.</SheetDescription></SheetHeader>
           <InviteForm allowOwnerInvite={allowOwnerInvite} />
         </SheetContent>
       </SheetTrigger>
@@ -77,7 +77,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               id: member.userId,
               href: `/app/team/${member.userId}`,
               cells: [
-                <div key="member"><p className="font-medium">{member.displayName ?? member.email ?? "Член на екипа"}{member.userId === context.userId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(ти)</span> : null}</p><p className="text-sm text-muted-foreground">{member.email ?? "—"}</p></div>,
+                <div key="member"><p className="font-medium">{member.displayName ?? member.email ?? "Служител"}{member.userId === context.userId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(ти)</span> : null}</p><p className="text-sm text-muted-foreground">{member.email ?? "—"}</p></div>,
                 <Badge key="role" variant={owner ? "default" : "secondary"}>{roleLabel(member)}</Badge>,
                 <span key="projects" className="whitespace-nowrap">{owner || member.allProjects ? "Всички" : member.projectIds.length ? `${member.projectIds.length} ${member.projectIds.length === 1 ? "обект" : "обекта"}` : <span className="text-muted-foreground">Няма</span>}</span>,
                 <div key="access" className="flex min-w-28 items-center gap-2" title={`${granted} от ${PERMISSION_KEYS.length} права`}>
@@ -115,7 +115,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           rows={requests.map((request) => ({
             id: request.id,
             cells: [
-              request.targetName ?? "Член на екипа",
+              request.targetName ?? "Служител",
               request.removeMember ? "Премахване на достъпа" : `Нова роля: ${roles[request.requestedRole ?? ""] ?? request.requestedRole}`,
               request.requestedBy !== context.userId
                 ? <ActionForm key={request.id} action={approveOwnerChangeAction} success="Промяната е одобрена"><input type="hidden" name="requestId" value={request.id} /><ActionSubmit>Потвърди</ActionSubmit></ActionForm>

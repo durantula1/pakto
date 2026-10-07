@@ -7,9 +7,9 @@ import { Ticker } from "../ticker";
 import { DemoFrame, StatusChip, useDemoLoop } from "./demo-frame";
 
 const lines = [
-  { label: "Долни шкафове, мат МДФ", qty: "4", unit: "л.м", price: 380 },
-  { label: "Горни шкафове", qty: "3", unit: "л.м", price: 290 },
-  { label: "Плот и монтаж", qty: "4", unit: "л.м", price: 120 },
+  { label: "Долни шкафове, мат МДФ", qty: "4", unit: "л. м", price: 380 },
+  { label: "Горни шкафове", qty: "3", unit: "л. м", price: 290 },
+  { label: "Плот и монтаж", qty: "4", unit: "л. м", price: 120 },
 ] as const;
 
 const format = (value: number) =>

@@ -71,7 +71,7 @@ function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: bool
           </button>
         ))}
       </div>
-      <p className="text-xs text-muted-foreground">Детайлните права се настройват след като човекът приеме.</p>
+      <p className="text-xs text-muted-foreground">Отделните права се настройват, след като поканата бъде приета.</p>
     </div>
     {preset !== "owner" ? <div className="flex flex-col gap-2"><p className="text-sm font-medium">Обекти</p><ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} /></div> : null}
     {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}

@@ -228,7 +228,7 @@ export async function resolveDecisionDisputeAction(formData: FormData): Promise<
     const context = await requireTenantContext();
     const [document] = await getDatabase().select({ projectId: changeOrders.projectId }).from(changeOrders)
       .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
-    if (!document) throw new Error("Документът не е намерен.");
+    if (!document) throw new Error("Офертата или промяната не е намерена.");
     await requireProjectCapability(context, document.projectId, "send");
     await getDatabase().transaction(async (tx) => {
       const [revision] = await tx.select({ id: changeOrderRevisions.id }).from(changeOrderRevisions)

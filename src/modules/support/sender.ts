@@ -16,7 +16,7 @@ export const describeSender = cache(async (): Promise<{ email: string | null; li
       email,
       lines: [
         ["Подател", "Служител (влязъл в профила си)"],
-        ["Акаунт", email],
+        ["Профил", email],
         ["Фирма", tenant ? `${tenant.organizationName} (${tenant.organizationId})` : "без фирма"],
         ["Роля", tenant?.role ?? null],
       ],

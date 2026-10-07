@@ -77,7 +77,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
         <kbd className="rounded-md bg-muted px-1.5 py-0.5 font-sans text-2xs font-semibold">⌘K</kbd>
       </button>
       <button type="button" onClick={() => setOpen(true)} aria-label="Търсене" className="grid size-9 place-items-center rounded-lg border bg-card md:hidden"><Search className="size-4" /></button>
-      <CommandDialog open={open} onOpenChange={change} title="Търсене" description="Търсете обект, клиент или оферта, или отидете на страница." className="sm:max-w-xl">
+      <CommandDialog open={open} onOpenChange={change} title="Търсене" description="Търси обект, клиент или оферта или отвори страница." className="sm:max-w-xl">
         <Command inputValue={query} onInputChange={setQuery}>
           <CommandInput placeholder="Търси обект, клиент, оферта или страница…" />
           <CommandList

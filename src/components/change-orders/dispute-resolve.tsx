@@ -17,7 +17,7 @@ export function ResolveDecisionDisputeDialog({ changeOrderId, revisionId }: { ch
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Оспорването уредено ли е?</DialogTitle>
-        <DialogDescription>Напиши какво сте се разбрали с клиента. Оспорването остава в историята, а банерът става сив. Решението остава в сила; ако не е вярно, анулирай документа и изпрати нов.</DialogDescription>
+        <DialogDescription>Опиши как сте се разбрали с клиента. Оспорването остава в историята като уредено. Решението остава в сила; ако е грешно, анулирай офертата и изпрати нова.</DialogDescription>
       </DialogHeader>
       <ActionForm action={resolveDecisionDisputeAction} success="Оспорването е отбелязано като уредено" className="grid gap-3">
         <input type="hidden" name="changeOrderId" value={changeOrderId} />

@@ -58,8 +58,8 @@ const footerColumns = [
   {
     title: "Продукт",
     links: [
-      { href: "/#workflow", label: "Как работи" },
-      { href: "/#product", label: "Функции" },
+      { href: "/#versions", label: "Как работи" },
+      { href: "/#product", label: "Възможности" },
       { href: "/#security", label: "Сигурност" },
       { href: "/faq", label: "Въпроси" },
     ],
@@ -98,16 +98,16 @@ export function SiteFooter() {
           </Link>
           {/* Where the name comes from. */}
           <p className="mt-10 font-serif text-3xl leading-tight tracking-[-0.02em] text-[#fbf7ec] sm:text-4xl">
-            <i>Pactum</i> — латинската дума за договорка.
+            <i>Pactum</i> – латинската дума за споразумение.
           </p>
           <p className="mt-4 max-w-md text-base leading-7 text-[#9db5b6]">
-            <i>Pacta sunt servanda</i>: договореното се спазва. Pakto го
-            записва, за да има какво да се спазва.
+            <i>Pacta sunt servanda</i> – договореното се спазва. Pakto го
+            записва, за да няма съмнение какво е договорено.
           </p>
         </div>
 
         <nav
-          aria-label="Връзки във футъра"
+          aria-label="Връзки в долната част на страницата"
           className="grid grid-cols-2 gap-x-16 gap-y-10 self-end"
         >
           {footerColumns.map((column) => (

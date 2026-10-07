@@ -132,7 +132,7 @@ export function AuthStage() {
             style={{ transform: "translateZ(-7.5rem)" }}
           />
           <Sheet
-            code="ОФ · в1"
+            code="ОФ · в. 1"
             kicker="Архив"
             title="Предишна версия"
             rows={[

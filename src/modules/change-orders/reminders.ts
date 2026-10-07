@@ -73,7 +73,7 @@ export async function expireOverdue(now = new Date(), scope: { projectId?: strin
         .returning({ id: changeOrderRevisions.id });
       if (!row) return false;
       await tx.insert(timelineEvents).values({ organizationId: document.organizationId, projectId: document.projectId, changeOrderId: document.changeOrderId, revisionId: document.revisionId, actorType: "system", eventType: "revision_expired", visibility: "client", metadata: { revisionNumber: document.revisionNumber } });
-      await notifyProjectStaff(tx, { organizationId: document.organizationId, projectId: document.projectId, eventType: "revision_expired", title: `Изтече: ${document.title}`, body: "Клиентът не реши до крайната дата. Коригирай офертата, за да я изпратиш с нов срок.", href: `/app/offers/${document.changeOrderId}` });
+      await notifyProjectStaff(tx, { organizationId: document.organizationId, projectId: document.projectId, eventType: "revision_expired", title: `Изтече: ${document.title}`, body: "Клиентът не взе решение в срока. Изпрати офертата отново с нов срок.", href: `/app/offers/${document.changeOrderId}` });
       return true;
     });
     if (!expired) continue;
@@ -83,7 +83,7 @@ export async function expireOverdue(now = new Date(), scope: { projectId?: strin
       const kind = document.documentKind === "offer" ? "Офертата" : "Промяната";
       emailClient(document.projectId, {
         subject: `${kind} „${document.title}“ изтече`,
-        intro: `${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) вече не е валидна, защото срокът за решение мина. Ако все още я искате, пишете на ${document.organizationName} за нова версия.`,
+        intro: `${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) вече не е валидна, защото срокът за решение изтече. Ако желаете да продължите, свържете се с ${document.organizationName} за нова версия.`,
       });
     }
   }

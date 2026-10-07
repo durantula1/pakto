@@ -45,7 +45,7 @@ export function ScheduleEditor({ rows, setRows, deadline, today }: {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        Етапите и колко дни отнема всеки. Клиентът ги вижда в офертата като ориентировъчни. Точните дати слагаш на обекта, след като офертата е одобрена.
+        Етапите и колко дни отнема всеки. Клиентът ги вижда в офертата като ориентировъчни. Точните дати задаваш на обекта, след като офертата е одобрена.
       </p>
       {rows.length ? (
         <ol className="flex flex-col gap-2">

@@ -120,7 +120,7 @@ export function FinanceToolbar({ filters, defaults, project, client }: {
     </div>
 
     <FacetFilter label="Вид" value={filters.kind} options={kindOptions} className={widths.kind} onChange={(kind) => apply({ kind })} />
-    <FacetFilter label="Метод" value={filters.method} options={methodOptions} className={widths.method} onChange={(method) => apply({ method })} />
+    <FacetFilter label="Начин на плащане" value={filters.method} options={methodOptions} className={widths.method} onChange={(method) => apply({ method })} />
 
     {active ? <Button variant="ghost" onPress={() => apply({ ...defaults, projectId: "all", clientId: "all", kind: "all", method: "all" })}>
       Изчисти <X data-icon="inline-end" />

@@ -52,11 +52,11 @@ export default function FaqPage() {
         <div className="px-[6vw] pb-[12vh] pt-14 lg:pt-20">
           <div className="mx-auto grid max-w-[93.75rem] gap-12 lg:grid-cols-[0.75fr_1.25fr]">
             <div className="lg:sticky lg:top-32 lg:self-start">
-              <p className="mf-kicker">ЧЗВ</p>
+              <p className="mf-kicker">ВЪПРОСИ</p>
               <h1 className="mf-section-title mt-8">
-                Как
+                Въпроси
                 <br />
-                <i>работи.</i>
+                <i>и отговори.</i>
               </h1>
               <p className="mt-6 max-w-sm text-base leading-7 text-[#49626b]">
                 Отговори на въпросите, които фирмите задават най-често, преди да
@@ -96,8 +96,8 @@ export default function FaqPage() {
 
               <div className="flex flex-col gap-5 border border-[#102b38]/20 bg-[#c5e3e5]/50 p-6 sm:flex-row sm:items-center sm:justify-between">
                 <p className="max-w-md text-[0.9375rem] leading-7">
-                  Най-бързо се разбира, като го пробваш: създай фирма и изпрати
-                  първата оферта. По време на бетата е безплатно.
+                  Най-ясно е в действие: създай фирма и изпрати първата си
+                  оферта. По време на бетата е безплатно.
                 </p>
                 <Link
                   href="/app"

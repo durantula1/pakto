@@ -188,10 +188,10 @@ export function WorkspaceShowcase() {
   return (
     <div className="mt-16 overflow-hidden rounded-[2rem] bg-[#102b38] px-4 pb-6 pt-12 text-[#f4efe4] sm:px-10 sm:pb-10 lg:mt-24 lg:px-14 lg:pb-16 lg:pt-16">
       <div className="mx-auto max-w-5xl text-center">
-        <p className="mf-kicker text-[#ff765f]">ВСИЧКО В ЕДИН ПАНЕЛ</p>
+        <p className="mf-kicker text-[#ff765f]">РАБОТЕН ПРЕГЛЕД</p>
         <h3 className="mt-5 text-balance text-4xl font-black leading-[0.95] tracking-[-0.06em] sm:text-5xl lg:text-6xl">
-          Какво чака и какво е платено
-          <br className="max-sm:hidden" /> — на един екран.
+          Какво чака решение и какво е платено
+          <br className="max-sm:hidden" /> – на един екран.
         </h3>
         <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-[#b8ced2]">
           Кой чака решение, кой иска промяна, кои срокове наближават и колко е

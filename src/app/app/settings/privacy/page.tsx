@@ -35,7 +35,7 @@ export default async function PrivacySettingsPage() {
         description="Профил, членства, достъп до обекти, известия и действия в един JSON файл. Обектите и офертите са на фирмата и ги изтегля собственикът."
         align="end"
       >
-        <ExportDataLink label="Изтегли JSON" />
+        <ExportDataLink label="Изтегли данните (JSON)" />
       </SettingsRow>
     </SettingsGroup>
 

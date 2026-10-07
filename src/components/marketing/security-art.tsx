@@ -5,78 +5,10 @@ import type { CSSProperties } from "react";
 import { Art, at } from "@/components/brand/line-art";
 
 /**
- * Line illustrations for the security tiles, on the dark security section: a slab that floats, a
+ * Line illustrations for the security tiles, on the dark security section: a record, a code, a
  * link that is cut, rings that turn. The frame and the draw-on CSS are shared (brand/line-art).
  */
 const large = "mx-auto max-w-[26rem]";
-
-/** A slab in isometric view: top face, then the two visible sides. `y` is the top corner. */
-function Slab({ y, className }: { y: number; className?: string }) {
-  return (
-    <>
-      <path
-        d={`M100 ${y}L150 ${y + 25}L100 ${y + 50}L50 ${y + 25}Z`}
-        pathLength="1"
-        data-draw
-        className={className}
-      />
-      <path
-        d={`M50 ${y + 25}v10l50 25l50 -25v-10M100 ${y + 50}v10`}
-        pathLength="1"
-        data-draw
-        className={className}
-      />
-    </>
-  );
-}
-
-/** "Изпратеното не се пренаписва": v1 is a locked slab, the change floats above it as a new one. */
-export function VersionsArt() {
-  return (
-    <Art label="Заключена версия 1 и нова версия 2 над нея">
-      {/* Where a slab would land, so the stack reads as layers even before the second one is drawn. */}
-      <g stroke="#b8ecda" strokeOpacity="0.22" strokeDasharray="2 4">
-        <path d="M100 28L150 53L100 78L50 53Z" />
-      </g>
-      <g stroke="#b8ecda">
-        <g style={at(0)}>
-          <Slab y={80} />
-        </g>
-        <g strokeWidth="2">
-          {/* The padlock on version 1. */}
-          <rect
-            x="91"
-            y="106"
-            width="18"
-            height="13"
-            rx="2"
-            pathLength="1"
-            data-draw
-            style={at(700)}
-          />
-          <path
-            d="M95 106v-4a5 5 0 0 1 10 0v4"
-            pathLength="1"
-            data-draw
-            style={at(900)}
-          />
-        </g>
-      </g>
-      <g className="mf-art-bob" stroke="#ff8f7a">
-        <g style={at(500)}>
-          <Slab y={10} />
-        </g>
-        <path
-          d="M84 35h32M90 43h20"
-          pathLength="1"
-          data-draw
-          strokeOpacity="0.7"
-          style={at(1100)}
-        />
-      </g>
-    </Art>
-  );
-}
 
 /** "Линк, който можеш да спреш": two links of a chain; the old one is cut loose, the new one stays. */
 export function LinkArt() {
@@ -180,7 +112,7 @@ export function SealArt() {
 /** "Запис на всяко решение": a sheet with the change written out, a signature, a hash tag, and a scan line checking it. */
 export function RecordArt() {
   return (
-    <Art label="Документ с подпис и отпечатък, който се проверява" className={large}>
+    <Art label="Оферта с отпечатък, който се проверява" className={large}>
       <g stroke="#b8ecda">
         <path
           d="M64 12h52l26 26v94a4 4 0 0 1-4 4H64a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z"

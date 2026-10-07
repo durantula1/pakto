@@ -40,7 +40,7 @@ export function TeamDemo() {
     <DemoFrame
       frameRef={ref}
       crumb="ЕКИП / ГЕОРГИ Д."
-      title="Права на члена"
+      title="Права на служителя"
       status={
         <StatusChip tone="info">{step >= 1 ? "ПО ИЗБОР" : "КООРДИНАТОР"}</StatusChip>
       }

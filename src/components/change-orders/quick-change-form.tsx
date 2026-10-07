@@ -301,7 +301,7 @@ export function QuickChangeForm({
 
       <fieldset>
         <legend className="mb-3 text-sm font-medium">
-          Отражение върху срока
+          Промяна в срока
         </legend>
         <div className="flex flex-wrap gap-2">
           {scheduleOptions.map(([value, label]) => (

@@ -147,7 +147,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
           <p className="font-semibold">Клиентът вече има версия {withdrawsRevision}.</p>
           <p className="mt-0.5">{canSend
             ? `При запазване тя се оттегля. „Запази и изпрати“ му изпраща новата версия с имейл за разликите; „Запази като чернова“ му показва „Офертата се обновява“, докато не я изпратиш.`
-            : `При запазване тя се оттегля и клиентът вижда „Офертата се обновява“, докато колега с право да изпраща не изпрати новата.`}</p>
+            : `При запазване тя се оттегля и клиентът вижда „Офертата се обновява“, докато служител с право да изпраща не изпрати новата.`}</p>
         </div>
       ) : null}
 
@@ -214,9 +214,9 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field>
-                    <FieldLabel>Отражение върху срока</FieldLabel>
+                    <FieldLabel>Промяна в срока</FieldLabel>
                     <input type="hidden" name="scheduleImpactType" value={scheduleType} />
-                    <Select aria-label="Отражение върху срока" selectedKey={scheduleType} onSelectionChange={(key) => setScheduleType(String(key))}>
+                    <Select aria-label="Промяна в срока" selectedKey={scheduleType} onSelectionChange={(key) => setScheduleType(String(key))}>
                       <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectGroup><SelectItem id="none">Без промяна</SelectItem><SelectItem id="days">Нов краен срок</SelectItem></SelectGroup></SelectContent>
                     </Select>
@@ -268,7 +268,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               <Field>
                 <FieldLabel htmlFor={`${formId}-client-note`}>Бележка към клиента</FieldLabel>
                 <Textarea id={`${formId}-client-note`} name="clientNote" defaultValue={initial.clientNote ?? ""} maxLength={2000} className="min-h-20" />
-                <FieldDescription>Бележки само за екипа се пишат в таб „Бележки“.</FieldDescription>
+                <FieldDescription>Бележки само за екипа се пишат в раздел „Бележки“.</FieldDescription>
               </Field>
             </EditorSection>
           </form>
@@ -298,7 +298,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             {error ? <p role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{error}</p> : null}
             <div className="hidden flex-col gap-2 lg:flex">
               {submitButtons(false)}
-              <Link href={cancelHref} className="inline-flex h-9 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Откажи</Link>
+              <Link href={cancelHref} className="inline-flex h-9 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Отказ</Link>
             </div>
           </div>
         </aside>

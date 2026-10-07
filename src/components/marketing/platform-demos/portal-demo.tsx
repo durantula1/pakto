@@ -22,16 +22,16 @@ export function PortalDemo() {
           <span className="absolute left-1/2 top-2.5 h-1.5 w-16 -translate-x-1/2 rounded-full bg-[#102b38]/15" />
           <div className="flex items-center justify-between font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
             <span className="flex items-center gap-1">
-              <Lock className="size-3" /> ЗАЩИТЕН ПРЕГЛЕД
+              <Lock className="size-3" /> ЛИЧЕН ЛИНК
             </span>
-            <span>v2</span>
+            <span>версия 2</span>
           </div>
           <h4 className="mt-4 text-xl font-black leading-tight tracking-[-0.05em]">
             Преместване на два контакта
           </h4>
           <div className="mt-3 grid grid-cols-2 gap-2 demo-text-10">
             <div className="rounded-xl bg-[#bceba8] p-2.5">
-              <b className="block text-base tracking-[-0.05em]">+384 €</b>крайна
+              <b className="block text-base tracking-[-0.05em]">384 €</b>крайна
               цена
             </div>
             <div className="rounded-xl bg-[#c5e3e5] p-2.5">
@@ -56,7 +56,7 @@ export function PortalDemo() {
                   {step >= 1 ? (
                     name
                   ) : (
-                    <span className="text-[#102b38]/30">Изпиши името си</span>
+                    <span className="text-[#102b38]/30">Изпишете името си</span>
                   )}
                   {step === 1 && (
                     <span className="ml-0.5 inline-block h-4 w-px animate-pulse bg-[#102b38] align-middle" />
@@ -122,7 +122,7 @@ export function PortalDemo() {
                   {name} · 14:32 · потвърдено с код
                 </p>
                 <p className="mt-2 font-mono demo-text-8 tracking-[0.1em] text-[#46636e]">
-                  РАЗПИСКАТА Е НА ИМЕЙЛА ТИ
+                  РАЗПИСКАТА Е НА ИМЕЙЛА ВИ
                 </p>
               </m.div>
             )}

@@ -22,7 +22,7 @@ const columns: DataTableColumn[] = [
   { id: "date", header: "Дата", className: "w-28 tabular-nums" },
   { id: "project", header: "Обект", mobile: "primary" },
   { id: "kind", header: "Вид", skeleton: "badge" },
-  { id: "method", header: "Метод" },
+  { id: "method", header: "Начин на плащане" },
   { id: "amount", header: "Сума", className: "text-right" },
 ];
 
@@ -86,7 +86,7 @@ function FinanceEmpty({ filtered, from, to }: { filtered: boolean; from: string;
     ? <EmptyState title="Нищо не отговаря на филтрите" description={`Няма плащания между ${formatIsoDate(from)} и ${formatIsoDate(to)} с избраните филтри.`}>
       <EmptyResultActions><EmptyResultAction href="/app/finance"><X />Изчисти филтрите</EmptyResultAction></EmptyResultActions>
     </EmptyState>
-    : <EmptyState title="Все още няма плащания" description="Плащанията се записват от страницата на обекта: капаро, междинно или окончателно.">
+    : <EmptyState title="Все още няма плащания" description="Плащанията се записват от страницата на обекта: аванс, междинно или окончателно плащане.">
       <EmptyResultActions><EmptyResultAction href="/app/projects" primary><Building2 />Към обектите</EmptyResultAction></EmptyResultActions>
     </EmptyState>;
 }

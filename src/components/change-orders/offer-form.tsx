@@ -201,7 +201,7 @@ export function OfferForm({
     <div>
       {initial ? <p className="mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">Попълнено от <span className="font-semibold">{initial.source}</span>. Провери обекта, цените и срока, преди да продължиш.</p> : null}
       {restored ? <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-        <p>Върнахме незавършената оферта от този браузър.</p>
+        <p>Възстановихме незавършената ти оферта.</p>
         <Button type="button" variant="ghost" className="h-8 px-2" onPress={discardDraft}>Започни отначало</Button>
       </div> : null}
       <ol className="mb-4 flex items-center gap-2 text-sm">

@@ -42,7 +42,7 @@ function Unfolding({ row, trigger, variant = "outline", stack = false, triggerCl
 
 /**
  * "Платих": the client says they paid. Amount and date come filled in (the installment's remainder,
- * today), so the usual case is one tap on "Изпрати". The company confirms it before it counts.
+ * today), so the usual case is one tap on "Изпратете". The company confirms it before it counts.
  */
 export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, installmentId, amount, stack, triggerClassName }: {
   row: ReactNode;
@@ -68,7 +68,7 @@ export function ClaimPaymentRow({ row, trigger, portalPublicId, offerId, install
             <FilterSelect name="method" value="bank" options={methodOptions} className="col-span-2 sm:col-span-1" />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ActionSubmit>Изпрати на фирмата</ActionSubmit>
+            <ActionSubmit>Изпратете на фирмата</ActionSubmit>
             <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-sm" onPress={close}>Отказ</Button>
             <span className="text-xs text-muted-foreground">Ще се отчете като платено, щом фирмата го потвърди.</span>
           </div>
@@ -88,7 +88,7 @@ export function DisputeReceiptRow({ row, portalPublicId, receiptId }: { row: Rea
           <input type="hidden" name="receiptId" value={receiptId} />
           <Textarea aria-label="Какво не е вярно?" name="reason" required minLength={5} maxLength={1000} rows={2} autoFocus placeholder="Какво не е вярно? Напр. платих 4 500 €, не 5 000 €" />
           <div className="flex items-center gap-2">
-            <ActionSubmit>Изпрати на фирмата</ActionSubmit>
+            <ActionSubmit>Изпратете на фирмата</ActionSubmit>
             <Button type="button" variant="ghost" size="sm" className="h-10 px-3 text-sm" onPress={close}>Отказ</Button>
           </div>
         </ActionForm>

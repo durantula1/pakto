@@ -21,9 +21,9 @@ function KeepButton({ keep, merge }: { keep: Side; merge: Side }) {
   return (
     <ConfirmDialog
       trigger={<Button type="button" variant="outline" className="h-9 bg-card">Остави „{keep.name}“</Button>}
-      title={`Да слея ли „${merge.name}“ в „${keep.name}“?`}
+      title={`Да обединя ли „${merge.name}“ с „${keep.name}“?`}
       description={`Обектите и поканите на „${merge.name}“ минават към „${keep.name}“. Историята и решенията остават непроменени. Сливането не може да се върне.`}
-      confirmLabel="Слей"
+      confirmLabel="Обедини"
       tone="default"
       action={mergeClientsAction}
       fields={{ keepId: keep.id, mergeId: merge.id }}

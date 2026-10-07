@@ -34,7 +34,7 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
   await orForbidden(requireOwner(context));
   const member = await getTeamMember(context.organizationId, userId);
   if (!member) notFound();
-  const name = member.displayName ?? member.email ?? "Член на екипа";
+  const name = member.displayName ?? member.email ?? "Служител";
   const active = member.status === "active";
   const isSelf = member.userId === context.userId;
 

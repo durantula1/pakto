@@ -319,7 +319,7 @@ export function DesktopClip({ layout }: { layout: Layout }) {
           from={onClient(REQUEST_BUTTON)}
           to={firmTop}
           label="Искане за промяна"
-          amount="v1"
+          amount="в. 1"
           tone="coral"
         />
         <Flight

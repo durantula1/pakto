@@ -73,7 +73,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
         </SettingsGroup>
       </TabsContent>
       <TabsContent id="deadlines" className="flex flex-col gap-7 pt-4">
-        <SettingsGroup title="Срокове и етапи" description="Важи за таблото и списъка с етапи на целия екип.">
+        <SettingsGroup title="Срокове и етапи" description="Важи за работния преглед и списъка с етапи на целия екип.">
           <SettingsRow label="Кога един етап „наближава“" description="Етапи със срок в този период се показват като наближаващи. Просрочените се показват винаги.">
             <AutoSaveForm action={updateStageWarningAction} className="flex w-full flex-wrap items-center gap-2">
               <AutoSaveSelect label="Кога един етап „наближава“" name="days" value={String(organization.stageWarningDays)} options={stageWarningChoices.map((value) => ({ value: String(value), label: value === 1 ? "1 ден преди срока" : `${value} дни преди срока` }))} />
@@ -100,7 +100,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
       <TabsContent id="data" className="flex flex-col gap-7 pt-4">
         <SettingsGroup title="Данни">
           <SettingsRow label="Изтегли данните на фирмата" description="Обекти, контакти, оферти с версиите им, решения, етапи и плащания в един JSON файл." align="end">
-            <ExportDataLink href="/api/organization/export" label="Изтегли JSON" fileLabel="Данните на фирмата · JSON" />
+            <ExportDataLink href="/api/organization/export" label="Изтегли данните (JSON)" fileLabel="Данните на фирмата · JSON" />
           </SettingsRow>
         </SettingsGroup>
       </TabsContent>

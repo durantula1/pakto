@@ -44,14 +44,13 @@ export default function AuthLayout({
       <aside className="surface-grid relative hidden overflow-hidden bg-sidebar py-12 pr-12 pl-28 text-sidebar-foreground [clip-path:url(#auth-wave)] lg:flex lg:flex-col lg:justify-end xl:pl-36">
         <AuthStage />
         <div className="absolute top-12 left-28 z-10 text-sm font-medium text-[#ff765f] xl:left-36">
-          Pakto / beta
+          Pakto · бета
         </div>
-        <blockquote className="relative z-10 max-w-2xl text-balance text-4xl font-medium leading-tight tracking-tight">
-          „Вече не спорим какво беше уговорено. Всички виждаме една и съща
-          промяна.“
-        </blockquote>
+        <p className="relative z-10 max-w-2xl text-balance text-4xl font-medium leading-tight tracking-tight">
+          Договореното с клиента – записано и потвърдено.
+        </p>
         <p className="relative mt-6 text-sidebar-foreground/60">
-          Ясно решение за екипа и клиента.
+          Оферти и промени, одобрени преди работата.
         </p>
       </aside>
     </main>

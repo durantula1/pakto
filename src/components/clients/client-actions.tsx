@@ -39,7 +39,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
     ? [
         { id: "archive", label: archive.label, icon: archive.icon },
         { id: "export", label: "Изтегли данните", icon: Download },
-        ...(!hasActiveProject ? [{ id: "anonymize" as const, label: "Анонимизирай", icon: UserX, destructive: true }] : []),
+        ...(!hasActiveProject ? [{ id: "anonymize" as const, label: "Изтрий личните данни", icon: UserX, destructive: true }] : []),
       ]
     : [];
   if (!canEdit && !menu.length) return null;
@@ -129,7 +129,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
           <ActionForm action={anonymizeClientAction} success="Клиентът е анонимизиран" onSuccess={close} className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <input type="hidden" name="clientId" value={client.id} />
             <DialogClose>Отказ</DialogClose>
-            <ActionSubmit variant="destructive">Анонимизирай</ActionSubmit>
+            <ActionSubmit variant="destructive">Изтрий личните данни</ActionSubmit>
           </ActionForm>
         </Dialog>
       ) : null}

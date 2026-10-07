@@ -229,7 +229,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
                 <span className="truncate">Не е запазено · {pending.file.name}</span>
               </p>
               <div className="flex gap-1.5">
-                <Button variant="ghost" onPress={() => setPending(null)} isDisabled={busy} className="h-9 px-3">Откажи</Button>
+                <Button variant="ghost" onPress={() => setPending(null)} isDisabled={busy} className="h-9 px-3">Отказ</Button>
                 <Button onPress={save} isDisabled={busy} className="h-9 px-4">
                   {busy ? <LoaderCircle className="animate-spin" /> : null} Запази логото
                 </Button>
@@ -258,7 +258,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
             </>
           ) : (
             <>
-              <p className="text-xs text-muted-foreground">Или пусни файла върху листа.</p>
+              <p className="text-xs text-muted-foreground">Или плъзни файла тук.</p>
               <Button variant="outline" onPress={pick} isDisabled={preparing} className="h-9 px-3">Избери файл</Button>
             </>
           )}

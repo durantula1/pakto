@@ -30,13 +30,13 @@ export function NewProjectForm({ defaultClient = null }: { defaultClient?: Clien
         <Input id="project-address" name="siteAddress" required className="h-11" placeholder="гр. София, ул. …" />
       </Field>
       <Field>
-        <FieldLabel htmlFor="project-reference">Референция</FieldLabel>
+        <FieldLabel htmlFor="project-reference">Вътрешен номер</FieldLabel>
         <Input id="project-reference" name="reference" className="h-11" placeholder="OBJ-2026-04" />
         <FieldDescription>По желание. Твой вътрешен номер или код.</FieldDescription>
       </Field>
 
       <div className="border-t pt-5">
-        <p className="font-medium">Клиент, който одобрява</p>
+        <p className="font-medium">Одобряващ</p>
         <p className="text-sm text-muted-foreground">Получава защитен линк към офертите, без да създава профил.</p>
       </div>
       <div role="radiogroup" aria-label="Клиент" className={segmentGroupClassName}>
@@ -79,7 +79,7 @@ function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOptio
     <>
       <SheetHeader className="px-6 pt-6">
         <SheetTitle className="text-lg font-semibold">Нов обект</SheetTitle>
-        <SheetDescription>Добави мястото и човека, който одобрява.</SheetDescription>
+        <SheetDescription>Добави обекта и одобряващия.</SheetDescription>
       </SheetHeader>
       <div className="px-6 pb-8">
         <NewProjectForm defaultClient={defaultClient} />

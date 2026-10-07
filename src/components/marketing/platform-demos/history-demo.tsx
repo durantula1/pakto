@@ -6,7 +6,7 @@ import { FileLock2, Fingerprint } from "lucide-react";
 import { DemoFrame, StatusChip, useDemoLoop } from "./demo-frame";
 
 const events = [
-  { time: "18.09 · 09:40", who: "Мария", text: "v1 е изпратена на клиента" },
+  { time: "18.09 · 09:40", who: "Мария", text: "Версия 1 е изпратена на клиента" },
   {
     time: "21.09 · 11:05",
     who: "Иван Петров",
@@ -15,12 +15,12 @@ const events = [
   {
     time: "24.09 · 10:02",
     who: "Мария",
-    text: "v2 е изпратена · v1 остава в историята",
+    text: "Версия 2 е изпратена · версия 1 остава в историята",
   },
   {
     time: "24.09 · 14:32",
     who: "Иван Петров",
-    text: "Одобри v2 · потвърдено с код",
+    text: "Одобри версия 2 · потвърдено с код",
   },
 ] as const;
 

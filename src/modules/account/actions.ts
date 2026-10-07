@@ -117,7 +117,7 @@ export async function leaveOrganizationAction(): Promise<ActionResult> {
     const [me] = await tx.select({ displayName: profiles.displayName }).from(profiles).where(eq(profiles.id, context.userId)).limit(1);
     await tx.insert(staffNotifications).values(remainingOwners.map((owner) => ({
       organizationId: context.organizationId, userId: owner.userId, eventType: "member_left",
-      title: `${me?.displayName ?? "Член на екипа"} напусна фирмата`, href: "/app/team",
+      title: `${me?.displayName ?? "Служител"} напусна фирмата`, href: "/app/team",
     })));
   });
   revalidatePath("/app", "layout");

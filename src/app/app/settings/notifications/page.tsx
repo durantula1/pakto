@@ -23,7 +23,7 @@ export default async function NotificationSettingsPage() {
   return (
     <AutoSaveForm action={updateNotificationPreferencesAction} className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
-        <p>В приложението получаваш всичко. Тук избираш кое да идва и на имейла, за да не пропуснеш нещо, докато си на обекта.</p>
+        <p>В приложението получаваш всичко. Тук избираш кои известия да получаваш и по имейл, за да не пропуснеш нещо, докато си на обекта.</p>
         <AutoSaveStatus />
       </div>
       {groups.map((group) => (

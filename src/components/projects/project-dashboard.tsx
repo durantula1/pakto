@@ -98,7 +98,7 @@ export function ProjectDashboard({ state, today, showPayments, openDisputes, pen
           return (
             <div key={item.id} className={rowClassName}>
               <span className="min-w-0">
-                <span className="block truncate">{item.correctionOfId ? (amount < 0n ? "Сторно" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>
+                <span className="block truncate">{item.correctionOfId ? (amount < 0n ? "Отменено плащане" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>
                 <span className="block text-xs text-muted-foreground tabular-nums">{formatDay(item.receivedOn)} · {methodLabels[item.method] ?? item.method}{item.disputed ? " · оспорено" : ""}</span>
               </span>
               <span className={cn("shrink-0 font-medium tabular-nums", amount < 0n ? "text-destructive" : "text-foreground")}>

@@ -111,7 +111,7 @@ export function AttachmentsPanel({ changeOrderId, initial, editable, description
             className={cn("flex flex-col items-center gap-3 rounded-xl border border-dashed px-4 py-6 text-center transition", dragging && "border-primary bg-primary/5")}
           >
             <ImagePlus className="size-6 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Пусни снимки или PDF тук, или</p>
+            <p className="text-sm text-muted-foreground">Плъзни снимки или PDF тук, или</p>
             <Button type="button" variant="outline" className="h-10" onPress={() => input.current?.click()}>Добави снимка или файл</Button>
             <p className="text-xs text-muted-foreground">JPG, PNG, WebP или PDF, до 15 MB. Снимките се смаляват автоматично.</p>
             <input

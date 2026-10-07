@@ -47,7 +47,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
     <section id="acceptance" className="rounded-xl border bg-card px-4 py-3 text-sm">
       <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-tile-sand-foreground" /> Забележките ви са изпратени на {organizationName}</p>
       <Quote tone="warning" className="mt-1 text-muted-foreground">{acceptance.note}</Quote>
-      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Ако искате да ги обсъдите, задайте въпрос в „Въпроси по тази оферта“ (таб „Офертата“). След това тя ще поиска приемане отново.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Ако искате да ги обсъдите, задайте въпрос в „Въпроси по тази оферта“ (раздел „Офертата“). След това тя ще поиска приемане отново.</p>
     </section>
   );
 
@@ -64,14 +64,14 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
         {acceptance.note ? <p className="mt-1 text-sm whitespace-pre-line text-muted-foreground">„{acceptance.note}“</p> : null}
 
         {!canAnswer ? (
-          <p className="mt-3 text-sm text-muted-foreground">Работата приема човекът, когото фирмата е посочила да одобрява, след като потвърди имейла си.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Работата може да приеме само одобряващият, посочен от фирмата, след като потвърди имейла си.</p>
         ) : issues ? (
           <ActionForm key="issues" action={answerAcceptanceAction} success="Изпратено на фирмата" className="mt-3 grid gap-2">
             {hidden("issues")}
             <label htmlFor="acceptance-note" className="sr-only">Вашите забележки</label>
             <Textarea id="acceptance-note" name="note" required minLength={5} maxLength={2000} rows={3} autoFocus placeholder="Напр. фугата в ъгъла е напукана" />
             <div className="flex flex-wrap items-center gap-3">
-              <ActionSubmit>Изпрати забележките</ActionSubmit>
+              <ActionSubmit>Изпратете забележките</ActionSubmit>
               <Button type="button" variant="ghost" size="sm" onPress={() => setIssues(false)}>Назад</Button>
             </div>
           </ActionForm>

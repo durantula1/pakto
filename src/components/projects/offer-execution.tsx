@@ -183,7 +183,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
     <SectionHeader title="Платежен план" description="Вноските идват от условията за плащане в офертата. Можеш да добавяш и свои." action={canRecord ? <InstallmentDialog projectId={projectId} offerOptions={offerOptions} stages={stageChoices} /> : null} />
     {view.installments.length ? <DataTable
       label="Платежен план"
-      columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Падеж" }, { id: "left", header: "Остава" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
+      columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Срок за плащане" }, { id: "left", header: "Остава" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
       rows={view.installments.map((item) => ({
         id: item.id,
         cells: [
@@ -227,7 +227,7 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
   return <DataTable
     label="Получени суми"
     columns={[
-      { id: "date", header: "Дата" }, { id: "kind", header: "Вид" }, { id: "method", header: "Метод" }, { id: "amount", header: "Сума", className: "text-right" },
+      { id: "date", header: "Дата" }, { id: "kind", header: "Вид" }, { id: "method", header: "Начин на плащане" }, { id: "amount", header: "Сума", className: "text-right" },
       ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : []),
     ]}
     rows={receipts.map((item) => ({
@@ -235,7 +235,7 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
       className: item.disputed ? "bg-tile-coral/25" : undefined,
       cells: [
         formatDay(item.receivedOn),
-        <span key="kind" className="inline-flex flex-col"><span>{item.correctionOfId ? (Number(item.amount) < 0 ? "Сторно" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>{showOffer ? <span className="text-xs text-muted-foreground">{codeOf(item.offerId) ?? "Неразпределено"}</span> : null}</span>,
+        <span key="kind" className="inline-flex flex-col"><span>{item.correctionOfId ? (Number(item.amount) < 0 ? "Отменено плащане" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>{showOffer ? <span className="text-xs text-muted-foreground">{codeOf(item.offerId) ?? "Без оферта"}</span> : null}</span>,
         <span key="method" className="inline-flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:justify-start">{item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}{methodLabels[item.method] ?? item.method}{item.note ? <span className="text-muted-foreground">· {item.note}</span> : null}</span>,
         <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
         ...(canRecord ? [<ReceiptActions key="actions" projectId={projectId} receipt={item} receipts={state.receipts} dispute={disputes.find((dispute) => dispute.receiptId === item.id)} assignOptions={assignOptions} />] : []),

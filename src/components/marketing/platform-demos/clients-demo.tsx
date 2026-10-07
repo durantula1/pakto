@@ -16,7 +16,7 @@ const objects = [
   },
   {
     name: "Баня · Витоша",
-    docs: "ОФ-019 · v1",
+    docs: "ОФ-019 · в. 1",
     status: "ЧАКА КЛИЕНТА",
     tone: "wait",
     amount: "2 160 €",

@@ -53,7 +53,7 @@ const decisionLabels = { approved: "Одобрявате", declined: "Отказ
 async function decisionContext(data: z.infer<typeof decisionSchema>) {
   if (data.decision === "changes_requested" && !data.comment) throw new Error("Опишете накратко какво да се промени.");
   const session = await getPortalSession(data.projectPublicId);
-  if (!session || session.contactRole !== "approver") throw new Error("Решението взима човекът, когото фирмата е посочила да одобрява.");
+  if (!session || session.contactRole !== "approver") throw new Error("Решението може да вземе само одобряващият, посочен от фирмата.");
   if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържете се с фирмата.");
   // The decision code goes to the contact's email, so the first decision also confirms it.
   if (!session.contactEmail) throw new Error("Първо потвърдете имейла си.");
@@ -338,7 +338,7 @@ async function sendDecisionReceipt(decisionId: number) {
     ["Сума", `${formatAmount(row.total)} ${row.currency}`],
     ["Решение", decisionReceiptLabels[row.decision]],
     ["Име", row.typedName],
-    ...(row.signatureSha256 ? [["Нарисувано на екрана", "Вижте го в приложения PDF"]] : []),
+    ...(row.signatureSha256 ? [["Ръкописно потвърждение", "Вижте го в приложения PDF"]] : []),
     ["Време", when],
     ["IP адрес", row.ip ?? "—"],
     ["Отпечатък", row.contentHash],
@@ -404,7 +404,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
   const session = await getPortalSession(data.projectPublicId);
   if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
   if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
-  if (session.contactRole !== "approver") return { error: "Плащане съобщава човекът, когото фирмата е посочила да одобрява." };
+  if (session.contactRole !== "approver") return { error: "Плащане може да съобщи само одобряващият, посочен от фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
@@ -472,7 +472,7 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
   if (data.answer === "accepted" && (!data.typedName || data.typedName.length < 2)) return { error: "Въведете името си." };
   if (data.answer === "issues" && (!data.note || data.note.length < 5)) return { error: "Опишете забележките си." };
   const session = await getPortalSession(data.projectPublicId);
-  if (!session || session.contactRole !== "approver") return { error: "Работата приема човекът, когото фирмата е посочила да одобрява." };
+  if (!session || session.contactRole !== "approver") return { error: "Работата може да приеме само одобряващият, посочен от фирмата." };
   if (!session.contactEmailVerifiedAt) return { error: "Първо потвърдете имейла си." };
   if (session.projectStatus !== "active") return { error: "Обектът е приключен. Свържете се с фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };

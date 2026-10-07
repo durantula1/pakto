@@ -21,7 +21,7 @@ export function OfferChangesTable({ label, offerId, path, initial }: { label: st
   function select(page: number) {
     startTransition(async () => {
       const next = await loadOfferChangesPage(offerId, page).catch(() => null);
-      if (!next) return setError("Промените не се заредиха. Опитайте отново.");
+      if (!next) return setError("Промените не се заредиха. Опитай отново.");
       setError(null);
       setData(next);
       // Keep the address shareable and the back link honest without a navigation.

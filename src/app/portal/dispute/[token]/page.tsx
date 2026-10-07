@@ -48,7 +48,7 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
           ) : (
             <>
               <p className="text-sm leading-6 text-muted-foreground">
-                Ако не сте взели това решение вие, оспорете го. Записът остава постоянно в историята на документа и фирмата получава известие.
+                Ако не сте взели това решение вие, оспорете го. Записът остава постоянно в историята на офертата и фирмата получава известие.
               </p>
               <PortalDisputeForm token={token} />
             </>

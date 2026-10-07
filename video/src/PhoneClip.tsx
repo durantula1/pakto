@@ -253,7 +253,7 @@ export function PhoneClip({ layout }: { layout: Layout }) {
           from={{ x: clientAt.x, y: clientAt.y + 80 }}
           to={{ x: firmAt.x, y: firmAt.y - 220 }}
           label="Искане за промяна"
-          amount="v1"
+          amount="в. 1"
           tone="coral"
         />
         <Flight

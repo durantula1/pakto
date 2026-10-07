@@ -221,7 +221,7 @@ const installmentFields = z.object({
   offerId: optionalUuid,
   milestoneId: optionalUuid,
   title: z.string().trim().min(2, "Въведи име на вноската.").max(180),
-  dueOn: z.iso.date("Избери падеж."),
+  dueOn: z.iso.date("Избери срок за плащане."),
   kind: paymentKind,
   amount: money,
 });
@@ -319,7 +319,7 @@ function emailReceipt(projectId: string, input: { amount: string; currency: stri
     intro: input.corrected
       ? "Фирмата коригира записано плащане. Вярната сума вече е в портала."
       : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
-    facts: [["Сума", `${formatAmount(input.amount)} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин", methodLabels[input.method] ?? input.method]],
+    facts: [["Сума", `${formatAmount(input.amount)} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин на плащане", methodLabels[input.method] ?? input.method]],
     cta: "Вижте плащанията",
     outro: "Ако нещо не е вярно, натиснете „Не е вярно?“ до плащането в портала.",
   });
@@ -368,7 +368,7 @@ export async function correctReceiptAction(formData: FormData): Promise<ActionRe
       if (prior) throw new Error("Това плащане вече е коригирано.");
       const common = { organizationId: context.organizationId, projectId: data.projectId, offerId: receipt.offerId, correctionOfId: data.receiptId, installmentId: receipt.installmentId, kind: receipt.kind, currency: receipt.currency, method: receipt.method, receivedOn: receipt.receivedOn, createdBy: context.userId };
       await tx.insert(projectReceipts).values([
-        { ...common, amount: (-Number(receipt.amount)).toFixed(2), note: `Сторно: ${data.reason}` },
+        { ...common, amount: (-Number(receipt.amount)).toFixed(2), note: `Отменено плащане: ${data.reason}` },
         ...(Number(data.amount) > 0 ? [{ ...common, amount: data.amount, note: `Корекция: ${data.reason}` }] : []),
       ]);
       await tx.update(paymentDisputes).set({ status: "resolved", resolution: `Плащането е коригирано: ${data.reason}`, resolvedAt: new Date(), resolvedBy: context.userId })
@@ -515,7 +515,7 @@ export async function requestAcceptanceAction(formData: FormData): Promise<Actio
     });
     emailClient(projectId, {
       subject: `Работата по „${title}“ очаква Вашия преглед`,
-      intro: `Фирмата отбеляза работата по „${title}“ като завършена и Ви моли да я прегледате. В портала можете да я приемете или да опишете забележките си. Всяка забележка остава записана, за да я обсъдите, докато и двете страни са удовлетворени.`,
+      intro: `Фирмата отбеляза работата по „${title}“ като завършена и Ви моли да я прегледате. В портала можете да я приемете или да опишете забележките си – те се записват и фирмата ще ги отстрани преди окончателното приемане.`,
       facts: note ? [["Бележка от фирмата", note]] : undefined,
       cta: "Прегледайте и приемете",
     });

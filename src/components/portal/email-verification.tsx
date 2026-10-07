@@ -31,7 +31,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
   const pending = finished ? null : confirmState.otpId ? confirmState : changeState.otpId ? changeState : claimState.otpId ? claimState : null;
 
   if (finished || (verified && !changing && !pending)) {
-    const changeButton = finished ? null : <button type="button" onClick={() => setChanging(true)} className={compact ? "text-sidebar-foreground/60 underline hover:text-sidebar-foreground" : "text-muted-foreground underline"}>Смени имейла</button>;
+    const changeButton = finished ? null : <button type="button" onClick={() => setChanging(true)} className={compact ? "text-sidebar-foreground/60 underline hover:text-sidebar-foreground" : "text-muted-foreground underline"}>Сменете имейла</button>;
     if (compact) {
       return (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
@@ -75,7 +75,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />
         {changeState.error ? <p role="alert" className="text-sm text-destructive">{changeState.error}</p> : null}
         <div className="flex gap-2">
-          <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакайте…" : "Изпрати код"}</Button>
+          <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакайте…" : "Изпратете код"}</Button>
           <Button type="button" variant="outline" className="h-11" onPress={() => setChanging(false)}>Отказ</Button>
         </div>
       </form>
@@ -93,7 +93,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
       </p>
       {hasEmail ? null : <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />}
       {claimState.error ? <p role="alert" className="text-sm text-destructive">{claimState.error}</p> : null}
-      <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакайте…" : "Изпрати ми код"}</Button>
+      <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакайте…" : "Изпратете ми код"}</Button>
     </form>
   );
 }

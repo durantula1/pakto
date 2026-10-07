@@ -68,7 +68,7 @@ export function StagedAttachments({ files, onChange, className }: {
       >
         <ImagePlus className="size-5 text-muted-foreground" />
         <Button type="button" variant="outline" className="h-10" onPress={() => input.current?.click()}>Добави снимка или файл</Button>
-        <p className="text-xs text-muted-foreground">или ги пусни тук · JPG, PNG, WebP, PDF до 15 MB</p>
+        <p className="text-xs text-muted-foreground">или ги плъзни тук · JPG, PNG, WebP, PDF до 15 MB</p>
         <input
           ref={input}
           type="file"

@@ -25,7 +25,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         Вход
       </h1>
       <p className="mb-8 mt-2 text-muted-foreground">
-        Продължи към работното си пространство.
+        Влез, за да продължиш работата си.
       </p>
       {account === "gone" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Този профил вече не съществува. Регистрирай се отново, ако искаш да го ползваш пак.</p> : null}
       {account === "password-updated" ? <p role="status" className="mb-6 rounded-xl bg-tile-mint px-3 py-2.5 text-sm text-tile-mint-foreground">Паролата е сменена. Влез с новата парола.</p> : null}

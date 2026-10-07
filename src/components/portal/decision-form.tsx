@@ -20,7 +20,7 @@ type Decision = "approved" | "changes_requested" | "declined";
 
 const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: string }[] = [
   { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Тази версия се затваря и фирмата изпраща нова" },
-  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Офертата се затваря без работа по нея" },
+  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Офертата се отхвърля и работа по нея няма да започне" },
 ];
 
 const RESEND_SECONDS = 30;
@@ -92,7 +92,7 @@ export function PortalDecisionForm({
     startTransition(() => requestCode(formData));
   }
 
-  const finalLabel = approving ? `Одобрявам · ${amount}` : decision === "changes_requested" ? "Изпрати искането" : "Потвърди отказа";
+  const finalLabel = approving ? `Одобрявам · ${amount}` : decision === "changes_requested" ? "Изпратете искането" : "Потвърдете отказа";
 
   return (
     <form
@@ -140,9 +140,9 @@ export function PortalDecisionForm({
             {submitting ? "Записваме…" : finalLabel}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            {wait > 0 ? `Не дойде ли? Нов код след ${wait} сек.` : (
+            {wait > 0 ? `Не сте получили кода? Нов може да поискате след ${wait} сек.` : (
               <button type="button" onClick={resend} disabled={requesting} className="inline-flex min-h-11 items-center font-medium text-foreground underline underline-offset-4">
-                {requesting ? "Изпращаме…" : "Изпрати нов код"}
+                {requesting ? "Изпращаме…" : "Изпратете нов код"}
               </button>
             )}
           </p>
@@ -162,7 +162,7 @@ export function PortalDecisionForm({
               <div className="flex flex-col gap-0.5">
                 <h3 className="text-lg font-semibold">Как искате да продължим?</h3>
                 <button type="button" onClick={() => choose("approved")} className="inline-flex min-h-11 items-center self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                  Всъщност одобрявам
+                  Одобрявам офертата
                 </button>
               </div>
               <RadioGroup aria-label="Решение" value={decision} onChange={(value) => choose(value as Decision)} className="flex flex-col gap-2">
@@ -192,7 +192,7 @@ export function PortalDecisionForm({
                 ))}
               </RadioGroup>
               <p className="rounded-xl bg-tile-blue/60 px-3.5 py-2.5 text-sm leading-6 text-tile-blue-foreground">
-                Само имате въпрос? Затворете това и го задайте в „Въпроси по тази оферта“. Офертата продължава да чака решението ви.
+                Имате само въпрос? Задайте го в „Въпроси по тази оферта“ – офертата ще продължи да чака решението ви.
               </p>
               <label className="flex flex-col gap-2">
                 <span className="text-sm font-medium">
@@ -226,7 +226,7 @@ export function PortalDecisionForm({
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <div className="flex flex-col gap-2">
             <Button type="submit" className="h-12 w-full rounded-xl text-base" isDisabled={busy}>
-              {requesting ? "Изпращаме кода…" : "Изпрати ми код"}
+              {requesting ? "Изпращаме кода…" : "Изпратете ми код"}
             </Button>
             <p className="text-center text-xs leading-5 text-muted-foreground">Ще получите 6-цифрен код на {maskedEmail ?? "имейла си"}. С него потвърждавате, че решението е ваше.</p>
           </div>

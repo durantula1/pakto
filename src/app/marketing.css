@@ -128,8 +128,9 @@
 }
 
 /* Sized so "„ДОГОВОРИХМЕ", the longest line, fills the text column without reaching the card. */
+/* Three lines ("Всяка промяна / с цена, срок и / „да“ от клиента.") must fit the text column. */
 .mf-hero-title {
-  font-size: clamp(3.5rem, 6.6vw, 7rem);
+  font-size: clamp(2.5rem, 5.4vw, 5.75rem);
 }
 
 /*
@@ -155,6 +156,11 @@
   font-weight: 600;
   letter-spacing: -0.1em;
   text-transform: none;
+}
+
+/* The tight tracking also closes the gaps between words: „да“ от клиента. needs them back. */
+.mf-hero-title i {
+  word-spacing: 0.18em;
 }
 
 .mf-swoosh {
@@ -267,12 +273,6 @@
   font-size: clamp(2.6rem, 4.8vw, 5rem);
 }
 
-/* The strike is a background line (drawn by problem-section.tsx), so it can grow across wrapped lines. */
-.mf-strike {
-  text-decoration: none;
-  background: linear-gradient(#102b38, #102b38) no-repeat 0 58% / 100% 0.1em;
-}
-
 .mf-tour-nav {
   background: rgb(244 239 228 / 92%);
   backdrop-filter: blur(14px);
@@ -319,7 +319,7 @@
   }
 
   .mf-hero-title {
-    font-size: clamp(2.5rem, 11.4vw, 6rem);
+    font-size: clamp(2.25rem, 9.6vw, 6rem);
   }
 
   .mf-hero-title,

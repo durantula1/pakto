@@ -27,8 +27,8 @@ export function PaymentAmountField({ remaining }: {
       <p id="receipt-amount-hint" role={over > 0 ? "alert" : undefined} className={over > 0 ? "text-xs font-medium text-tile-coral-foreground" : "text-xs text-muted-foreground"}>
         {over > 0
           ? remaining.cents <= 0
-            ? "Обектът вече е изплатен. Цялата сума ще се води надплатена."
-            : `С ${money(over, remaining.currency)} над остатъка. Разликата ще се води надплатена.`
+            ? "Обектът вече е изплатен. Цялата сума ще се отчете като надплатена."
+            : `С ${money(over, remaining.currency)} над остатъка. Разликата ще се отчете като надплатена.`
           : remaining.cents > 0 ? `Остават ${money(remaining.cents, remaining.currency)}` : "Обектът е изплатен изцяло."}
       </p>
     ) : null}

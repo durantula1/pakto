@@ -64,7 +64,7 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
           </>
         }
         // Phones and tablets cancel with the back button and the link beside the save buttons.
-        action={<Link href={path} className="inline-flex h-9 items-center rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted">Откажи</Link>}
+        action={<Link href={path} className="inline-flex h-9 items-center rounded-lg border bg-card px-3 text-sm font-medium hover:bg-muted">Отказ</Link>}
         actionClassName="hidden xl:block"
       />
       <RevisionForm

@@ -31,8 +31,8 @@ type Props = {
 /** The opening slide: the mark with the versions of one offer orbiting it. */
 function HelloVisual() {
   const chips = [
-    { label: "ПР-042 · v1", value: "450 €", tone: "bg-[#102b38]/8 text-[#52707d] line-through", place: "left-0 top-6 -rotate-6" },
-    { label: "ПР-042 · v2", value: "384 €", tone: "bg-[#c5e3e5] text-[#17485a]", place: "right-0 top-16 rotate-3" },
+    { label: "ПР-042 · в. 1", value: "450 €", tone: "bg-[#102b38]/8 text-[#52707d] line-through", place: "left-0 top-6 -rotate-6" },
+    { label: "ПР-042 · в. 2", value: "384 €", tone: "bg-[#c5e3e5] text-[#17485a]", place: "right-0 top-16 rotate-3" },
     { label: "ОДОБРЕНА", value: "с код от имейла", tone: "bg-[#bceba8] text-[#102b38]", place: "bottom-4 left-6 rotate-2" },
   ];
   return (
@@ -127,7 +127,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
     {
       id: "hello",
       kicker: "ДОБРЕ ДОШЪЛ",
-      title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-[#ff765f]">Край на „не сме се разбрали така“.</span></>,
+      title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-[#ff765f]">Договореното – записано и потвърдено.</span></>,
       text: `Pakto пази какво сте договорили с клиента: офертата, всяка промяна, сроковете и плащанията. ${owner ? "" : `Вече си в екипа на „${organizationName}“. `}Ето най-важното за минута.`,
       points: ["Всичко по обекта на едно място", "Клиентът решава от телефона", "Всяко „да“ остава записано"],
       visual: <HelloVisual />,
@@ -135,7 +135,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
     {
       id: "offer",
       kicker: "ОФЕРТИ",
-      title: "Офертата е готова, докато си още на обекта.",
+      title: "Изготви оферта направо от телефона.",
       text: "Редове от каталога, количества и цени. Сумите и ДДС се смятат сами, а условията за плащане стават вноски, щом клиентът одобри.",
       points: ["Каталог с услуги и материали", "Срок, график и условия за плащане", "PDF с логото на фирмата"],
       visual: <OfferDemo />,
@@ -151,7 +151,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
     {
       id: "changes",
       kicker: "ПРОМЕНИ",
-      title: "Промяна без спорове.",
+      title: "Промени без спорове.",
       text: "Изпратеното не се пренаписва. Всяка промяна е нова версия и клиентът вижда точно какво се е променило и с колко.",
       points: ["Допълнителна работа, намаление или само срок", "Сума преди и след за клиента", "Старите версии остават в историята"],
       visual: <QuickChangeDemo />,

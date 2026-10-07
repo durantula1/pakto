@@ -13,7 +13,7 @@ export default function InvalidPortalPage() {
           <div>
             <h1 className="text-2xl font-semibold">Линкът не е активен</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Възможно е да е изтекъл или отнет. Не е показана информация за обекта.
+              Възможно е да е изтекъл или отнет. От съображения за сигурност данните за обекта не се показват.
             </p>
           </div>
           <RequestLinksForm />
