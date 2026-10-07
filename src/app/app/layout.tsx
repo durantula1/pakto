@@ -106,7 +106,7 @@ export default async function WorkspaceLayout({
     { href: "/contact?from=/app", label: "Съобщи за проблем", icon: "support" },
   ];
   const paletteActions: PaletteLink[] = [
-    ...(can(context, "projects.create") ? [{ href: "/app/projects/new", label: "Нов обект", icon: "projects" as const, command: "new-project" as const }] : []),
+    ...(can(context, "projects.create") ? [{ href: "/app/projects?new=1", label: "Нов обект", icon: "projects" as const, command: "new-project" as const }] : []),
     ...(can(context, "offers.edit") ? [{ href: "/app/offers/new", label: "Нова оферта", icon: "offers" as const }] : []),
     ...(can(context, "changes.draft") ? [{ href: "/app/offers/changes/new", label: "Нова промяна", icon: "offers" as const }] : []),
   ];

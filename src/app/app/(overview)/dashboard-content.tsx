@@ -103,7 +103,7 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
       />
     </section> : <EmptyState title="Още няма оферти" description={can(context, "offers.edit") || can(context, "projects.create") ? "Започни с обект и клиент, после направи оферта към него." : "Когато ти възложат обект, ще го видиш тук."}>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {can(context, "projects.create") ? <Link href="/app/projects/new" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Нов обект</Link> : null}
+        {can(context, "projects.create") ? <Link href="/app/projects?new=1" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Нов обект</Link> : null}
         {can(context, "offers.edit") ? <Link href="/app/offers/new" className="inline-flex h-9 items-center rounded-lg border px-4 text-sm font-medium">Нова оферта</Link> : null}
       </div>
     </EmptyState>}

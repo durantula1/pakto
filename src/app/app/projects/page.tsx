@@ -21,7 +21,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/app/pro
   const searchState = { q: query, status, ...(clientId ? { client: clientId } : {}) };
   return (
     <PageShell>
-      <PageHeader page="projects" actions={can(context, "projects.create") ? <NewProjectSheet /> : null} />
+      <PageHeader page="projects" actions={can(context, "projects.create") ? <NewProjectSheet defaultOpen={params.new === "1"} /> : null} />
       <ListFilters query={query} status={status} statusOptions={[{ value: "all", label: "Всички" }, { value: "active", label: "Активни" }, { value: "completed", label: "Приключени" }, { value: "archived", label: "Архив" }]} placeholder="Обект, адрес или клиент" />
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<ProjectsTableSkeleton />}>
         <ProjectsTable

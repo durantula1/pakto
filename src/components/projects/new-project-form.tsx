@@ -88,11 +88,22 @@ function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOptio
   );
 }
 
-/** "Нов обект" opens a panel over the list instead of a separate page. */
-export function NewProjectSheet({ defaultClient = null, label = "Нов обект" }: { defaultClient?: ClientOption | null; label?: string }) {
-  const [open, setOpen] = useState(false);
+/**
+ * "Нов обект" opens a panel over the list instead of a separate page. `defaultOpen` comes from
+ * `/app/projects?new=1`, where every other "create a project" link points; closing drops the parameter.
+ */
+export function NewProjectSheet({ defaultClient = null, label = "Нов обект", defaultOpen = false }: { defaultClient?: ClientOption | null; label?: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  function onOpenChange(value: boolean) {
+    setOpen(value);
+    if (!value && defaultOpen) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("new");
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }
   return (
-    <SheetTrigger isOpen={open} onOpenChange={setOpen}>
+    <SheetTrigger isOpen={open} onOpenChange={onOpenChange}>
       <Button type="button" className="min-h-10 gap-2 rounded-xl px-4 font-semibold">
         <Plus className="size-4" /> {label}
       </Button>

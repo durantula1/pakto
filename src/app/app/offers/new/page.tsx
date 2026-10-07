@@ -82,7 +82,7 @@ export default async function NewOfferPage({
         </div>
       ) : (
         <EmptyState title="Първо добави обект.">
-          <Link href="/app/projects/new" className="mt-3 inline-block font-semibold text-primary-ink">
+          <Link href="/app/projects?new=1" className="mt-3 inline-block font-semibold text-primary-ink">
             Създай обект →
           </Link>
         </EmptyState>

@@ -41,7 +41,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
   revalidatePath("/app", "layout");
 }
 
-const welcomeTargets = ["/app", "/app/projects/new", "/app/offers/new", "/app/guide"] as const;
+const welcomeTargets = ["/app", "/app/projects?new=1", "/app/offers/new", "/app/guide"] as const;
 
 /** Marks the welcome screens as seen (finished or skipped) and opens where the user chose. */
 export async function finishWelcomeAction(formData: FormData) {

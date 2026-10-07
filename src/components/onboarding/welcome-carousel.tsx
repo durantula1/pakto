@@ -228,7 +228,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
   }, [active, goTo]);
 
   const primaryNext = owner && createsProjects
-    ? { href: "/app/projects/new", label: "Създай първия обект" }
+    ? { href: "/app/projects?new=1", label: "Създай първия обект" }
     : editsOffers
       ? { href: "/app/offers/new", label: "Нова оферта" }
       : { href: "/app", label: "Към работния преглед" };
