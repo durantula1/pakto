@@ -11,3 +11,7 @@ allowBuilds:
 
 overrides:
   electron-to-chromium: 1.5.406
+  # One sharp for the logo code and Next: 0.35.4 carries a librsvg flaw reachable through SVG logos.
+  sharp: 0.35.5
+  # postcss pulls 1.2.1, which a crafted source map can stall (build time only).
+  source-map-js: 1.2.2
