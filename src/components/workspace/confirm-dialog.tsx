@@ -7,8 +7,10 @@ import { Dialog, DialogClose, DialogDescription, DialogHeader, DialogTitle, Dial
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 
 type ConfirmDialogProps = {
-  /** The button that opens the dialog; it must be a pressable `Button`. */
-  trigger: ReactElement;
+  /** The button that opens the dialog; it must be a pressable `Button`. Omit it to open the dialog from outside (a menu item) with `isOpen`. */
+  trigger?: ReactElement;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description: ReactNode;
   /** The verb on the confirm button, e.g. "Изтрий". */
@@ -34,7 +36,9 @@ type ConfirmDialogProps = {
 /** Asks before anything destructive or hard to undo. One pattern for every delete, removal and revoke. */
 export function ConfirmDialog(props: ConfirmDialogProps) {
   const { trigger, title, description, confirmLabel, tone = "destructive" } = props;
-  const [isOpen, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const isOpen = props.isOpen ?? ownOpen;
+  const setOpen = (open: boolean) => (props.onOpenChange ?? setOwnOpen)(open);
   const [pending, setPending] = useState(false);
   const variant = tone === "destructive" ? "destructive" : "default";
 

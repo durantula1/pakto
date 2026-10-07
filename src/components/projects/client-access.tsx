@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Phone, Plus, ShieldCheck, UserRound, Users } from "lucide-react";
+import { EllipsisVertical, KeyRound, Mail, Pencil, Phone, Plus, ShieldCheck, ShieldOff, UserCheck, UserMinus, UserRound, Users } from "lucide-react";
 
 import { contactRoleHint, contactRoleLabel } from "@/components/projects/contact-role";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
@@ -31,6 +33,11 @@ export type AccessContact = {
 };
 
 const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1]![0] : "")).toUpperCase() || "?";
+}
 
 /**
  * "Достъп на клиента": who follows the project in the portal, who decides, whether they confirmed
@@ -83,7 +90,7 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
             <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="ghost" onPress={() => setAdding(false)}>Отказ</Button><ActionSubmit>Добави</ActionSubmit></div>
           </ActionForm>
         ) : (
-          <Button type="button" variant="outline" className="justify-self-start" onPress={() => setAdding(true)}><Plus data-icon="inline-start" />Добави наблюдател</Button>
+          <Button type="button" variant="ghost" className="h-12 w-full border border-dashed border-foreground/20 text-muted-foreground hover:border-foreground/35 hover:text-foreground" onPress={() => setAdding(true)}><Plus data-icon="inline-start" />Добави наблюдател</Button>
         ) : null}
         <div className="flex justify-end"><DialogClose>Затвори</DialogClose></div>
       </Dialog>
@@ -91,54 +98,90 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
   );
 }
 
+type Confirm = "approver" | "rotate" | "reset" | "remove";
+
+/**
+ * One person with access: who they are and their state on top, then the link to copy (the reason the
+ * dialog is opened) and "Редактирай". The rare and risky actions sit in the "⋯" menu, each behind a confirmation.
+ */
 function ContactCard({ projectId, contact, canEdit, isOwner }: { projectId: string; contact: AccessContact; canEdit: boolean; isOwner: boolean }) {
   const [editing, setEditing] = useState(false);
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
   const fields = { projectId, contactId: contact.id };
+  const menu = [
+    canEdit && !contact.isPrimary ? { id: "approver", label: "Направи одобряващ", icon: UserCheck } : null,
+    canEdit && isOwner && contact.link ? { id: "rotate", label: "Смени линка", icon: KeyRound } : null,
+    canEdit && isOwner && contact.emailVerifiedAt ? { id: "reset", label: "Отмени потвърждението", icon: ShieldOff } : null,
+  ].filter((item) => item !== null);
+  const removable = canEdit && !contact.isPrimary;
+  const dialog = (id: Confirm) => ({ isOpen: confirm === id, onOpenChange: (open: boolean) => setConfirm(open ? id : null), fields });
   return (
-    <li className="rounded-xl border p-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="font-medium">{contact.name}</p>
+    <li className="rounded-xl border bg-card p-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="size-10 shrink-0">
+          <AvatarFallback className="bg-primary/15 text-sm font-semibold text-primary-ink">{initials(contact.name)}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="font-medium">{contact.name}</p>
+            <Badge variant="outline" title={contactRoleHint(contact.isPrimary)}>{contactRoleLabel(contact.isPrimary)}</Badge>
+            {contact.emailVerifiedAt ? <Badge variant="success-soft"><ShieldCheck className="size-3" />Потвърден</Badge> : <Badge variant="warning-soft">Непотвърден</Badge>}
+          </div>
           <div className="mt-1 flex flex-col gap-0.5 text-sm text-muted-foreground">
             {contact.email ? <span className="flex min-w-0 items-center gap-1.5"><Mail className="size-3.5 shrink-0" /><span className="truncate">{contact.email}</span></span> : <span className="text-xs">Без имейл: клиентът ще го въведе при първото отваряне</span>}
             {contact.phone ? <span className="flex items-center gap-1.5"><Phone className="size-3.5" />{contact.phone}</span> : null}
-            <span className="text-xs">{contact.lastSeenAt ? `Последно в портала ${dateTime.format(contact.lastSeenAt)}` : "Още не е отварял портала"}</span>
+            <span className="text-xs">{contact.lastSeenAt ? `Последно в портала: ${dateTime.format(contact.lastSeenAt)}` : "Още не е отварял портала"}</span>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline" title={contactRoleHint(contact.isPrimary)}>{contactRoleLabel(contact.isPrimary)}</Badge>
-          {contact.emailVerifiedAt ? <Badge variant="success-soft"><ShieldCheck className="size-3" />Потвърден</Badge> : <Badge variant="warning-soft">Непотвърден</Badge>}
         </div>
       </div>
 
       {editing ? (
-        <ActionForm action={updateContactAction} success="Контактът е записан" onSuccess={() => setEditing(false)} className="mt-3 grid gap-3 border-t pt-3 sm:grid-cols-2">
+        <ActionForm action={updateContactAction} success="Контактът е записан" onSuccess={() => setEditing(false)} className="mt-4 grid gap-3 border-t pt-4 sm:grid-cols-2">
           <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="contactId" value={contact.id} />
           <Field><FieldLabel htmlFor={`contact-name-${contact.id}`}>Име</FieldLabel><Input id={`contact-name-${contact.id}`} name="name" required minLength={2} maxLength={160} defaultValue={contact.name} autoFocus /></Field>
           <Field><FieldLabel htmlFor={`contact-phone-${contact.id}`}>Телефон</FieldLabel><Input id={`contact-phone-${contact.id}`} name="phone" maxLength={40} defaultValue={contact.phone ?? ""} /></Field>
           {contact.emailVerifiedAt ? (
-            <p className="text-xs text-muted-foreground sm:col-span-2">Имейлът е потвърден от клиента. Само той може да го смени от портала{isOwner ? ", или ти с „Отмени потвърждението“" : ""}.</p>
+            <p className="text-xs text-muted-foreground sm:col-span-2">Имейлът е потвърден от клиента. Само той може да го смени от портала{isOwner ? ", или ти с „Отмени потвърждението“ от менюто" : ""}.</p>
           ) : (
             <Field className="sm:col-span-2"><FieldLabel htmlFor={`contact-email-${contact.id}`}>Имейл</FieldLabel><Input id={`contact-email-${contact.id}`} name="email" type="email" defaultValue={contact.email ?? ""} /></Field>
           )}
           <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="ghost" onPress={() => setEditing(false)}>Отказ</Button><ActionSubmit>Запази</ActionSubmit></div>
         </ActionForm>
       ) : (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t pt-3">
-          {contact.link ? <CopyPortalLink url={contact.link} variant="outline" className="h-8" label="Копирай линка" /> : canEdit ? (
+        <div className="mt-4 flex items-center gap-2">
+          {contact.link ? <CopyPortalLink url={contact.link} className="h-9" label="Копирай линка" /> : canEdit ? (
             <ActionForm action={createOrRotatePortalLinkAction} success="Линкът е създаден">
               <input type="hidden" name="projectId" value={projectId} /><input type="hidden" name="contactId" value={contact.id} />
-              <ActionSubmit variant="outline" className="h-8">Създай линк</ActionSubmit>
+              <ActionSubmit className="h-9">Създай линк</ActionSubmit>
             </ActionForm>
           ) : null}
-          {canEdit ? <Button type="button" variant="ghost" size="sm" onPress={() => setEditing(true)}>Редактирай</Button> : null}
-          {canEdit && !contact.isPrimary ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm">Направи одобряващ</Button>} title={`Да стане ли ${contact.name} одобряващ?`} description="Решенията по офертите и промените минават към този човек. Досегашният одобряващ остава наблюдател със същия линк." confirmLabel="Направи одобряващ" tone="default" action={makeApproverAction} fields={fields} success="Одобряващият е сменен" /> : null}
-          {canEdit && isOwner && contact.link ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm">Смени линка</Button>} title="Да сменя ли линка?" description="Старият линк спира да работи веднага, включително на устройствата, от които вече е влизано. Ще трябва да пратиш новия." confirmLabel="Смени линка" tone="default" action={createOrRotatePortalLinkAction} fields={{ ...fields, rotate: "true" }} success="Линкът е сменен" /> : null}
-          {canEdit && isOwner && contact.emailVerifiedAt ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm">Отмени потвърждението</Button>} title="Да отменя ли потвърждението на имейла?" description={`Имейлът ${contact.email ?? ""} се изчиства, всички устройства излизат и се създава нов линк. Прати го на правилния човек: той ще потвърди своя имейл.`} confirmLabel="Отмени потвърждението" action={resetContactVerificationAction} fields={fields} success="Потвърждението е отменено" /> : null}
-          {canEdit && !contact.isPrimary ? <ConfirmDialog trigger={<Button type="button" variant="ghost" size="sm" className="text-destructive">Премахни</Button>} title={`Да премахна ли ${contact.name}?`} description="Линкът му спира да работи веднага. Историята остава." confirmLabel="Премахни" action={removeContactAction} fields={fields} success="Контактът е премахнат" /> : null}
+          {canEdit ? <Button type="button" variant="outline" className="h-9" onPress={() => setEditing(true)}><Pencil data-icon="inline-start" />Редактирай</Button> : null}
+          {menu.length || removable ? (
+            <DropdownMenuTrigger>
+              <Button type="button" variant="outline" size="icon" className="ml-auto size-9" aria-label={`Още действия за ${contact.name}`}><EllipsisVertical className="size-4" /></Button>
+              <DropdownMenu placement="bottom end" onAction={(key) => setConfirm(key as Confirm)} className="min-w-60">
+                {menu.map((item) => (
+                  <DropdownMenuItem key={item.id} id={item.id} textValue={item.label} className="min-h-11 gap-2">
+                    <item.icon className="size-4" /> {item.label}
+                  </DropdownMenuItem>
+                ))}
+                {removable && menu.length ? <DropdownMenuSeparator /> : null}
+                {removable ? (
+                  <DropdownMenuItem id="remove" textValue="Премахни" variant="destructive" className="min-h-11 gap-2">
+                    <UserMinus className="size-4" /> Премахни
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenu>
+            </DropdownMenuTrigger>
+          ) : null}
         </div>
       )}
+
+      <ConfirmDialog {...dialog("approver")} title={`Да стане ли ${contact.name} одобряващ?`} description="Решенията по офертите и промените минават към този човек. Досегашният одобряващ остава наблюдател със същия линк." confirmLabel="Направи одобряващ" tone="default" action={makeApproverAction} success="Одобряващият е сменен" />
+      <ConfirmDialog {...dialog("rotate")} title="Да сменя ли линка?" description="Старият линк спира да работи веднага, включително на устройствата, от които вече е влизано. Ще трябва да пратиш новия." confirmLabel="Смени линка" tone="default" action={createOrRotatePortalLinkAction} fields={{ ...fields, rotate: "true" }} success="Линкът е сменен" />
+      <ConfirmDialog {...dialog("reset")} title="Да отменя ли потвърждението на имейла?" description={`Имейлът ${contact.email ?? ""} се изчиства, всички устройства излизат и се създава нов линк. Прати го на правилния човек: той ще потвърди своя имейл.`} confirmLabel="Отмени потвърждението" action={resetContactVerificationAction} success="Потвърждението е отменено" />
+      <ConfirmDialog {...dialog("remove")} title={`Да премахна ли ${contact.name}?`} description="Линкът му спира да работи веднага. Историята остава." confirmLabel="Премахни" action={removeContactAction} success="Контактът е премахнат" />
     </li>
   );
 }
