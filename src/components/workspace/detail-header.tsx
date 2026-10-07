@@ -70,7 +70,7 @@ export function DetailHeader({
         </div>
       </div>
       {action && (
-        <div className={cn("min-w-0 self-start xl:max-w-sm xl:shrink-0 xl:[&>div]:justify-end", actionClassName)}>
+        <div className={cn("min-w-0 self-start xl:max-w-[65%] xl:shrink-0 xl:[&>div]:justify-end", actionClassName)}>
           {action}
         </div>
       )}
