@@ -20,7 +20,7 @@ export function InlineCta({ title }: { title: string }) {
           ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
         </Link>
         <p className="mf-when-out text-sm text-[#46636e]">
-          Безплатно в бета · без карта
+          Безплатно, докато сме в бета · Без банкова карта
         </p>
       </div>
     </div>

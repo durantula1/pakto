@@ -204,8 +204,8 @@ export function LandingExperience() {
                     </a>
                   </div>
                   <p className="mt-6 flex items-center gap-2 text-sm text-[#46636e]">
-                    <ShieldCheck className="size-4 shrink-0" /> Безплатно по време на
-                    бетата · Без банкова карта · Без регистрация за клиента
+                    <ShieldCheck className="size-4 shrink-0" /> Безплатно, докато сме в
+                    бета · Без банкова карта
                   </p>
                 </HeroReveal>
               </div>
@@ -276,7 +276,7 @@ export function LandingExperience() {
             <div className="relative z-10 mx-auto max-w-[93.75rem]">
               <Reveal>
                 <div className="mf-kicker flex items-center gap-3">
-                  <ShieldCheck className="size-4" /> БЕЗПЛАТНО ПО ВРЕМЕ НА БЕТАТА
+                  <ShieldCheck className="size-4" /> БЕЗПЛАТНО, ДОКАТО СМЕ В БЕТА
                 </div>
                 <h2 className="mf-cta-title mt-8">
                   <span className="lg:whitespace-nowrap">
