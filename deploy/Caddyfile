@@ -1,5 +1,10 @@
 {
 	email info@pakto.net
+	# The Hostinger firewall lets 443 in only from Cloudflare, so Let's Encrypt cannot reach it: renew over port 80
+	# (open to all, it only redirects and answers the HTTP challenge), never with the TLS-ALPN challenge on 443.
+	cert_issuer acme {
+		disable_tlsalpn_challenge
+	}
 	# Cloudflare sits in front (docs/deployment-notes.md): the visitor's IP comes in CF-Connecting-IP, trusted only
 	# from Cloudflare's ranges (https://www.cloudflare.com/ips/). A direct request keeps its own address.
 	servers {
