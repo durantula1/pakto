@@ -6,10 +6,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
-  CalendarCheck,
-  GitCompareArrows,
-  Lock,
-  MailCheck,
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -45,13 +41,6 @@ const loadMotionFeatures = () =>
 // the top, and stays while the pointer or keyboard focus is in it.
 const HEADER_TOP = 80;
 const HEADER_STEP = 8;
-
-const heroBenefits = [
-  { icon: Lock, text: "ИЗПРАТЕНАТА ВЕРСИЯ Е ЗАКЛЮЧЕНА" },
-  { icon: MailCheck, text: "ОДОБРЕНИЕ С КОД, БЕЗ РЕГИСТРАЦИЯ" },
-  { icon: GitCompareArrows, text: "ИСТОРИЯ НА ВСИЧКИ ВЕРСИИ" },
-  { icon: CalendarCheck, text: "ПЛАЩАНИЯ И СРОКОВЕ ПО ЕТАПИ" },
-] as const;
 
 export function LandingExperience() {
   // The root layout's inline script runs once per page load; after a client navigation to "/"
@@ -215,26 +204,29 @@ export function LandingExperience() {
               </div>
             </div>
 
-            {/* Why it holds up, in four short lines: two by two on a phone, one row on a desktop. */}
+            {/* Not a list of claims: the bottom line of a real approved change (the same ПР-042 as the card above and the version scene). */}
             <HeroReveal
               delay={0.5}
               className="relative z-10 mx-auto mt-10 w-full max-w-[93.75rem] lg:mt-6"
             >
-              <ul className="grid grid-cols-2 gap-x-4 gap-y-4 border-t border-[#102b38]/10 pt-5 lg:grid-cols-4 lg:gap-6">
-                {heroBenefits.map(({ icon: Icon, text }) => (
-                  <li
-                    key={text}
-                    className="group flex items-center gap-3 font-mono text-[0.6875rem] font-bold tracking-[0.08em] text-[#284955]"
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      className="size-[1.125rem] shrink-0 text-[#102b38] transition-colors group-hover:text-[#e85f48]"
-                      strokeWidth={1.75}
-                    />
-                    {text}
-                  </li>
-                ))}
-              </ul>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#102b38]/15 pt-5">
+                  <p className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-xs text-[#284955]">
+                    <span className="font-bold text-[#102b38]">ПР-042</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span>версия 2</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span className="font-bold text-[#102b38]">384 €</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span>одобрена от Иван Петров с код от имейла</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span>24.09 · 14:32</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span>отпечатък 3f9a…dc21</span>
+                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
+                    <span className="underline decoration-[#102b38]/30 underline-offset-4">PDF</span>
+                  </p>
+                  <span aria-hidden="true" className="ml-auto hidden -rotate-6 rounded-md sm:inline-block border-[0.1875rem] border-[#e85f48] px-2.5 py-1 font-mono text-[0.6875rem] font-black tracking-[0.12em] text-[#e85f48] mix-blend-multiply [filter:url(#mf-ink)]">ОДОБРЕНО</span>
+                </div>
             </HeroReveal>
           </section>
 
