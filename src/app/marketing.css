@@ -376,6 +376,10 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 50rem;
 }
+/* Set by an in-page link (landing-experience.tsx): real heights, so the scroll lands where it should. */
+.mf-defer-off .mf-defer {
+  content-visibility: visible;
+}
 
 .mf-rise {
   animation: mf-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
