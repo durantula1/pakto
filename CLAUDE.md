@@ -42,6 +42,8 @@ Pakto (formerly MadeFlow) is a mobile-first pilot for agreed offers, change orde
 - `actions.ts` (and `*-actions.ts`): `"use server"` Server Actions. They parse `FormData` with zod, check access as above, write via Drizzle, call `revalidatePath`, and return a `{ error?, ok? }` state for `useActionState`.
 - Other files hold domain logic (`pricing.ts`, `revision-diff.ts`, `state.ts`, and so on).
 
+The typeface is Sofia Sans (`src/app/fonts/sofia-sans-standard.woff2`, loaded with `next/font/local` in the root layout as `--font-sans`). Its default Cyrillic is the Bulgarian letterforms and browsers ignore `font-feature-settings: "locl" 0`, so the file is regenerated with the standard forms as default by `scripts/fonts/sofia-sans-standard.py`; do not swap it for the Google Fonts copy.
+
 `src/app` stays thin: routes compose module queries with components from `src/components/<domain>/`, the shared workspace chrome in `src/components/workspace/` (page shell, header, data table, filters), and the shadcn/React Aria primitives in `src/components/ui/`.
 
 **Offers are versioned and immutable once sent.** `change_orders` is the stable identity. Content lives in `change_order_revisions`. After `sent`, the content columns, frozen timestamp and canonical content hash (`src/lib/crypto/canonical-json.ts`) are protected by a database trigger. Revising a sent offer creates a new revision; it never edits the old one. `portal_decisions` and `timeline_events` are append-only and idempotent. The commercial decision and the work status are separate state machines.

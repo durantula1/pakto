@@ -12,7 +12,7 @@
   --mf-lime: #bceba8;
   position: relative;
   isolation: isolate;
-  font-family: Arial, Helvetica, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
 }
 
 .mf-grain {
@@ -115,7 +115,8 @@
   font-weight: 900;
   /* Tight, but "Д" and "Щ" drop below the baseline and need room above the next line's capitals. */
   line-height: 0.92;
-  letter-spacing: -0.092em;
+  /* Sofia Sans is narrower than the Arial this was first set in; tighter tracking makes its capitals touch. */
+  letter-spacing: -0.045em;
   text-transform: uppercase;
 }
 

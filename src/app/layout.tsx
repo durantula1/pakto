@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/locale-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { authHintScript } from "@/lib/auth/session-hint";
 import { productDefinition } from "@/lib/seo/site";
 import "./globals.css";
+
+/**
+ * Sofia Sans (Lettersoup, a Bulgarian foundry), one variable Latin + Cyrillic file in the repo. Its default Cyrillic is
+ * the Bulgarian letterforms; this copy has the standard ones as default (scripts/fonts/sofia-sans-standard.py), since
+ * browsers ignore `font-feature-settings: "locl" 0` and the page stays lang="bg". Feeds --font-sans.
+ */
+const sofiaSans = localFont({
+  src: "./fonts/sofia-sans-standard.woff2",
+  weight: "1 1000",
+  variable: "--font-sofia-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -30,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="bg"
-      className="h-full antialiased"
+      className={`${sofiaSans.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
