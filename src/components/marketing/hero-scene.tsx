@@ -395,77 +395,141 @@ export function HeroScene() {
         </div>
 
         <div className="mf-layer [--depth:1.2]">
-          {/* The client's phone, in front. */}
-          <div className="absolute top-[26.8%] right-[6.3%] w-[31.6%] rounded-[2.1rem] bg-[linear-gradient(145deg,#2a4552,#0b1f29_30%)] p-[2%] shadow-[0_0_0_1px_rgb(255_255_255/14%)_inset,0_2px_6px_rgb(16_43_56/25%),0_60px_90px_-26px_rgb(16_43_56/70%)] [transform:perspective(60rem)_rotateY(-12deg)_rotateX(4deg)_rotate(3deg)]">
-            <div className="relative flex aspect-[9/19] flex-col overflow-hidden rounded-[1.75rem] bg-[linear-gradient(180deg,#f8f3e7,#f1e9d6)] px-[7%] pt-[17%] pb-[7%]">
-              <span className="absolute top-[2.6%] left-1/2 z-10 h-[5.5%] w-[32%] -translate-x-1/2 rounded-full bg-[#0b1f29]" />
-              <p className="flex items-center justify-center gap-[0.3em] font-mono demo-text-8 font-bold tracking-[0.1em] text-[#52707d]">
-                <Lock className="size-[1.1em]" />
-                pakto.net
-              </p>
-              <p className="mt-[1.2em] font-mono demo-text-10 font-bold tracking-[0.06em] text-[#b5412d]">
-                ПР-042 · версия 2
-              </p>
-              <p className="demo-text-14 font-black tracking-[-0.03em]">
-                Кухня · Лозенец
-              </p>
-              <p className="mt-[0.25em] demo-text-30 font-black leading-none tracking-[-0.06em] tabular-nums">
-                384 €
-              </p>
-              <p className="demo-text-10 text-[#52707d]">срок 16.10</p>
+          {/* The client's phone, in front: an iPhone with a thin titanium edge, a slim black bezel,
+              side buttons, the Dynamic Island, the status bar and the home indicator. Radii are
+              elliptical percentages so the corners stay round at any size. */}
+          <div className="absolute top-[25.5%] right-[6.3%] w-[31.6%] [transform:perspective(60rem)_rotateY(-12deg)_rotateX(4deg)_rotate(3deg)]">
+            <span className="absolute top-[16%] -left-[1.4%] h-[4%] w-[2%] rounded-l-[0.2rem] bg-[linear-gradient(90deg,#76848a,#cfd6d9)]" />
+            <span className="absolute top-[23.5%] -left-[1.4%] h-[8%] w-[2%] rounded-l-[0.2rem] bg-[linear-gradient(90deg,#76848a,#cfd6d9)]" />
+            <span className="absolute top-[33%] -left-[1.4%] h-[8%] w-[2%] rounded-l-[0.2rem] bg-[linear-gradient(90deg,#76848a,#cfd6d9)]" />
+            <span className="absolute top-[27%] -right-[1.4%] h-[12%] w-[2%] rounded-r-[0.2rem] bg-[linear-gradient(90deg,#cfd6d9,#76848a)]" />
+            <div className="relative rounded-[15%/6.9%] bg-[linear-gradient(135deg,#e3e7e9,#8f9ca2_22%,#eef1f2_45%,#7f8d93_70%,#d3d9dc)] p-[1%] shadow-[0_2px_6px_rgb(16_43_56/25%),0_60px_90px_-26px_rgb(16_43_56/70%)]">
+              <div className="rounded-[14%/6.5%] bg-[#07090b] p-[2.4%] shadow-[0_0_0_1px_rgb(255_255_255/10%)_inset]">
+                <div className="relative flex aspect-[9/19.5] flex-col overflow-hidden rounded-[12.5%/5.8%] bg-[linear-gradient(180deg,#f8f3e7,#f1e9d6)] px-[7%] pt-[19%] pb-[9%]">
+                  {/* Status bar around the Dynamic Island. */}
+                  <div className="absolute inset-x-[9%] top-[2.6%] flex items-center justify-between demo-text-9 font-bold">
+                    <span>9:41</span>
+                    <span className="flex items-center gap-[0.3em]">
+                      <svg
+                        viewBox="0 0 17 11"
+                        className="h-[0.8em]"
+                        fill="currentColor"
+                      >
+                        <rect x="0" y="7" width="3" height="4" rx="0.8" />
+                        <rect x="4.5" y="5" width="3" height="6" rx="0.8" />
+                        <rect x="9" y="2.5" width="3" height="8.5" rx="0.8" />
+                        <rect x="13.5" y="0" width="3" height="11" rx="0.8" />
+                      </svg>
+                      <svg
+                        viewBox="0 0 15 11"
+                        className="h-[0.8em]"
+                        fill="currentColor"
+                      >
+                        <path d="M7.5 2.2c2.1 0 4 .8 5.4 2.1l1.1-1.1A9.2 9.2 0 0 0 7.5.6 9.2 9.2 0 0 0 1 3.2l1.1 1.1a7.6 7.6 0 0 1 5.4-2.1Zm0 3.1c1.2 0 2.3.5 3.2 1.2l1.1-1.1a6.1 6.1 0 0 0-8.6 0l1.1 1.1c.9-.7 2-1.2 3.2-1.2Zm0 3.1c.4 0 .8.1 1.1.4L7.5 10 6.4 8.8c.3-.3.7-.4 1.1-.4Z" />
+                      </svg>
+                      <svg
+                        viewBox="0 0 26 12"
+                        className="h-[0.8em]"
+                        fill="none"
+                      >
+                        <rect
+                          x="0.5"
+                          y="0.5"
+                          width="22"
+                          height="11"
+                          rx="3"
+                          stroke="currentColor"
+                          strokeOpacity="0.4"
+                        />
+                        <rect
+                          x="2"
+                          y="2"
+                          width="16"
+                          height="8"
+                          rx="1.8"
+                          fill="currentColor"
+                        />
+                        <path
+                          d="M24 4v4c.8-.3 1.3-1.1 1.3-2S24.8 4.3 24 4Z"
+                          fill="currentColor"
+                          fillOpacity="0.45"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <span className="absolute top-[1.8%] left-1/2 z-10 h-[4.2%] w-[32%] -translate-x-1/2 rounded-full bg-[#07090b]" />
+                  <p className="flex items-center justify-center gap-[0.3em] font-mono demo-text-8 font-bold tracking-[0.1em] text-[#52707d]">
+                    <Lock className="size-[1.1em]" />
+                    pakto.net
+                  </p>
+                  <p className="mt-[1.2em] font-mono demo-text-10 font-bold tracking-[0.06em] text-[#b5412d]">
+                    ПР-042 · версия 2
+                  </p>
+                  <p className="demo-text-14 font-black tracking-[-0.03em]">
+                    Кухня · Лозенец
+                  </p>
+                  <p className="mt-[0.25em] demo-text-30 font-black leading-none tracking-[-0.06em] tabular-nums">
+                    384 €
+                  </p>
+                  <p className="demo-text-10 text-[#52707d]">срок 16.10</p>
 
-              <p className="mt-[1.4em] demo-text-10 text-[#52707d]">
-                Код от имейла
-              </p>
-              <div className="relative mt-[0.3em]">
-                <div className="grid grid-cols-6 gap-[0.2rem]">
-                  {code.map((_, index) => (
-                    <span
-                      key={index}
-                      className="aspect-[3/4] rounded-[0.3rem] border border-[#16623f]/45 bg-white"
-                    />
-                  ))}
-                </div>
-                {/* The digits sit on top and are revealed one by one. */}
-                <div className="mf-sc-code absolute inset-0 grid grid-cols-6 gap-[0.2rem]">
-                  {code.map((digit, index) => (
-                    <span
-                      key={index}
-                      className="grid place-items-center font-mono demo-text-11 font-black"
-                    >
-                      {digit}
+                  <p className="mt-[1.4em] demo-text-10 text-[#52707d]">
+                    Код от имейла
+                  </p>
+                  <div className="relative mt-[0.3em]">
+                    <div className="grid grid-cols-6 gap-[0.2rem]">
+                      {code.map((_, index) => (
+                        <span
+                          key={index}
+                          className="aspect-[3/4] rounded-[0.3rem] border border-[#16623f]/45 bg-white"
+                        />
+                      ))}
+                    </div>
+                    {/* The digits sit on top and are revealed one by one. */}
+                    <div className="mf-sc-code absolute inset-0 grid grid-cols-6 gap-[0.2rem]">
+                      {code.map((digit, index) => (
+                        <span
+                          key={index}
+                          className="grid place-items-center font-mono demo-text-11 font-black"
+                        >
+                          {digit}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="mf-sc-on-38 mt-[1.1em] flex items-center gap-[0.4em] demo-text-10 font-bold text-[#16623f]">
+                    <span className="grid size-[1.4em] shrink-0 place-items-center rounded-full bg-[#d9f3cf]">
+                      <Check className="size-[0.9em]" />
                     </span>
-                  ))}
-                </div>
-              </div>
-              <p className="mf-sc-on-38 mt-[1.1em] flex items-center gap-[0.4em] demo-text-10 font-bold text-[#16623f]">
-                <span className="grid size-[1.4em] shrink-0 place-items-center rounded-full bg-[#d9f3cf]">
-                  <Check className="size-[0.9em]" />
-                </span>
-                Код потвърден
-              </p>
-              <p className="mf-sc-on-38 mt-[0.6em] demo-text-9 leading-snug text-[#52707d] max-sm:hidden">
-                С одобрението приемате цена 384 € и срок 16.10.
-              </p>
+                    Код потвърден
+                  </p>
+                  <p className="mf-sc-on-38 mt-[0.6em] demo-text-9 leading-snug text-[#52707d] max-sm:hidden">
+                    С одобрението приемате цена 384 € и срок 16.10.
+                  </p>
 
-              <div className="relative mt-auto">
-                {/* The tap: a ring spreads from the button. */}
-                <span className="mf-sc-ripple pointer-events-none absolute -inset-[18%] rounded-[1.2rem] border-2 border-[#3f8f5a] opacity-0" />
-                <span className="mf-sc-press block">
-                  <span className="mf-sc-btn grid place-items-center rounded-[0.8rem] bg-[#16623f] py-[0.9em] demo-text-12 font-extrabold text-white shadow-[0_10px_18px_-8px_rgb(22_98_63/70%)]">
-                    <span className="mf-sc-off-46 col-start-1 row-start-1 opacity-0">
-                      Одобрявам
+                  <div className="relative mt-auto">
+                    {/* The tap: a ring spreads from the button. */}
+                    <span className="mf-sc-ripple pointer-events-none absolute -inset-[18%] rounded-[1.2rem] border-2 border-[#3f8f5a] opacity-0" />
+                    <span className="mf-sc-press block">
+                      <span className="mf-sc-btn grid place-items-center rounded-[0.8rem] bg-[#16623f] py-[0.9em] demo-text-12 font-extrabold text-white shadow-[0_10px_18px_-8px_rgb(22_98_63/70%)]">
+                        <span className="mf-sc-off-46 col-start-1 row-start-1 opacity-0">
+                          Одобрявам
+                        </span>
+                        <span className="mf-sc-on-46 col-start-1 row-start-1 flex items-center gap-[0.4em]">
+                          <Check className="size-[1.1em]" />
+                          Одобрено
+                        </span>
+                      </span>
                     </span>
-                    <span className="mf-sc-on-46 col-start-1 row-start-1 flex items-center gap-[0.4em]">
-                      <Check className="size-[1.1em]" />
-                      Одобрено
-                    </span>
-                  </span>
-                </span>
+                  </div>
+                  <span className="absolute bottom-[1.2%] left-1/2 h-[0.6%] w-[36%] -translate-x-1/2 rounded-full bg-[#102b38]/85" />
+                  {/* Dims the screen until the notification wakes it: a veil over the text, not a faded text colour. */}
+                  <span className="mf-sc-screen pointer-events-none absolute inset-0 bg-[#f6f1e4] opacity-0" />
+                  {/* Glass: a faint reflection across the screen. */}
+                  <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgb(255_255_255/30%),transparent_32%)]" />
+                </div>
               </div>
             </div>
-            {/* Dims the screen until the notification wakes it: a veil over the text, not a faded text colour. */}
-            <span className="mf-sc-screen pointer-events-none absolute inset-[2%] rounded-[1.75rem] bg-[#f6f1e4] opacity-0" />
           </div>
 
           {/* Push notification floating over the phone. */}
