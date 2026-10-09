@@ -13,10 +13,12 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResolveDecisionDisputeDialog } from "@/components/change-orders/dispute-resolve";
 import { CopyPortalLink } from "@/components/change-orders/copy-portal-link";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { maskEmail } from "@/lib/email/send";
 import { cn } from "@/lib/utils";
 import { sendChangeOrderAction } from "@/modules/change-orders/actions";
@@ -164,17 +166,19 @@ export function DocumentStatusCard({
 
   let primary: ReactNode = null;
   if (status === "draft" && canSend) {
+    // Sending cannot be undone: the client gets an email and the version is frozen. Ask first.
     primary = (
-      <ActionForm
+      <ConfirmDialog
+        trigger={<Button className="h-10 w-full gap-2 whitespace-nowrap lg:h-9 lg:w-auto"><Send className="size-4" /> Изпрати на клиента</Button>}
+        tone="default"
+        title={change.documentKind === "offer" ? "Да изпратя ли офертата на клиента?" : "Да изпратя ли промяната на клиента?"}
+        description={`Клиентът получава имейл с линк: ${money(change.total)} ${currencySymbol(change.currency)}. След изпращане тази версия не може да се редактира; промени се правят с нова версия.`}
+        confirmLabel="Изпрати"
         action={sendChangeOrderAction}
+        fields={{ changeOrderId: change.id }}
         success="Изпратено на клиента"
         redirects
-      >
-        <input type="hidden" name="changeOrderId" value={change.id} />
-        <ActionSubmit className="h-10 w-full gap-2 whitespace-nowrap lg:h-9 lg:w-auto">
-          <Send className="size-4" /> Изпрати на клиента
-        </ActionSubmit>
-      </ActionForm>
+      />
     );
   } else if (awaiting && canSend) {
     primary = (

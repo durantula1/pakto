@@ -17,6 +17,7 @@ import { documentCode } from "@/modules/change-orders/labels";
 import { getChangeOrder, getChangeOrderTitle, listAbsorbableChanges } from "@/modules/change-orders/queries";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
 import { orForbidden } from "@/lib/authz/page-access";
+import { getProjectState } from "@/modules/projects/state";
 
 export async function generateMetadata({ params }: PageProps<"/app/offers/[changeOrderId]/edit">): Promise<Metadata> {
   const [{ changeOrderId }, context] = await Promise.all([params, requireTenantContext()]);
@@ -32,12 +33,14 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
   const isOffer = change.documentKind === "offer";
   const path = `/app/offers/${change.id}`;
   // The access check runs with the reads; nothing is rendered unless it passes.
-  const [member, attachments, catalog, absorbable] = await Promise.all([
+  const [member, attachments, catalog, absorbable, projectState] = await Promise.all([
     orForbidden(requireProjectCapability(context, change.projectId, "view")),
     listRevisionAttachments(change.revisionId),
     isOffer ? listCatalog(context.organizationId) : Promise.resolve([]),
     isOffer ? listAbsorbableChanges(context.organizationId, change.id) : Promise.resolve([]),
+    isOffer ? getProjectState(context.organizationId, change.projectId) : Promise.resolve(null),
   ]);
+  const offerState = projectState?.offers.find((offer) => offer.id === change.id);
   if (!can(member, "drafts.view_all") && !change.frozenAt && change.revisionCreatedBy !== context.userId) notFound();
   // An approved change or a superseded version is not edited; the document page offers what comes next.
   if (!revisableStatus(change.documentKind, change.revisionStatus) || !can(member, isOffer ? "offers.edit" : "changes.draft")) redirect(path);
@@ -76,6 +79,7 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
         currency={change.currency}
         cancelHref={path}
         absorbable={absorbable}
+        agreement={offerState?.inForce ? { contractMinor: Number(offerState.contractMinor), paidMinor: Number(offerState.paidMinor) } : undefined}
         attachments={
           <AttachmentsPanel
             changeOrderId={change.id}

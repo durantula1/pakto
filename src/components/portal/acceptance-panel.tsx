@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { Check, TriangleAlert } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { Quote, Slip } from "@/components/portal/paper";
-import { answerAcceptanceAction } from "@/modules/change-portal/actions";
+import { answerAcceptanceAction, requestAcceptanceCodeAction } from "@/modules/change-portal/actions";
 
 type Acceptance = { kind: "requested" | "accepted" | "issues"; note: string | null; typedName: string | null; createdAt: Date };
 
@@ -31,6 +32,19 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
   signerName: string;
 }) {
   const [issues, setIssues] = useState(false);
+  // Step two of accepting: the code went to the approver's email, the typed name waits with it.
+  const [pendingCode, setPendingCode] = useState<{ otpId: string; sentTo: string; typedName: string } | null>(null);
+  const [requesting, startRequest] = useTransition();
+
+  function requestCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startRequest(async () => {
+      const result = await requestAcceptanceCodeAction(formData);
+      if (result.error || !result.otpId) { toast.error(result.error ?? "Кодът не беше изпратен. Опитайте отново."); return; }
+      setPendingCode({ otpId: result.otpId, sentTo: result.sentTo ?? "", typedName: String(formData.get("typedName") ?? "") });
+    });
+  }
 
   if (acceptance.kind === "accepted") return (
     // Two lines, not a "·" run-on: on a phone the separator wrapped to the start of the second line.
@@ -75,8 +89,32 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
               <Button type="button" variant="ghost" size="sm" onPress={() => setIssues(false)}>Назад</Button>
             </div>
           </ActionForm>
+        ) : pendingCode ? (
+          <ActionForm key="code" action={answerAcceptanceAction} success="Работата е приета" className="mt-4 grid gap-2">
+            {hidden("accepted")}
+            <input type="hidden" name="typedName" value={pendingCode.typedName} />
+            <input type="hidden" name="otpId" value={pendingCode.otpId} />
+            <p className="text-sm">Изпратихме 6-цифрен код на {pendingCode.sentTo}. Въведете го, за да потвърдите приемането от {pendingCode.typedName}.</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <input
+                name="code"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                autoFocus
+                aria-label="Код от имейла"
+                className="h-11 w-40 rounded-xl border bg-background px-3 text-center text-lg tracking-[0.4em] tabular-nums outline-none focus:border-primary"
+              />
+              <ActionSubmit className="h-11 shrink-0 px-5"><Check className="size-4" /> Потвърждавам приемането</ActionSubmit>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Не е дошъл?{" "}
+              <button type="button" onClick={() => setPendingCode(null)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary-ink">Поискайте нов код</button>
+            </p>
+          </ActionForm>
         ) : (
-          <ActionForm key="accept" action={answerAcceptanceAction} success="Работата е приета" className="mt-4">
+          <form noValidate onSubmit={requestCode} className="mt-4">
             {hidden("accepted")}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <label className="min-w-0 flex-1">
@@ -90,16 +128,16 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
                   aria-label="Вашето име"
                   className="w-full border-0 border-b-2 border-dashed border-foreground/30 bg-transparent px-0.5 pb-1 text-lg italic outline-none placeholder:text-muted-foreground/50 focus:border-solid focus:border-primary"
                 />
-                <span className="mt-1 block text-xs text-muted-foreground">Име и фамилия · потвърждава приемането</span>
+                <span className="mt-1 block text-xs text-muted-foreground">Име и фамилия · ще получите код по имейл, за да потвърдите</span>
               </label>
-              <ActionSubmit className="h-11 shrink-0 px-5 sm:mb-5"><Check className="size-4" /> Приемам</ActionSubmit>
+              <Button type="submit" isDisabled={requesting} className="h-11 shrink-0 px-5 sm:mb-5"><Check className="size-4" /> {requesting ? "Изпращане на код…" : "Приемам"}</Button>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               Нещо не е наред?{" "}
               <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary-ink">Напишете забележки</button>
               {" "}вместо да приемате.
             </p>
-          </ActionForm>
+          </form>
         )}
       </div>
     </Slip>

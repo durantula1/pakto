@@ -9,7 +9,7 @@ import { documentName } from "@/modules/change-orders/labels";
 
 /** The offer or change a message is about, e.g. "Оферта №3 · Тестова оферта". */
 export type MessageTopic = { id: string; label: string };
-export type ThreadMessage = { id: number; authorType: "staff" | "portal_contact"; authorName: string; body: string; createdAt: Date; topic: MessageTopic | null; readByClient: boolean;
+export type ThreadMessage = { id: number; authorType: "staff" | "portal_contact"; authorId: string | null; authorName: string; body: string; createdAt: Date; topic: MessageTopic | null; readByClient: boolean;
   /** The version of the offer on screen when the message was written. */
   revisionNumber: number | null };
 
@@ -23,7 +23,7 @@ function threadScope(changeOrderId: string) {
 /** The conversation, oldest first, each message with its offer if it has one. Staff names come from profiles, client names from contacts. */
 export async function listThread(target: string): Promise<ThreadMessage[]> {
   const rows = await getDatabase().select({
-    id: documentMessages.id, authorType: documentMessages.authorType, body: documentMessages.body, createdAt: documentMessages.createdAt,
+    id: documentMessages.id, authorType: documentMessages.authorType, authorId: documentMessages.authorId, body: documentMessages.body, createdAt: documentMessages.createdAt,
     staffName: profiles.displayName, contactName: projectContacts.name, revisionNumber: messageRevision.revisionNumber, readByClientAt: documentMessages.readByClientAt,
     topicId: documentMessages.changeOrderId, topicKind: changeOrders.documentKind, topicNumber: changeOrders.sequenceNumber, topicTitle: changeOrderRevisions.title,
   }).from(documentMessages)
@@ -36,7 +36,7 @@ export async function listThread(target: string): Promise<ThreadMessage[]> {
     .orderBy(asc(documentMessages.createdAt), asc(documentMessages.id))
     .limit(300);
   return rows.map((row) => ({
-    id: row.id, authorType: row.authorType, body: row.body, createdAt: row.createdAt, revisionNumber: row.revisionNumber, readByClient: !!row.readByClientAt,
+    id: row.id, authorType: row.authorType, authorId: row.authorType === "portal_contact" ? row.authorId : null, body: row.body, createdAt: row.createdAt, revisionNumber: row.revisionNumber, readByClient: !!row.readByClientAt,
     authorName: (row.authorType === "staff" ? row.staffName : row.contactName) ?? (row.authorType === "staff" ? "Фирмата" : "Клиент"),
     topic: row.topicId && row.topicKind && row.topicNumber ? { id: row.topicId, label: `${documentName(row.topicKind, row.topicNumber)}${row.topicTitle ? ` · ${row.topicTitle}` : ""}` } : null,
   }));

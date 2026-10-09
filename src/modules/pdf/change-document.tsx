@@ -6,6 +6,7 @@ import { discountLabel } from "@/modules/change-orders/pricing";
 import { termAmounts } from "@/modules/change-orders/payment-terms";
 import { cents } from "@/modules/projects/state";
 import { logoBox, type LogoSize } from "@/modules/organizations/logo-box";
+import { maskEmail } from "@/lib/email/send";
 
 // Full Noto Sans (Latin + Cyrillic + €). The @fontsource woff files are unicode-range subsets,
 // and react-pdf cannot merge subsets into one family, so every missing glyph rendered blank.
@@ -195,7 +196,8 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
       <View style={styles.decision} wrap={false}>
         <Text style={styles.heading}>Решение на клиента</Text>
         <Text>{decision.decision === "approved" ? "Одобрено" : decision.decision === "declined" ? "Отказано" : "Поискана промяна"} от {decision.typedName} на {dateTimeFormat.format(decision.createdAt)}.</Text>
-        {decision.verifiedEmail ? <Text style={{ color: muted }}>Потвърдено с еднократен код, изпратен до {decision.verifiedEmail}{decision.ip ? `, IP ${decision.ip}` : ""}.</Text> : null}
+        {/* Masked like the portal: the PDF travels further than the portal does. The full email and IP stay in the record at the company. */}
+        {decision.verifiedEmail ? <Text style={{ color: muted }}>Потвърдено с еднократен код, изпратен до {maskEmail(decision.verifiedEmail)}.</Text> : null}
         {decision.signature ? (
           <View style={styles.signature}>
             {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt attribute */}

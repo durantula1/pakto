@@ -5,12 +5,15 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { LEGAL_DOCUMENTS } from "@/lib/legal";
+import { useKeepFormValues } from "@/lib/use-keep-form-values";
 import { googleSignInAction, resendConfirmationAction, signInAction, signUpAction } from "@/modules/auth/actions";
 
 export function AuthForm({ mode, next, defaultEmail, google }: { mode: "sign-in" | "sign-up"; next?: string; /** The address a team invitation was sent to. */ defaultEmail?: string; /** Google keys are configured on the server. */ google?: boolean }) {
   const action = mode === "sign-in" ? signInAction : signUpAction;
   const [state, formAction, pending] = useActionState(action, {});
   const [showPassword, setShowPassword] = useState(false);
+  // A failed sign-in or sign-up keeps the name, email and the terms tick; only the password is typed again.
+  const formRef = useKeepFormValues(state);
   const withNext = (path: string) => `${path}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
   // After sign-up the form has done its job: one panel with the next steps, so nothing can be sent twice.
   if (state.signedUp) return <div className="space-y-4">
@@ -24,7 +27,7 @@ export function AuthForm({ mode, next, defaultEmail, google }: { mode: "sign-in"
   </div>;
   return <>
     {google ? <GoogleSignIn next={next} /> : null}
-    <form noValidate action={formAction} className="space-y-4">
+    <form ref={formRef} noValidate action={formAction} className="space-y-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {mode === "sign-up" && <label className="block text-sm font-medium">Име<input name="displayName" required autoComplete="name" className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>}
       <label className="block text-sm font-medium">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>

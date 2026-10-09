@@ -217,7 +217,35 @@ export async function requestOwnerChangeAction(formData: FormData) {
     }
     const [request] = await tx.insert(ownerRoleRequests).values({ organizationId: context.organizationId, targetUserId, requestedRole, targetRole: target.role, removeMember, requestedBy: context.userId, expiresAt: new Date(Date.now() + 7 * 86400000) }).returning({ id: ownerRoleRequests.id });
     const approvers = owners.filter((owner) => owner.userId !== context.userId);
-    if (approvers.length && request) await tx.insert(staffNotifications).values(approvers.map((owner) => ({ organizationId: context.organizationId, userId: owner.userId, eventType: "owner_change_requested", title: "Потвърди промяна на собственик", href: "/app/team" })));
+    const names = await tx.select({ id: profiles.id, name: profiles.displayName }).from(profiles).where(inArray(profiles.id, [context.userId, targetUserId]));
+    const nameOf = (id: string) => names.find((row) => row.id === id)?.name ?? "Собственик";
+    const change = removeMember ? "да бъде премахнат(а) от екипа" : requestedRole === "owner" ? "да стане собственик" : `да стане ${PRESETS[requestedRole === "field" ? "field" : "office"].label}`;
+    if (approvers.length && request) await tx.insert(staffNotifications).values(approvers.map((owner) => ({
+      organizationId: context.organizationId, userId: owner.userId, eventType: "owner_change_requested", title: "Потвърди или откажи промяна на собственик",
+      body: `${nameOf(context.userId)} предлага ${owner.userId === targetUserId ? "ти" : nameOf(targetUserId)} ${change}. Важи 7 дни.`,
+      href: "/app/team?tab=approvals",
+    })));
+  });
+  revalidatePath("/app/team");
+}
+
+/** "Откажи" by another owner (the affected one included) or "Оттегли" by whoever proposed it; the role stays as it is. */
+export async function closeOwnerChangeAction(formData: FormData) {
+  const context = await requireTenantContext();
+  await requireOwner(context);
+  const { requestId, outcome } = z.object({ requestId: z.uuid(), outcome: z.enum(["rejected", "withdrawn"]) }).parse(Object.fromEntries(formData));
+  await getDatabase().transaction(async (tx) => {
+    const [request] = await tx.select().from(ownerRoleRequests)
+      .where(and(eq(ownerRoleRequests.id, requestId), eq(ownerRoleRequests.organizationId, context.organizationId), eq(ownerRoleRequests.status, "pending")))
+      .for("update").limit(1);
+    if (!request) throw new Error("Предложението вече е решено или изтекло.");
+    const own = request.requestedBy === context.userId;
+    if (outcome === "withdrawn" ? !own : own) throw new Error(own ? "Своето предложение можеш само да оттеглиш." : "Само предложилият може да оттегли предложението.");
+    await tx.update(ownerRoleRequests).set({ status: outcome, resolvedAt: new Date() }).where(eq(ownerRoleRequests.id, request.id));
+    // The "please confirm" notices are answered.
+    await tx.update(staffNotifications).set({ readAt: new Date() })
+      .where(and(eq(staffNotifications.organizationId, context.organizationId), eq(staffNotifications.eventType, "owner_change_requested"), isNull(staffNotifications.readAt)));
+    if (outcome === "rejected") await tx.insert(staffNotifications).values({ organizationId: context.organizationId, userId: request.requestedBy, eventType: "owner_change_rejected", title: "Предложението за промяна на собственик е отказано", href: "/app/team?tab=approvals" });
   });
   revalidatePath("/app/team");
 }
@@ -232,7 +260,8 @@ export async function approveOwnerChangeAction(formData: FormData) {
     const [request] = await tx.select().from(ownerRoleRequests)
       .where(and(eq(ownerRoleRequests.id, requestId), eq(ownerRoleRequests.organizationId, context.organizationId), eq(ownerRoleRequests.status, "pending"), gt(ownerRoleRequests.expiresAt, new Date())))
       .for("update").limit(1);
-    if (!request || request.requestedBy === context.userId) throw new Error("Това предложение не може да бъде потвърдено.");
+    if (!request) throw new Error("Предложението е изтекло или вече е решено. Направи ново.");
+    if (request.requestedBy === context.userId) throw new Error("Своето предложение потвърждава друг собственик.");
     const [target] = await tx.select({ role: organizationMembers.role }).from(organizationMembers)
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.userId, request.targetUserId), eq(organizationMembers.status, "active"))).limit(1);
     if (!target || (request.targetRole && target.role !== request.targetRole) || (request.requestedRole === "owner" ? target.role === "owner" : target.role !== "owner")) throw new Error("Ролята се е променила. Създай ново предложение.");

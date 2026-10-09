@@ -32,7 +32,7 @@ import { getActivePortalLink } from "@/modules/change-portal/links";
 import { cents, formatCents, getProjectState, type OfferState, type ProjectState } from "@/modules/projects/state";
 import { sofiaToday } from "@/modules/finance/queries";
 import { summarizeRevisionDiff, type RevisionDiff } from "@/modules/change-orders/revision-diff";
-import { money, priceOffer, type Discount } from "@/modules/change-orders/pricing";
+import { money, priceOffer, totalTooLarge, type Discount } from "@/modules/change-orders/pricing";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
 import { revisionFingerprint } from "@/modules/change-orders/fingerprint";
 import { scheduleField, type ScheduleLine } from "@/modules/change-orders/schedule";
@@ -61,6 +61,9 @@ const quickChangeSchema = z.object({
   clientNote: z.string().trim().max(2000).optional(),
   internalNote: z.string().trim().max(2000).optional(),
 });
+
+/** Extra work or a discount with no amount reads to the client as "the price did not change" and gets sent by mistake. */
+const zeroChangeError = "Посочи сума над 0 или избери „Без промяна в цената“.";
 
 const offerLineSchema = z.object({
   description: z.string().trim().min(2, "Добави описание на всяка услуга и материал.").max(300),
@@ -239,6 +242,9 @@ export async function createChangeOrderAction(
   const taxAmount = money(authoritativeSubtotal * (data.taxRate / 100));
   const unsignedTotal = money(authoritativeSubtotal + taxAmount);
   const total = data.changeKind === "credit" ? -unsignedTotal : unsignedTotal;
+  if ((data.changeKind === "addition" || data.changeKind === "credit") && !(authoritativeSubtotal > 0)) return { error: zeroChangeError };
+  const tooLarge = totalTooLarge(total);
+  if (tooLarge) return { error: tooLarge };
   const overLimit = creditOverLimit(offerState, projectState!.pendingDocuments, total);
   if (overLimit) return { error: overLimit };
 
@@ -361,7 +367,9 @@ export async function createOfferAction(
     lineTotal: money(line.quantity * line.unitPrice),
   }));
   const discount = parseDiscount(data);
-  const { subtotal, taxAmount, total, discountAmount } = priceOffer(data.lines, data.taxRate, discount);
+  const { gross, subtotal, taxAmount, total, discountAmount } = priceOffer(data.lines, data.taxRate, discount);
+  const tooLarge = totalTooLarge(gross, total);
+  if (tooLarge) return { error: tooLarge };
 
   const offerId = await database.transaction(async (transaction) => {
     await transaction.execute(
@@ -477,6 +485,21 @@ const revisionSchema = z.object({
   }).pipe(z.array(z.uuid()).max(100)),
 });
 
+/**
+ * A new version of an offer in force replaces the agreed price: the offer itself plus its approved changes, minus
+ * the ones ticked as "already included". Ticking one without adding its lines silently dropped its amount, so a
+ * lower result needs an explicit "yes" from the form, and it can never go below what the client already paid.
+ */
+function renegotiationProblem(offer: OfferState | undefined, total: number, absorbed: string[], confirmed: boolean) {
+  if (!offer?.inForce) return null;
+  const kept = offer.changes.filter((change) => !absorbed.includes(change.id)).reduce((sum, change) => sum + cents(change.total), 0n);
+  const next = BigInt(Math.round(total * 100)) + kept;
+  const euro = (minor: bigint) => `${formatAmount((Number(minor) / 100).toFixed(2))} ${currencySymbol(offer.currency)}`;
+  if (next < offer.paidMinor) return `Новата сума (${euro(next)}) е под вече платеното (${euro(offer.paidMinor)}). Провери редовете.`;
+  if (next < offer.contractMinor && !confirmed) return `Новата сума (${euro(next)}) е под договорената (${euro(offer.contractMinor)}). Ако включваш одобрена промяна, добави я в редовете. Ако намалението е умишлено, потвърди го.`;
+  return null;
+}
+
 export async function createDocumentRevisionAction(_state: QuickChangeState, formData: FormData): Promise<QuickChangeState> {
   const parsed = revisionSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Тази версия вече не е налична. Презареди страницата." };
@@ -494,7 +517,7 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   if (document.documentKind === "offer" && (!data.agreedDeadline || !data.lines.length)) return { error: "Офертата изисква краен срок и поне една услуга или материал." };
   if (document.documentKind === "change" && data.scheduleImpactType === "days" && !data.agreedDeadline) return { error: "Посочи нов краен срок." };
   let scheduleDays: number | null = null;
-  const projectState = document.documentKind === "change" ? await getProjectState(context.organizationId, document.projectId) : null;
+  const projectState = await getProjectState(context.organizationId, document.projectId);
   const baseline = projectState?.offers.find((offer) => offer.id === document.baselineOfferId);
   if (document.documentKind === "change" && data.scheduleImpactType === "days") {
     try { scheduleDays = deadlineDelta(baseline?.deadline ?? null, data.agreedDeadline); }
@@ -507,7 +530,14 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   const subtotal = document.documentKind === "offer" ? offerPrice.subtotal : data.changeKind === "no_cost" || data.changeKind === "schedule_only" ? 0 : money(data.subtotal);
   const taxAmount = money(subtotal * data.taxRate / 100);
   const total = document.documentKind === "change" && data.changeKind === "credit" ? -money(subtotal + taxAmount) : money(subtotal + taxAmount);
-  const overLimit = projectState ? creditOverLimit(baseline, projectState.pendingDocuments, total, data.changeOrderId) : null;
+  if (document.documentKind === "change" && (data.changeKind === "addition" || data.changeKind === "credit") && !(subtotal > 0)) return { error: zeroChangeError };
+  const tooLarge = totalTooLarge(offerPrice.gross, total);
+  if (tooLarge) return { error: tooLarge };
+  if (document.documentKind === "offer") {
+    const lower = renegotiationProblem(projectState?.offers.find((offer) => offer.id === data.changeOrderId), total, data.absorbedChanges, formData.get("confirmLower") === "1");
+    if (lower) return { error: lower };
+  }
+  const overLimit = document.documentKind === "change" && projectState ? creditOverLimit(baseline, projectState.pendingDocuments, total, data.changeOrderId) : null;
   if (overLimit) return { error: overLimit };
   await db.transaction(async (tx) => {
     const [current] = await tx.select({ id: changeOrderRevisions.id, status: changeOrderRevisions.status, revisionNumber: changeOrderRevisions.revisionNumber, currency: changeOrderRevisions.currency })
@@ -583,11 +613,13 @@ async function assertSendable(organizationId: string, changeOrderId: string) {
     agreedDeadline: changeOrderRevisions.agreedDeadline,
     scheduleImpactType: changeOrderRevisions.scheduleImpactType,
     total: changeOrderRevisions.total,
+    changeKind: changeOrderRevisions.changeKind,
   }).from(changeOrders)
     .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
     .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, organizationId), eq(changeOrderRevisions.status, "draft")))
     .limit(1);
   if (!revision) return;
+  if (revision.documentKind === "change" && (revision.changeKind === "addition" || revision.changeKind === "credit") && Number(revision.total) === 0) throw new Error(zeroChangeError);
   const today = sofiaToday();
   const setsDeadline = revision.documentKind === "offer" || revision.scheduleImpactType === "days";
   if (setsDeadline && revision.agreedDeadline && revision.agreedDeadline < today) throw new Error("Крайният срок е минал. Избери нова дата.");

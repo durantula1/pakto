@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -164,7 +164,8 @@ export async function mergeClientsAction(formData: FormData): Promise<ActionResu
         archivedAt: null,
         updatedAt: new Date(),
       }).where(eq(clients.id, keepId));
-      await tx.update(clients).set({ mergedIntoId: keepId, archivedAt: new Date(), updatedAt: new Date() }).where(eq(clients.id, mergeId));
+      // Everything useful moved to the kept client above; the old row stays only as a pointer, without personal data.
+      await tx.update(clients).set({ mergedIntoId: keepId, name: keep.name, email: null, phone: null, phoneNormalized: null, address: null, notes: null, archivedAt: new Date(), updatedAt: new Date() }).where(eq(clients.id, mergeId));
 
       const projectIds = [...new Set([...moved.map((row) => row.id), ...contacts.map((row) => row.projectId)])];
       if (projectIds.length) {
@@ -182,7 +183,7 @@ export async function mergeClientsAction(formData: FormData): Promise<ActionResu
 
 /**
  * On a personal data request, once no project of the client is active: name and contacts are erased
- * from the client and every invitation, and their links stop working. Decisions keep the typed name
+ * from the client, the rows merged into it, every invitation and the site addresses, and their links stop working. Decisions keep the typed name
  * and confirmed email as the legal record of what was agreed.
  */
 export async function anonymizeClientAction(formData: FormData): Promise<ActionResult> {
@@ -200,7 +201,11 @@ export async function anonymizeClientAction(formData: FormData): Promise<ActionR
 
       const now = new Date();
       const erased = "Анонимизиран клиент";
-      await tx.update(clients).set({ name: erased, email: null, phone: null, phoneNormalized: null, address: null, notes: null, archivedAt: now, updatedAt: now }).where(eq(clients.id, clientId));
+      // Rows merged into this client earlier go too: they may still carry the old name, email and phone.
+      await tx.update(clients).set({ name: erased, email: null, phone: null, phoneNormalized: null, address: null, notes: null, archivedAt: now, updatedAt: now })
+        .where(and(eq(clients.organizationId, context.organizationId), or(eq(clients.id, clientId), eq(clients.mergedIntoId, clientId))));
+      // A private client's site is their home address.
+      await tx.update(projects).set({ siteAddress: "Адресът е изтрит", updatedAt: now }).where(and(eq(projects.organizationId, context.organizationId), eq(projects.clientId, clientId)));
       // Confirmed contacts are locked against email changes; this is the owner's explicit reset.
       await tx.execute(sql`select set_config('app.contact_change', 'reset', true)`);
       const contacts = await tx.update(projectContacts).set({ name: erased, email: null, phone: null, emailVerifiedAt: null, lockedAt: null, removedAt: sql`coalesce(${projectContacts.removedAt}, now())` })

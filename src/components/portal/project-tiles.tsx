@@ -79,7 +79,7 @@ export function MoneyTile({ view, claims }: { view: ScopeView; claims: PortalCla
         : <span className="truncate text-xs tabular-nums">{formatCents(view.paidMinor, view.currency)} платени</span>}
     </>
   );
-  const percent = view.contractMinor > 0n ? Number((view.paidMinor * 100n) / view.contractMinor) : 0;
+  const percent = view.contractMinor > 0n ? Number((view.paidMinor * 100n + view.contractMinor / 2n) / view.contractMinor) : 0;
   return (
     <>
       <span className="flex flex-col">

@@ -36,6 +36,9 @@ export function sniffLogoType(bytes: Uint8Array): LogoMimeType | null {
 function assertSafeSvg(bytes: Uint8Array) {
   const text = new TextDecoder().decode(bytes);
   if (/<!ENTITY/i.test(text)) throw new Error("SVG файлът съдържа непозволени елементи.");
+  // Scripts, event handlers and embedded HTML do nothing in a rasterized logo except signal a hostile file
+  // (and foreignObject renders blank or black): refused outright instead of "saved" as a black square.
+  if (/<script[\s>]|<foreignObject[\s>]|\son[a-z]+\s*=/i.test(text)) throw new Error("SVG файлът съдържа скриптове или вграден HTML. Запази логото като обикновен SVG или PNG.");
   for (const match of text.matchAll(/(?:xlink:)?href\s*=\s*["']\s*([^"']*)/gi)) {
     const target = match[1]!.trim();
     if (!target.startsWith("#") && !/^data:image\/(png|jpeg|webp|gif);base64,/i.test(target)) {

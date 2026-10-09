@@ -360,7 +360,10 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
   const data = parsed.data;
   const session = await getPortalSession(data.projectPublicId);
   if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
+  // Like "Платих": the approver answers for the money, an observer only watches.
+  if (session.contactRole !== "approver") return { error: "Плащане може да оспори само одобряващият, посочен от фирмата." };
   if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
+  if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
       const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount }).from(projectReceipts)
@@ -457,9 +460,48 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
   return {};
 }
 
+/** Who may answer a handover: the approver, with a confirmed email, on an active project, not a signed-in employee. */
+async function acceptanceSession(projectPublicId: string) {
+  const session = await getPortalSession(projectPublicId);
+  if (!session || session.contactRole !== "approver") throw new Error("Работата може да приеме само одобряващият, посочен от фирмата.");
+  if (!session.contactEmailVerifiedAt || !session.contactEmail) throw new Error("Първо потвърдете имейла си.");
+  if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържете се с фирмата.");
+  if (await isOrganizationStaff(session.organizationId)) throw new Error("Излез от служебния профил, за да действаш като клиент.");
+  return session;
+}
+
 /**
- * The client's answer to "please accept the work": accepted (with their typed name, from a session
- * whose email they confirmed) or a list of issues for the company to fix.
+ * Accepting the work is signed with a code sent to the approver's confirmed email, like a decision on an offer:
+ * whoever holds a forwarded link could otherwise accept it with any typed name. Remarks need no code.
+ */
+export async function requestAcceptanceCodeAction(formData: FormData): Promise<{ error?: string; otpId?: string; sentTo?: string }> {
+  const parsed = z.object({ projectPublicId: z.uuid(), offerId: z.uuid(), typedName: z.string().trim().max(160).optional() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Нещо не е попълнено правилно. Опитайте отново." };
+  const data = parsed.data;
+  if (!data.typedName || data.typedName.length < 2) return { error: "Въведете името си." };
+  try {
+    const session = await acceptanceSession(data.projectPublicId);
+    const [offer] = await getDatabase().select({ title: changeOrderRevisions.title }).from(changeOrders)
+      .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
+      .where(and(eq(changeOrders.id, data.offerId), eq(changeOrders.projectId, session.projectId))).limit(1);
+    if (!offer) return { error: "Офертата не е намерена." };
+    const otpId = await issueOtp({
+      sessionId: session.id,
+      contactId: session.contactId,
+      purpose: "acceptance",
+      email: session.contactEmail!,
+      ip: clientIp(await headers()),
+      summary: `Приемане на работата по „${offer.title}“ от ${data.typedName}.`,
+    });
+    return { otpId, sentTo: maskEmail(session.contactEmail!) };
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Кодът не беше изпратен. Опитайте отново." };
+  }
+}
+
+/**
+ * The client's answer to "please accept the work": accepted (with their typed name and the emailed code)
+ * or a list of issues for the company to fix.
  */
 export async function answerAcceptanceAction(formData: FormData): Promise<{ error?: string }> {
   const parsed = z.object({
@@ -468,16 +510,21 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
     answer: z.enum(["accepted", "issues"]),
     typedName: z.string().trim().max(160).optional(),
     note: z.string().trim().max(2000).optional(),
+    otpId: z.uuid().optional(),
+    code: z.string().trim().optional(),
   }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
   const data = parsed.data;
   if (data.answer === "accepted" && (!data.typedName || data.typedName.length < 2)) return { error: "Въведете името си." };
+  if (data.answer === "accepted" && (!data.otpId || !/^\d{6}$/.test(data.code ?? ""))) return { error: "Въведете 6-цифрения код от имейла." };
   if (data.answer === "issues" && (!data.note || data.note.length < 5)) return { error: "Опишете забележките си." };
-  const session = await getPortalSession(data.projectPublicId);
-  if (!session || session.contactRole !== "approver") return { error: "Работата може да приеме само одобряващият, посочен от фирмата." };
-  if (!session.contactEmailVerifiedAt) return { error: "Първо потвърдете имейла си." };
-  if (session.projectStatus !== "active") return { error: "Обектът е приключен. Свържете се с фирмата." };
-  if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
+  let session: Awaited<ReturnType<typeof acceptanceSession>>;
+  try {
+    session = await acceptanceSession(data.projectPublicId);
+    if (data.answer === "accepted") await checkOtp({ otpId: data.otpId!, code: data.code!, sessionId: session.id, contactId: session.contactId, purpose: "acceptance" });
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Отговорът не беше записан. Опитайте отново." };
+  }
   const requestHeaders = await headers();
   try {
     await getDatabase().transaction(async (tx) => {
@@ -486,6 +533,7 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
         .where(and(eq(offerAcceptances.offerId, data.offerId), eq(offerAcceptances.projectId, session.projectId)))
         .orderBy(desc(offerAcceptances.createdAt)).limit(1);
       if (latest?.kind !== "requested") throw new Error("Фирмата още не е поискала приемане или вече сте отговорили.");
+      if (data.answer === "accepted") await consumeOtp(tx, data.otpId!);
       const [offer] = await tx.select({ title: changeOrderRevisions.title }).from(changeOrders)
         .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
         .where(eq(changeOrders.id, data.offerId)).limit(1);

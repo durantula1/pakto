@@ -18,6 +18,7 @@ import {
 import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { maskEmail } from "@/lib/email/send";
 import { getSessionUser } from "@/lib/auth/server";
+import { isUuid } from "@/lib/uuid";
 
 export const PORTAL_COOKIE = "sitechange_portal";
 /** One cookie per organization for a client-wide session. */
@@ -115,6 +116,7 @@ async function clientSession(secret: string, projectPublicId: string) {
 
 /** Once per request: the layout, the page and the actions of one render share it. */
 export const getPortalSession = cache(async (projectPublicId: string) => {
+  if (!isUuid(projectPublicId)) return null;
   const cookieStore = await cookies();
   // A client session first: an older one-project cookie on the same device must not hide it.
   for (const cookie of cookieStore.getAll()) {

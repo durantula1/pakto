@@ -24,6 +24,7 @@ import type { TenantContext } from "@/lib/authz/tenant-context";
 import { documentLogo } from "@/modules/organizations/logo";
 import { expireOverdue } from "@/modules/change-orders/reminders";
 import { verifyRevision } from "@/modules/change-orders/fingerprint";
+import { isUuid } from "@/lib/uuid";
 
 /** `waiting` is the dashboard's "awaiting decision": sent to the client, seen or not. */
 export type ChangeOrderStatusFilter = "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested" | "waiting";
@@ -168,6 +169,7 @@ export async function getChangeOrder<Extra = undefined>(
    */
   options: { eventsBefore?: number; extra?: (head: ChangeOrderHead) => Promise<Extra> } = {},
 ) {
+  if (!isUuid(changeOrderId)) return null;
   const result = await loadChangeOrder(organizationId, changeOrderId, options);
   // The daily job may not have run yet: a version past its validity is expired, then read again.
   if (result && (result.revisionStatus === "sent" || result.revisionStatus === "viewed") && result.responseDueAt && result.responseDueAt < new Date()) {

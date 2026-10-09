@@ -38,6 +38,7 @@ import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, p
 import { formatAmount } from "@/lib/money";
 import { orForbidden } from "@/lib/authz/page-access";
 import { currencySymbol } from "@/lib/money";
+import { isUuid } from "@/lib/uuid";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: PageProps<"/app/projects/[pro
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/app/projects/[projectId]">) {
   const [{ projectId }, query, context] = await Promise.all([params, searchParams, requireTenantContext()]);
+  if (!isUuid(projectId)) notFound();
   const offersPage = parsePage(query.offersPage);
   const changesPage = parsePage(query.changesPage);
   const notesPage = parsePage(query.notesPage);
@@ -96,7 +98,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const allReceiptsHref = can(member, "finance.view") && state.receiptsTotal > state.receipts.length && state.firstReceiptOn
     ? `/app/finance?${new URLSearchParams({ projectId, from: state.firstReceiptOn, to: state.lastReceiptOn && state.lastReceiptOn > today ? state.lastReceiptOn : today })}`
     : null;
-  const paidPercent = state.contractMinor > 0n ? Number((state.paidMinor * 100n) / state.contractMinor) : null;
+  const paidPercent = state.contractMinor > 0n ? Number((state.paidMinor * 100n + state.contractMinor / 2n) / state.contractMinor) : null;
   const overdueMinor = state.installments.filter((item) => item.dueOn < today && item.remainingMinor > 0n).reduce((sum, item) => sum + item.remainingMinor, 0n);
   const daysToDeadline = state.deadline ? Math.round((Date.parse(state.deadline) - Date.parse(today)) / 86_400_000) : null;
   const openStages = state.milestones.filter((item) => item.status !== "completed").length;
@@ -111,7 +113,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const here = `/app/projects/${projectId}`;
   const openItems = [
     ...(openStages ? [{ label: openStages === 1 ? "1 етап не е завършен" : `${openStages} етапа не са завършени`, href: `${here}?tab=work` }] : []),
-    ...(state.remainingMinor > 0n && inForce.length ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
+    ...(showPayments && state.remainingMinor > 0n && inForce.length ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
     ...state.pendingDocuments.map((item) => ({ label: `${named(item.kind, item.sequenceNumber, item.title)} чака решение от клиента`, href: `/app/offers/${item.id}` })),
     ...inForce.flatMap((offer) => handover[offer.status] ? [{ label: `Работата по ${named("offer", offer.sequenceNumber, offer.title)} ${handover[offer.status]}`, href: `/app/offers/${offer.id}?tab=stages` }] : []),
   ];
@@ -151,9 +153,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         </p>
       ) : null}
       <div className={projectStatsClassName}>
-        <StatCard tone="mint" label={projectStatLabels.price} value={inForce.length ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : "Очаква одобрена оферта"} />
-        <StatCard tone="teal" label={projectStatLabels.paid} value={formatCents(state.paidMinor, state.currency)} hint={paidPercent !== null ? `${paidPercent}% от договореното` : `${state.receiptsTotal} ${state.receiptsTotal === 1 ? "плащане" : "плащания"}`} />
-        <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={inForce.length && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={inForce.length ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : inForce.length && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
+        {/* Price, paid and remaining are finance: a role without "finance.view" sees the deadline only. */}
+        {showPayments ? <>
+          <StatCard tone="mint" label={projectStatLabels.price} value={inForce.length ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : "Очаква одобрена оферта"} />
+          <StatCard tone="teal" label={projectStatLabels.paid} value={formatCents(state.paidMinor, state.currency)} hint={paidPercent !== null ? `${paidPercent}% от договореното` : `${state.receiptsTotal} ${state.receiptsTotal === 1 ? "плащане" : "плащания"}`} />
+          <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={inForce.length && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={inForce.length ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : inForce.length && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
+        </> : null}
         <StatCard tone={daysToDeadline !== null && daysToDeadline < 0 && active ? "coral" : "blue"} label={projectStatLabels.deadline} value={state.deadline ? formatDay(state.deadline) : "—"} hint={daysToDeadline === null ? "Очаква одобрение" : daysToDeadline > 0 ? `След ${daysToDeadline} ${daysToDeadline === 1 ? "ден" : "дни"}` : daysToDeadline === 0 ? "Днес" : `Изтекъл преди ${-daysToDeadline} ${daysToDeadline === -1 ? "ден" : "дни"}`} />
       </div>
       {showPayments ? <PaymentDisputesAlert projectId={projectId} disputes={disputes} canResolve={canRecordPayments} /> : null}
@@ -170,6 +175,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
             state={state}
             today={today}
             showPayments={showPayments}
+            showDrafts={can(member, "drafts.view_all")}
             openDisputes={disputes.length}
             pendingClaims={claims.length}
           />

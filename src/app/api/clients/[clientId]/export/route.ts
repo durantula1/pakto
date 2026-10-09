@@ -16,7 +16,8 @@ export async function GET(_: Request, { params }: RouteContext<"/api/clients/[cl
   const { clientId } = await params;
   if (!context || context.role !== "owner" || !/^[0-9a-f-]{36}$/i.test(clientId)) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
   const db = getDatabase();
-  const [client] = await db.select({ id: clients.id, name: clients.name, email: clients.email, phone: clients.phone, address: clients.address, notes: clients.notes, archivedAt: clients.archivedAt, createdAt: clients.createdAt })
+  // `notes` is the team's internal note ("Вижда се само от екипа"), not data the client gave: it stays out.
+  const [client] = await db.select({ id: clients.id, name: clients.name, email: clients.email, phone: clients.phone, address: clients.address, archivedAt: clients.archivedAt, createdAt: clients.createdAt })
     .from(clients).where(and(eq(clients.id, clientId), eq(clients.organizationId, context.organizationId))).limit(1);
   if (!client) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
 

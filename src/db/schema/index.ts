@@ -665,7 +665,7 @@ export const portalOtps = appSchema.table(
       .notNull()
       .references(() => projectContacts.id, { onDelete: "cascade" }),
     purpose: text("purpose")
-      .$type<"claim" | "email_change" | "decision" | "unlock">()
+      .$type<"claim" | "email_change" | "decision" | "unlock" | "acceptance">()
       .notNull(),
     revisionId: bigint("revision_id", { mode: "number" }).references(
       () => changeOrderRevisions.id,

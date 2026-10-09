@@ -141,7 +141,7 @@ type Receipt = ProjectState["receipts"][number];
 
 /** A payment for an installment is called what the plan calls it, so "Аванс" reads the same in both lists. */
 function receiptLabel(receipt: Receipt, installments: ScopeView["installments"]) {
-  if (receipt.correctionOfId) return Number(receipt.amount) < 0 ? "Отменено плащане" : "Корекция";
+  if (receipt.correctionOfId) return "Коригирана сума";
   return installments.find((item) => item.id === receipt.installmentId)?.title ?? paymentLabels[receipt.kind] ?? "Плащане";
 }
 
@@ -238,15 +238,19 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
           {claim.response ? <Quote by="Фирмата:" tone="warning" className="mt-2 sm:ml-[6.25rem]">{claim.response}</Quote> : null}
         </li>)}
         {view.receipts.map((item, _, receipts) => {
+          // The reversal row only cancels the original out: the client sees the original struck through instead.
+          if (item.correctionOfId && Number(item.amount) < 0) return null;
+          // The record in force: a payment nobody corrected, or the corrected amount that replaced it.
+          const corrected = receipts.some((other) => other.correctionOfId === item.id);
+          const replaced = corrected && receipts.some((other) => other.correctionOfId === item.id && Number(other.amount) > 0);
           const row = <Entry
             date={formatDay(item.receivedOn)}
             title={receiptLabel(item, view.installments)}
             sub={[offerOf(item.offerId), methodLabels[item.method] ?? item.method].filter(Boolean).join(" · ")}
-            amount={<span className={cn(Number(item.amount) < 0 && "text-muted-foreground")}>{formatCents(cents(item.amount), item.currency)}</span>}
-            badge={item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}
+            amount={<span className={cn(corrected && "text-muted-foreground line-through")}>{formatCents(cents(item.amount), item.currency)}</span>}
+            badge={item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge>
+              : corrected ? <Badge variant="secondary">{replaced ? "Коригирано" : "Анулирано"}</Badge> : null}
           />;
-          // The record in force: a payment nobody corrected, or the corrected amount that replaced it.
-          const corrected = receipts.some((other) => other.correctionOfId === item.id);
           const canDispute = canAct && Number(item.amount) > 0 && item.dispute?.status !== "open" && !corrected;
           return <li key={item.id} className="py-3">
             {canDispute ? <DisputeReceiptRow row={row} portalPublicId={portalPublicId} receiptId={item.id} /> : row}

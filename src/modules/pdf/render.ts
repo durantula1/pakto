@@ -11,8 +11,10 @@ import { listRevisionAbsorbedChanges, listRevisionPaymentTerms, listRevisionSche
 import { ChangePdfDocument } from "@/modules/pdf/change-document";
 import { loadSignature } from "@/modules/change-portal/signature";
 import { documentLogoPath, loadLogo } from "@/modules/organizations/logo";
+import { isUuid } from "@/lib/uuid";
 
 export async function getPdfDocumentMeta(changeOrderId: string) {
+  if (!isUuid(changeOrderId)) return null;
   const [document] = await getDatabase().select({
     id: changeOrders.id, projectId: projects.id, publicId: projects.publicId, organizationId: organizations.id,
     organizationName: organizations.name, organizationLogoPath: organizations.logoStoragePath, organizationLogoSize: organizations.logoSize, projectName: projects.name, siteAddress: projects.siteAddress, contactName: projectContacts.name,

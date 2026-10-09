@@ -11,7 +11,8 @@ const money = (cents: number, currency: string) =>
 
 /**
  * "Получена сума" with what is still owed under it. More than that is allowed (an advance for work
- * not yet agreed, say), but the firm sees it before saving instead of finding "Надплатено" later.
+ * not yet agreed, say), but only with an explicit tick: the server refuses it otherwise, since the
+ * client gets a receipt by email and 99 999 instead of 999 is a typo.
  */
 export function PaymentAmountField({ remaining }: {
   /** What the agreed offers still owe; absent while nothing is agreed. */
@@ -32,6 +33,12 @@ export function PaymentAmountField({ remaining }: {
             : `С ${money(over, remaining.currency)} над остатъка. Разликата ще се отчете като надплатена.`
           : remaining.cents > 0 ? `Остават ${money(remaining.cents, remaining.currency)}` : "Обектът е изплатен изцяло."}
       </p>
+    ) : null}
+    {over > 0 ? (
+      <label className="flex items-start gap-2 text-sm">
+        <input type="checkbox" name="allowOverpay" value="1" className="mt-0.5 size-4 shrink-0 accent-primary" />
+        <span>Да, сумата е повече от остатъка</span>
+      </label>
     ) : null}
   </Field>;
 }

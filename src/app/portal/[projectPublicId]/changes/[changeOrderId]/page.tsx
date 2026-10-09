@@ -300,6 +300,7 @@ export default async function PortalChangePage({
   const questions = (
     <OfferQuestions
       messages={thread}
+      contactId={data.session.contactId}
       projectPublicId={projectPublicId}
       changeOrderId={change.id}
       organizationName={data.project.organizationName}

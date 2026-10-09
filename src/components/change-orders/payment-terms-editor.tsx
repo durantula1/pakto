@@ -41,6 +41,8 @@ export function termsPayload(rows: TermRow[]): PaymentTerm[] {
 export function termsProblem(rows: TermRow[]) {
   const terms = termsPayload(rows);
   if (!terms.length) return null;
+  const outOfRange = terms.find((term) => !(term.percent > 0 && term.percent <= 100));
+  if (outOfRange) return `Процентът за „${outOfRange.title}“ трябва да е между 0 и 100.`;
   const total = termsPercent(terms);
   if (total !== 100) return `Плащанията трябва да са общо 100%, сега са ${total}%.`;
   const missing = terms.find((term) => (term.dueTrigger === "on_date" && !term.dueOn) || (term.dueTrigger === "on_stage" && !term.stage));

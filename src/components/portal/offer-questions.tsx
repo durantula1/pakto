@@ -18,8 +18,10 @@ const dateTime = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "shor
  * record, each marked with the version it was about, oldest first. Not a chat: no bubbles, no live
  * typing; a question never changes the offer's status.
  */
-export function OfferQuestions({ messages, projectPublicId, changeOrderId, organizationName, revisionNumber, waiting, canAsk, isChange = false }: {
+export function OfferQuestions({ messages, contactId, projectPublicId, changeOrderId, organizationName, revisionNumber, waiting, canAsk, isChange = false }: {
   messages: ThreadMessage[];
+  /** Whoever opened the portal: their own questions read "Вие", everyone else's carry the asker's name. */
+  contactId: string;
   projectPublicId: string;
   changeOrderId: string;
   organizationName: string;
@@ -64,11 +66,12 @@ export function OfferQuestions({ messages, projectPublicId, changeOrderId, organ
         <ol className="mt-1 flex flex-col gap-2 px-1">
           {messages.map((message) => {
             const company = message.authorType === "staff";
+            const own = !company && message.authorId === contactId;
             return (
               <li key={message.id} className={cn("rounded-2xl px-4 py-3", company ? "bg-tile-blue/60" : "bg-muted/70")}>
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">{company ? organizationName : "Вие"}</span>
-                  <span>{company ? "отговори" : "попитахте"} · {dateTime.format(message.createdAt)}</span>
+                  <span className="font-semibold text-foreground">{company ? organizationName : own ? "Вие" : message.authorName}</span>
+                  <span>{company ? "отговори" : own ? "попитахте" : "попита"} · {dateTime.format(message.createdAt)}</span>
                   {markVersions && message.revisionNumber ? <span className="rounded-full bg-card px-2 py-0.5">към версия {message.revisionNumber}</span> : null}
                   {company && !message.readByClient ? <span className="rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground">Нов</span> : null}
                 </p>

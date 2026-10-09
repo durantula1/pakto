@@ -46,10 +46,12 @@ function StageBadge({ item, today }: { item: Milestone; today: string }) {
   return <Badge variant="secondary">{stageLabels[item.status] ?? item.status}</Badge>;
 }
 
-export function ProjectDashboard({ state, today, showPayments, openDisputes, pendingClaims }: {
+export function ProjectDashboard({ state, today, showPayments, showDrafts, openDisputes, pendingClaims }: {
   state: ProjectState;
   today: string;
   showPayments: boolean;
+  /** `drafts.view_all`: without it, offers never sent stay out of the list (the offer page answers 404 for them too). */
+  showDrafts: boolean;
   openDisputes: number;
   pendingClaims: number;
 }) {
@@ -64,7 +66,7 @@ export function ProjectDashboard({ state, today, showPayments, openDisputes, pen
 
   // Changes waiting for the client; offers show their own status below.
   const pendingChanges = state.pendingDocuments.filter((item) => item.kind === "change");
-  const offers = state.offers.filter((offer) => offer.status !== "canceled").slice(0, 5);
+  const offers = state.offers.filter((offer) => offer.status !== "canceled" && (showDrafts || offer.clientVisible)).slice(0, 5);
 
   return (
     <div className={overviewGridClassName}>
@@ -130,7 +132,7 @@ export function ProjectDashboard({ state, today, showPayments, openDisputes, pen
               <Badge variant="warning-soft">Чака клиента</Badge>
             </Link>
           ))}
-          {state.offersInForce.length ? <div className="flex items-center justify-between gap-3 border-t pt-2 text-sm">
+          {showPayments && state.offersInForce.length ? <div className="flex items-center justify-between gap-3 border-t pt-2 text-sm">
             <span className="text-muted-foreground">Общо договорено</span>
             <strong className="tabular-nums">{formatCents(state.contractMinor, state.currency)}</strong>
           </div> : null}

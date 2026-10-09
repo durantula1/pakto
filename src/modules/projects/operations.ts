@@ -16,6 +16,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { formatDay } from "@/modules/change-orders/labels";
 import { emailClient } from "@/modules/notifications/client";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
+import { getProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
 import { sofiaToday } from "@/modules/finance/queries";
 import { currencySymbol } from "@/lib/money";
@@ -314,27 +315,55 @@ async function receiptOffer(db: Executor, organizationId: string, projectId: str
   return offers.length === 1 ? offers[0]!.id : null;
 }
 
-function emailReceipt(projectId: string, input: { amount: string; currency: string; receivedOn: string; method: string; corrected?: boolean }) {
+function emailReceipt(projectId: string, input: { amount: string; currency: string; receivedOn: string; method: string; corrected?: { previous: string } }) {
+  const symbol = currencySymbol(input.currency);
+  const sum = (value: string) => `${formatAmount(value)} ${symbol}`;
+  // A correction to 0 cancels a payment recorded by mistake: "Коригирано плащане: 0,00 €" would read as "you paid nothing".
+  const cancelled = input.corrected && Number(input.amount) === 0;
   emailClient(projectId, {
-    subject: input.corrected ? `Коригирано плащане: ${formatAmount(input.amount)} ${currencySymbol(input.currency)}` : `Записано плащане: ${formatAmount(input.amount)} ${currencySymbol(input.currency)}`,
-    intro: input.corrected
-      ? "Фирмата коригира записано плащане. Вярната сума вече е в портала."
-      : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
-    facts: [["Сума", `${formatAmount(input.amount)} ${currencySymbol(input.currency)}`], ["Дата", formatDay(input.receivedOn)], ["Начин на плащане", methodLabels[input.method] ?? input.method]],
+    subject: cancelled
+      ? `Анулирано плащане от ${sum(input.corrected!.previous)}`
+      : input.corrected ? `Коригирано плащане: ${sum(input.corrected.previous)} → ${sum(input.amount)}` : `Записано плащане: ${sum(input.amount)}`,
+    intro: cancelled
+      ? `Фирмата анулира плащането от ${sum(input.corrected!.previous)} от ${formatDay(input.receivedOn)}. Беше записано по грешка и вече не се брои.`
+      : input.corrected
+        ? `Фирмата коригира плащането от ${formatDay(input.receivedOn)}: ${sum(input.corrected.previous)} → ${sum(input.amount)}.`
+        : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
+    facts: cancelled
+      ? [["Анулирана сума", sum(input.corrected!.previous)], ["Дата", formatDay(input.receivedOn)]]
+      : [["Сума", sum(input.amount)], ["Дата", formatDay(input.receivedOn)], ["Начин на плащане", methodLabels[input.method] ?? input.method]],
     cta: "Вижте плащанията",
     outro: "Ако нещо не е вярно, натиснете „Не е вярно?“ до плащането в портала.",
   });
+}
+
+/**
+ * More than the agreed offers still owe is almost always a typo (99 999 instead of 999), and the client gets a
+ * receipt by email. So it needs an explicit "yes, an overpayment" from the form; without anything agreed there
+ * is nothing to compare against.
+ */
+async function assertWithinRemaining(organizationId: string, projectId: string, amount: string, allowOverpay: boolean) {
+  if (allowOverpay) return;
+  const state = await getProjectState(organizationId, projectId);
+  if (!state || state.contractMinor <= 0n) return;
+  const over = BigInt(Math.round(Number(amount) * 100)) - (state.remainingMinor > 0n ? state.remainingMinor : 0n);
+  if (over <= 0n) return;
+  const symbol = currencySymbol(state.currency);
+  throw new Error(state.remainingMinor > 0n
+    ? `Сумата е с ${formatAmount((Number(over) / 100).toFixed(2))} ${symbol} над остатъка (${formatAmount((Number(state.remainingMinor) / 100).toFixed(2))} ${symbol}). Провери я или отбележи, че е надплащане.`
+    : "Обектът вече е изплатен. Провери сумата или отбележи, че е надплащане.");
 }
 
 export async function recordReceiptAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
     const data = z.object({
       projectId: uuid, installmentId: optionalUuid, offerId: optionalUuid, kind: paymentKind, amount: money, method: paymentMethod,
-      receivedOn: receivedDay, note: z.string().trim().max(500).optional(),
+      receivedOn: receivedDay, note: z.string().trim().max(500).optional(), allowOverpay: z.literal("1").optional(),
     }).parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
+    await assertWithinRemaining(context.organizationId, data.projectId, data.amount, Boolean(data.allowOverpay));
     const db = getDatabase();
     const offerId = await receiptOffer(db, context.organizationId, data.projectId, data.installmentId, data.offerId);
     await db.transaction(async (tx) => {
@@ -377,7 +406,7 @@ export async function correctReceiptAction(formData: FormData): Promise<ActionRe
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, changeOrderId: receipt.offerId, actorType: "staff", actorId: context.userId, eventType: "payment_corrected", visibility: "client", metadata: { receiptId: data.receiptId, newAmount: data.amount, reason: data.reason } });
       return receipt;
     });
-    emailReceipt(data.projectId, { amount: data.amount, currency: receipt.currency, receivedOn: receipt.receivedOn, method: receipt.method, corrected: true });
+    emailReceipt(data.projectId, { amount: data.amount, currency: receipt.currency, receivedOn: receipt.receivedOn, method: receipt.method, corrected: { previous: receipt.amount } });
     refresh(data.projectId);
   }, "Корекцията не беше записана.");
 }
@@ -453,6 +482,8 @@ export async function confirmPaymentClaimAction(formData: FormData): Promise<Act
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
+    // A client's "Платих" above what is owed is a typo on their side; a real overpayment is recorded by hand.
+    await assertWithinRemaining(context.organizationId, data.projectId, data.amount, false);
     const claim = await getDatabase().transaction(async (tx) => {
       const [claim] = await tx.select().from(paymentClaims)
         .where(and(eq(paymentClaims.id, data.claimId), eq(paymentClaims.projectId, data.projectId), eq(paymentClaims.organizationId, context.organizationId), eq(paymentClaims.status, "pending"))).for("update").limit(1);

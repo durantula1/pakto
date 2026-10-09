@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { DataTable } from "@/components/workspace/data-table";
 import { FilterSelect } from "@/components/workspace/filter-select";
@@ -19,7 +18,7 @@ import { PERMISSION_KEYS, PRESETS, can, roleLabel } from "@/lib/authz/permission
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { lastPage, PAGE_SIZE, pageHref, pageOffset, parsePage } from "@/lib/pagination";
-import { approveOwnerChangeAction, revokeTeamInviteAction } from "@/modules/team/actions";
+import { approveOwnerChangeAction, closeOwnerChangeAction, revokeTeamInviteAction } from "@/modules/team/actions";
 import { countTeamMembers, getTeamCounters, listPendingOwnerRequests, listPendingTeamInvites, listTeamMembers } from "@/modules/team/queries";
 import { memberColumns, membersLabel, searchLabel } from "./team-sections";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -28,7 +27,10 @@ const roles: Record<string, string> = { owner: "Собственик", office: P
 
 export const metadata: Metadata = { title: "Екип" };
 
-export default async function TeamPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; page?: string }> }) {
+const tabs = ["members", "invites", "approvals"] as const;
+const shortDate = (value: Date) => value.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" });
+
+export default async function TeamPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; page?: string; tab?: string }> }) {
   const context = await requireTenantContext();
   await orForbidden(requireOwner(context));
   const query = await searchParams;
@@ -45,6 +47,8 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   ]);
   if (!pageMembers.length && page > lastPage(total)) redirect(pageHref("/app/team", { q: term, status }, "page", lastPage(total)));
   const allowOwnerInvite = counters.activeOwners === 1;
+  // The notification "Потвърди промяна на собственик" opens the approvals tab directly.
+  const tab = tabs.find((item) => item === query.tab) ?? "members";
 
   return <PageShell>
     <PageHeader page="team" actions={
@@ -56,7 +60,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
         </SheetContent>
       </SheetTrigger>
     } />
-    <Tabs defaultSelectedKey="members">
+    <Tabs defaultSelectedKey={tab}>
       <TabsList>
         <TabsTrigger id="members">Членове</TabsTrigger>
         <TabsTrigger id="invites">Покани</TabsTrigger>
@@ -111,17 +115,27 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <TabsContent id="approvals" className="pt-4">
         {requests.length ? <DataTable
           label="Промени с второ потвърждение"
-          columns={[{ id: "member", header: "Член", mobile: "primary" }, { id: "change", header: "Промяна" }, { id: "action", header: "" }]}
-          rows={requests.map((request) => ({
-            id: request.id,
-            cells: [
-              request.targetName ?? "Служител",
-              request.removeMember ? "Премахване на достъпа" : `Нова роля: ${roles[request.requestedRole ?? ""] ?? request.requestedRole}`,
-              request.requestedBy !== context.userId
-                ? <ActionForm key={request.id} action={approveOwnerChangeAction} success="Промяната е одобрена"><input type="hidden" name="requestId" value={request.id} /><ActionSubmit>Потвърди</ActionSubmit></ActionForm>
-                : <span key={request.id} className="text-sm text-muted-foreground">Чака друг собственик</span>,
-            ],
-          }))}
+          columns={[{ id: "member", header: "Член", mobile: "primary" }, { id: "change", header: "Промяна" }, { id: "by", header: "Предложено от" }, { id: "action", header: "" }]}
+          rows={requests.map((request) => {
+            const change = request.removeMember ? "Премахване на достъпа" : `Нова роля: ${roles[request.requestedRole ?? ""] ?? request.requestedRole}`;
+            const target = request.targetName ?? "Служител";
+            const own = request.requestedBy === context.userId;
+            const self = request.targetUserId === context.userId;
+            return {
+              id: request.id,
+              cells: [
+                <span key="member">{target}{self ? <span className="ml-1.5 text-xs text-muted-foreground">(ти)</span> : null}</span>,
+                change,
+                <span key="by" className="text-sm"><span className="block">{own ? "Ти" : request.requesterName ?? "Собственик"}</span><span className="block text-xs text-muted-foreground">{shortDate(request.createdAt)} · важи до {shortDate(request.expiresAt)}</span></span>,
+                own
+                  ? <ConfirmDialog key={request.id} trigger={<Button type="button" variant="outline" size="sm">Оттегли</Button>} tone="default" title="Да оттегля ли предложението?" description={`${target} запазва сегашната си роля.`} confirmLabel="Оттегли" action={closeOwnerChangeAction} fields={{ requestId: request.id, outcome: "withdrawn" }} success="Предложението е оттеглено" />
+                  : <div key={request.id} className="flex flex-wrap gap-2">
+                    <ConfirmDialog trigger={<Button type="button" size="sm">{self ? "Съгласен съм" : "Потвърди"}</Button>} tone="default" title={self ? "Да приема ли промяната на моята роля?" : `Да потвърдя ли промяната за ${target}?`} description={`${change}. Влиза в сила веднага.`} confirmLabel="Потвърди" action={approveOwnerChangeAction} fields={{ requestId: request.id }} success="Промяната е одобрена" />
+                    <ConfirmDialog trigger={<Button type="button" variant="outline" size="sm">Откажи</Button>} tone="default" title="Да откажа ли предложението?" description={`${target} запазва сегашната си роля. Предложилият ще получи известие.`} confirmLabel="Откажи" action={closeOwnerChangeAction} fields={{ requestId: request.id, outcome: "rejected" }} success="Предложението е отказано" />
+                  </div>,
+              ],
+            };
+          })}
         /> : <EmptyState title="Няма промени за одобрение" />}
       </TabsContent>
     </Tabs>

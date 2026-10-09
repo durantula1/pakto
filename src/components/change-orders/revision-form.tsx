@@ -16,6 +16,7 @@ import { DiscountField } from "@/components/change-orders/discount-field";
 import { ScheduleEditor, schedulePayload, scheduleRowsFrom, type ScheduleRow } from "@/components/change-orders/schedule-editor";
 import { PaymentTermsEditor, termRowsFrom, termsPayload, termsProblem, type TermRow } from "@/components/change-orders/payment-terms-editor";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { LineItemsEditor, formatMoney, linesPayload, priceLines, type Line } from "@/components/change-orders/line-items-editor";
 import type { CatalogPick } from "@/components/catalog/catalog-picker";
 import { createDocumentRevisionAction, type QuickChangeState } from "@/modules/change-orders/actions";
@@ -54,8 +55,10 @@ const changeKinds: Array<{ value: ChangeKind; label: string }> = [
  * `withdrawsRevision` is set when the client already has this version; saving takes it back.
  * With `canSend`, "Запази и изпрати" sends the new version (and the email) in the same step.
  */
-export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevision, canSend = false, catalog = [], currency = "EUR", cancelHref, attachments, absorbable = [] }: {
+export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevision, canSend = false, catalog = [], currency = "EUR", cancelHref, attachments, absorbable = [], agreement }: {
   initial: RevisionFormInitial;
+  /** An offer in force: its agreed price (with approved changes) and what is paid, in cents. A new version below either is checked. */
+  agreement?: { contractMinor: number; paidMinor: number };
   /** Approved changes of this offer that are not absorbed yet (offers only). */
   absorbable?: AbsorbableChange[];
   /** The version being edited; saving creates the next one. */
@@ -87,6 +90,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   const [absorbed, setAbsorbed] = useState<string[]>(() => (initial.absorbedChangeIds ?? []).filter((id) => absorbable.some((change) => change.id === id)));
   const today = sofiaTodayIso();
   const [localError, setLocalError] = useState("");
+  const [confirmSend, setConfirmSend] = useState<FormData | null>(null);
   const error = localError || state.error;
 
   const payload = linesPayload(lines);
@@ -100,6 +104,9 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
     return { gross: subtotal, discountAmount: 0, subtotal, taxAmount, total: money(subtotal + taxAmount) };
   }, [isOffer, priced, taxRate, discountType, discountValue, pricedChange, changePrice]);
   const sign = !isOffer && changeKind === "credit" ? "−" : "";
+  // The agreed price after this version: its total plus the approved changes it does not include.
+  const nextContractMinor = Math.round(bill.total * 100) + absorbable.filter((change) => !absorbed.includes(change.id)).reduce((sum, change) => sum + Math.round(Number(change.total) * 100), 0);
+  const lowerThanAgreed = !!agreement && nextContractMinor < agreement.contractMinor;
   const nextVersion = revisionNumber + 1;
 
   function validate(event: FormEvent<HTMLFormElement>) {
@@ -107,6 +114,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
     if (isOffer && !payload.length) message = "Добави поне една услуга или материал.";
     else if (payload.some((line) => line.description.length < 2)) message = "Добави описание на всяка услуга и материал.";
     else if (payload.some((line) => !(line.quantity > 0))) message = "Количеството трябва да е над 0.";
+    else if (!isOffer && pricedChange && !(bill.subtotal > 0)) message = "Посочи сума над 0 или избери „Без промяна в цената“.";
     else if (isOffer) message = termsProblem(termRows) ?? "";
     setLocalError(message);
     // Sent by hand, not as a form action: React resets the form after an action, and React Aria's
@@ -114,6 +122,8 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
     event.preventDefault();
     if (message) return;
     const formData = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
+    // Sending cannot be undone: the client gets an email and the version is frozen. Ask first.
+    if (formData.get("intent") === "send") { setConfirmSend(formData); return; }
     startTransition(() => action(formData));
   }
 
@@ -143,6 +153,15 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
 
   return (
     <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        isOpen={confirmSend !== null}
+        onOpenChange={(open) => { if (!open) setConfirmSend(null); }}
+        tone="default"
+        title={isOffer ? "Да изпратя ли офертата на клиента?" : "Да изпратя ли промяната на клиента?"}
+        description={`Клиентът получава имейл с линк към версия ${nextVersion}: ${sign}${formatMoney(bill.total)} ${currencySymbol(currency)}. След изпращане тази версия не може да се редактира.`}
+        confirmLabel="Изпрати"
+        onConfirm={() => { const formData = confirmSend; if (formData) startTransition(() => action(formData)); }}
+      />
       {withdrawsRevision ? (
         <div role="note" className="rounded-xl bg-tile-sand px-4 py-3 text-sm text-tile-sand-foreground">
           <p className="font-semibold">Клиентът вече има версия {withdrawsRevision}.</p>
@@ -260,6 +279,21 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                   ))}
                 </ul>
               </EditorSection>
+            ) : null}
+
+            {isOffer && agreement ? (
+              <div role={lowerThanAgreed ? "alert" : undefined} className={lowerThanAgreed ? "rounded-xl bg-tile-coral px-4 py-3 text-sm text-tile-coral-foreground" : "rounded-xl bg-muted px-4 py-3 text-sm"}>
+                <p>Договорено досега: <span className="font-semibold tabular-nums">{formatMoney(agreement.contractMinor / 100)} {currencySymbol(currency)}</span> · вече платено: <span className="font-semibold tabular-nums">{formatMoney(agreement.paidMinor / 100)} {currencySymbol(currency)}</span></p>
+                <p className="mt-0.5">С тази версия: <span className="font-semibold tabular-nums">{formatMoney(nextContractMinor / 100)} {currencySymbol(currency)}</span>{absorbed.length ? " (отбелязаните промени не се добавят отделно)" : ""}</p>
+                {nextContractMinor < agreement.paidMinor ? <p className="mt-1 font-medium">Новата сума е под вече платеното. Провери редовете.</p>
+                  : lowerThanAgreed ? <>
+                    <p className="mt-1">Сумата е под договорената. Ако версията включва одобрена промяна, добави я в редовете.</p>
+                    <label className="mt-2 flex items-start gap-2 font-medium">
+                      <input type="checkbox" name="confirmLower" value="1" className="mt-0.5 size-4 shrink-0 accent-primary" />
+                      <span>Да, новата сума умишлено е по-ниска</span>
+                    </label>
+                  </> : null}
+              </div>
             ) : null}
 
             <EditorSection title="За клиента" description="Двете полета се виждат в PDF-а и в портала.">

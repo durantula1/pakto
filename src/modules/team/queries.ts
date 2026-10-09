@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, asc, count, eq, gt, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import { getDatabase } from "@/db";
 import { organizationMembers, organizations, ownerRoleRequests, profiles, projectMembers, projects, teamInvites } from "@/db/schema";
@@ -65,9 +66,12 @@ function pendingInviteFilter(organizationId: string) {
   return and(eq(teamInvites.organizationId, organizationId), isNull(teamInvites.acceptedAt), isNull(teamInvites.revokedAt), gt(teamInvites.expiresAt, new Date()));
 }
 
+/** Pending and not expired: an expired proposal can no longer be confirmed, so it is not listed either. */
 function pendingRequestFilter(organizationId: string) {
-  return and(eq(ownerRoleRequests.organizationId, organizationId), eq(ownerRoleRequests.status, "pending"));
+  return and(eq(ownerRoleRequests.organizationId, organizationId), eq(ownerRoleRequests.status, "pending"), gt(ownerRoleRequests.expiresAt, new Date()));
 }
+
+const requester = alias(profiles, "requester");
 
 export async function listPendingTeamInvites(organizationId: string) {
   return getDatabase().select({ id: teamInvites.id, email: teamInvites.email, role: teamInvites.role, permissions: teamInvites.permissions, allProjects: teamInvites.allProjects, projectIds: teamInvites.projectIds, expiresAt: teamInvites.expiresAt })
@@ -78,7 +82,9 @@ export async function listPendingOwnerRequests(organizationId: string) {
   return getDatabase().select({
     id: ownerRoleRequests.id, targetUserId: ownerRoleRequests.targetUserId, requestedRole: ownerRoleRequests.requestedRole,
     removeMember: ownerRoleRequests.removeMember, requestedBy: ownerRoleRequests.requestedBy, targetName: profiles.displayName,
+    requesterName: requester.displayName, createdAt: ownerRoleRequests.createdAt, expiresAt: ownerRoleRequests.expiresAt,
   }).from(ownerRoleRequests).leftJoin(profiles, eq(profiles.id, ownerRoleRequests.targetUserId))
+    .leftJoin(requester, eq(requester.id, ownerRoleRequests.requestedBy))
     .where(pendingRequestFilter(organizationId)).orderBy(asc(ownerRoleRequests.createdAt));
 }
 

@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // A self-contained server.js with only the files it needs: the Docker image copies .next/standalone.
   output: "standalone",
+  // No "X-Powered-By: Next.js" in the responses.
+  poweredByHeader: false,
   allowedDevOrigins: ["127.0.0.1"],
   experimental: {
     authInterrupts: true,
@@ -60,6 +62,7 @@ const nextConfig: NextConfig = {
       { key: "X-Frame-Options", value: "DENY" },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
     ];
     // Later entries win for the same header, so the portal keeps its stricter values.
     const portalHeaders = [

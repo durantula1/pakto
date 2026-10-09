@@ -5,13 +5,11 @@ import { CalendarDays, Mail } from "lucide-react";
 
 import { MemberAccess } from "@/components/team/member-access";
 import { Badge } from "@/components/ui/badge";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { DetailHeader } from "@/components/workspace/detail-header";
-import { FilterSelect } from "@/components/workspace/filter-select";
 import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
 import { PRESETS, roleLabel } from "@/lib/authz/permissions";
 import { requireOwner } from "@/lib/authz/project-access";
@@ -66,11 +64,12 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
           </section>
           <AccessCard>
             {isSelf ? <p className="text-sm text-muted-foreground">Това е твоят профил. Ролята на собственик се сменя от друг собственик.</p> : (
-              <ActionForm action={requestOwnerChangeAction} success="Предложението е изпратено" className="flex flex-col gap-3">
-                <input type="hidden" name="targetUserId" value={member.userId} />
-                <Field><FieldLabel>Нова роля</FieldLabel><FilterSelect name="requestedRole" value="office" options={[{ value: "office", label: PRESETS.office.label }, { value: "remove", label: "Премахване от екипа" }]} /></Field>
-                <ActionSubmit variant="outline">Предложи промяна</ActionSubmit>
-              </ActionForm>
+              // Two explicit choices, each asked once more: nothing is preselected, and the other owner still has to confirm.
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-muted-foreground">Промяната на собственик чака потвърждение от друг собственик.</p>
+                <ConfirmDialog trigger={<Button type="button" variant="outline">Предложи роля „{PRESETS.office.label}“</Button>} tone="default" title={`Да предложа ли ${name} да стане ${PRESETS.office.label}?`} description="Губи правата на собственик, когато друг собственик потвърди. Можеш да оттеглиш предложението от „Екип“ → „Одобрения“." confirmLabel="Предложи" action={requestOwnerChangeAction} fields={{ targetUserId: member.userId, requestedRole: "office" }} success="Предложението е изпратено" />
+                <ConfirmDialog trigger={<Button type="button" variant="outline" className="text-destructive">Предложи премахване от екипа</Button>} title={`Да предложа ли премахване на ${name}?`} description="Достъпът спира, когато друг собственик потвърди. Можеш да оттеглиш предложението от „Екип“ → „Одобрения“." confirmLabel="Предложи премахване" action={requestOwnerChangeAction} fields={{ targetUserId: member.userId, requestedRole: "remove" }} success="Предложението е изпратено" />
+              </div>
             )}
           </AccessCard>
         </div>

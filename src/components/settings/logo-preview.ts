@@ -48,7 +48,10 @@ export async function prepareLogoPreview(file: File, isSvg: boolean): Promise<Lo
     const context = canvas.getContext("2d", { willReadFrequently: true })!;
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-    const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+    let data: Uint8ClampedArray;
+    // A browser refuses to read back an SVG with foreignObject (a "tainted" canvas) and throws in English.
+    try { ({ data } = context.getImageData(0, 0, canvas.width, canvas.height)); }
+    catch { throw new Error("Това SVG съдържа вграден HTML и не може да се използва. Запази логото като обикновен SVG или PNG."); }
     const [left, top, cropWidth, cropHeight] = findContentBox(data, canvas.width, canvas.height);
     const trimmedWidth = Math.round(cropWidth / workScale);
     const trimmedHeight = Math.round(cropHeight / workScale);

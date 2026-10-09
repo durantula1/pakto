@@ -22,6 +22,8 @@ type ConfirmDialogProps = {
     action: (formData: FormData) => Promise<unknown>;
     fields: Record<string, string>;
     success: string;
+    /** The action redirects on success (the next page shows its own notice). */
+    redirects?: boolean;
     onConfirm?: never;
   }
   | {
@@ -30,6 +32,7 @@ type ConfirmDialogProps = {
     action?: never;
     fields?: never;
     success?: never;
+    redirects?: never;
   }
 );
 
@@ -61,7 +64,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {props.action ? (
-          <ActionForm action={props.action} success={props.success} className="grid gap-3">
+          <ActionForm action={props.action} success={props.success} redirects={props.redirects} className="grid gap-3">
             {Object.entries(props.fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <DialogClose>Отказ</DialogClose>

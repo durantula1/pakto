@@ -15,6 +15,6 @@ export function Meter({ percent, caption, label, className }: { percent: number;
 
 /** Paid against agreed. Overpaid fills the bar and says "изплатено". */
 export function PaidBar({ paidMinor, contractMinor, className }: { paidMinor: bigint; contractMinor: bigint; className?: string }) {
-  const percent = contractMinor > 0n ? Math.max(0, Number((paidMinor * 100n) / contractMinor)) : 0;
+  const percent = contractMinor > 0n ? Math.max(0, Number((paidMinor * 100n + contractMinor / 2n) / contractMinor)) : 0;
   return <Meter className={className} percent={percent} label="Платено от договореното" caption={percent >= 100 ? "изплатено" : `${percent}% платено`} />;
 }

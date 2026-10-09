@@ -157,6 +157,8 @@ export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = fal
                   <Input
                     value={line.unitPrice}
                     inputMode="decimal"
+                    // Up to 999 999 999,99: the server's cap, and the preview never reaches Infinity.
+                    maxLength={12}
                     placeholder="0"
                     aria-label={`Единична цена ${index + 1}`}
                     className="h-8 w-full min-w-[6ch] border-0 bg-transparent text-right text-sm tabular-nums focus-visible:ring-0"

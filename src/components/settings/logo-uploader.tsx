@@ -69,7 +69,8 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
       setSaved(null);
       setPending({ file, mimeType, preview });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Изображението не може да се отвори.");
+      // Only our own (Bulgarian) messages reach the toast; a browser's English error gets the generic one.
+      toast.error(error instanceof Error && /[а-я]/i.test(error.message) ? error.message : "Изображението не може да се отвори. Опитай с друг файл.");
     } finally {
       setPreparing(false);
     }
