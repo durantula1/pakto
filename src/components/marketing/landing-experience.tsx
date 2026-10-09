@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
   ShieldCheck,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import {
   LazyMotion,
   MotionConfig,
@@ -30,6 +30,17 @@ import { SecuritySection } from "./security-section";
 import { UpdatesSection } from "./updates-section";
 import { VersionScene } from "./version-scene";
 import { applyAuthHint, verifyAuthHint } from "@/lib/auth/session-hint";
+
+/** The hero's bottom line: the record of the approval the hero scene plays out. */
+const heroLine: readonly { text: string; className?: string }[] = [
+  { text: "ПР-042", className: "font-bold text-[#102b38]" },
+  { text: "версия 2" },
+  { text: "384 €", className: "font-bold text-[#102b38]" },
+  { text: "одобрена от Иван Петров с код от имейла" },
+  { text: "24.09 · 14:32" },
+  { text: "отпечатък 3f9a…dc21" },
+  { text: "PDF", className: "underline decoration-[#102b38]/30 underline-offset-4" },
+];
 
 // The landing page is static (cached, back/forward-cacheable). Both signed-in and visitor buttons
 // are in the HTML; `authHintScript` (run before paint by the root layout) sets <html data-auth>, and CSS
@@ -204,28 +215,34 @@ export function LandingExperience() {
               </div>
             </div>
 
-            {/* Not a list of claims: the bottom line of a real approved change (the same ПР-042 as the card above and the version scene). */}
+            {/* Not a list of claims: the bottom line of a real approved change (the same ПР-042 as the card above and the version scene). It prints itself once, in step with the first approval in the hero scene. */}
             <HeroReveal
               delay={0.5}
               className="relative z-10 mx-auto mt-10 w-full max-w-[93.75rem] lg:mt-6"
             >
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-[#102b38]/15 pt-5">
                   <p className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-xs text-[#284955]">
-                    <span className="font-bold text-[#102b38]">ПР-042</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span>версия 2</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span className="font-bold text-[#102b38]">384 €</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span>одобрена от Иван Петров с код от имейла</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span>24.09 · 14:32</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span>отпечатък 3f9a…dc21</span>
-                    <span aria-hidden="true" className="text-[#102b38]/30">·</span>
-                    <span className="underline decoration-[#102b38]/30 underline-offset-4">PDF</span>
+                    {heroLine.map((item, index) => (
+                      <Fragment key={item.text}>
+                        {index > 0 && (
+                          <span
+                            aria-hidden="true"
+                            className="mf-print text-[#102b38]/30"
+                            style={{ "--i": index * 2 - 1 } as CSSProperties}
+                          >
+                            ·
+                          </span>
+                        )}
+                        <span
+                          className={`mf-print ${item.className ?? ""}`}
+                          style={{ "--i": index * 2 } as CSSProperties}
+                        >
+                          {item.text}
+                        </span>
+                      </Fragment>
+                    ))}
                   </p>
-                  <span aria-hidden="true" className="ml-auto hidden -rotate-6 rounded-md sm:inline-block border-[0.1875rem] border-[#e85f48] px-2.5 py-1 font-mono text-[0.6875rem] font-black tracking-[0.12em] text-[#e85f48] mix-blend-multiply [filter:url(#mf-ink)]">ОДОБРЕНО</span>
+                  <span aria-hidden="true" className="mf-print-stamp ml-auto hidden -rotate-6 rounded-md sm:inline-block border-[0.1875rem] border-[#e85f48] px-2.5 py-1 font-mono text-[0.6875rem] font-black tracking-[0.12em] text-[#e85f48] mix-blend-multiply [filter:url(#mf-ink)]">ОДОБРЕНО</span>
                 </div>
             </HeroReveal>
           </section>
