@@ -15,6 +15,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { vatLabel } from "@/modules/change-orders/labels";
 import { archiveTemplateAction } from "@/modules/catalog/actions";
 import { listCatalog, listTemplates } from "@/modules/catalog/queries";
+import { formatAmount } from "@/lib/money";
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
 
@@ -46,7 +47,7 @@ export default async function CatalogPage({ searchParams }: PageProps<"/app/cata
                     <div>
                       <p className="font-semibold">{template.name}</p>
                       <p className="mt-0.5 text-sm text-muted-foreground">{template.title}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">{template.lines.length === 1 ? "1 услуга или материал" : `${template.lines.length} услуги и материали`} · {total.toFixed(2)} EUR без ДДС · {vatLabel(template.taxRate)} · {dateFormat.format(template.createdAt)}</p>
+                      <p className="mt-2 text-xs text-muted-foreground">{template.lines.length === 1 ? "1 услуга или материал" : `${template.lines.length} услуги и материали`} · {formatAmount(total)} € без ДДС · {vatLabel(template.taxRate)} · {dateFormat.format(template.createdAt)}</p>
                     </div>
                     <div className="mt-auto flex flex-wrap items-center gap-2">
                       {canEdit ? <Link href={`/app/offers/new?template=${template.id}`} className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground sm:flex-none"><FilePlus2 className="size-4" /> Нова оферта от шаблона</Link> : null}

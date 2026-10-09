@@ -9,6 +9,7 @@ import { lastPage, PAGE_SIZE, pageHref, pageOffset } from "@/lib/pagination";
 import { documentCode } from "@/modules/change-orders/labels";
 import { countChangeOrders, countChangesByOffer, listChangeOrders } from "@/modules/change-orders/queries";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 const label = "Всички оферти";
 
@@ -47,7 +48,7 @@ export async function OffersTable({ filters, page, searchState }: {
           offer.clientName ? <span key="client">{offer.clientName}</span> : <span key="client" className="text-muted-foreground">—</span>,
           <DocumentStatusBadge key="status" status={offer.revisionStatus} />,
           changeCount?.total ? <span key="changes" className="inline-flex items-center gap-2 whitespace-nowrap"><span className="tabular-nums">{changeCount.total}</span>{changeCount.pending ? <Badge variant="sent">{changeCount.pending} {changeCount.pending === 1 ? "чака решение" : "чакат решение"}</Badge> : null}</span> : <span key="changes" className="text-muted-foreground">—</span>,
-          <span key="total" className="font-semibold">{formatAmount(offer.total ?? 0)} {offer.currency}</span>,
+          <span key="total" className="font-semibold">{formatAmount(offer.total ?? 0)} {currencySymbol(offer.currency)}</span>,
         ],
       };
     })}

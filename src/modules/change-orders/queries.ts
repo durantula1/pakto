@@ -23,6 +23,7 @@ import { seesAllProjects } from "@/lib/authz/project-access";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { documentLogo } from "@/modules/organizations/logo";
 import { expireOverdue } from "@/modules/change-orders/reminders";
+import { verifyRevision } from "@/modules/change-orders/fingerprint";
 
 /** `waiting` is the dashboard's "awaiting decision": sent to the client, seen or not. */
 export type ChangeOrderStatusFilter = "draft" | "sent" | "viewed" | "approved" | "declined" | "changes_requested" | "waiting";
@@ -321,7 +322,9 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
   const events = eventRows.slice(0, TIMELINE_PAGE_SIZE);
   const { revisionLogoPath, organizationLogoPath, organizationLogoSize, ...rest } = change;
   const logo = documentLogo({ revisionLogoPath, organizationLogoPath, size: organizationLogoSize });
-  return { ...rest, logo, revisions, events, hasOlderEvents, disputeEvent, decision, lineItems, baselineOffer, schedule, paymentTerms, absorbedChanges, extra };
+  // Read again from the stored rows: proves the version is still what was sent and what the client decided on.
+  const fingerprint = decision ? await verifyRevision(change.revisionId, decision.revisionContentHash) : null;
+  return { ...rest, logo, revisions, events, hasOlderEvents, disputeEvent, decision, fingerprint, lineItems, baselineOffer, schedule, paymentTerms, absorbedChanges, extra };
 }
 
 /** Tab title for an offer or change page, under the same project and draft visibility as the page itself. */

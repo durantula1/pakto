@@ -20,6 +20,7 @@ import type { CatalogPick } from "@/components/catalog/catalog-picker";
 import { UnitField } from "@/components/catalog/unit-field";
 import { useKeepFormValues } from "@/lib/use-keep-form-values";
 import { cn } from "@/lib/utils";
+import { currencySymbol } from "@/lib/money";
 
 const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
 const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 sm:grid-cols-[minmax(0,1fr)_4rem_7rem_1rem]";
@@ -251,7 +252,7 @@ function CatalogRow({ item, currency, onEdit }: { item: CatalogPick; currency: s
     </span>
     <span className="hidden text-sm text-muted-foreground sm:block">{item.unit ?? "—"}</span>
     <span className="flex items-center gap-2 justify-self-end sm:contents">
-      <span className="text-right font-semibold tabular-nums">{price.format(Number(item.unitPrice))} {currency}</span>
+      <span className="text-right font-semibold tabular-nums">{price.format(Number(item.unitPrice))} {currencySymbol(currency)}</span>
       {onEdit ? <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" /> : null}
     </span>
   </>;
@@ -316,7 +317,7 @@ function ItemSheet({ item, category, categories, onClose, onArchive, currency }:
           <label className="text-sm font-medium">Име
             <Input name="name" required minLength={2} maxLength={300} defaultValue={item?.name ?? ""} autoFocus placeholder="напр. Шпакловка стени" className="mt-1.5 h-11 text-base sm:text-sm" />
           </label>
-          <label className="text-sm font-medium">Цена ({currency})
+          <label className="text-sm font-medium">Цена ({currencySymbol(currency)})
             <Input name="unitPrice" required inputMode="decimal" defaultValue={item ? String(Number(item.unitPrice)) : ""} placeholder="0" className="mt-1.5 h-11 text-right text-base tabular-nums sm:text-sm" />
           </label>
           <UnitField defaultValue={item?.unit ?? ""} />

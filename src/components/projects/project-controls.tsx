@@ -20,6 +20,7 @@ import {
 import type { ProjectState } from "@/modules/projects/state";
 import { formatDay } from "@/modules/change-orders/labels";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 const paymentKinds = [{ value: "deposit", label: "Аванс" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 const methods = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
@@ -42,7 +43,7 @@ export function PaymentDisputesAlert({ projectId, disputes, canResolve }: { proj
     <ul className="divide-y divide-dashed">
       {disputes.map((item) => {
         const row = <>
-          <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${formatAmount(item.amount)} ${item.currency}`} />
+          <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${formatAmount(item.amount)} ${currencySymbol(item.currency)}`} />
           <Quote by="Клиентът:" tone="danger" className="mt-2">{item.reason}</Quote>
           <p className="mt-1 text-xs text-muted-foreground">{item.createdAt.toLocaleString("bg-BG", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Sofia" })}</p>
         </>;
@@ -68,7 +69,7 @@ export function PaymentClaimsBlock({ projectId, claims, canResolve }: { projectI
             date={formatDay(claim.paidOn)}
             title={claim.installmentTitle ? `За „${claim.installmentTitle}“` : claim.offerLabel ?? "Плащане"}
             sub={`${claim.contactName} · ${methodLabels[claim.method] ?? claim.method}`}
-            amount={`${formatAmount(claim.amount)} ${claim.currency}`}
+            amount={`${formatAmount(claim.amount)} ${currencySymbol(claim.currency)}`}
           />
           {claim.note ? <Quote by="Бележка:" className="mt-2">{claim.note}</Quote> : null}
         </>;
@@ -158,7 +159,7 @@ export function InstallmentDialog({ projectId, offerOptions, stages, installment
         <input type="hidden" name="projectId" value={projectId} />
         {installment ? <input type="hidden" name="installmentId" value={installment.id} /> : null}
         <Field className="sm:col-span-2"><FieldLabel htmlFor={`installment-title-${key}`}>Име</FieldLabel><Input id={`installment-title-${key}`} name="title" required minLength={2} maxLength={180} defaultValue={installment?.title} placeholder="Напр. Аванс за материали" autoFocus /></Field>
-        <Field><FieldLabel htmlFor={`installment-amount-${key}`}>Сума (EUR)</FieldLabel><Input id={`installment-amount-${key}`} type="number" name="amount" min="0.01" step="0.01" defaultValue={installment ? Number(installment.amount).toFixed(2) : undefined} required /></Field>
+        <Field><FieldLabel htmlFor={`installment-amount-${key}`}>Сума (€)</FieldLabel><Input id={`installment-amount-${key}`} type="number" name="amount" min="0.01" step="0.01" defaultValue={installment ? Number(installment.amount).toFixed(2) : undefined} required /></Field>
         <Field><FieldLabel htmlFor={`installment-due-${key}`}>Срок за плащане</FieldLabel><DatePicker id={`installment-due-${key}`} name="dueOn" defaultValue={installment?.dueOn ?? today()} required aria-label="Срок за плащане" /></Field>
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value={installment?.kind ?? "progress"} options={paymentKinds} /></Field>
         {stages.length ? <Field><FieldLabel>След етап</FieldLabel><FilterSelect name="milestoneId" value={installment?.milestoneId ?? "none"} options={stageOptions} /></Field> : null}
@@ -195,7 +196,7 @@ function AssignReceiptDialog({ projectId, receipt, options }: { projectId: strin
     <Dialog className="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Към коя оферта е плащането?</DialogTitle>
-        <DialogDescription>{formatAmount(receipt.amount)} {receipt.currency} от {formatDay(receipt.receivedOn)}. Разпределя се веднъж и влиза в платеното по тази оферта.</DialogDescription>
+        <DialogDescription>{formatAmount(receipt.amount)} {currencySymbol(receipt.currency)} от {formatDay(receipt.receivedOn)}. Разпределя се веднъж и влиза в платеното по тази оферта.</DialogDescription>
       </DialogHeader>
       <ActionForm action={assignReceiptAction} success="Плащането е разпределено" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
@@ -217,11 +218,11 @@ function CorrectReceiptDialog({ projectId, receipt }: { projectId: string; recei
         <DialogTitle>Коригирай плащане</DialogTitle>
         <DialogDescription>Записът не се изтрива. Добавяме отменящ запис и нов запис с вярната сума, а клиентът вижда корекцията. Ако плащането не е получено изобщо, въведи 0.</DialogDescription>
       </DialogHeader>
-      <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${formatAmount(receipt.amount)} ${receipt.currency}`} className="border-y border-dashed py-2.5" />
+      <BillLine code={formatDay(receipt.receivedOn)} label={`Записано · ${paymentKinds.find((kind) => kind.value === receipt.kind)?.label ?? receipt.kind}`} amount={`${formatAmount(receipt.amount)} ${currencySymbol(receipt.currency)}`} className="border-y border-dashed py-2.5" />
       <ActionForm action={correctReceiptAction} success="Плащането е коригирано" className="grid gap-3">
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="receiptId" value={receipt.id} />
-        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({receipt.currency})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0" defaultValue={Number(receipt.amount).toFixed(2)} required autoFocus /></Field>
+        <Field><FieldLabel htmlFor={amountId}>Вярна сума ({currencySymbol(receipt.currency)})</FieldLabel><Input id={amountId} type="number" name="amount" step="0.01" min="0" defaultValue={Number(receipt.amount).toFixed(2)} required autoFocus /></Field>
         <Field><FieldLabel htmlFor={reasonId}>Причина</FieldLabel><Input id={reasonId} name="reason" required minLength={3} maxLength={500} placeholder="Напр. грешно въведена сума" /></Field>
         <div className="flex justify-end gap-2 pt-1">
           <DialogClose>Отказ</DialogClose>

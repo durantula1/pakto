@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { projectStatLabels, projectStatsClassName, projectStatusBadgeVariants, projectStatusLabels, projectTabLabels } from "./project-skeleton";
 import { formatAmount } from "@/lib/money";
 import { orForbidden } from "@/lib/authz/page-access";
+import { currencySymbol } from "@/lib/money";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
@@ -256,7 +257,7 @@ function DocumentTable({ label, empty, rows, pagination }: {
       cells: [
         <span key="code" className="font-mono text-xs text-muted-foreground">{documentCode(kind, row.sequenceNumber)}</span>,
         <div key="title"><p className="font-medium">{row.title}</p><p className="text-sm text-muted-foreground">Версия {row.revisionNumber}</p></div>,
-        <span key="total" className="font-semibold">{formatAmount(row.total ?? 0)} {row.currency}</span>,
+        <span key="total" className="font-semibold">{formatAmount(row.total ?? 0)} {currencySymbol(row.currency)}</span>,
       ],
     }))}
     footer={pagination}

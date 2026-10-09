@@ -15,6 +15,7 @@ import {
   submitPortalDecisionAction,
   type DecisionState,
 } from "@/modules/change-portal/actions";
+import { currencySymbol } from "@/lib/money";
 
 type Decision = "approved" | "changes_requested" | "declined";
 
@@ -71,7 +72,7 @@ export function PortalDecisionForm({
   const [staleSubmit, setStaleSubmit] = useState<DecisionState | null>(null);
   const error = otpId ? (submitState === staleSubmit ? undefined : submitState.error) : localError ?? codeState.error;
   const busy = requesting || submitting;
-  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(total)).replace("-", "−")} ${currency}`;
+  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(total)).replace("-", "−")} ${currencySymbol(currency)}`;
   const approving = decision === "approved";
 
   // A new code arrived: count down before offering another one.

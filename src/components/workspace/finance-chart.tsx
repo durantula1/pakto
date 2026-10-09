@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
 const config = {
-  EUR: { label: "EUR", color: "var(--primary)" },
+  EUR: { label: "€", color: "var(--primary)" },
 } satisfies ChartConfig;
 
 // bg-BG "short" months are numeric ("03"), so the long name is cut to three letters instead.
@@ -30,7 +30,7 @@ export function FinanceChart({ data, compact = false, className }: {
       {compact ? null : <CartesianGrid vertical={false} />}
       <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={compact ? 4 : 8} tickFormatter={compact ? monthLabel : undefined} fontSize={compact ? 11 : undefined} />
       {compact ? null : <YAxis tickLine={false} axisLine={false} width={48} tickFormatter={(value: number) => new Intl.NumberFormat("bg-BG", { notation: "compact" }).format(value)} />}
-      <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value))} EUR`} />} />
+      <ChartTooltip content={<ChartTooltipContent formatter={(value) => `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value))} €`} />} />
       <Bar dataKey="EUR" fill="var(--color-EUR)" radius={[4, 4, 0, 0]} />
     </BarChart>
   </ChartContainer>;

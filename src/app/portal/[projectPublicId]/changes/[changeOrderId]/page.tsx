@@ -29,6 +29,7 @@ import { scopeView } from "@/modules/projects/scope";
 import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
 import { formatAmount } from "@/lib/money";
 import { MotionDetails } from "@/components/ui/motion-details";
+import { currencySymbol } from "@/lib/money";
 
 const eventLabels: Record<string, string> = {
   revision_sent: "Изпратена за решение",
@@ -185,7 +186,7 @@ export default async function PortalChangePage({
           <div className="flex flex-wrap gap-2 border-b pb-4">
             {versions.map((revision) => (
               <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary-ink transition hover:bg-primary/5">
-                <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {revision.currency}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
+                <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {currencySymbol(revision.currency)}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
               </DownloadLink>
             ))}
           </div>

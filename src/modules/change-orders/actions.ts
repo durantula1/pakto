@@ -26,7 +26,6 @@ import {
 } from "@/db/schema";
 import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
 import { requireProjectCapability } from "@/lib/authz/project-access";
-import { hashCanonicalJson } from "@/lib/crypto/canonical-json";
 import { createStablePortalToken } from "@/lib/crypto/portal-token";
 import { escapeHtml, projectSubject, sendEmail } from "@/lib/email/send";
 import { getActivePortalLink } from "@/modules/change-portal/links";
@@ -35,12 +34,14 @@ import { sofiaToday } from "@/modules/finance/queries";
 import { summarizeRevisionDiff, type RevisionDiff } from "@/modules/change-orders/revision-diff";
 import { money, priceOffer, type Discount } from "@/modules/change-orders/pricing";
 import { revisableStatus } from "@/modules/change-orders/revision-rules";
+import { revisionFingerprint } from "@/modules/change-orders/fingerprint";
 import { scheduleField, type ScheduleLine } from "@/modules/change-orders/schedule";
 import { paymentTermsField, type PaymentTerm } from "@/modules/change-orders/payment-terms";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { emailClient } from "@/modules/notifications/client";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 /** `createdId` comes back instead of a redirect when the form still has files to upload. */
 export type QuickChangeState = { error?: string; createdId?: string };
@@ -693,76 +694,10 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
       if (!contact) throw new Error("Обектът няма одобряващ.");
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`${change.projectId}:${contact.id}`}))`);
 
-      const lineItems = await transaction
-        .select({
-          position: changeOrderLineItems.position,
-          description: changeOrderLineItems.description,
-          quantity: changeOrderLineItems.quantity,
-          unit: changeOrderLineItems.unit,
-          unitPrice: changeOrderLineItems.unitPrice,
-          lineTotal: changeOrderLineItems.lineTotal,
-        })
-        .from(changeOrderLineItems)
-        .where(eq(changeOrderLineItems.revisionId, revision.id))
-        .orderBy(changeOrderLineItems.position);
-      const schedule = await transaction
-        .select({ position: changeOrderScheduleItems.position, title: changeOrderScheduleItems.title, durationDays: changeOrderScheduleItems.durationDays })
-        .from(changeOrderScheduleItems)
-        .where(eq(changeOrderScheduleItems.revisionId, revision.id))
-        .orderBy(changeOrderScheduleItems.position);
-      const scheduleKeys = await transaction
-        .select({ position: changeOrderScheduleItems.position, lineKey: changeOrderScheduleItems.lineKey })
-        .from(changeOrderScheduleItems)
-        .where(eq(changeOrderScheduleItems.revisionId, revision.id));
-      // A term "after a stage" is fingerprinted by the stage's position, which the client sees.
-      const paymentTerms = (await transaction
-        .select()
-        .from(changeOrderPaymentTerms)
-        .where(eq(changeOrderPaymentTerms.revisionId, revision.id))
-        .orderBy(changeOrderPaymentTerms.position))
-        .map((term) => ({ position: term.position, title: term.title, percent: term.percent, dueTrigger: term.dueTrigger, dueOn: term.dueOn, stage: scheduleKeys.find((item) => item.lineKey === term.scheduleLineKey)?.position ?? null }));
-      const absorbedChanges = (await transaction
-        .select({ changeOrderId: revisionAbsorbedChanges.changeOrderId })
-        .from(revisionAbsorbedChanges)
-        .where(eq(revisionAbsorbedChanges.revisionId, revision.id)))
-        .map((row) => row.changeOrderId)
-        .sort();
-      // The fingerprint also proves which files the client saw with this version.
-      const attachments = await transaction
-        .select({ name: changeAttachments.originalName, mimeType: changeAttachments.mimeType, sha256: changeAttachments.sha256 })
-        .from(changeAttachments)
-        .where(eq(changeAttachments.revisionId, revision.id))
-        .orderBy(changeAttachments.id);
       const now = new Date();
       // The client sees until when the price holds; it is part of what they agree to.
       const responseDueAt = new Date(now.getTime() + change.offerValidityDays * 86_400_000);
-      const contentHash = hashCanonicalJson({
-        changeOrderId: change.id,
-        revisionNumber: revision.revisionNumber,
-        title: revision.title,
-        description: revision.description,
-        reason: revision.reason,
-        changeKind: revision.changeKind,
-        pricingType: revision.pricingType,
-        currency: revision.currency,
-        subtotal: revision.subtotal,
-        taxRate: revision.taxRate,
-        taxAmount: revision.taxAmount,
-        total: revision.total,
-        scheduleImpactType: revision.scheduleImpactType,
-        scheduleImpactDays: revision.scheduleImpactDays,
-        agreedDeadline: revision.agreedDeadline,
-        clientNote: revision.clientNote,
-        lineItems,
-        ...(attachments.length ? { attachments } : {}),
-        // Only when there is one, so versions sent before schedules existed keep their fingerprint.
-        ...(schedule.length ? { schedule } : {}),
-        responseDueAt: responseDueAt.toISOString(),
-        ...(revision.discountType ? { discountType: revision.discountType, discountValue: revision.discountValue, discountAmount: revision.discountAmount } : {}),
-        // Only when present, so versions sent before these existed keep their fingerprint.
-        ...(paymentTerms.length ? { paymentTerms } : {}),
-        ...(absorbedChanges.length ? { absorbedChanges } : {}),
-      });
+      const contentHash = await revisionFingerprint(transaction, revision, change.id, responseDueAt);
       if (revision.status === "draft") {
         await numberOnFirstSend(transaction, { id: change.id, projectId: change.projectId, documentKind: change.documentKind });
         await transaction
@@ -824,7 +759,11 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
           lineItems: await transaction.select().from(changeOrderLineItems).where(eq(changeOrderLineItems.revisionId, previous.id)),
           schedule: await transaction.select().from(changeOrderScheduleItems).where(eq(changeOrderScheduleItems.revisionId, previous.id)).orderBy(changeOrderScheduleItems.position),
         },
-        { ...revision, lineItems, schedule },
+        {
+          ...revision,
+          lineItems: await transaction.select().from(changeOrderLineItems).where(eq(changeOrderLineItems.revisionId, revision.id)).orderBy(changeOrderLineItems.position),
+          schedule: await transaction.select().from(changeOrderScheduleItems).where(eq(changeOrderScheduleItems.revisionId, revision.id)).orderBy(changeOrderScheduleItems.position),
+        },
       ) : null;
       return { projectId: change.projectId, contact, documentKind: change.documentKind, title: revision.title, revisionNumber: revision.revisionNumber, diff };
     },
@@ -850,7 +789,7 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
   const intro = diff
     ? `${input.organizationName} обнови ${kind} „${input.title}“. Версия ${input.revisionNumber} заменя версия ${diff.previousNumber}.`
     : `${input.organizationName} Ви изпрати ${kind} „${input.title}“ (версия ${input.revisionNumber}).`;
-  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${formatAmount(diff.totalBefore)} → ${formatAmount(diff.totalAfter)} ${diff.currency}` : null;
+  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${formatAmount(diff.totalBefore)} → ${formatAmount(diff.totalAfter)} ${currencySymbol(diff.currency)}` : null;
   const changeLines = diff ? [...(totalLine ? [totalLine] : []), ...diff.changes] : [];
   const changesText = changeLines.length ? `\n\nКакво се промени:\n${changeLines.map((line) => `• ${line}`).join("\n")}` : "";
   const changesHtml = changeLines.length ? `<p style="margin:16px 0 4px;font-weight:600">Какво се промени</p><ul style="margin:0;padding-left:20px">${changeLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";

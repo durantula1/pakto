@@ -280,7 +280,7 @@ export function QuickChangeForm({
             min={0}
             max={999999999}
             step={1}
-            suffix="EUR"
+            suffix="€"
             required
           />
         </div>

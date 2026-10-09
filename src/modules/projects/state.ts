@@ -18,6 +18,7 @@ import {
   projects,
 } from "@/db/schema";
 import { offerDisplayStatus, offerInForce } from "@/modules/projects/offer-status";
+import { currencySymbol } from "@/lib/money";
 
 export function cents(value: string | null | undefined) {
   const raw = value ?? "0";
@@ -28,7 +29,7 @@ export function cents(value: string | null | undefined) {
 }
 
 export function formatCents(value: bigint, currency: string) {
-  return `${formatAmount(Number(value) / 100)} ${currency}`;
+  return `${formatAmount(Number(value) / 100)} ${currencySymbol(currency)}`;
 }
 
 /** How many of the latest receipts `getProjectState` returns; totals always cover every receipt. */

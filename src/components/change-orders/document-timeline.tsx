@@ -7,6 +7,7 @@ import { DownloadLink } from "@/components/workspace/download-tray";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 export const eventLabels: Record<string, string> = {
   change_created: "Създадена чернова",
@@ -107,7 +108,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
                     {revision.id === approvedRevisionId ? <span className="text-xs text-muted-foreground">в сила</span> : null}
                   </span>
                   <span className="flex items-center gap-3 text-sm">
-                    <span className="tabular-nums text-muted-foreground">{formatAmount(revision.total)} {revision.currency}</span>
+                    <span className="tabular-nums text-muted-foreground">{formatAmount(revision.total)} {currencySymbol(revision.currency)}</span>
                     <DownloadLink href={`/api/changes/${changeOrderId}/pdf?revision=${revision.id}`} label={`PDF · версия ${revision.revisionNumber}`} className="inline-flex items-center gap-1 font-medium text-primary-ink hover:underline">
                       <Download className="size-3.5" /> PDF
                     </DownloadLink>

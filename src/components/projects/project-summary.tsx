@@ -16,6 +16,7 @@ import { offerLabel } from "@/modules/projects/scope";
 import { formatCents, type OfferState, type ProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { currencySymbol } from "@/lib/money";
 
 const offerHref = (offer: Pick<OfferState, "id">, tab: "stages" | "payments") => `/app/offers/${offer.id}?tab=${tab}`;
 
@@ -165,7 +166,7 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
           cells: [
             <span key="title" className="min-w-0"><span className="block">{item.title}</span><span className="block text-xs text-muted-foreground">{paymentLabels[item.kind] ?? item.kind}</span></span>,
             <span key="due" className={cn("tabular-nums", item.dueOn < today && item.remainingMinor > 0n && "font-medium text-destructive")}>{formatDay(item.dueOn)}</span>,
-            <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
+            <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {currencySymbol(item.currency)}</span>,
             ...(canRecord && placeOptions.length ? [<InstallmentActions key="actions" projectId={projectId} item={item} offerOptions={placeOptions} stages={stageChoices.filter((stage) => !!stage.offerId)} />] : []),
           ],
         }))}

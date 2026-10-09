@@ -100,7 +100,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
                 ) : null}
               </div>
               <Button type="button" variant="ghost" size="icon" className="size-10 text-muted-foreground" aria-label={`Премахни плащане ${index + 1}`} onPress={() => setRows(rows.filter((other) => other.key !== item.key))}><Trash2 /></Button>
-              <p className="text-xs text-muted-foreground tabular-nums @lg:col-span-4">{Number(item.percent) ? `${money(amounts[index]!)} EUR` : "\u00a0"}</p>
+              <p className="text-xs text-muted-foreground tabular-nums @lg:col-span-4">{Number(item.percent) ? `${money(amounts[index]!)} €` : "\u00a0"}</p>
             </li>
           ))}
         </ol>

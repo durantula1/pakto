@@ -9,6 +9,7 @@ import { formatAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { loadOfferChangesPage, type OfferChangesPage } from "@/modules/change-orders/changes-page-actions";
 import { OFFER_CHANGES_PAGE_SIZE } from "@/modules/change-orders/labels";
+import { currencySymbol } from "@/lib/money";
 
 export const offerChangeColumns: DataTableColumn[] = [{ id: "code", header: "Код" }, { id: "title", header: "Промяна", mobile: "primary", skeleton: "stack" }, { id: "status", header: "Статус", skeleton: "badge" }, { id: "total", header: "Сума", className: "text-right" }];
 
@@ -43,7 +44,7 @@ export function OfferChangesTable({ label, offerId, path, initial }: { label: st
           <span key="code" className="font-mono text-xs text-muted-foreground">{item.code}</span>,
           <div key="title"><p className="font-medium">{item.title}</p><p className="text-sm text-muted-foreground">версия {item.revisionNumber}</p></div>,
           <DocumentStatusBadge key="status" status={item.status} />,
-          <span key="total" className="font-semibold tabular-nums">{formatAmount(item.total)} {item.currency}</span>,
+          <span key="total" className="font-semibold tabular-nums">{formatAmount(item.total)} {currencySymbol(item.currency)}</span>,
         ],
       }))}
       footer={<ListPagination path={path} params={{}} page={data.page} total={data.total} pageSize={OFFER_CHANGES_PAGE_SIZE} pageParam="changesPage" onSelect={select} />}

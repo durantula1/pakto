@@ -35,6 +35,7 @@ import { applyApprovedChange, applyApprovedOffer } from "@/modules/change-orders
 import { sofiaToday } from "@/modules/finance/queries";
 import { getProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 const decisionSchema = z.object({
   projectPublicId: z.uuid(),
@@ -113,7 +114,7 @@ export async function requestDecisionCodeAction(_: DecisionState, formData: Form
       revisionId: revision.id,
       decision: data.decision,
       ip: clientIp(await headers()),
-      summary: `${decisionLabels[data.decision]} „${revision.title}“, версия ${revision.revisionNumber}, ${formatAmount(revision.total)} ${revision.currency}.`,
+      summary: `${decisionLabels[data.decision]} „${revision.title}“, версия ${revision.revisionNumber}, ${formatAmount(revision.total)} ${currencySymbol(revision.currency)}.`,
     });
     return { otpId, sentTo: maskEmail(session.contactEmail!) };
   } catch (cause) {
@@ -335,7 +336,7 @@ async function sendDecisionReceipt(decisionId: number) {
   const when = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Sofia" }).format(row.createdAt);
   const facts = [
     [document?.kind === "change" ? "Промяна" : "Оферта", `${row.title}, версия ${row.revisionNumber}`],
-    ["Сума", `${formatAmount(row.total)} ${row.currency}`],
+    ["Сума", `${formatAmount(row.total)} ${currencySymbol(row.currency)}`],
     ["Решение", decisionReceiptLabels[row.decision]],
     ["Име", row.typedName],
     ...(row.signatureSha256 ? [["Ръкописно потвърждение", "Вижте го в приложения PDF"]] : []),
@@ -431,7 +432,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
       if (offerId) {
         const offerState = (await getProjectState(session.organizationId, session.projectId))?.offers.find((item) => item.id === offerId);
         if (offerState?.inForce && Math.round(data.amount * 100) > Number(offerState.remainingMinor)) {
-          throw new Error(offerState.remainingMinor > 0n ? `По тази оферта остават ${formatAmount(Number(offerState.remainingMinor) / 100)} EUR. Въведете по-малка сума.` : "Тази оферта е платена изцяло.");
+          throw new Error(offerState.remainingMinor > 0n ? `По тази оферта остават ${formatAmount(Number(offerState.remainingMinor) / 100)} €. Въведете по-малка сума.` : "Тази оферта е платена изцяло.");
         }
       }
       const [pending] = await tx.select({ total: sql<number>`count(*)::int` }).from(paymentClaims)
@@ -443,7 +444,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
       });
       await notifyProjectStaff(tx, {
         organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_claimed", permission: "payments.record",
-        title: `${session.contactName} отбеляза плащане: ${formatAmount(data.amount)} EUR`,
+        title: `${session.contactName} отбеляза плащане: ${formatAmount(data.amount)} €`,
         body: data.note || "Провери получената сума и я потвърди.",
         href: `/app/projects/${session.projectId}?tab=payments`,
       });

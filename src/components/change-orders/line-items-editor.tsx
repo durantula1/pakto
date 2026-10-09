@@ -11,6 +11,7 @@ import { Stepper } from "@/components/change-orders/stepper";
 import { CatalogPicker, type CatalogPick } from "@/components/catalog/catalog-picker";
 import { saveCatalogItemAction } from "@/modules/catalog/actions";
 import { money } from "@/modules/change-orders/pricing";
+import { currencySymbol } from "@/lib/money";
 
 export type Line = {
   key: string;
@@ -161,7 +162,7 @@ export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = fal
                     className="h-8 w-full min-w-[6ch] border-0 bg-transparent text-right text-sm tabular-nums focus-visible:ring-0"
                     onChange={(event) => updateLine(line.key, { unitPrice: event.target.value.replace(",", ".").replace(/[^\d.]/g, "") })}
                   />
-                  <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currency}</span>
+                  <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currencySymbol(currency)}</span>
                 </label>
               </div>
               <div className="mt-1 flex items-center justify-between gap-2 xl:mt-0 xl:justify-end">

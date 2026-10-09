@@ -4,9 +4,10 @@ import { useState } from "react";
 
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { currencySymbol } from "@/lib/money";
 
 const money = (cents: number, currency: string) =>
-  `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(cents / 100)} ${currency}`;
+  `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(cents / 100)} ${currencySymbol(currency)}`;
 
 /**
  * "Получена сума" with what is still owed under it. More than that is allowed (an advance for work

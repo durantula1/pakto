@@ -9,6 +9,7 @@ import { getActivePortalLink } from "@/modules/change-portal/links";
 import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { emailClient, sendClientDigests } from "@/modules/notifications/client";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
 
@@ -46,8 +47,8 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
     ? `Напомняне: ${kind} „${document.title}“ е валидна до ${due}`
     : `Напомняне: ${kind} „${document.title}“ очаква Вашето решение`;
   const intro = reason === "expiring" && due
-    ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) е валидна до ${due}.`
-    : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}).${due ? ` Валидна е до ${due}.` : ""}`;
+    ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}) е валидна до ${due}.`
+    : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}).${due ? ` Валидна е до ${due}.` : ""}`;
   await sendEmail({
     kind: "reminder", retry: true,
     to: contact.email,
@@ -83,7 +84,7 @@ export async function expireOverdue(now = new Date(), scope: { projectId?: strin
       const kind = document.documentKind === "offer" ? "Офертата" : "Промяната";
       emailClient(document.projectId, {
         subject: `${kind} „${document.title}“ изтече`,
-        intro: `${kind} „${document.title}“ (${formatAmount(document.total)} ${document.currency}) вече не е валидна, защото срокът за решение изтече. Ако желаете да продължите, свържете се с ${document.organizationName} за нова версия.`,
+        intro: `${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}) вече не е валидна, защото срокът за решение изтече. Ако желаете да продължите, свържете се с ${document.organizationName} за нова версия.`,
       });
     }
   }

@@ -22,6 +22,7 @@ import { offerLabel, scopeView } from "@/modules/projects/scope";
 import { cents, formatCents, type OfferState, type ProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { currencySymbol } from "@/lib/money";
 
 const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
 const stageOptions = [{ value: "planned", label: "Предстои" }, { value: "in_progress", label: "В работа" }, { value: "completed", label: "Завършен" }];
@@ -190,7 +191,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
           <span key="title" className="min-w-0"><span className="block">{item.title}</span><span className="block text-xs text-muted-foreground">{[paymentLabels[item.kind] ?? item.kind, item.termId ? "по офертата" : null].filter(Boolean).join(" · ")}</span></span>,
           <span key="due" className={cn("tabular-nums", item.dueOn < today && item.remainingMinor > 0n && "font-medium text-destructive")}>{formatDay(item.dueOn)}</span>,
           item.remainingMinor > 0n ? formatCents(item.remainingMinor, item.currency) : <Badge key="left" variant="success-soft">Платено</Badge>,
-          <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
+          <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {currencySymbol(item.currency)}</span>,
           ...(canRecord ? [<InstallmentActions key="actions" projectId={projectId} item={item} offerOptions={offerOptions} stages={stageChoices} />] : []),
         ],
       }))}
@@ -237,7 +238,7 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
         formatDay(item.receivedOn),
         <span key="kind" className="inline-flex flex-col"><span>{item.correctionOfId ? (Number(item.amount) < 0 ? "Отменено плащане" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>{showOffer ? <span className="text-xs text-muted-foreground">{codeOf(item.offerId) ?? "Без оферта"}</span> : null}</span>,
         <span key="method" className="inline-flex flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:justify-start">{item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}{methodLabels[item.method] ?? item.method}{item.note ? <span className="text-muted-foreground">· {item.note}</span> : null}</span>,
-        <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {item.currency}</span>,
+        <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {currencySymbol(item.currency)}</span>,
         ...(canRecord ? [<ReceiptActions key="actions" projectId={projectId} receipt={item} receipts={state.receipts} dispute={disputes.find((dispute) => dispute.receiptId === item.id)} assignOptions={assignOptions} />] : []),
       ],
     }))}

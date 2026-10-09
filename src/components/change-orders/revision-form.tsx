@@ -21,6 +21,7 @@ import type { CatalogPick } from "@/components/catalog/catalog-picker";
 import { createDocumentRevisionAction, type QuickChangeState } from "@/modules/change-orders/actions";
 import { discountLabel, money, priceOffer, type DiscountType } from "@/modules/change-orders/pricing";
 import { formatDay, vatLabel } from "@/modules/change-orders/labels";
+import { currencySymbol } from "@/lib/money";
 
 type ChangeKind = "addition" | "credit" | "no_cost" | "schedule_only";
 export type RevisionFormInitial = {
@@ -193,7 +194,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                       <FieldLabel htmlFor={`${formId}-subtotal`}>Цена без ДДС</FieldLabel>
                       <label className="flex h-10 items-center rounded-lg border bg-background px-3">
                         <Input id={`${formId}-subtotal`} name="subtotal" inputMode="decimal" value={changePrice} onChange={(event) => setChangePrice(event.target.value.replace(",", "."))} className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0 text-right tabular-nums focus-visible:ring-0" />
-                        <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currency}</span>
+                        <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currencySymbol(currency)}</span>
                       </label>
                     </Field>
                   ) : <input type="hidden" name="subtotal" value="0" />}
@@ -252,7 +253,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                       <Checkbox isSelected={absorbed.includes(change.id)} onChange={(selected) => setAbsorbed(selected ? [...absorbed, change.id] : absorbed.filter((id) => id !== change.id))} className="w-full">
                         <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3 text-sm">
                           <span className="min-w-0 truncate">{change.title} <span className="text-muted-foreground">· ПР-{String(change.sequenceNumber).padStart(3, "0")}</span></span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground">{formatMoney(Number(change.total))} {currency}</span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">{formatMoney(Number(change.total))} {currencySymbol(currency)}</span>
                         </span>
                       </Checkbox>
                     </li>
@@ -288,7 +289,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               <BillRow label={vatLabel(taxRate)} value={`${sign}${formatMoney(bill.taxAmount)}`} />
               <div className="flex justify-between gap-3 border-t pt-2 text-base font-semibold">
                 <dt>Общо</dt>
-                <dd className="tabular-nums">{sign}{formatMoney(bill.total)} {currency}</dd>
+                <dd className="tabular-nums">{sign}{formatMoney(bill.total)} {currencySymbol(currency)}</dd>
               </div>
             </dl>
             <p className="mt-3 text-xs text-muted-foreground">{deadlineText}</p>
@@ -309,7 +310,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
       <div className="sticky bottom-20 z-20 -mx-4 flex flex-col gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
         <p className="flex items-baseline justify-between gap-3 text-sm">
           <span className="text-muted-foreground">Общо · версия {nextVersion}</span>
-          <span className="font-semibold tabular-nums">{sign}{formatMoney(bill.total)} {currency}</span>
+          <span className="font-semibold tabular-nums">{sign}{formatMoney(bill.total)} {currencySymbol(currency)}</span>
         </p>
         <div className="flex gap-2">{submitButtons(true)}</div>
       </div>

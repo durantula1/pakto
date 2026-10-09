@@ -139,7 +139,7 @@ export function AuthStage() {
               { name: "Подготовка", meta: "1 бр.", amount: "420" },
               { name: "Изпълнение", meta: "12 м", amount: "1 200" },
             ]}
-            total="1 620 EUR"
+            total="1 620 €"
             className="opacity-70"
             transform="translate(-50%, -50%) translate3d(-8rem, 2.625rem, -5.625rem) rotateZ(-13deg) scale(0.92)"
           />
@@ -152,7 +152,7 @@ export function AuthStage() {
               { name: "Изпълнение", meta: "12 м", amount: "1 440" },
               { name: "Довършване", meta: "1 бр.", amount: "480" },
             ]}
-            total="2 400 EUR"
+            total="2 400 €"
             transform="translate(-50%, -50%) translate3d(-2.875rem, 0.375rem, 0) rotateZ(-7deg)"
           />
           <Sheet
@@ -160,7 +160,7 @@ export function AuthStage() {
             kicker="Промяна"
             title="Спрямо офертата"
             rows={[{ name: "Допълнителна работа", meta: "+2 дни", amount: "+320" }]}
-            total="+320 EUR"
+            total="+320 €"
             approved
             transform="translate(-50%, -50%) translate3d(3rem, -1rem, 5rem) rotateZ(8deg)"
           />

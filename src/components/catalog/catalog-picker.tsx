@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { groupByCategory } from "@/modules/catalog/categories";
+import { currencySymbol } from "@/lib/money";
 
 export type CatalogPick = { id: string; name: string; unit: string | null; unitPrice: string; category: string | null };
 
@@ -62,7 +63,7 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
                     >
                       <span className="min-w-0">
                         <span className="block font-medium">{item.name}</span>
-                        <span className="text-xs text-muted-foreground">{price.format(Number(item.unitPrice))} {currency}{item.unit ? ` / ${item.unit}` : ""}</span>
+                        <span className="text-xs text-muted-foreground">{price.format(Number(item.unitPrice))} {currencySymbol(currency)}{item.unit ? ` / ${item.unit}` : ""}</span>
                       </span>
                       <span className={`grid size-8 shrink-0 place-items-center rounded-full ${added.includes(item.id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                         {added.includes(item.id) ? <span className="text-xs font-semibold">{added.filter((id) => id === item.id).length}</span> : <Plus className="size-4" />}

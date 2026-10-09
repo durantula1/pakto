@@ -1,6 +1,7 @@
 import { formatDay } from "@/modules/change-orders/labels";
 import { daysLabel, scheduleDays, type ScheduleLine } from "@/modules/change-orders/schedule";
 import { formatAmount } from "@/lib/money";
+import { currencySymbol } from "@/lib/money";
 
 type DiffLine = { description: string; quantity: string | number; unit: string | null; unitPrice: string | number; lineTotal: string | number };
 type DiffRevision = { revisionNumber: number; total: string | number; taxRate: string | number; agreedDeadline: string | null; currency: string; discountAmount?: string | number | null; lineItems: DiffLine[]; schedule?: ScheduleLine[] };
@@ -23,13 +24,13 @@ export function summarizeRevisionDiff(previous: DiffRevision, next: DiffRevision
   const after = new Map(next.lineItems.map((line) => [key(line), line]));
   for (const [id, line] of after) {
     const old = before.get(id);
-    if (!old) changes.push(`Добавено: ${line.description} (${amount(line.lineTotal)} ${next.currency})`);
+    if (!old) changes.push(`Добавено: ${line.description} (${amount(line.lineTotal)} ${currencySymbol(next.currency)})`);
     else if (Number(old.quantity) !== Number(line.quantity) || Number(old.unitPrice) !== Number(line.unitPrice) || (old.unit ?? "") !== (line.unit ?? "")) {
       changes.push(`Променено: ${line.description} — ${Number(old.quantity)} ${old.unit ?? ""} × ${amount(old.unitPrice)} → ${Number(line.quantity)} ${line.unit ?? ""} × ${amount(line.unitPrice)}`.replace(/\s+/g, " "));
     }
   }
   for (const [id, line] of before) if (!after.has(id)) changes.push(`Премахнато: ${line.description}`);
-  if (Number(previous.discountAmount ?? 0) !== Number(next.discountAmount ?? 0)) changes.push(Number(next.discountAmount ?? 0) ? `Отстъпка: ${amount(previous.discountAmount ?? 0)} → ${amount(next.discountAmount ?? 0)} ${next.currency}` : "Отстъпката е премахната");
+  if (Number(previous.discountAmount ?? 0) !== Number(next.discountAmount ?? 0)) changes.push(Number(next.discountAmount ?? 0) ? `Отстъпка: ${amount(previous.discountAmount ?? 0)} → ${amount(next.discountAmount ?? 0)} ${currencySymbol(next.currency)}` : "Отстъпката е премахната");
   if (Number(previous.taxRate) !== Number(next.taxRate)) changes.push(`ДДС: ${Number(previous.taxRate)}% → ${Number(next.taxRate)}%`);
   if (previous.agreedDeadline !== next.agreedDeadline) changes.push(`Срок: ${previous.agreedDeadline ? formatDay(previous.agreedDeadline) : "—"} → ${next.agreedDeadline ? formatDay(next.agreedDeadline) : "—"}`);
   const scheduleBefore = previous.schedule ?? [];

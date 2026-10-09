@@ -18,6 +18,7 @@ import { emailClient } from "@/modules/notifications/client";
 import { requireActiveProject } from "@/modules/projects/lifecycle";
 import { formatAmount } from "@/lib/money";
 import { sofiaToday } from "@/modules/finance/queries";
+import { currencySymbol } from "@/lib/money";
 
 type Transaction = Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0];
 type Executor = Pick<Transaction, "select">;
@@ -270,7 +271,7 @@ export async function editInstallmentAction(formData: FormData): Promise<ActionR
       const [received] = await tx.select({ sum: sql<string>`coalesce(sum(${projectReceipts.amount}), 0)::text`, count: sql<number>`count(*)::int` }).from(projectReceipts).where(eq(projectReceipts.installmentId, data.installmentId));
       const [claims] = await tx.select({ count: sql<number>`count(*)::int` }).from(paymentClaims).where(and(eq(paymentClaims.installmentId, data.installmentId), eq(paymentClaims.status, "pending")));
       if (((received?.count ?? 0) > 0 || (claims?.count ?? 0) > 0) && offerId !== current.offerId) throw new Error("По тази вноска има плащане. Не може да я преместиш към друга оферта.");
-      if ((received?.count ?? 0) > 0 && Number(data.amount) < Number(received?.sum ?? 0)) throw new Error(`По тази вноска са получени ${formatAmount(received?.sum ?? 0)} EUR. Сумата ѝ не може да е по-малка.`);
+      if ((received?.count ?? 0) > 0 && Number(data.amount) < Number(received?.sum ?? 0)) throw new Error(`По тази вноска са получени ${formatAmount(received?.sum ?? 0)} €. Сумата ѝ не може да е по-малка.`);
       await tx.update(paymentInstallments).set({ offerId, milestoneId, kind: data.kind, title: data.title, amount: data.amount, dueOn: data.dueOn, updatedAt: new Date() })
         .where(eq(paymentInstallments.id, data.installmentId));
     });
@@ -315,11 +316,11 @@ async function receiptOffer(db: Executor, organizationId: string, projectId: str
 
 function emailReceipt(projectId: string, input: { amount: string; currency: string; receivedOn: string; method: string; corrected?: boolean }) {
   emailClient(projectId, {
-    subject: input.corrected ? `Коригирано плащане: ${formatAmount(input.amount)} ${input.currency}` : `Записано плащане: ${formatAmount(input.amount)} ${input.currency}`,
+    subject: input.corrected ? `Коригирано плащане: ${formatAmount(input.amount)} ${currencySymbol(input.currency)}` : `Записано плащане: ${formatAmount(input.amount)} ${currencySymbol(input.currency)}`,
     intro: input.corrected
       ? "Фирмата коригира записано плащане. Вярната сума вече е в портала."
       : "Фирмата записа, че е получила плащане от Вас. Моля, проверете дали всичко е вярно.",
-    facts: [["Сума", `${formatAmount(input.amount)} ${input.currency}`], ["Дата", formatDay(input.receivedOn)], ["Начин на плащане", methodLabels[input.method] ?? input.method]],
+    facts: [["Сума", `${formatAmount(input.amount)} ${currencySymbol(input.currency)}`], ["Дата", formatDay(input.receivedOn)], ["Начин на плащане", methodLabels[input.method] ?? input.method]],
     cta: "Вижте плащанията",
     outro: "Ако нещо не е вярно, натиснете „Не е вярно?“ до плащането в портала.",
   });
@@ -480,7 +481,7 @@ export async function rejectPaymentClaimAction(formData: FormData): Promise<Acti
     if (!claim) throw new Error("Отбелязването вече е обработено.");
     emailClient(projectId, {
       subject: "Плащането Ви още не е потвърдено",
-      intro: `Фирмата още не може да потвърди плащането от ${formatDay(claim.paidOn)} за ${formatAmount(claim.amount)} ${claim.currency}. Отговорът ѝ е по-долу. Ако имате потвърждение за плащането, пишете ѝ от портала, за да го изясните.`,
+      intro: `Фирмата още не може да потвърди плащането от ${formatDay(claim.paidOn)} за ${formatAmount(claim.amount)} ${currencySymbol(claim.currency)}. Отговорът ѝ е по-долу. Ако имате потвърждение за плащането, пишете ѝ от портала, за да го изясните.`,
       facts: [["Отговор", response]],
       cta: "Вижте плащанията",
     });

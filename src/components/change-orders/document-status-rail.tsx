@@ -8,6 +8,8 @@ import {
   PencilLine,
   Plus,
   Send,
+  ShieldAlert,
+  ShieldCheck,
   UserRound,
 } from "lucide-react";
 
@@ -30,6 +32,7 @@ import type { getChangeOrder } from "@/modules/change-orders/queries";
 import { remindClientAction } from "@/modules/change-orders/reminder-actions";
 import { formatAmount } from "@/lib/money";
 import { cents, formatCents } from "@/modules/projects/state";
+import { currencySymbol } from "@/lib/money";
 
 type Document = NonNullable<Awaited<ReturnType<typeof getChangeOrder>>>;
 
@@ -276,7 +279,7 @@ export function DocumentStatusCard({
             </p>
             {inForceChanges.length ? (
               <p className="mt-1 text-muted-foreground tabular-nums">
-                Версия {inForce.revisionNumber}: {money(inForce.total)} {inForce.currency} · {inForceChanges.length === 1 ? "1 одобрена промяна" : `${inForceChanges.length} одобрени промени`}: {formatCents(inForceChangesMinor, inForce.currency).replace(/^-/, "−")}
+                Версия {inForce.revisionNumber}: {money(inForce.total)} {currencySymbol(inForce.currency)} · {inForceChanges.length === 1 ? "1 одобрена промяна" : `${inForceChanges.length} одобрени промени`}: {formatCents(inForceChangesMinor, inForce.currency).replace(/^-/, "−")}
               </p>
             ) : null}
             <p className="mt-1 text-muted-foreground">
@@ -387,7 +390,7 @@ export function DocumentFacts({
             <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
               {money(change.total)}{" "}
               <span className="text-base text-muted-foreground">
-                {change.currency}
+                {currencySymbol(change.currency)}
               </span>
             </p>
             <p className="mt-1 text-xs text-muted-foreground tabular-nums">
@@ -471,6 +474,15 @@ export function DocumentFacts({
                 ? maskEmail(decision.verifiedEmail)
                 : "— (старо решение без код)"}
             </p>
+            {change.fingerprint === "match" ? (
+              <p className="flex items-start gap-2 text-tile-mint-foreground">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Съдържанието е същото като при изпращането и решението.
+              </p>
+            ) : change.fingerprint === "mismatch" ? (
+              <p role="alert" className="flex items-start gap-2 text-destructive">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0" /> Записаното съдържание не съвпада с отпечатъка от изпращането. Пиши ни на info@pakto.net.
+              </p>
+            ) : null}
             {signature}
             <details className="text-xs text-muted-foreground">
               <summary className="cursor-pointer select-none">

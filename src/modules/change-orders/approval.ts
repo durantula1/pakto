@@ -149,9 +149,20 @@ export async function applyApprovedOffer(tx: Transaction, input: { organizationI
  * are never touched.
  */
 export async function applyApprovedChange(tx: Transaction, input: { organizationId: string; projectId: string; changeOrderId: string; offerId: string; revisionId: number; approvedAt: Date }) {
-  const [revision] = await tx.select({ total: changeOrderRevisions.total, currency: changeOrderRevisions.currency, title: changeOrderRevisions.title, createdBy: changeOrderRevisions.createdBy })
+  const [revision] = await tx.select({ total: changeOrderRevisions.total, currency: changeOrderRevisions.currency, title: changeOrderRevisions.title, createdBy: changeOrderRevisions.createdBy, deadline: changeOrderRevisions.agreedDeadline })
     .from(changeOrderRevisions).where(eq(changeOrderRevisions.id, input.revisionId)).limit(1);
   if (!revision) return;
+  // A new deadline moves the payments due "on completion" with it, as long as nothing was paid or claimed on them.
+  if (revision.deadline) {
+    await tx.update(paymentInstallments).set({ dueOn: revision.deadline, updatedAt: new Date() }).where(and(
+      eq(paymentInstallments.projectId, input.projectId),
+      eq(paymentInstallments.offerId, input.offerId),
+      inArray(paymentInstallments.termId, tx.select({ id: changeOrderPaymentTerms.id }).from(changeOrderPaymentTerms).where(eq(changeOrderPaymentTerms.dueTrigger, "on_completion"))),
+      // Fully qualified, as above: a bare "id" here would be the receipt's.
+      sql`not exists (select 1 from app.project_receipts r where r.installment_id = app.payment_installments.id)`,
+      sql`not exists (select 1 from app.payment_claims c where c.installment_id = app.payment_installments.id)`,
+    ));
+  }
   const delta = cents(revision.total);
   if (delta === 0n) return;
 

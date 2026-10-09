@@ -305,7 +305,7 @@ export function OfferForm({
             </div>
             <div className="flex justify-between gap-3 border-t pt-2 text-base font-semibold">
               <dt>Общо</dt>
-              <dd className="tabular-nums">{formatMoney(totals.total)} EUR</dd>
+              <dd className="tabular-nums">{formatMoney(totals.total)} €</dd>
             </div>
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">
@@ -356,7 +356,7 @@ export function OfferForm({
           <aside className="mt-3 space-y-3 rounded-2xl bg-sidebar p-5 text-sidebar-foreground lg:sticky lg:top-4 lg:mt-0">
             <div>
               <p className="text-xs text-sidebar-foreground/70">{taxRate ? `Общо с ${vatLabel(taxRate)}` : "Общо, без ДДС"}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(totals.total)} <span className="text-base text-sidebar-foreground/70">EUR</span></p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(totals.total)} <span className="text-base text-sidebar-foreground/70">€</span></p>
             </div>
             <p className="border-t border-sidebar-border pt-3 text-sm">Срок <strong>до {formatDay(deadline)}</strong></p>
             {paymentTerms.length ? <p className="text-sm text-sidebar-foreground/80">{paymentTerms.length === 1 ? "1 плащане" : `${paymentTerms.length} плащания`}{schedule.length ? ` · ${schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}` : ""}</p> : schedule.length ? <p className="text-sm text-sidebar-foreground/80">{schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}</p> : null}
