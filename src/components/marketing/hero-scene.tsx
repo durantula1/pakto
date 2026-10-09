@@ -177,8 +177,8 @@ export function HeroScene() {
           {/* The client's phone, in front. */}
           <div className="absolute right-0 bottom-0 w-[38%] rotate-[3deg] rounded-[2rem] bg-[#0b1f29] p-[0.375rem] shadow-[0_0_0_1px_rgb(255_255_255/10%)_inset,0_2px_6px_rgb(16_43_56/20%),0_50px_80px_-20px_rgb(16_43_56/55%)]">
             <div className="relative aspect-[9/18.5] overflow-hidden rounded-[1.625rem] bg-[#f6f1e4]">
-              <span className="absolute top-[1.5%] left-1/2 h-[2.2%] w-[28%] -translate-x-1/2 rounded-full bg-[#0b1f29]" />
-              <div className="mf-sc-screen flex h-full flex-col px-[0.875rem] pt-[11%] pb-[0.875rem]">
+              <span className="absolute top-[1.5%] left-1/2 z-10 h-[2.2%] w-[28%] -translate-x-1/2 rounded-full bg-[#0b1f29]" />
+              <div className="flex h-full flex-col px-[0.875rem] pt-[11%] pb-[0.875rem]">
                 <p className="font-mono demo-text-9 font-bold tracking-[0.1em] text-[#52707d]">
                   pakto.net
                 </p>
@@ -224,6 +224,8 @@ export function HeroScene() {
                   </span>
                 </span>
               </div>
+              {/* Dims the screen until the notification wakes it: a veil over the text, not a faded text colour. */}
+              <span className="mf-sc-screen pointer-events-none absolute inset-0 bg-[#f6f1e4] opacity-0" />
             </div>
           </div>
 

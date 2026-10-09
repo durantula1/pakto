@@ -68,17 +68,17 @@ function useIsDesktop() {
   return desktop;
 }
 
-/** A step in the list: bright near its own point of the scroll, dimmed elsewhere, never hidden. */
+/** A step in the list: bright near its own point of the scroll, dimmed elsewhere but still readable (4.5:1). */
 function StepItem({ p, index, still }: { p: MotionValue<number>; index: number; still: boolean }) {
   const step = steps[index]!;
   const near = useTransform(p, (v) => clamp01(1 - Math.abs(v - step.at) * 6));
-  const opacity = useTransform(near, (n) => (still ? 1 : 0.28 + 0.72 * n));
+  const opacity = useTransform(near, (n) => (still ? 1 : 0.62 + 0.38 * n));
   const x = useTransform(near, (n) => `${(still ? 0 : 1 - n) * -0.5}rem`);
   return (
     <m.li style={{ opacity, x }} className="py-4">
       <p className="font-mono text-[0.6875rem] font-bold tracking-[0.12em] text-[#b8ecda]">{step.kicker}</p>
       <p className="mt-1.5 text-[clamp(1.375rem,2.2vw,2rem)] font-black leading-[1.05] tracking-[-0.04em]">{step.title}</p>
-      <p className="mt-2 max-w-md text-[0.9375rem] leading-7 text-[#f4efe4]/70">{step.text}</p>
+      <p className="mt-2 max-w-md text-[0.9375rem] leading-7 text-[#f4efe4]/85">{step.text}</p>
     </m.li>
   );
 }
@@ -86,7 +86,8 @@ function StepItem({ p, index, still }: { p: MotionValue<number>; index: number; 
 /** Phone layout: only the current step's title, sliding in from below as it takes over. */
 function StepCaption({ p, index }: { p: MotionValue<number>; index: number }) {
   const step = steps[index]!;
-  const near = useTransform(p, (v) => clamp01(1 - Math.abs(v - step.at) * 9));
+  // The first caption is fully there from the top of the section, not half faded in.
+  const near = useTransform(p, (v) => (index === 0 && v <= step.at ? 1 : clamp01(1 - Math.abs(v - step.at) * 9)));
   const y = useTransform(near, (n) => `${(1 - n) * 0.75}rem`);
   return (
     <m.div style={{ opacity: near, y }} className="col-start-1 row-start-1">
@@ -296,7 +297,7 @@ export function VersionScene() {
                   <p className="mt-0.5 text-lg font-black tracking-[-0.04em]">Кухня · Лозенец</p>
                 </div>
                 <span className="relative grid shrink-0 text-xs font-bold">
-                  <m.span style={{ opacity: draft }} className="col-start-1 row-start-1 rounded-full bg-[#102b38]/[0.08] px-2.5 py-1 text-[#52707d]">
+                  <m.span style={{ opacity: draft }} className="col-start-1 row-start-1 rounded-full bg-[#102b38]/[0.08] px-2.5 py-1 text-[#435f6b]">
                     Чернова
                   </m.span>
                   <m.span

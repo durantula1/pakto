@@ -58,7 +58,7 @@ function Bubble({ show, side, time, children }: { show: boolean; side: "client" 
       >
         {children}
       </p>
-      <p className={`mt-1 px-1 text-[0.625rem] text-[#102b38]/45 ${client ? "" : "text-right"}`}>{time}</p>
+      <p className={`mt-1 px-1 text-[0.625rem] text-[#102b38]/70 ${client ? "" : "text-right"}`}>{time}</p>
     </m.div>
   );
 }
@@ -198,7 +198,7 @@ export function ProblemSection() {
                 ) : null}
               </span>
             ))}
-            <span className="mt-3 block font-sans text-base font-bold not-italic leading-7 tracking-normal text-[#102b38]/75 lg:text-lg">
+            <span className="mt-3 block font-sans text-base font-bold not-italic leading-7 tracking-normal text-[#102b38] lg:text-lg">
               и за всяка работа, която започва с оферта.
             </span>
           </p>
