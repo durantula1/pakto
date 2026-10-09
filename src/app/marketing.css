@@ -1108,49 +1108,8 @@ html[data-auth="in"] .mf-when-out {
   }
 }
 
-/* The hero's bottom line prints itself once, in step with the first approval in the scene. */
-.mf-print {
-  animation: mf-print 0.4s var(--mf-ease-out) both;
-  animation-delay: calc(6s + var(--i, 0) * 0.09s);
-}
-@keyframes mf-print {
-  from {
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-  }
-}
-.mf-print-stamp {
-  animation: mf-print-stamp 0.45s both;
-  animation-delay: 6.9s;
-}
-@keyframes mf-print-stamp {
-  from {
-    opacity: 0;
-    scale: 1.6;
-    rotate: -14deg;
-    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  60% {
-    opacity: 1;
-    scale: 0.94;
-    rotate: -6deg;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  to {
-    opacity: 1;
-    scale: 1;
-    rotate: -6deg;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .mf-scene [class*="mf-sc-"],
-  .mf-print,
-  .mf-print-stamp {
+  .mf-scene [class*="mf-sc-"] {
     animation: none !important;
   }
 }
