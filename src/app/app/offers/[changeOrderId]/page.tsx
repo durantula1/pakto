@@ -181,7 +181,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
               <OfferPayments state={execution.state} offer={offerState} projectId={change.projectId} canRecord={can(member, "payments.record") && change.projectStatus !== "archived"} today={today} inbox={execution.inbox} />
             </TabsContent> : null}
             {thread ? <TabsContent id="messages" className="pt-4">
-              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} thread={thread} /></Suspense>
+              <Suspense fallback={<MessageThreadSkeleton />}><StaffThread changeOrderId={change.id} thread={thread} isOffer={isOffer} /></Suspense>
             </TabsContent> : null}
             {notesTotal ? <TabsContent id="notes" className="pt-4">
               <Suspense key={notesPage} fallback={<NotesSectionSkeleton />}>
@@ -220,10 +220,11 @@ async function loadStaffThread(changeOrderId: string) {
 }
 
 /** The client's questions about this offer and the team's answers; the client sees them under the offer. */
-async function StaffThread({ changeOrderId, thread }: { changeOrderId: string; thread: ReturnType<typeof loadStaffThread> }) {
+async function StaffThread({ changeOrderId, thread, isOffer }: { changeOrderId: string; thread: ReturnType<typeof loadStaffThread>; isOffer: boolean }) {
+  const noun = isOffer ? "офертата" : "промяната";
   const { messages } = await thread;
   return <div className="flex flex-col gap-2">
-    <MessageThread side="staff" title="Въпроси по тази оферта" messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} currentTopic={changeOrderId} composerNote="Клиентът ще го види под офертата и ще получи имейл." placeholder="Отговори на клиента…" emptyText="Клиентът още не е питал за тази оферта. Когато попита, ще го видиш тук." />
+    <MessageThread side="staff" title={`Въпроси по ${isOffer ? "тази оферта" : "тази промяна"}`} messages={messages} action={sendStaffMessageAction} hidden={{ changeOrderId }} currentTopic={changeOrderId} composerNote={`Клиентът ще го види под ${noun} и ще получи имейл.`} placeholder="Отговори на клиента…" emptyText={`Клиентът още не е питал за ${isOffer ? "тази оферта" : "тази промяна"}. Когато попита, ще го видиш тук.`} />
   </div>;
 }
 

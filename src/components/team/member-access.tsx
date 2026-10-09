@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Check, ChevronDown, Minus } from "lucide-react";
@@ -89,8 +89,14 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
   return <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
     <form
       id={FORM_ID}
-      action={action}
-      onSubmit={() => setSubmitted({ permissions, allProjects, projects: selected })}
+      // Not a form action: React resets the form after one, and React Aria's checkboxes then snap back
+      // to how they mounted, so a saved right showed as off and the next save would have removed it.
+      onSubmit={(event) => {
+        event.preventDefault();
+        setSubmitted({ permissions, allProjects, projects: selected });
+        const formData = new FormData(event.currentTarget);
+        startTransition(() => action(formData));
+      }}
       className="flex min-w-0 flex-col gap-4"
     >
       <input type="hidden" name="userId" value={userId} />

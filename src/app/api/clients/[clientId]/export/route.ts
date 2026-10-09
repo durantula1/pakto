@@ -14,11 +14,11 @@ export const runtime = "nodejs";
 export async function GET(_: Request, { params }: RouteContext<"/api/clients/[clientId]/export">) {
   const context = await getOptionalTenantContext();
   const { clientId } = await params;
-  if (!context || context.role !== "owner" || !/^[0-9a-f-]{36}$/i.test(clientId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!context || context.role !== "owner" || !/^[0-9a-f-]{36}$/i.test(clientId)) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
   const db = getDatabase();
   const [client] = await db.select({ id: clients.id, name: clients.name, email: clients.email, phone: clients.phone, address: clients.address, notes: clients.notes, archivedAt: clients.archivedAt, createdAt: clients.createdAt })
     .from(clients).where(and(eq(clients.id, clientId), eq(clients.organizationId, context.organizationId))).limit(1);
-  if (!client) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!client) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
 
   const contacts = await db.select({ id: projectContacts.id, projectId: projectContacts.projectId, projectName: projects.name, siteAddress: projects.siteAddress, name: projectContacts.name, email: projectContacts.email, phone: projectContacts.phone, role: projectContacts.portalRole, emailVerifiedAt: projectContacts.emailVerifiedAt, removedAt: projectContacts.removedAt, createdAt: projectContacts.createdAt })
     .from(projectContacts).innerJoin(projects, eq(projects.id, projectContacts.projectId))

@@ -66,8 +66,9 @@ export async function signUpAction(
   _state: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  const parsed = credentialsSchema
-    .extend({ displayName: z.string().trim().min(2).max(100) })
+  // In the order of the form, so the first message is about the first empty field.
+  const parsed = z.object({ displayName: z.string().trim().min(2, "Напиши името си.").max(100, "Името може да е до 100 символа.") })
+    .extend(credentialsSchema.shape)
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message };

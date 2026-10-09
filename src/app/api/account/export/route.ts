@@ -16,7 +16,7 @@ export const runtime = "nodejs";
  */
 export async function GET() {
   const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "Влез в профила си." }, { status: 401 });
 
   const db = getDatabase();
   const [login] = await db.select({

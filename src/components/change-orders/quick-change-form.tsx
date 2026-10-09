@@ -4,7 +4,6 @@ import { useActionState, useEffect, useRef, useState } from "react";
 
 import { StagedAttachments, useUploadStagedFiles } from "@/components/change-orders/staged-attachments";
 import { ChevronDown } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -116,9 +115,17 @@ export function QuickChangeForm({
       setLoadingOffers(false);
     }
   }
+  // Submitting ends the draft (a successful save redirects), or the next new change on this project
+  // would open with it; a failed save writes it back.
+  function submit(formData: FormData) {
+    window.localStorage.removeItem(storageKey);
+    action(formData);
+  }
   useEffect(() => {
-    if (state.error) toast.error(state.error);
-  }, [state.error]);
+    const form = document.querySelector<HTMLFormElement>("#quick-change-form");
+    if (!state.error || !form) return;
+    window.localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(new FormData(form).entries())));
+  }, [state, storageKey]);
 
   const restored = useRef(false);
   const persistReady = useRef(false);
@@ -179,7 +186,7 @@ export function QuickChangeForm({
   }, [projectId, scheduleType, storageKey]);
 
   return (
-    <form noValidate ref={keepRef} id="quick-change-form" action={action} className="space-y-7">
+    <form noValidate ref={keepRef} id="quick-change-form" action={submit} className="space-y-7">
       <input type="hidden" name="scheduleImpactType" value={scheduleType} />
       <div className="grid gap-5 sm:grid-cols-2">
         <div>

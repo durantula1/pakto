@@ -3,7 +3,6 @@
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { sofiaTodayIso } from "@/lib/sofia-today";
 import { Pencil } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 
@@ -193,9 +192,6 @@ export function OfferForm({
   }
 
   const error = localError || state.error;
-  useEffect(() => {
-    if (error) toast.error(error);
-  }, [error]);
 
   return (
     <div>
@@ -263,10 +259,11 @@ export function OfferForm({
 
           <LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog={canSaveCatalog} />
 
-          <section className="grid gap-4 rounded-2xl border bg-card p-4 md:grid-cols-2 md:gap-6">
+          {/* Side by side only when the column is wide enough; beside the menu and the bill it is not. */}
+          <section className="@container rounded-2xl border bg-card p-4"><div className="grid gap-4 @xl:grid-cols-2 @xl:gap-6">
             <VatRateField value={taxRateValue} onChange={setTaxRateValue} />
             <DiscountField key={formKey} defaultType={discountType} defaultValue={discountValue} onChange={(type, value) => { setDiscountType(type); setDiscountValue(value); }} />
-          </section>
+          </div></section>
 
           <label className="block rounded-2xl border bg-card p-4 text-sm font-medium">Договорен краен срок
             <div className="mt-2"><DatePicker aria-label="Договорен краен срок" required min="today" value={deadline} onChange={setDeadline} /></div>

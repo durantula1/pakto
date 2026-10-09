@@ -153,6 +153,7 @@ export default async function PortalChangePage({
             maskedEmail={maskEmail(data.session.contactEmail)}
             idempotencyKey={randomUUID()}
             defaultName={data.session.contactName}
+            isOffer={isOffer}
           />
           {data.session.contactEmailVerifiedAt ? <div className="border-t pt-4">{verification}</div> : null}
         </CardContent>
@@ -352,7 +353,7 @@ export default async function PortalChangePage({
         decision={decision}
         details={<>{diff}{details}</>}
         footer={<>{questions}{history}</>}
-        asideNote={canAsk ? <a href="#questions" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Имате въпрос? Задайте го под офертата, без да решавате.</a> : null}
+        asideNote={canAsk ? <a href="#questions" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Имате въпрос? Задайте го под {isOffer ? "офертата" : "промяната"}, без да решавате.</a> : null}
       />
     </div>
   );

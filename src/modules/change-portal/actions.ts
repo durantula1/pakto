@@ -362,11 +362,12 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
   if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
   try {
     await getDatabase().transaction(async (tx) => {
-      const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount, correctionOfId: projectReceipts.correctionOfId }).from(projectReceipts)
+      const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount }).from(projectReceipts)
         .where(and(eq(projectReceipts.id, data.receiptId), eq(projectReceipts.projectId, session.projectId), eq(projectReceipts.organizationId, session.organizationId)))
         .for("update")
         .limit(1);
-      if (!receipt || Number(receipt.amount) <= 0 || receipt.correctionOfId) throw new Error("Плащането не може да се оспори.");
+      // A corrected amount can be disputed too; a reversal (negative) cannot.
+      if (!receipt || Number(receipt.amount) <= 0) throw new Error("Плащането не може да се оспори.");
       const [correction] = await tx.select({ id: projectReceipts.id }).from(projectReceipts)
         .where(eq(projectReceipts.correctionOfId, receipt.id)).limit(1);
       if (correction) throw new Error("Това плащане вече е коригирано.");

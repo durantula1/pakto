@@ -254,11 +254,19 @@ export function DocumentStatusCard({
                 {dateTime(change.disputeEvent.createdAt)}
               </p>
               <p className="mt-2 opacity-90">
-                Решението остава в сила. Свържи се с клиента. Ако е грешно, анулирай офертата и изпрати нова. Когато е уредено, отбележи го.
+                Решението остава в сила. Свържи се с клиента. Ако е грешно, поправи го с нова промяна или нова версия: одобреното не се анулира. Когато е уредено, отбележи го.
               </p>
               {canSend ? <ResolveDecisionDisputeDialog changeOrderId={change.id} revisionId={change.revisionId} /> : null}
             </div>
           )
+        ) : null}
+        {decision?.comment && decision.decision !== "approved" ? (
+          <div className="rounded-lg bg-muted p-3 text-sm">
+            <p className="font-semibold">
+              {decision.decision === "changes_requested" ? "Какво иска да се промени" : "Причина за отказа"}
+            </p>
+            <p className="mt-1 whitespace-pre-line">{decision.comment}</p>
+          </div>
         ) : null}
         {inForce ? (
           <div role="status" className="rounded-lg bg-muted p-3 text-sm">
@@ -469,6 +477,7 @@ export function DocumentFacts({
                 Технически детайли
               </summary>
               <p className="mt-2">IP адрес: {decision.ip ?? "—"}</p>
+              <p className="mt-1 break-all">Устройство (браузър): {decision.userAgent ?? "—"}</p>
               <p className="mt-1 break-all">
                 Отпечатък на версията:{" "}
                 <span className="font-mono">

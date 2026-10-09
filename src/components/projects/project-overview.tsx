@@ -237,7 +237,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
           />
           {claim.response ? <Quote by="Фирмата:" tone="warning" className="mt-2 sm:ml-[6.25rem]">{claim.response}</Quote> : null}
         </li>)}
-        {view.receipts.map((item) => {
+        {view.receipts.map((item, _, receipts) => {
           const row = <Entry
             date={formatDay(item.receivedOn)}
             title={receiptLabel(item, view.installments)}
@@ -245,7 +245,9 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
             amount={<span className={cn(Number(item.amount) < 0 && "text-muted-foreground")}>{formatCents(cents(item.amount), item.currency)}</span>}
             badge={item.dispute?.status === "open" ? <Badge variant="danger-soft">Оспорено</Badge> : null}
           />;
-          const canDispute = canAct && Number(item.amount) > 0 && item.dispute?.status !== "open" && !item.correctionOfId;
+          // The record in force: a payment nobody corrected, or the corrected amount that replaced it.
+          const corrected = receipts.some((other) => other.correctionOfId === item.id);
+          const canDispute = canAct && Number(item.amount) > 0 && item.dispute?.status !== "open" && !corrected;
           return <li key={item.id} className="py-3">
             {canDispute ? <DisputeReceiptRow row={row} portalPublicId={portalPublicId} receiptId={item.id} /> : row}
             {item.dispute?.status === "open" ? <Quote by="Оспорено от вас:" tone="danger" className="mt-2 sm:ml-[6.25rem]">{item.dispute.reason}</Quote>

@@ -6,6 +6,7 @@ import { OverlayTriggerStateContext } from "react-aria-components";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { invalidMessage } from "@/components/ui/field";
 import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
 export function ActionForm({ action, success, children, className, redirects = false, onSuccess }: {
@@ -56,20 +57,32 @@ export function ActionForm({ action, success, children, className, redirects = f
   }, [succeeded]);
 
   // Required and malformed fields are caught here, before the round trip: each `Field` shows its own
-  // message and the first visible one gets the focus. Hidden controls never block (the server still checks).
+  // message and the first visible one gets the focus. A control outside a `Field` (an inline textarea)
+  // gets the red border and its message next to the button. Hidden controls never block (the server still checks).
   function check(event: React.FormEvent<HTMLFormElement>) {
     const form = event.currentTarget;
     if (form.checkValidity()) return;
-    const invalid = [...form.querySelectorAll<HTMLElement>(":is(input, textarea, select):invalid")]
+    const invalid = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(":is(input, textarea, select):invalid")]
       .filter((control) => control.getClientRects().length > 0);
     if (!invalid.length) return;
     event.preventDefault();
-    setError(null);
+    const loose = invalid.filter((control) => !control.closest("[data-slot=field]"));
+    for (const control of loose) control.setAttribute("aria-invalid", "true");
+    setError(loose[0] ? invalidMessage(loose[0]) : null);
     invalid[0]!.focus({ preventScroll: true });
     invalid[0]!.scrollIntoView({ block: "center", behavior: "smooth" });
   }
 
-  return <form noValidate ref={formRef} action={submit} onSubmit={check} className={className}>
+  // Typing a valid value clears the red border of a control outside a `Field` (a `Field` clears its own).
+  function clearInvalid(event: React.FormEvent<HTMLFormElement>) {
+    const control = event.target as HTMLInputElement;
+    if (control.validity?.valid && control.getAttribute("aria-invalid") === "true" && !control.closest("[data-slot=field]")) {
+      control.removeAttribute("aria-invalid");
+      setError(null);
+    }
+  }
+
+  return <form noValidate ref={formRef} action={submit} onSubmit={check} onInput={clearInvalid} className={className}>
     {children}
     {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
   </form>;

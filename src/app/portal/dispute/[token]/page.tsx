@@ -6,6 +6,7 @@ import { PortalDisputeForm } from "@/components/portal/dispute-form";
 import { BillLine, Quote } from "@/components/portal/paper";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDisputeTarget, parseDisputeToken } from "@/modules/change-portal/dispute";
+import { cents, formatCents } from "@/modules/projects/state";
 
 export const metadata: Metadata = {
   title: "Оспорване на решение · Pakto",
@@ -31,7 +32,7 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">Оспорване на решение</h1>
           </div>
           <div className="space-y-1.5">
-            <BillLine label={`${target.title} · версия ${target.revisionNumber}`} amount={`${Number(target.total).toFixed(2)} ${target.currency}`} />
+            <BillLine label={`${target.title} · версия ${target.revisionNumber}`} amount={formatCents(cents(target.total), target.currency)} />
             <Quote className="text-muted-foreground">
               {labels[target.decision]} от „{target.typedName}“ на{" "}
               {new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Sofia" }).format(target.createdAt)}

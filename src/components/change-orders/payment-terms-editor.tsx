@@ -78,9 +78,9 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
         {rows.length ? <Button type="button" variant="ghost" size="sm" className="shrink-0 rounded-full" onPress={() => setRows([])}>Без условия</Button> : null}
       </div>
       {rows.length ? (
-        <ol className="flex flex-col gap-2">
+        <ol className="@container flex flex-col gap-2">
           {rows.map((item, index) => (
-            <li key={item.key} className="grid gap-2 rounded-xl border p-2.5 sm:grid-cols-[minmax(0,1fr)_5.5rem_11rem_2.25rem] sm:items-start">
+            <li key={item.key} className="grid gap-2 rounded-xl border p-2.5 @lg:grid-cols-[minmax(0,1fr)_5.5rem_11rem_2.25rem] @lg:items-start">
               <Input value={item.title} maxLength={180} placeholder={index === 0 ? "Напр. Аванс" : "Плащане"} aria-label={`Плащане ${index + 1}`} className="h-10" onChange={(event) => update(item.key, { title: event.target.value })} />
               <div className="relative">
                 <Input value={item.percent} inputMode="decimal" type="number" min="0" max="100" step="0.01" aria-label={`Процент на плащане ${index + 1}`} className="h-10 pr-7 text-right tabular-nums" onChange={(event) => update(item.key, { percent: event.target.value })} />
@@ -100,7 +100,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
                 ) : null}
               </div>
               <Button type="button" variant="ghost" size="icon" className="size-10 text-muted-foreground" aria-label={`Премахни плащане ${index + 1}`} onPress={() => setRows(rows.filter((other) => other.key !== item.key))}><Trash2 /></Button>
-              <p className="text-xs text-muted-foreground tabular-nums sm:col-span-4">{Number(item.percent) ? `${money(amounts[index]!)} EUR` : "\u00a0"}</p>
+              <p className="text-xs text-muted-foreground tabular-nums @lg:col-span-4">{Number(item.percent) ? `${money(amounts[index]!)} EUR` : "\u00a0"}</p>
             </li>
           ))}
         </ol>

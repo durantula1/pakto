@@ -16,7 +16,7 @@ export const runtime = "nodejs";
  */
 export async function GET() {
   const context = await getOptionalTenantContext();
-  if (!context || context.role !== "owner") return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!context || context.role !== "owner") return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
 
   const db = getDatabase();
   const organizationId = context.organizationId;

@@ -75,16 +75,19 @@ function isControl(target: EventTarget): target is Control {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement
 }
 
-/** The browser's verdict on a control, in Bulgarian (the native bubbles are English and off with `noValidate`). */
-function invalidMessage(control: Control) {
+/**
+ * The browser's verdict on a control, in Bulgarian (the native bubbles are English and off with `noValidate`).
+ * Impersonal on purpose: the same forms speak „ти“ to the company and „вие“ to its clients.
+ */
+export function invalidMessage(control: Control) {
   const validity = control.validity
-  if (validity.valueMissing) return "Попълни това поле."
-  if (validity.typeMismatch) return control.type === "email" ? "Провери имейла, нещо в него не е наред." : "Провери стойността."
+  if (validity.valueMissing) return "Полето е задължително."
+  if (validity.typeMismatch) return control.type === "email" ? "Имейлът не изглежда верен." : "Стойността не е вярна."
   if (validity.tooShort && "minLength" in control) return `Поне ${control.minLength} символа.`
   if (validity.tooLong && "maxLength" in control) return `Най-много ${control.maxLength} символа.`
   if (validity.rangeUnderflow && "min" in control) return `Най-малко ${control.min}.`
   if (validity.rangeOverflow && "max" in control) return `Най-много ${control.max}.`
-  return "Провери стойността."
+  return "Стойността не е вярна."
 }
 
 /**

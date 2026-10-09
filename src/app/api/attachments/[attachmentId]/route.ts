@@ -9,7 +9,7 @@ import { getPortalSession } from "@/modules/change-portal/session";
 
 export const runtime = "nodejs";
 
-const notFound = () => NextResponse.json({ error: "Not found" }, { status: 404 });
+const notFound = () => NextResponse.json({ error: "Не е намерено." }, { status: 404 });
 
 /**
  * Streams an attachment from private storage. Staff need view access to the project
@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: RouteContext<"/api/attac
   if (!authorized) return notFound();
 
   const bytes = await readFile(ATTACHMENT_BUCKET, attachment.storagePath).catch(() => null);
-  if (!bytes) return NextResponse.json({ error: "Unavailable" }, { status: 503 });
+  if (!bytes) return NextResponse.json({ error: "Файлът не е достъпен." }, { status: 503 });
   const disposition = new URL(request.url).searchParams.has("download") ? "attachment" : "inline";
   // RFC 6266: an ASCII fallback plus the real (Cyrillic) name.
   const asciiName = attachment.originalName.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "_");

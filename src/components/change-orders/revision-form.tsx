@@ -1,10 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { startTransition, useActionState, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { sofiaTodayIso } from "@/lib/sofia-today";
 import Link from "next/link";
 import { Send } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -88,7 +87,6 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   const today = sofiaTodayIso();
   const [localError, setLocalError] = useState("");
   const error = localError || state.error;
-  useEffect(() => { if (state.error) toast.error(state.error); }, [state.error]);
 
   const payload = linesPayload(lines);
   const priced = useMemo(() => priceLines(lines), [lines]);
@@ -110,10 +108,12 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
     else if (payload.some((line) => !(line.quantity > 0))) message = "Количеството трябва да е над 0.";
     else if (isOffer) message = termsProblem(termRows) ?? "";
     setLocalError(message);
-    if (message) {
-      event.preventDefault();
-      toast.error(message);
-    }
+    // Sent by hand, not as a form action: React resets the form after an action, and React Aria's
+    // checkboxes then snap back, so a failed save quietly unticked "already includes this change".
+    event.preventDefault();
+    if (message) return;
+    const formData = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
+    startTransition(() => action(formData));
   }
 
   const deadlineText = isOffer
@@ -153,7 +153,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
         <div className="flex min-w-0 flex-col gap-4">
-          <form noValidate id={formId} action={action} onSubmit={validate} className="flex flex-col gap-4">
+          <form noValidate id={formId} onSubmit={validate} className="flex flex-col gap-4">
             <input type="hidden" name="changeOrderId" value={initial.id} />
             <input type="hidden" name="lines" value={JSON.stringify(payload)} />
             {isOffer ? <>
@@ -202,10 +202,11 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             )}
 
             <EditorSection title={isOffer ? "ДДС, отстъпка и срок" : "ДДС и срок"}>
-              <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+              {/* Side by side only when the column is wide enough; beside the menu and the bill it is not. */}
+              <div className="@container"><div className="grid gap-4 @xl:grid-cols-2 @xl:gap-6">
                 <VatRateField value={taxRate} onChange={setTaxRate} />
                 {isOffer ? <DiscountField defaultType={discountType} defaultValue={discountValue} currency={currency} onChange={(type, value) => { setDiscountType(type); setDiscountValue(value); }} /> : null}
-              </div>
+              </div></div>
               {isOffer ? (
                 <Field>
                   <FieldLabel htmlFor={`${formId}-deadline`}>Договорен краен срок</FieldLabel>

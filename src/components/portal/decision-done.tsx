@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 const copy: Record<string, { title: string; next: string }> = {
   approved: { title: "Одобрено", next: "Фирмата е уведомена и може да започне работа." },
   changes_requested: { title: "Искането е изпратено", next: "Фирмата ще подготви нова версия. Ще получите имейл, когато е готова." },
-  declined: { title: "Отказът е записан", next: "Фирмата е уведомена, че отказвате офертата." },
+  declined: { title: "Отказът е записан", next: "Фирмата е уведомена за отказа ви." },
 };
 
 /** After a decision: what was recorded and what happens next, where the client lands. */

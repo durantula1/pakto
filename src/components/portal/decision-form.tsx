@@ -18,9 +18,9 @@ import {
 
 type Decision = "approved" | "changes_requested" | "declined";
 
-const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: string }[] = [
-  { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: "Тази версия се затваря и фирмата изпраща нова" },
-  { id: "declined", icon: XCircle, title: "Отказвам", hint: "Офертата се отхвърля и работа по нея няма да започне" },
+const objections: { id: Exclude<Decision, "approved">; icon: LucideIcon; title: string; hint: (document: string) => string }[] = [
+  { id: "changes_requested", icon: MessageSquareText, title: "Искам промяна", hint: () => "Тази версия се затваря и фирмата изпраща нова" },
+  { id: "declined", icon: XCircle, title: "Отказвам", hint: (document) => `${document} се отхвърля и работа по нея няма да започне` },
 ];
 
 const RESEND_SECONDS = 30;
@@ -40,6 +40,7 @@ export function PortalDecisionForm({
   maskedEmail,
   idempotencyKey,
   defaultName,
+  isOffer = true,
 }: {
   projectPublicId: string;
   changeOrderId: string;
@@ -51,6 +52,8 @@ export function PortalDecisionForm({
   idempotencyKey: string;
   /** The contact's name, prefilled; the client can correct it. */
   defaultName?: string;
+  /** An offer or a change to it; only the wording differs. */
+  isOffer?: boolean;
 }) {
   const intent = useDecisionIntent();
   const [decision, setDecision] = useState<Decision>(intent ?? "approved");
@@ -64,7 +67,9 @@ export function PortalDecisionForm({
   const [localError, setLocalError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const otpId = codeState.otpId && codeFor === decision ? codeState.otpId : null;
-  const error = otpId ? submitState.error : localError ?? codeState.error;
+  // The submit error that was on screen when a new code arrived; it belongs to the old code.
+  const [staleSubmit, setStaleSubmit] = useState<DecisionState | null>(null);
+  const error = otpId ? (submitState === staleSubmit ? undefined : submitState.error) : localError ?? codeState.error;
   const busy = requesting || submitting;
   const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(total)).replace("-", "−")} ${currency}`;
   const approving = decision === "approved";
@@ -73,6 +78,7 @@ export function PortalDecisionForm({
   const [counted, setCounted] = useState(codeState.otpId);
   if (codeState.otpId !== counted) {
     setCounted(codeState.otpId);
+    setStaleSubmit(submitState);
     if (codeState.otpId) setWait(RESEND_SECONDS);
   }
   useEffect(() => {
@@ -98,6 +104,8 @@ export function PortalDecisionForm({
     <form
       ref={formRef}
       action={otpId ? submit : undefined}
+      // Without it a click before the page hydrates sends a GET and puts the client's name in the address.
+      method={otpId ? undefined : "post"}
       // Not a form action: React resets the form after an action, and React Aria's RadioGroup then
       // snaps back to the option it mounted with, so "Отказвам" turned into "Искам промяна".
       onSubmit={otpId ? undefined : (event) => {
@@ -105,7 +113,7 @@ export function PortalDecisionForm({
         // Checked here, not with the browser's own bubbles, which speak the browser's language.
         const missing = typedName.trim().length < 2 ? "Напишете името си."
           : decision === "changes_requested" && !comment.trim() ? "Напишете какво да се промени."
-          : approving && !consent ? "Отбележете, че одобрявате офертата."
+          : approving && !consent ? `Отбележете, че одобрявате ${isOffer ? "офертата" : "промяната"}.`
           : null;
         setLocalError(missing);
         if (missing) return;
@@ -162,7 +170,7 @@ export function PortalDecisionForm({
               <div className="flex flex-col gap-0.5">
                 <h3 className="text-lg font-semibold">Как искате да продължим?</h3>
                 <button type="button" onClick={() => choose("approved")} className="inline-flex min-h-11 items-center self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
-                  Одобрявам офертата
+                  Одобрявам {isOffer ? "офертата" : "промяната"}
                 </button>
               </div>
               <RadioGroup aria-label="Решение" value={decision} onChange={(value) => choose(value as Decision)} className="flex flex-col gap-2">
@@ -181,7 +189,7 @@ export function PortalDecisionForm({
                         <Icon className={cn("size-5 shrink-0", id === "declined" ? "text-destructive" : isSelected ? "text-foreground" : "text-muted-foreground")} />
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className={cn("font-semibold", id === "declined" && "text-destructive")}>{title}</span>
-                          <span className="text-sm text-muted-foreground">{hint}</span>
+                          <span className="text-sm text-muted-foreground">{hint(isOffer ? "Офертата" : "Промяната")}</span>
                         </span>
                         <span aria-hidden="true" className={cn("grid size-5 shrink-0 place-items-center rounded-full border-2", isSelected ? "border-foreground" : "border-foreground/25")}>
                           {isSelected ? <span className="size-2.5 rounded-full bg-foreground" /> : null}
@@ -192,7 +200,7 @@ export function PortalDecisionForm({
                 ))}
               </RadioGroup>
               <p className="rounded-xl bg-tile-blue/60 px-3.5 py-2.5 text-sm leading-6 text-tile-blue-foreground">
-                Имате само въпрос? Задайте го в „Въпроси по тази оферта“ – офертата ще продължи да чака решението ви.
+                Имате само въпрос? Задайте го в „Въпроси по {isOffer ? "тази оферта" : "тази промяна"}“ – {isOffer ? "офертата" : "промяната"} ще продължи да чака решението ви.
               </p>
               <label className="flex flex-col gap-2">
                 <span className="text-sm font-medium">

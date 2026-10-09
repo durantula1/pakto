@@ -11,9 +11,9 @@ export const runtime = "nodejs";
 export async function GET(_request: Request, { params }: RouteContext<"/api/logos/[...path]">) {
   const { path } = await params;
   const key = path.join("/");
-  if (!key.endsWith(".png")) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!key.endsWith(".png")) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
   const bytes = await readFile(LOGO_BUCKET, key).catch(() => null);
-  if (!bytes) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!bytes) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
   return new NextResponse(new Uint8Array(bytes), {
     headers: {
       "Content-Type": "image/png",

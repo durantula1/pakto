@@ -14,10 +14,10 @@ export const runtime = "nodejs";
 /** The sample offer as the real PDF, with the company's saved logo, so the owner sees exactly what clients get. */
 export async function GET() {
   const context = await getOptionalTenantContext();
-  if (!context || context.role !== "owner") return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!context || context.role !== "owner") return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
   const [organization] = await getDatabase().select({ name: organizations.name, logoStoragePath: organizations.logoStoragePath, logoSize: organizations.logoSize })
     .from(organizations).where(eq(organizations.id, context.organizationId)).limit(1);
-  if (!organization) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!organization) return NextResponse.json({ error: "Не е намерено." }, { status: 404 });
 
   const logo = await loadLogo(organization.logoStoragePath).catch(() => null);
   const now = new Date();

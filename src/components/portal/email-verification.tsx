@@ -5,6 +5,7 @@ import { offlineSafe } from "@/lib/offline-safe";
 import { MailCheck, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { OtpInput } from "@/components/portal/otp-input";
 import {
@@ -72,7 +73,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <input type="hidden" name="projectPublicId" value={projectPublicId} />
         <p className="text-sm font-medium">Нов имейл</p>
         <p className="text-xs text-muted-foreground">Първо ще потвърдите с код до текущия имейл, после с код до новия.</p>
-        <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />
+        <Field><Input name="email" type="email" required aria-label="Нов имейл" value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" /></Field>
         {changeState.error ? <p role="alert" className="text-sm text-destructive">{changeState.error}</p> : null}
         <div className="flex gap-2">
           <Button type="submit" className="h-11 flex-1" isDisabled={requestingChange}>{requestingChange ? "Моля, изчакайте…" : "Изпратете код"}</Button>
@@ -91,7 +92,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
           ? `Преди да вземете решение, ще ви изпратим код до ${maskedEmail}. Само вие ще можете да одобрявате или отказвате оферти. Фирмата няма достъп до кода.`
           : "Фирмата не е посочила имейл. Въведете своя. На него ще получавате кодовете за решения и разписките."}
       </p>
-      {hasEmail ? null : <Input name="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" />}
+      {hasEmail ? null : <Field><Input name="email" type="email" required aria-label="Вашият имейл" value={email} onChange={(event) => setEmail(event.target.value)} className="h-11 bg-background text-base" /></Field>}
       {claimState.error ? <p role="alert" className="text-sm text-destructive">{claimState.error}</p> : null}
       <Button type="submit" className="h-11 w-full" isDisabled={requestingClaim}>{requestingClaim ? "Моля, изчакайте…" : "Изпратете ми код"}</Button>
     </form>
