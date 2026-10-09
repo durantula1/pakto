@@ -49,6 +49,48 @@ export function LandingExperience() {
     applyAuthHint();
     verifyAuthHint();
   }, []);
+  // In-page links (#versions, #faq…) and arrivals with a hash: the sections below the hero are
+  // `.mf-defer` (content-visibility: auto), so until they have been on screen they count as 50rem
+  // placeholders and the browser scrolls to a wrong offset. Lay them out at their real height first
+  // (`mf-defer-off` on <html>, kept from then on), then scroll on the next frames.
+  useEffect(() => {
+    const scrollToSection = (id: string, smooth: boolean) => {
+      const target = document.getElementById(id);
+      if (!target) return false;
+      document.documentElement.classList.add("mf-defer-off");
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          target.scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            block: "start",
+          }),
+        ),
+      );
+      return true;
+    };
+    const onClick = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
+      const link = (event.target as Element).closest?.('a[href^="#"]');
+      const id = decodeURIComponent(link?.getAttribute("href")?.slice(1) ?? "");
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)")
+        .matches;
+      if (!id || !scrollToSection(id, smooth)) return;
+      event.preventDefault();
+      history.pushState(null, "", `#${id}`);
+    };
+    document.addEventListener("click", onClick);
+    if (location.hash)
+      scrollToSection(decodeURIComponent(location.hash.slice(1)), false);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
   const { scrollY, scrollYProgress } = useScroll();
   const [navHidden, setNavHidden] = useState(false);
   const [navHeld, setNavHeld] = useState(false);

@@ -64,7 +64,9 @@ export default function FaqPage() {
               </p>
               <SectionNav
                 label="Теми"
-                variant="chips"
+                variant="list"
+                numbered={false}
+                mobileChips
                 items={faqSections.map(({ id, title }) => ({
                   id,
                   label: title,
