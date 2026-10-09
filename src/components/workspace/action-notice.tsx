@@ -10,6 +10,7 @@ const messages: Record<string, string> = {
   "offer-created": "Офертата е създадена",
   "change-created": "Промяната е създадена",
   "revision-saved": "Новата версия е запазена",
+  "draft-saved": "Черновата е запазена",
   sent: "Изпратено. Клиентът получи имейл с линка.",
 };
 

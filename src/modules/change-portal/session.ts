@@ -107,7 +107,8 @@ async function clientSession(secret: string, projectPublicId: string) {
     .orderBy(desc(targetGrant.createdAt))
     .limit(1);
   if (!session) return null;
-  if (Date.now() - session.lastSeenAt.getTime() > TOUCH_EVERY_MS) {
+  // "Последно в портала" is the client's: an employee looking through the client's link in the same browser is not a visit.
+  if (Date.now() - session.lastSeenAt.getTime() > TOUCH_EVERY_MS && !(await isOrganizationStaff(session.organizationId))) {
     await getDatabase().update(portalSessions).set({ lastSeenAt: new Date() }).where(eq(portalSessions.id, session.id));
   }
   const { verifiedAt, ...rest } = session;

@@ -4,7 +4,7 @@ import { uploadWithTicket } from "@/lib/storage/upload-client";
 import { confirmAttachmentAction, createAttachmentUploadAction } from "@/modules/change-orders/attachment-actions";
 
 export const ATTACHMENT_ACCEPT = "image/*,application/pdf";
-const MAX_BYTES = 15 * 1024 * 1024;
+export const MAX_BYTES = 15 * 1024 * 1024;
 const MAX_IMAGE_SIDE = 2000;
 
 export type UploadedAttachment = { id: number; name: string; mimeType: string; byteSize: number; isImage: boolean };
@@ -30,7 +30,11 @@ async function prepareFile(file: File): Promise<{ blob: Blob; name: string; mime
   bitmap.close();
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
   if (!blob) throw new Error(`„${file.name}“: снимката не може да се обработи.`);
-  return { blob, name: file.name.replace(/\.[^.]+$/, "") + ".jpg", mimeType: "image/jpeg" };
+  // The old extension stays in the name when it was not a JPEG, so "a.gif" and "a.webp" do not both become "a.jpg".
+  const extension = /\.([^.]+)$/.exec(file.name)?.[1]?.toLowerCase();
+  const base = file.name.replace(/\.[^.]+$/, "");
+  const name = !extension || extension === "jpg" || extension === "jpeg" ? `${base}.jpg` : `${base}-${extension}.jpg`;
+  return { blob, name, mimeType: "image/jpeg" };
 }
 
 /** Uploads one file to the server's private storage and attaches it to the document's draft. */

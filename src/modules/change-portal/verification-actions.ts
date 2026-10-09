@@ -92,7 +92,7 @@ export async function confirmVerificationCodeAction(_: VerificationState, formDa
       await notifyProjectStaff(tx, {
         organizationId: session.organizationId, projectId: session.projectId, eventType: "contact_verified",
         title: `${session.contactName} потвърди имейл ${maskEmail(otp.email)}`,
-        body: "Кодовете за решенията ще идват на този имейл. Ако не е на клиента, нулирай потвърждението от „Достъп на клиента“.",
+        body: "Кодовете за решенията ще идват на този имейл. Ако имейлът не е на клиента, отвори „Достъп на клиента“ и избери „Отмени потвърждението“.",
         href: `/app/projects/${session.projectId}?panel=client`,
       });
     });

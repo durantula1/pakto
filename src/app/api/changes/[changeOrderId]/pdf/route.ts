@@ -25,5 +25,5 @@ export async function GET(request: Request, { params }: RouteContext<"/api/chang
   const revisionId = requested && /^\d+$/.test(requested) ? Number(requested) : document.currentRevisionId;
   const pdf = revisionId ? await renderChangePdf(document, revisionId) : null;
   if (!pdf) return NextResponse.json({ error: "Документът още не е изпратен." }, { status: 409 });
-  return new Response(new Uint8Array(pdf.buffer), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${pdf.filename}"`, "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
+  return new Response(new Uint8Array(pdf.buffer), { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${pdf.asciiFilename}"; filename*=UTF-8''${encodeURIComponent(pdf.filename)}`, "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" } });
 }

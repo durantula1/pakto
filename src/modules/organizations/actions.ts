@@ -61,7 +61,7 @@ export async function updateOrganizationAction(formData: FormData) {
 
 export async function updateOrganizationPhoneAction(formData: FormData) {
   const phone = z.string().trim().max(30, "Най-много 30 символа.")
-    .refine((value) => !value || (value.match(/\d/g)?.length ?? 0) >= 6, "Въведи телефон с поне 6 цифри.")
+    .refine((value) => !value || (value.match(/\d/g)?.length ?? 0) >= 6, "Телефонът може да съдържа само цифри, интервали и „+“, поне 6 цифри.")
     .safeParse(formData.get("phone") ?? "");
   if (!phone.success) return { error: phone.error.issues[0]?.message };
   const context = await requireTenantContext();
@@ -82,7 +82,7 @@ export async function updateDefaultTaxRateAction(formData: FormData) {
 }
 
 export async function updateOfferValidityAction(formData: FormData) {
-  const days = z.coerce.number().int("Въведи цял брой дни.").min(1, "Поне 1 ден.").max(180, "Най-много 180 дни.").safeParse(formData.get("offerValidityDays"));
+  const days = z.string().trim().regex(/^\d{1,3}$/, "Въведи цял брой дни, от 1 до 180.").transform(Number).pipe(z.number().min(1, "Поне 1 ден.").max(180, "Най-много 180 дни.")).safeParse(formData.get("offerValidityDays"));
   if (!days.success) return { error: days.error.issues[0]?.message };
   const context = await requireTenantContext();
   requireRole(context, ["owner"]);

@@ -6,7 +6,7 @@ import { FileText, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { ATTACHMENT_ACCEPT, formatFileSize, uploadAttachment } from "@/components/change-orders/attachment-upload";
+import { ATTACHMENT_ACCEPT, MAX_BYTES, formatFileSize, uploadAttachment } from "@/components/change-orders/attachment-upload";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +26,14 @@ export function StagedAttachments({ files, onChange, className }: {
 
   function add(list: FileList | null) {
     if (!list?.length) return;
-    const accepted = Array.from(list).filter((file) => file.type.startsWith("image/") || file.type === "application/pdf");
-    if (accepted.length < list.length) toast.error("Позволени са само снимки и PDF.");
+    const typed = Array.from(list).filter((file) => file.type.startsWith("image/") || file.type === "application/pdf");
+    if (typed.length < list.length) toast.error("Позволени са само снимки и PDF.");
+    // A PDF is uploaded as it is, so the limit applies at once; photos are shrunk before upload.
+    const accepted = typed.filter((file) => {
+      const tooBig = file.type === "application/pdf" && file.size > MAX_BYTES;
+      if (tooBig) toast.error(`„${file.name}“ е ${formatFileSize(file.size)}. Максимумът е 15 MB.`);
+      return !tooBig;
+    });
     onChange([...files, ...accepted]);
   }
 

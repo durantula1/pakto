@@ -21,6 +21,7 @@ import type { ProjectState } from "@/modules/projects/state";
 import { formatDay } from "@/modules/change-orders/labels";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
+import { dateWithTime } from "@/lib/dates";
 
 const paymentKinds = [{ value: "deposit", label: "Аванс" }, { value: "progress", label: "Междинно" }, { value: "final", label: "Окончателно" }, { value: "other", label: "Друго" }];
 const methods = [{ value: "bank", label: "Банков превод" }, { value: "cash", label: "В брой" }, { value: "card", label: "Карта" }, { value: "other", label: "Друго" }];
@@ -45,7 +46,7 @@ export function PaymentDisputesAlert({ projectId, disputes, canResolve }: { proj
         const row = <>
           <Entry date={formatDay(item.receivedOn)} title="Записано плащане" amount={`${formatAmount(item.amount)} ${currencySymbol(item.currency)}`} />
           <Quote by="Клиентът:" tone="danger" className="mt-2">{item.reason}</Quote>
-          <p className="mt-1 text-xs text-muted-foreground">{item.createdAt.toLocaleString("bg-BG", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Sofia" })}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{dateWithTime.format(item.createdAt)}</p>
         </>;
         return <li key={item.id} id={`dispute-${item.id}`} className="scroll-mt-24 px-4 py-3 target:bg-primary/5">
           {canResolve ? <DisputeRow row={row} projectId={projectId} disputeId={item.id} /> : row}

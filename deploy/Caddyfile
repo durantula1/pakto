@@ -24,8 +24,10 @@ pakto.net {
 		max_size 20MB
 	}
 	header {
-		# Not includeSubDomains: other subdomains may not be on https yet.
-		Strict-Transport-Security "max-age=31536000"
+		# includeSubDomains checked 09.10.2026: the only subdomains are www (https, redirects here) and the Hostinger
+		# mail ones (autodiscover, autoconfig), which are read by mail clients, not browsers. Not "preload": that is
+		# a promise to browsers' lists that is hard to take back.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
 	}
 	reverse_proxy app:3000 {

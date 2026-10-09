@@ -1,3 +1,5 @@
+import { formatPercent } from "@/lib/money";
+
 export function documentCode(
   kind: "offer" | "change",
   sequenceNumber: number,
@@ -51,7 +53,7 @@ export function scheduleLabel(
 
 /** A 0% rate means the company does not charge VAT on this document. */
 export function vatLabel(taxRate: string | number) {
-  return Number(taxRate) ? `ДДС ${Number(taxRate)}%` : "Без ДДС";
+  return Number(taxRate) ? `ДДС ${formatPercent(taxRate)}` : "Без ДДС";
 }
 
 export function totalLabel(taxRate: string | number, prefix = "Обща цена") {

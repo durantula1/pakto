@@ -39,9 +39,10 @@ import { formatAmount } from "@/lib/money";
 import { orForbidden } from "@/lib/authz/page-access";
 import { currencySymbol } from "@/lib/money";
 import { isUuid } from "@/lib/uuid";
+import { dateOnly } from "@/lib/dates";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
-const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
+const dayFormat = dateOnly;
 const tabs = ["overview", "documents", "work", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
 
@@ -149,7 +150,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       {!active ? (
         <p role="status" className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
           <Lock className="size-4 shrink-0 text-muted-foreground" />
-          <span>{project.status === "archived" ? "Обектът е в архива и е само за четене." : `Обектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt).replace(/\.$/, "")}` : ""}. Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
+          <span>{project.status === "archived" ? "Обектът е в архива и е само за четене." : `Обектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt)}` : ""}${project.completedAt ? "" : "."} Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
         </p>
       ) : null}
       <div className={projectStatsClassName}>

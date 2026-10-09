@@ -36,6 +36,7 @@ import { sofiaToday } from "@/modules/finance/queries";
 import { getProjectState } from "@/modules/projects/state";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
+import { dateWithTime } from "@/lib/dates";
 
 const decisionSchema = z.object({
   projectPublicId: z.uuid(),
@@ -180,7 +181,7 @@ async function confirmedByCode(
   await notifyProjectStaff(tx, {
     organizationId: session.organizationId, projectId: session.projectId, eventType: "contact_verified",
     title: `${session.contactName} потвърди имейл ${maskEmail(email)}`,
-    body: "Кодовете за решенията ще идват на този имейл. Ако не е на клиента, нулирай потвърждението от „Достъп на клиента“.",
+    body: "Кодовете за решенията ще идват на този имейл. Ако имейлът не е на клиента, отвори „Достъп на клиента“ и избери „Отмени потвърждението“.",
     href: `/app/projects/${session.projectId}?panel=client`,
   });
 }
@@ -333,7 +334,7 @@ async function sendDecisionReceipt(decisionId: number) {
   const document = await getPdfDocumentMeta(row.changeOrderId);
   const pdf = document ? await renderChangePdf(document, row.revisionId) : null;
   const disputeUrl = `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/portal/dispute/${createDisputeToken(decisionId)}`;
-  const when = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Sofia" }).format(row.createdAt);
+  const when = dateWithTime.format(row.createdAt);
   const facts = [
     [document?.kind === "change" ? "Промяна" : "Оферта", `${row.title}, версия ${row.revisionNumber}`],
     ["Сума", `${formatAmount(row.total)} ${currencySymbol(row.currency)}`],
@@ -366,7 +367,7 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
-      const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount }).from(projectReceipts)
+      const [receipt] = await tx.select({ id: projectReceipts.id, amount: projectReceipts.amount, offerId: projectReceipts.offerId }).from(projectReceipts)
         .where(and(eq(projectReceipts.id, data.receiptId), eq(projectReceipts.projectId, session.projectId), eq(projectReceipts.organizationId, session.organizationId)))
         .for("update")
         .limit(1);
@@ -380,8 +381,9 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
         .where(and(eq(paymentDisputes.receiptId, receipt.id), eq(paymentDisputes.status, "open"))).limit(1);
       if (existing) return;
       const [dispute] = await tx.insert(paymentDisputes).values({ organizationId: session.organizationId, projectId: session.projectId, receiptId: receipt.id, projectContactId: session.contactId, reason: data.reason }).returning({ id: paymentDisputes.id });
+      await tx.insert(timelineEvents).values({ organizationId: session.organizationId, projectId: session.projectId, changeOrderId: receipt.offerId, actorType: "portal_contact", actorId: session.contactId, eventType: "payment_disputed", visibility: "client", metadata: { receiptId: receipt.id, reason: data.reason } });
       const handlers = await projectStaffIds(tx, session.organizationId, session.projectId, "payments.record");
-      await notifyUsers(tx, handlers, { organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_disputed", title: "Клиент оспори плащане", body: data.reason, href: `/app/projects/${session.projectId}?tab=payments#dispute-${dispute!.id}` });
+      await notifyUsers(tx, handlers, { organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_disputed", title: `${session.contactName} оспори плащане от ${formatAmount(receipt.amount)} €`, body: data.reason, href: `/app/projects/${session.projectId}?tab=payments#dispute-${dispute!.id}` });
     });
   } catch (cause) {
     return { error: cause instanceof Error ? cause.message : "Оспорването не беше записано. Опитайте отново." };
@@ -445,6 +447,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
         organizationId: session.organizationId, projectId: session.projectId, offerId, installmentId: data.installmentId || null,
         projectContactId: session.contactId, amount: data.amount.toFixed(2), currency: "EUR", method: data.method, paidOn: data.paidOn, note: data.note || null,
       });
+      await tx.insert(timelineEvents).values({ organizationId: session.organizationId, projectId: session.projectId, changeOrderId: offerId, actorType: "portal_contact", actorId: session.contactId, eventType: "payment_claimed", visibility: "client", metadata: { amount: data.amount.toFixed(2), paidOn: data.paidOn } });
       await notifyProjectStaff(tx, {
         organizationId: session.organizationId, projectId: session.projectId, eventType: "payment_claimed", permission: "payments.record",
         title: `${session.contactName} отбеляза плащане: ${formatAmount(data.amount)} €`,

@@ -75,6 +75,7 @@ function InviteFormInner({ allowOwnerInvite, onReset }: { allowOwnerInvite: bool
     </div>
     {preset !== "owner" ? <div className="flex flex-col gap-2"><p className="text-sm font-medium">Обекти</p><ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} /></div> : null}
     {state.error ? <p role="alert" className="text-sm text-destructive">{state.error}</p> : null}
+    {state.canReplace ? <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="replace" value="1" className="mt-0.5 size-4 shrink-0 accent-primary" /><span>Да, новата покана заменя старата</span></label> : null}
     <Button type="submit" className="w-full" isDisabled={pending}>{pending ? "Изпращане…" : "Изпрати поканата"}</Button>
   </form>;
 }

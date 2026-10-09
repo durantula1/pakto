@@ -7,10 +7,11 @@ import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
+import { dateOnly } from "@/lib/dates";
 
 function formatDate(value: string) {
   const [year, month, day] = value.split("-").map(Number);
-  return new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium" }).format(new Date(year, month - 1, day));
+  return dateOnly.format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
 /** "today" is the Bulgarian day, as the server checks it. */

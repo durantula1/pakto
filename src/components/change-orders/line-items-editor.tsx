@@ -27,7 +27,7 @@ export function blankLine(key: string = crypto.randomUUID()): Line {
 }
 
 export function formatMoney(value: number) {
-  return new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(value);
+  return new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" }).format(value);
 }
 
 const finite = (value: number) => (Number.isFinite(value) ? value : 0);
@@ -55,7 +55,7 @@ const columnsClassName = "xl:grid-cols-[minmax(0,1fr)_6.5rem_4.5rem_9.5rem_5.5re
  * The offer's lines as an editable table: column headings and a total per line on wide screens,
  * one card per line on phones. Catalog picks fill the first empty line, otherwise they are appended.
  */
-export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = false, minQuantity = 1, currency = "EUR", title = "Услуги и материали", description }: {
+export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = false, minQuantity = 0, currency = "EUR", title = "Услуги и материали", description }: {
   lines: Line[];
   setLines: Dispatch<SetStateAction<Line[]>>;
   catalog: CatalogPick[];
@@ -162,7 +162,7 @@ export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = fal
                     placeholder="0"
                     aria-label={`Единична цена ${index + 1}`}
                     className="h-8 w-full min-w-[6ch] border-0 bg-transparent text-right text-sm tabular-nums focus-visible:ring-0"
-                    onChange={(event) => updateLine(line.key, { unitPrice: event.target.value.replace(",", ".").replace(/[^\d.]/g, "") })}
+                    onChange={(event) => updateLine(line.key, { unitPrice: event.target.value.replace(/,/g, ".").replace(/[^\d.]/g, "") })}
                   />
                   <span className="shrink-0 pl-2 text-xs text-muted-foreground">{currencySymbol(currency)}</span>
                 </label>

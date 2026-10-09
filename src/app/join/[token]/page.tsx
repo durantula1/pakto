@@ -6,6 +6,7 @@ import { PERMISSION_GROUPS, can, roleLabel } from "@/lib/authz/permissions";
 import { hashPortalToken } from "@/lib/crypto/portal-token";
 import { getSessionUser } from "@/lib/auth/server";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { signOutAction } from "@/modules/auth/actions";
 import { acceptTeamInviteAction } from "@/modules/team/actions";
 import { getTeamInvite } from "@/modules/team/queries";
 import type { Metadata } from "next";
@@ -27,7 +28,7 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
   const { token } = await params;
   const invite = await getTeamInvite(hashPortalToken(token));
   if (!invite || invite.acceptedAt || invite.revokedAt || invite.expiresAt < new Date()) {
-    return <Shell><h1 className="text-2xl font-semibold tracking-tight">Поканата не е активна</h1><p className="text-muted-foreground">Линкът е използван, отменен или изтекъл. Поискай нова покана от фирмата.</p></Shell>;
+    return <Shell><h1 className="text-2xl font-semibold tracking-tight">Поканата не е активна</h1><p className="text-muted-foreground">Тази покана вече не е активна: изтекла е, отменена е или вече е използвана. Помоли фирмата за нова. Ако вече имаш достъп, просто влез.</p><div className="grid gap-2 sm:grid-cols-2"><Link className={`${buttonClass} bg-primary text-primary-foreground`} href="/sign-in">Вход</Link><Link className={`${buttonClass} border bg-card`} href="/">Към началото</Link></div></Shell>;
   }
   const user = await getSessionUser();
   const next = encodeURIComponent(`/join/${token}`);
@@ -61,9 +62,13 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
     return <Shell>
       {summary}
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
-        <p className="font-semibold">Влязъл си като {user.email}</p>
-        <p className="mt-1 text-muted-foreground">Поканата е за {invite.email}. Излез и влез с този имейл.</p>
+        <p className="font-semibold">Този профил не е поканеният</p>
+        <p className="mt-1 text-muted-foreground">Поканата е за друг имейл адрес. Излез и влез с адреса, на който е изпратена.</p>
       </div>
+      <form action={signOutAction}>
+        <input type="hidden" name="next" value={`/join/${token}`} />
+        <button type="submit" className={`${buttonClass} w-full border bg-card`}>Излез и влез с поканения имейл</button>
+      </form>
     </Shell>;
   }
   return <Shell>

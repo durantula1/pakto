@@ -30,6 +30,11 @@ import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-st
 import { formatAmount } from "@/lib/money";
 import { MotionDetails } from "@/components/ui/motion-details";
 import { currencySymbol } from "@/lib/money";
+import { eventDetail } from "@/modules/change-orders/event-detail";
+import { dateWithTime } from "@/lib/dates";
+import { termAmounts } from "@/modules/change-orders/payment-terms";
+import { dateOnly } from "@/lib/dates";
+import { formatDay } from "@/modules/change-orders/labels";
 
 const eventLabels: Record<string, string> = {
   revision_sent: "Изпратена за решение",
@@ -39,6 +44,11 @@ const eventLabels: Record<string, string> = {
   decision_declined: "Отказана",
   decision_changes_requested: "Поискана промяна",
   decision_disputed: "Решението е оспорено от клиента",
+  decision_dispute_resolved: "Оспорването е уредено",
+  payment_claimed: "Отбелязахте плащане",
+  payment_disputed: "Оспорихте плащане",
+  payment_dispute_resolved: "Фирмата отговори на оспорено плащане",
+  payment_claim_rejected: "Фирмата още не е потвърдила плащането ви",
   revision_canceled: "Новата версия е оттеглена от фирмата",
   document_canceled: "Анулирана от фирмата",
   milestone_added: "Добавен етап",
@@ -113,8 +123,7 @@ export default async function PortalChangePage({
   const agreedNowMinor = inForce ? (offerState?.inForce ? offerState.contractMinor : cents(inForce.total)) : 0n;
   const agreedAfterMinor = cents(change.total) + keptChanges.reduce((sum, item) => sum + cents(item.total), 0n);
   const inForceLabel = inForce ? `версия ${inForce.revisionNumber}${withChanges ? " с одобрените промени" : ""} · ${formatCents(agreedNowMinor, inForce.currency)}` : "";
-  const dateTime = (value: Date, dateStyle: "long" | "medium" = "medium") =>
-    new Intl.DateTimeFormat("bg-BG", { dateStyle, timeStyle: "short", timeZone: "Europe/Sofia" }).format(value);
+  const dateTime = (value: Date) => dateWithTime.format(value);
 
   const pdfHref = `/api/changes/${change.id}/pdf?revision=${change.revisionId}`;
   const details = (
@@ -140,8 +149,21 @@ export default async function PortalChangePage({
       verified={!!data.session.contactEmailVerifiedAt}
     />
   );
+  // What approving commits the client to, in a few lines right above the button: the deposit due now, the deadline, how long the price holds.
+  const approvalFacts = (() => {
+    const lines: string[] = [];
+    const totalMinor = BigInt(Math.round(Number(change.total) * 100));
+    const first = data.paymentTerms[0];
+    if (isOffer && first?.dueTrigger === "on_approval" && totalMinor > 0n) {
+      lines.push(`Аванс при одобрение: ${formatCents(termAmounts(totalMinor, data.paymentTerms)[0] ?? 0n, change.currency)}`);
+    }
+    if (change.agreedDeadline) lines.push(`Краен срок: ${formatDay(change.agreedDeadline)}`);
+    if (change.responseDueAt) lines.push(`Цената важи до ${dateOnly.format(change.responseDueAt)}`);
+    lines.push("Решението е обвързващо и не може да се върне.");
+    return lines;
+  })();
   const decision = awaitingDecision ? (
-    <Card className="[--card-spacing:--spacing(5)] max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none max-lg:[--card-spacing:0] sm:[--card-spacing:--spacing(6)]">
+    <Card className="[--card-spacing:--spacing(5)] max-lg:overflow-visible max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none max-lg:ring-0 max-lg:[--card-spacing:0] sm:[--card-spacing:--spacing(6)]">
       {data.session.contactEmail ? (
         <CardContent className="space-y-6">
           <PortalDecisionForm
@@ -155,6 +177,7 @@ export default async function PortalChangePage({
             idempotencyKey={randomUUID()}
             defaultName={data.session.contactName}
             isOffer={isOffer}
+            approvalFacts={approvalFacts}
           />
           {data.session.contactEmailVerifiedAt ? <div className="border-t pt-4">{verification}</div> : null}
         </CardContent>
@@ -198,7 +221,8 @@ export default async function PortalChangePage({
                 <Clock3 className="size-4" />
               </span>
               <div>
-                <p className="text-sm font-medium">{eventLabels[event.eventType] ?? event.eventType}</p>
+                <p className="text-sm font-medium">{eventLabels[event.eventType] ?? "Обновяване"}</p>
+                {eventDetail(event) ? <p className="mt-0.5 text-sm break-words whitespace-pre-line text-muted-foreground">„{eventDetail(event)}“</p> : null}
                 <p className="text-xs text-muted-foreground">{dateTime(event.createdAt)}</p>
               </div>
             </li>
@@ -209,7 +233,7 @@ export default async function PortalChangePage({
   );
 
   const waiting = ["sent", "viewed"].includes(change.status);
-  const decidedOn = data.decision ? `${dateTime(data.decision.createdAt, "long")} · ${data.decision.typedName}` : "";
+  const decidedOn = data.decision ? `${dateTime(data.decision.createdAt)} · ${data.decision.typedName}` : "";
   const stillInForce = inForce ? ` В сила остава ${inForceLabel}.` : "";
   const status: Status | null = awaitingDecision
     ? null
@@ -325,7 +349,8 @@ export default async function PortalChangePage({
           ) : null}
         </div>
       </div>
-      <DecisionDone decision={query.decision} />
+      {/* The banner belongs to the version that was decided: a new version must not keep the old "Искането е изпратено". */}
+      <DecisionDone decision={data.decision?.decision === query.decision ? query.decision : undefined} />
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-1.5 text-sm">
           <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 font-medium", isOffer ? "bg-tile-blue text-tile-blue-foreground" : "bg-tile-lilac text-tile-lilac-foreground")}>

@@ -23,8 +23,9 @@ import { cents, formatCents, type OfferState, type ProjectState } from "@/module
 import { formatAmount } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { currencySymbol } from "@/lib/money";
+import { dateOnly } from "@/lib/dates";
 
-const dayFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
+const dayFormat = dateOnly;
 const stageOptions = [{ value: "planned", label: "Предстои" }, { value: "in_progress", label: "В работа" }, { value: "completed", label: "Завършен" }];
 const changeWorkOptions = [{ value: "not_started", label: "Предстои" }, { value: "scheduled", label: "Планирана" }, { value: "in_progress", label: "В работа" }, { value: "completed", label: "Завършена" }];
 
@@ -59,7 +60,8 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
   // Approved changes whose work has not started and that no stage covers yet.
   // A reduction or a change with no price has no extra work to date, so it is not asked for.
   const unscheduled = offer.changes.filter((change) => cents(change.total) > 0n && (change.workStatus === "not_started" || change.workStatus === "scheduled") && !milestones.some((item) => item.changeOrderId === change.id));
-  const openStages = milestones.filter((item) => item.status !== "completed").length;
+  // Stages not finished, plus approved extra work no stage covers yet: both are "not done" for the handover.
+  const openStages = milestones.filter((item) => item.status !== "completed").length + unscheduled.length;
   const acceptance = offer.acceptance;
   const changeOf = (id: string | null) => id ? offer.changes.find((change) => change.id === id) ?? state.changes.find((change) => change.id === id) ?? null : null;
 
@@ -181,7 +183,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
       <p className="font-medium">Платежният план не съвпада с договореното.</p>
       <p className="mt-1 text-muted-foreground">Вноските са общо {formatCents(offer.plannedMinor, offer.currency)}, а договореното е {formatCents(offer.contractMinor, offer.currency)} ({offer.contractMinor > offer.plannedMinor ? "липсват" : "над договореното са"} {formatCents(offer.contractMinor > offer.plannedMinor ? offer.contractMinor - offer.plannedMinor : offer.plannedMinor - offer.contractMinor, offer.currency)}). Коригирай вноските.</p>
     </div> : null}
-    <SectionHeader title="Платежен план" description="Вноските идват от условията за плащане в офертата. Можеш да добавяш и свои." action={canRecord ? <InstallmentDialog projectId={projectId} offerOptions={offerOptions} stages={stageChoices} /> : null} />
+    <SectionHeader title="Платежен план" description="Вноските идват от условията за плащане в офертата." action={canRecord ? <InstallmentDialog projectId={projectId} offerOptions={offerOptions} stages={stageChoices} /> : null} />
     {view.installments.length ? <DataTable
       label="Платежен план"
       columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Срок за плащане" }, { id: "left", header: "Остава" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}

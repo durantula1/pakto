@@ -7,6 +7,9 @@ import { termAmounts } from "@/modules/change-orders/payment-terms";
 import { cents } from "@/modules/projects/state";
 import { logoBox, type LogoSize } from "@/modules/organizations/logo-box";
 import { maskEmail } from "@/lib/email/send";
+import { formatPercent } from "@/lib/money";
+import { dateOnly, dateWithTime } from "@/lib/dates";
+import { daysLabel } from "@/modules/change-orders/schedule";
 
 // Full Noto Sans (Latin + Cyrillic + €). The @fontsource woff files are unicode-range subsets,
 // and react-pdf cannot merge subsets into one family, so every missing glyph rendered blank.
@@ -62,8 +65,8 @@ export type PdfPhoto = { name: string; data: Buffer };
 export type PdfLogo = { data: Buffer; width: number; height: number; size: LogoSize };
 
 const quantityFormat = new Intl.NumberFormat("bg-BG", { maximumFractionDigits: 3 });
-const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
-const dateTimeFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateFormat = dateOnly;
+const dateTimeFormat = dateWithTime;
 
 function formatDeadline(value: string | null) {
   return value ? dateFormat.format(new Date(`${value}T12:00:00Z`)) : null;
@@ -82,7 +85,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
   decision: { decision: string; typedName: string; createdAt: Date; verifiedEmail?: string | null; ip?: string | null; signature?: Buffer | null } | null;
   photos?: PdfPhoto[];
 }) {
-  const money = new Intl.NumberFormat("bg-BG", { style: "currency", currency: revision.currency.trim() || "EUR" });
+  const money = new Intl.NumberFormat("bg-BG", { style: "currency", currency: revision.currency.trim() || "EUR", useGrouping: "always" });
   const sign = revision.changeKind === "credit" ? "−" : "";
   const amount = (value: string) => `${sign}${money.format(Number(value))}`;
   const noun = kind === "offer" ? "Оферта" : "Промяна";
@@ -145,7 +148,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
         </> : null}
         {Number(revision.taxRate) ? <>
           <View style={styles.summaryRow}><Text style={{ color: muted }}>Без ДДС</Text><Text>{amount(revision.subtotal)}</Text></View>
-          <View style={styles.summaryRow}><Text style={{ color: muted }}>ДДС {Number(revision.taxRate)}%</Text><Text>{amount(revision.taxAmount)}</Text></View>
+          <View style={styles.summaryRow}><Text style={{ color: muted }}>ДДС {formatPercent(revision.taxRate)}</Text><Text>{amount(revision.taxAmount)}</Text></View>
         </> : <View style={styles.summaryRow}><Text style={{ color: muted }}>Не се начислява ДДС</Text><Text> </Text></View>}
         <View style={styles.summaryTotal}><Text>Общо</Text><Text>{amount(revision.total)}</Text></View>
       </View>
@@ -161,7 +164,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
           </View>
         ))}
         <Text style={styles.note}>
-          Общо около {schedule.reduce((sum, item) => sum + item.durationDays, 0)} дни. Графикът е ориентировъчен: точните дати се уточняват след одобрение{deadline ? `, а договореният срок за изпълнение е ${deadline}` : ""}.
+          Общо {daysLabel(schedule.reduce((sum, item) => sum + item.durationDays, 0))}. Графикът е ориентировъчен: точните дати се уточняват след одобрение{deadline ? `, а договореният срок за изпълнение е ${deadline}` : ""}.
         </Text>
       </View>
     ) : null}
@@ -174,7 +177,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
           const when = term.dueTrigger === "on_date" && term.dueOn ? `до ${formatDeadline(term.dueOn)}` : term.dueTrigger === "on_stage" ? `след „${term.stageTitle ?? "етап"}“` : term.dueTrigger === "on_completion" ? "при завършване" : "при одобрение";
           return (
             <View key={index} style={styles.summaryRow}>
-              <Text>{term.title} · {Number(term.percent)}% · {when}</Text>
+              <Text>{term.title} · {formatPercent(term.percent)} · {when}</Text>
               <Text>{money.format(Number(minor) / 100)}</Text>
             </View>
           );

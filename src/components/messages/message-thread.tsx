@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import type { MessageState } from "@/modules/messages/actions";
 import { cn } from "@/lib/utils";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
+import { dateWithTime } from "@/lib/dates";
 
 type Message = { id: number; authorType: "staff" | "portal_contact"; authorName: string; body: string; createdAt: Date; topic?: { id: string; label: string } | null };
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateTime = dateWithTime;
 
 /**
  * The conversation with the client about a project, as chat bubbles. `side` is who is reading: their

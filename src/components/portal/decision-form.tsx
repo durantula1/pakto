@@ -42,6 +42,7 @@ export function PortalDecisionForm({
   idempotencyKey,
   defaultName,
   isOffer = true,
+  approvalFacts = [],
 }: {
   projectPublicId: string;
   changeOrderId: string;
@@ -55,6 +56,8 @@ export function PortalDecisionForm({
   defaultName?: string;
   /** An offer or a change to it; only the wording differs. */
   isOffer?: boolean;
+  /** What approving commits to (deposit, deadline, validity), shown above the button. */
+  approvalFacts?: string[];
 }) {
   const intent = useDecisionIntent();
   const [decision, setDecision] = useState<Decision>(intent ?? "approved");
@@ -72,7 +75,7 @@ export function PortalDecisionForm({
   const [staleSubmit, setStaleSubmit] = useState<DecisionState | null>(null);
   const error = otpId ? (submitState === staleSubmit ? undefined : submitState.error) : localError ?? codeState.error;
   const busy = requesting || submitting;
-  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(Number(total)).replace("-", "−")} ${currencySymbol(currency)}`;
+  const amount = `${new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" }).format(Number(total)).replace("-", "−")} ${currencySymbol(currency)}`;
   const approving = decision === "approved";
 
   // A new code arrived: count down before offering another one.
@@ -162,6 +165,7 @@ export function PortalDecisionForm({
             <div className="flex flex-col gap-1">
               <h3 className="text-lg font-semibold">Одобрявате{revisionNumber > 1 ? ` версия ${revisionNumber}` : ""}</h3>
               <p className="text-3xl font-semibold tracking-tight tabular-nums">{amount}</p>
+              {approvalFacts.length ? <ul className="mt-1 flex flex-col gap-0.5 text-sm text-muted-foreground">{approvalFacts.map((line) => <li key={line}>{line}</li>)}</ul> : null}
               <button type="button" onClick={() => choose("changes_requested")} className="inline-flex min-h-11 items-center self-start text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground">
                 Не сте съгласни? Поискайте промяна или откажете
               </button>

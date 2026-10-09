@@ -16,8 +16,9 @@ import { vatLabel } from "@/modules/change-orders/labels";
 import { archiveTemplateAction } from "@/modules/catalog/actions";
 import { listCatalog, listTemplates } from "@/modules/catalog/queries";
 import { formatAmount } from "@/lib/money";
+import { dateOnly } from "@/lib/dates";
 
-const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
+const dateFormat = dateOnly;
 
 export const metadata: Metadata = { title: "Каталог" };
 

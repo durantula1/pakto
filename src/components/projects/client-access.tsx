@@ -19,6 +19,7 @@ import { CopyPortalLink } from "@/components/change-orders/copy-portal-link";
 import {
   addViewerAction, createOrRotatePortalLinkAction, makeApproverAction, removeContactAction, resetContactVerificationAction, updateContactAction,
 } from "@/modules/change-portal/staff-actions";
+import { dateWithTime } from "@/lib/dates";
 
 export type AccessContact = {
   id: string;
@@ -32,7 +33,7 @@ export type AccessContact = {
   link: string | null;
 };
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateTime = dateWithTime;
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -63,7 +64,7 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
       <Dialog className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Достъп на клиента</DialogTitle>
-          <DialogDescription>Всеки контакт има свой линк. Одобрява само един; останалите виждат всичко, без да решават.</DialogDescription>
+          <DialogDescription>Всеки контакт има свой линк. Одобрява само един; останалите виждат всичко, без да решават. Наблюдателите не получават имейл: прати им линка сам.</DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-3">
           {contacts.map((contact) => <ContactCard key={contact.id} projectId={projectId} contact={contact} canEdit={canEdit} isOwner={isOwner} />)}
@@ -125,7 +126,7 @@ function ContactCard({ projectId, contact, canEdit, isOwner }: { projectId: stri
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-medium">{contact.name}</p>
             <Badge variant="outline" title={contactRoleHint(contact.isPrimary)}>{contactRoleLabel(contact.isPrimary)}</Badge>
-            {contact.emailVerifiedAt ? <Badge variant="success-soft"><ShieldCheck className="size-3" />Потвърден</Badge> : <Badge variant="warning-soft">Непотвърден</Badge>}
+            {contact.emailVerifiedAt ? <Badge variant="success-soft"><ShieldCheck className="size-3" />Имейлът е потвърден</Badge> : <Badge variant="warning-soft">Непотвърден</Badge>}
           </div>
           <div className="mt-1 flex flex-col gap-0.5 text-sm text-muted-foreground">
             {contact.email ? <span className="flex min-w-0 items-center gap-1.5"><Mail className="size-3.5 shrink-0" /><span className="truncate">{contact.email}</span></span> : <span className="text-xs">Без имейл: клиентът ще го въведе при първото отваряне</span>}

@@ -18,8 +18,9 @@ import { createPortalToken, hashPortalToken } from "@/lib/crypto/portal-token";
 import { escapeHtml, maskEmail, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
 import { getSessionUser } from "@/lib/auth/server";
+import { dateOnly } from "@/lib/dates";
 
-export type InviteState = { error?: string; link?: string; sentTo?: string; emailError?: string };
+export type InviteState = { error?: string; canReplace?: boolean; link?: string; sentTo?: string; emailError?: string };
 export type MemberAccessState = { error?: string; savedAt?: number };
 
 async function checkedProjectIds(organizationId: string, values: FormDataEntryValue[]) {
@@ -37,7 +38,7 @@ async function projectScope(organizationId: string, formData: FormData) {
 }
 
 function errorMessage(error: unknown) {
-  if (error instanceof z.ZodError) return "Провери въведените данни.";
+  if (error instanceof z.ZodError) return error.issues[0]?.path[0] === "email" ? "Въведи валиден имейл адрес." : "Провери въведените данни.";
   return error instanceof Error ? error.message : "Действието не беше завършено.";
 }
 
@@ -45,7 +46,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
   try {
     const context = await requireTenantContext();
     await requireOwner(context);
-    const email = z.email("Провери имейла, нещо в него не е наред.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
+    const email = z.email("Въведи валиден имейл адрес.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
     const preset = z.enum(["field", "office", "owner"]).parse(formData.get("preset"));
     const scope = preset === "owner" ? { allProjects: false, projectIds: [] } : await projectScope(context.organizationId, formData);
     if (preset !== "owner" && !scope.allProjects && !scope.projectIds.length) return { error: "Избери поне един обект или „Всички обекти“." };
@@ -58,7 +59,11 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
     const [existing] = await db.select({ userId: organizationMembers.userId }).from(organizationMembers)
       .innerJoin(profiles, eq(profiles.id, organizationMembers.userId))
       .where(and(eq(organizationMembers.organizationId, context.organizationId), eq(organizationMembers.status, "active"), eq(profiles.email, email))).limit(1);
-    if (existing) return { error: "Този човек вече е в екипа." };
+    if (existing) return { error: `${email} вече е член на екипа.` };
+    // A second invite used to replace the first one silently (new link, possibly another role): say so instead.
+    const [open] = await db.select({ role: teamInvites.role }).from(teamInvites)
+      .where(and(eq(teamInvites.organizationId, context.organizationId), eq(teamInvites.email, email), isNull(teamInvites.acceptedAt), isNull(teamInvites.revokedAt), gt(teamInvites.expiresAt, new Date()))).limit(1);
+    if (open && formData.get("replace") !== "1") return { error: `Вече има покана до ${email} (${open.role === "owner" ? "Собственик" : PRESETS[open.role === "field" ? "field" : "office"].label}). Отмени я от „Покани“ или отбележи, че новата я заменя.`, canReplace: true };
     const [inviter] = await db.select({ displayName: profiles.displayName }).from(profiles).where(eq(profiles.id, context.userId)).limit(1);
     const token = createPortalToken();
     const expiresAt = new Date(Date.now() + 7 * 86400000);
@@ -87,7 +92,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
 
 async function sendInviteEmail(input: { to: string; link: string; organizationName: string; inviterName: string | null; roleLabel: string; expiresAt: Date }) {
   const who = input.inviterName ? `${input.inviterName} от ${input.organizationName}` : input.organizationName;
-  const until = input.expiresAt.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }).replace(/\.$/, "");
+  const until = dateOnly.format(input.expiresAt);
   await sendEmail({
     kind: "team_invite",
     to: input.to,

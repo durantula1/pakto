@@ -67,7 +67,7 @@ export async function signUpAction(
   formData: FormData,
 ): Promise<AuthActionState> {
   // In the order of the form, so the first message is about the first empty field.
-  const parsed = z.object({ displayName: z.string().trim().min(2, "Напиши името си.").max(100, "Името може да е до 100 символа.") })
+  const parsed = z.object({ displayName: z.string().trim().min(2, "Името е твърде кратко. Напиши поне 2 знака.").max(100, "Името може да е до 100 символа.") })
     .extend(credentialsSchema.shape)
     .safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
@@ -96,7 +96,7 @@ export async function signUpAction(
 
   // The same answer for a new and a registered email, so the form does not reveal who has a profile.
   return {
-    message: "Ако имейлът е нов, изпратихме линк за потвърждение. Провери и папката за спам.",
+    message: "Ако за този имейл още няма профил, ще получиш линк за потвърждение до минута. Провери и папката „Спам“.",
     signedUp: true,
     unconfirmedEmail: parsed.data.email,
   };
@@ -137,9 +137,11 @@ export async function googleSignInAction(formData: FormData) {
   redirect(url ?? "/sign-in?error=google");
 }
 
-export async function signOutAction() {
+export async function signOutAction(formData?: FormData) {
   await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
-  redirect("/");
+  // From an invitation page: back to sign-in with the invitation as the next stop.
+  const next = formData instanceof FormData ? safeNextPath(formData.get("next"), "") : "";
+  redirect(next ? `/sign-in?next=${encodeURIComponent(next)}` : "/");
 }
 
 export async function requestPasswordResetAction(

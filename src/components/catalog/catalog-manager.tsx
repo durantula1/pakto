@@ -22,7 +22,7 @@ import { useKeepFormValues } from "@/lib/use-keep-form-values";
 import { cn } from "@/lib/utils";
 import { currencySymbol } from "@/lib/money";
 
-const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
+const price = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
 const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 sm:grid-cols-[minmax(0,1fr)_4rem_7rem_1rem]";
 /** Chips shown before the rest fold into "Още". */
 const TOP_CATEGORIES = 5;

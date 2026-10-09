@@ -10,6 +10,7 @@ import { clientIp } from "@/lib/http/client-ip";
 import { supportKinds, type SupportKind } from "@/modules/support/kinds";
 import { allowHit } from "@/modules/support/limits";
 import { describeSender } from "@/modules/support/sender";
+import { dateWithTime } from "@/lib/dates";
 
 export type SupportState = { error?: string; ok?: boolean };
 
@@ -81,7 +82,7 @@ export async function sendSupportRequestAction(_: SupportState, formData: FormDa
 
   const kindLabel = supportKinds[input.kind];
   const firstLine = input.message.split("\n")[0]!.slice(0, 60);
-  const sentAt = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Sofia" }).format(new Date());
+  const sentAt = dateWithTime.format(new Date());
   const details: [string, string | null | undefined][] = [
     ["Тип", kindLabel],
     ["Име", input.name],

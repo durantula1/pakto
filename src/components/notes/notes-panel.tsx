@@ -13,6 +13,7 @@ import { addNoteAction, deleteNoteAction, togglePinAction, updateNoteAction, typ
 import { documentCode } from "@/modules/change-orders/labels";
 import { cn } from "@/lib/utils";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
+import { dateWithTime } from "@/lib/dates";
 
 type Note = {
   id: string; body: string; pinned: boolean; createdAt: Date; updatedAt: Date;
@@ -31,7 +32,7 @@ function applyChange(list: Note[], change: NotesChange) {
   return [...list.slice(0, at), change.add, ...list.slice(at)];
 }
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateTime = dateWithTime;
 
 /** Team-only notes. `changeOrderId` scopes new notes to one document; without it they belong to the whole project. */
 export function NotesPanel({ projectId, changeOrderId, notes, legacy = [], currentUserId, isOwner, pagination }: {

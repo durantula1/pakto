@@ -16,6 +16,7 @@ import { getClient, getClientHistory } from "@/modules/clients/queries";
 import { eventLabels } from "@/components/change-orders/document-timeline";
 import { formatCents, getProjectsTotals, type ProjectTotals } from "@/modules/projects/state";
 import { projectStatusBadgeVariants } from "@/app/app/projects/[projectId]/project-skeleton";
+import { dateWithTime } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Клиент" };
 
@@ -27,7 +28,7 @@ const baseColumns: DataTableColumn[] = [
 ];
 const moneyColumn: DataTableColumn = { id: "remaining", header: "Остава", className: "text-right" };
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateTime = dateWithTime;
 
 type Totals = { contract: bigint; paid: bigint; remaining: bigint };
 

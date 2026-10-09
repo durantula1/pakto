@@ -1,4 +1,4 @@
-const amountFormat = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true });
+const amountFormat = new Intl.NumberFormat("bg-BG", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
 
 /** A money amount as Bulgarians write it: "1 466,40". For display only; stored values keep `toFixed(2)`. */
 export function formatAmount(value: string | number) {
@@ -10,4 +10,11 @@ export function formatAmount(value: string | number) {
 export function currencySymbol(code: string | null | undefined) {
   const value = (code ?? "EUR").trim();
   return value === "EUR" ? "€" : value;
+}
+
+const percentFormat = new Intl.NumberFormat("bg-BG", { maximumFractionDigits: 2 });
+
+/** A percentage as Bulgarians write it: "33,33 %" (comma, and a space before the sign). */
+export function formatPercent(value: string | number) {
+  return `${percentFormat.format(Number(value))} %`;
 }

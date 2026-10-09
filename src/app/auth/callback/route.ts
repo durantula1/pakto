@@ -9,6 +9,8 @@ import { appUrl } from "@/lib/env/public";
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  if (url.searchParams.get("error")) return NextResponse.redirect(appUrl("/sign-in?error=confirmation"));
+  // `next` survives a failed link: a resend from the sign-in page must still land on the invitation, not on /app.
+  const next = safeNextPath(url.searchParams.get("next"), "");
+  if (url.searchParams.get("error")) return NextResponse.redirect(appUrl(`/sign-in?error=confirmation${next ? `&next=${encodeURIComponent(next)}` : ""}`));
   return NextResponse.redirect(appUrl(safeNextPath(url.searchParams.get("next"))));
 }

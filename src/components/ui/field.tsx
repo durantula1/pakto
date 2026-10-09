@@ -81,12 +81,12 @@ function isControl(target: EventTarget): target is Control {
  */
 export function invalidMessage(control: Control) {
   const validity = control.validity
-  if (validity.valueMissing) return "Полето е задължително."
+  if (validity.valueMissing) return "Попълни това поле."
   if (validity.typeMismatch) return control.type === "email" ? "Имейлът не изглежда верен." : "Стойността не е вярна."
   if (validity.tooShort && "minLength" in control) return `Поне ${control.minLength} символа.`
   if (validity.tooLong && "maxLength" in control) return `Най-много ${control.maxLength} символа.`
-  if (validity.rangeUnderflow && "min" in control) return `Най-малко ${control.min}.`
-  if (validity.rangeOverflow && "max" in control) return `Най-много ${control.max}.`
+  if (validity.rangeUnderflow && "min" in control) return `Най-малко ${String(control.min).replace(".", ",")}.`
+  if (validity.rangeOverflow && "max" in control) return `Най-много ${String(control.max).replace(".", ",")}.`
   return "Стойността не е вярна."
 }
 

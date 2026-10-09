@@ -15,6 +15,7 @@ import type { AccountDeletionPlan, Blocker } from "@/modules/account/queries";
 import {
   acceptLegalDocumentsAction, cancelAccountDeletionAction, changeEmailAction, changePasswordAction, leaveOrganizationAction, requestAccountDeletionAction, signOutEverywhereAction,
 } from "@/modules/account/actions";
+import { stop } from "@/lib/dates";
 
 /** Explains why the button above is disabled and links to the fix, when there is one. */
 function BlockerNote({ blocker }: { blocker: Blocker }) {
@@ -138,7 +139,7 @@ export function DeletionPendingBanner({ deleteOn, companyName }: { deleteOn: str
   return (
     <div role="status" className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm">
-        <span className="font-semibold text-destructive">{companyName ? `Профилът ти и фирмата „${companyName}“ ще бъдат изтрити на ${deleteOn}.` : `Профилът ти ще бъде изтрит на ${deleteOn}.`}</span>{" "}
+        <span className="font-semibold text-destructive">{companyName ? `Профилът ти и фирмата „${companyName}“ ще бъдат изтрити на ${stop(deleteOn)}` : `Профилът ти ще бъде изтрит на ${stop(deleteOn)}`}</span>{" "}
         <span className="text-muted-foreground">Докато не отмениш, можеш да работиш както обикновено.</span>
       </p>
       <ActionForm action={cancelAccountDeletionAction} success="Изтриването е отменено" className="shrink-0">

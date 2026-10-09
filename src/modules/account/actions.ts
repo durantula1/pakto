@@ -17,6 +17,7 @@ import { accountDeletionDate } from "@/lib/legal";
 import { auth, getSessionUser, signOutEverywhere, userHasPassword, verifyUserPassword } from "@/lib/auth/server";
 import { recordLegalConsent } from "@/modules/account/mutations";
 import { getAccountDeletionPlan, getLeaveBlocker } from "@/modules/account/queries";
+import { dateOnly } from "@/lib/dates";
 
 type ActionResult = { error?: string } | void;
 
@@ -185,14 +186,14 @@ export async function acceptLegalDocumentsAction(): Promise<ActionResult> {
 }
 
 async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyName: string | null) {
-  const date = deleteOn.toLocaleDateString("bg-BG", { timeZone: "Europe/Sofia" }).replace(/\.$/, "");
+  const date = dateOnly.format(deleteOn);
   const link = `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/sign-in`;
   const what = companyName ? `Профилът ти и фирмата „${companyName}“ с всички обекти, оферти и плащания ще бъдат изтрити` : "Профилът ще бъде изтрит";
   await sendEmail({
     kind: "account_deletion",
     to,
     subject: "Профилът ти в Pakto ще бъде изтрит",
-    text: `Получихме заявка за изтриване на профила ти в Pakto.\n\n${what} окончателно на ${date}. Ако заявката не е от теб или си промениш решението, влез до тази дата и натисни „Отмени изтриването“: ${link}`,
-    html: `<div style="font-family:system-ui,sans-serif;max-width:520px;color:#102b38"><p>Получихме заявка за изтриване на профила ти в Pakto.</p><p>${escapeHtml(what)} окончателно на <strong>${escapeHtml(date)}</strong>.</p><p style="color:#5b6b70;font-size:14px">Ако заявката не е от теб или си промениш решението, <a href="${link}">влез</a> до тази дата и натисни „Отмени изтриването“.</p></div>`,
+    text: `Получихме заявка за изтриване на профила ти в Pakto.\n\n${what} окончателно на ${date} Ако заявката не е от теб или си промениш решението, влез до тази дата и натисни „Отмени изтриването“: ${link}`,
+    html: `<div style="font-family:system-ui,sans-serif;max-width:520px;color:#102b38"><p>Получихме заявка за изтриване на профила ти в Pakto.</p><p>${escapeHtml(what)} окончателно на <strong>${escapeHtml(date)}</strong>${date.endsWith(".") ? "" : "."}</p><p style="color:#5b6b70;font-size:14px">Ако заявката не е от теб или си промениш решението, <a href="${link}">влез</a> до тази дата и натисни „Отмени изтриването“.</p></div>`,
   });
 }

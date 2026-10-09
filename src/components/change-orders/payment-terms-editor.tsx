@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { PAYMENT_TERMS_MAX, paymentPresets, paymentTriggerLabels, termAmounts, termsPercent, type PaymentTerm, type PaymentTermTrigger } from "@/modules/change-orders/payment-terms";
+import { formatPercent } from "@/lib/money";
 
 export type TermRow = { key: string; title: string; percent: string; dueTrigger: PaymentTermTrigger; dueOn: string; stage: string };
 
@@ -44,7 +45,7 @@ export function termsProblem(rows: TermRow[]) {
   const outOfRange = terms.find((term) => !(term.percent > 0 && term.percent <= 100));
   if (outOfRange) return `Процентът за „${outOfRange.title}“ трябва да е между 0 и 100.`;
   const total = termsPercent(terms);
-  if (total !== 100) return `Плащанията трябва да са общо 100%, сега са ${total}%.`;
+  if (total !== 100) return `Плащанията трябва да са общо 100 %, сега са ${formatPercent(total)}.`;
   const missing = terms.find((term) => (term.dueTrigger === "on_date" && !term.dueOn) || (term.dueTrigger === "on_stage" && !term.stage));
   if (missing) return `Избери ${missing.dueTrigger === "on_date" ? "дата" : "етап"} за „${missing.title}“.`;
   return null;
@@ -112,7 +113,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
         {named.length ? (
           <p className={cn("flex items-center gap-1.5 text-sm tabular-nums", percent === 100 ? "text-muted-foreground" : "font-medium text-tile-sand-foreground")}>
             {percent === 100 ? null : <TriangleAlert className="size-4" aria-hidden="true" />}
-            Общо {percent}%{percent === 100 ? "" : " · трябва да е 100%"}
+            Общо {formatPercent(percent)}{percent === 100 ? "" : " · трябва да е 100 %"}
           </p>
         ) : null}
       </div>

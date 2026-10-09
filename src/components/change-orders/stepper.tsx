@@ -75,7 +75,8 @@ export function Stepper({
           if (cleaned !== input.value) input.value = cleaned;
           const value = Number(input.value);
           if (input.value === "" || Number.isNaN(value)) return;
-          if (value < min) input.value = String(min);
+          // Only the upper limit is enforced while typing: "0" on the way to "0.5" must not jump to the minimum.
+          // A value below the minimum is caught by the form's own message ("Количеството трябва да е над 0.").
           if (value > max) input.value = String(max);
           onValueChange?.(input.value);
         }}

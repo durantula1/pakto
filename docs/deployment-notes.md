@@ -125,7 +125,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 
 ## 8. Сигурност
 
-- Хедъри от `next.config.ts`: Content-Security-Policy на страниците (всичко от `'self'`, без външни ресурси), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`; порталът е `private, no-store` и `no-referrer`. HSTS (без `includeSubDomains`) идва от Caddy.
+- Хедъри от `next.config.ts`: Content-Security-Policy на страниците (всичко от `'self'`, без външни ресурси), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`; порталът е `private, no-store` и `no-referrer`. HSTS (с `includeSubDomains`, без `preload`; поддомейните са проверени на 09.10.2026) идва от Caddy.
 - Лимити в приложението (в паметта, нулират се при рестарт): вход, регистрация, писма за парола, кодове, съобщения, клиентски линкове (`/access/[token]`: до 20 нови сесии на IP за 10 мин.; повторно отваряне на същото устройство ползва старата сесия), „Изпрати ми нови линкове“, `/contact`.
 - Better Auth: HTTP пътищата, които браузърът не ползва (`/sign-up/email`, `/sign-in/email`, `/request-password-reset`, `/send-verification-email` и т.н.), връщат 404 (`disabledPaths` в `src/lib/auth/server.ts`), за да не заобикалят лимитите. Server actions викат `auth.api` директно. Отворени остават линковете от писмата и `/callback/google`.
 - `deploy.sh` рестартира Caddy, когато Caddyfile се е сменил (`/opt/pakto/.caddyfile.sha256`): новият файл не се вижда през bind mount-а без рестарт.
@@ -191,3 +191,7 @@ pnpm dev
 - **06.10.2026**: преместването е завършено. Сървърът, деплоят, бекъпите (локални и R2) и имейлите са описани по-горе; Supabase, Resend и Vercel са махнати от кода (`@supabase/supabase-js`, `resend`, `drizzle-kit`, `vercel.json`, `supabase/`, `drizzle/`, `src/instrumentation.ts`). Базата на сървъра е започната на чисто (данните в Supabase бяха само тестови). Добавени CSP и `db/seed.sql`. Поправени: пренасочвания към `0.0.0.0:3000`, контактната форма (искаше `RESEND_API_KEY`), `db:pull` (историята на миграциите и `--files`).
 - **05.10.2026**: имейли през SMTP с опашка, файлове на диска, Better Auth, live през `LISTEN/NOTIFY`, собствен Postgres.
 - По-старите записи (Vercel/Supabase периода) са в историята на git.
+
+## robots.txt и Cloudflare
+
+Приложението сервира собствен `robots.txt` (`src/app/robots.ts`: `Disallow` за `/app`, `/portal`, `/access`, `/api`, `/onboarding`, `/auth`, `/join`). Ако в Cloudflare е включено „Manage your robots.txt“ / управляваният robots.txt (Security → Settings, или AI Crawl Control), той слага своя група `User-agent: *` с `Allow: /` преди нашата и някои ботове четат само първата група. Изключи го от таблото на Cloudflare. Това не може да се направи от кода.

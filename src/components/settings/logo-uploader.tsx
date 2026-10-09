@@ -143,7 +143,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
       <div className="min-w-0">
         <p className="font-medium">Лого</p>
         <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-          Горе вляво на всяка оферта, в портала и в PDF. Появява се и във вече изпратените оферти без лого. Ако после го смениш, изпратените с лого запазват своето.
+          Горе вляво на всяка оферта, в портала и в PDF. Логото ще се показва и в офертите, изпратени преди да го качиш. Ако после го смениш, офертите, изпратени с лого, запазват своето.
         </p>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">SVG, PNG, JPG или WebP до 5 MB. Най-добре хоризонтално, с прозрачен фон.</p>
       </div>

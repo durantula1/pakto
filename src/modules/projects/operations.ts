@@ -378,6 +378,9 @@ export async function recordReceiptAction(formData: FormData): Promise<ActionRes
       if (twin) throw new Error("Това плащане вече е записано преди малко.");
       const [receipt] = await tx.insert(projectReceipts).values({ organizationId: context.organizationId, projectId: data.projectId, offerId, installmentId: data.installmentId, kind: data.kind, amount: data.amount, currency: "EUR", method: data.method, receivedOn: data.receivedOn, note: data.note || null, createdBy: context.userId }).returning({ id: projectReceipts.id });
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, changeOrderId: offerId, actorType: "staff", actorId: context.userId, eventType: "payment_received", visibility: "client", metadata: { receiptId: receipt!.id, amount: data.amount, currency: "EUR", receivedOn: data.receivedOn } });
+      // The client already said "Платих" for this installment: the payment just recorded answers it.
+      if (data.installmentId) await tx.update(paymentClaims).set({ status: "confirmed", receiptId: receipt!.id, resolvedBy: context.userId, resolvedAt: new Date() })
+        .where(and(eq(paymentClaims.installmentId, data.installmentId), eq(paymentClaims.projectId, data.projectId), eq(paymentClaims.status, "pending")));
     });
     emailReceipt(data.projectId, { amount: data.amount, currency: "EUR", receivedOn: data.receivedOn, method: data.method });
     refresh(data.projectId);
@@ -508,8 +511,9 @@ export async function rejectPaymentClaimAction(formData: FormData): Promise<Acti
     await requireProjectCapability(context, projectId, "payment");
     const [claim] = await getDatabase().update(paymentClaims).set({ status: "rejected", response, resolvedBy: context.userId, resolvedAt: new Date() })
       .where(and(eq(paymentClaims.id, claimId), eq(paymentClaims.projectId, projectId), eq(paymentClaims.organizationId, context.organizationId), eq(paymentClaims.status, "pending")))
-      .returning({ amount: paymentClaims.amount, currency: paymentClaims.currency, paidOn: paymentClaims.paidOn });
+      .returning({ amount: paymentClaims.amount, currency: paymentClaims.currency, paidOn: paymentClaims.paidOn, offerId: paymentClaims.offerId });
     if (!claim) throw new Error("Отбелязването вече е обработено.");
+    await getDatabase().insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: claim.offerId, actorType: "staff", actorId: context.userId, eventType: "payment_claim_rejected", visibility: "client", metadata: { amount: claim.amount, response } });
     emailClient(projectId, {
       subject: "Плащането Ви още не е потвърдено",
       intro: `Фирмата още не може да потвърди плащането от ${formatDay(claim.paidOn)} за ${formatAmount(claim.amount)} ${currencySymbol(claim.currency)}. Отговорът ѝ е по-долу. Ако имате потвърждение за плащането, пишете ѝ от портала, за да го изясните.`,

@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogDescription, DialogTitle } from "@/component
 import { cn } from "@/lib/utils";
 import { demoOffer } from "@/modules/organizations/demo-offer";
 import { logoBox, type DocumentLogo } from "@/modules/organizations/logo-box";
+import { dateOnly } from "@/lib/dates";
 
 /**
  * A whole sample offer with the company's logo, full size, as the client sees it in the portal and
@@ -91,7 +92,7 @@ function PortalPage({ organizationName, logo }: { organizationName: string; logo
 
 const money = new Intl.NumberFormat("bg-BG", { style: "currency", currency: "EUR" });
 const quantity = new Intl.NumberFormat("bg-BG", { maximumFractionDigits: 3 });
-const date = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
+const date = dateOnly;
 /** Same box as the PDF (logoBox in points); a logo of unknown size falls back to the old fixed height. */
 function pdfLogoStyle(logo: DocumentLogo) {
   if (!logo.dimensions) return { height: "36pt", maxWidth: "180pt" };

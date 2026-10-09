@@ -176,7 +176,7 @@ export function OfferForm({
   function openPreview() {
     if (!projectId) return setLocalError("Избери обект.");
     if (title.trim().length < 3) return setLocalError("Добави кратко заглавие.");
-    if (description.trim().length < 5) return setLocalError("Опиши работата.");
+    if (description.trim().length < 5) return setLocalError("Попълни „Обхват на работата“.");
     if (!deadline) return setLocalError("Посочи договорен краен срок.");
     if (!payload.length) return setLocalError("Добави поне една услуга или материал.");
     if (payload.some((line) => line.description.length < 2)) {

@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { Quote, Slip } from "@/components/portal/paper";
 import { answerAcceptanceAction, requestAcceptanceCodeAction } from "@/modules/change-portal/actions";
+import { dateWithTime } from "@/lib/dates";
 
 type Acceptance = { kind: "requested" | "accepted" | "issues"; note: string | null; typedName: string | null; createdAt: Date };
 
-const dateTime = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" });
+const dateTime = dateWithTime;
 const day = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", timeZone: "Europe/Sofia" });
 
 /**

@@ -129,7 +129,7 @@ export function DocumentBody({ document, brand, compact = false }: {
           </section>
           {document.reason ? (
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Защо е необходимо</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Причина</p>
               <p className="mt-1.5 leading-7 whitespace-pre-line">{document.reason}</p>
             </section>
           ) : null}
@@ -176,7 +176,7 @@ function ScheduleSection({ schedule, deadline }: { schedule: Array<{ id?: number
         ))}
       </ol>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
-        Общо около {daysLabel(scheduleDays(schedule))}. Графикът е ориентировъчен: точните дати се уточняват след одобрение{deadline ? `, а договореният краен срок е ${formatDay(deadline)}` : ""}.
+        Общо {daysLabel(scheduleDays(schedule))}. Графикът е ориентировъчен: точните дати се уточняват след одобрение{deadline ? `, а договореният краен срок е ${formatDay(deadline)}` : ""}.
       </p>
     </section>
   );

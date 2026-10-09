@@ -10,8 +10,9 @@ import { userHasPassword } from "@/lib/auth/server";
 import { ACCOUNT_DELETION_GRACE_DAYS, LEGAL_DOCUMENTS, type LegalDocument } from "@/lib/legal";
 import { acceptLegalDocumentsAction } from "@/modules/account/actions";
 import { getAccountDeletionPlan, getLeaveBlocker, listUserConsents } from "@/modules/account/queries";
+import { dateOnly } from "@/lib/dates";
 
-const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeZone: "Europe/Sofia" });
+const dateFormat = dateOnly;
 
 export const metadata: Metadata = { title: "Данни и профил · Настройки" };
 

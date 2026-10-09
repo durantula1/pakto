@@ -10,8 +10,10 @@ import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { emailClient, sendClientDigests } from "@/modules/notifications/client";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
+import { dateOnly } from "@/lib/dates";
+import { stop } from "@/lib/dates";
 
-const dateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
+const dateFormat = dateOnly;
 
 type Pending = {
   revisionId: number; changeOrderId: string; projectId: string; projectName: string; organizationId: string; organizationName: string;
@@ -42,13 +44,13 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
   const url = await getActivePortalLink(document.projectId, contact.id);
   if (!url) return false;
   const kind = document.documentKind === "offer" ? "офертата" : "промяната";
-  const due = document.responseDueAt ? dateFormat.format(document.responseDueAt).replace(/\.$/, "") : null;
+  const due = document.responseDueAt ? dateFormat.format(document.responseDueAt) : null;
   const subject = reason === "expiring" && due
     ? `Напомняне: ${kind} „${document.title}“ е валидна до ${due}`
     : `Напомняне: ${kind} „${document.title}“ очаква Вашето решение`;
   const intro = reason === "expiring" && due
-    ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}) е валидна до ${due}.`
-    : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}).${due ? ` Валидна е до ${due}.` : ""}`;
+    ? `${document.organizationName} Ви напомня, че ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}) е валидна до ${stop(due)}`
+    : `${document.organizationName} очаква Вашето решение по ${kind} „${document.title}“ (${formatAmount(document.total)} ${currencySymbol(document.currency)}).${due ? ` Валидна е до ${stop(due)}` : ""}`;
   await sendEmail({
     kind: "reminder", retry: true,
     to: contact.email,

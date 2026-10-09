@@ -175,7 +175,8 @@ export function escapeHtml(value: string) {
 
 export function maskEmail(email: string) {
   const [local = "", domain = ""] = email.split("@");
-  return `${local.slice(0, 1)}${"*".repeat(Math.max(local.length - 1, 2))}@${domain}`;
+  // A fixed number of stars: the length of the mask must not give away the length of the address.
+  return `${local.slice(0, 1)}***@${domain}`;
 }
 
 /** Client emails start with the project, so a client with several projects knows which one it is about. */

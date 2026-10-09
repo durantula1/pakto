@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { formatDay, formatShortDay } from "@/modules/change-orders/labels";
 import type { ScopeView } from "@/modules/projects/scope";
 import { formatCents } from "@/modules/projects/state";
+import { formatPercent } from "@/lib/money";
 
 const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
 export const today = () => sofiaDay.format(new Date());
@@ -88,7 +89,7 @@ export function MoneyTile({ view, claims }: { view: ScopeView; claims: PortalCla
       </span>
       <Bar percent={percent} />
       <span className={cn("line-clamp-2 text-xs", overdue && !claimed && "font-medium text-destructive")}>
-        {next ? (claimed ? "вноската чака потвърждение" : `вноска ${formatCents(next.remainingMinor, next.currency)} ${overdue ? "· просрочена от" : "до"} ${formatShortDay(next.dueOn)}`) : `платени ${percent}%`}
+        {next ? (claimed ? "вноската чака потвърждение от фирмата" : `вноска ${formatCents(next.remainingMinor, next.currency)} ${overdue ? "· просрочена от" : "до"} ${formatShortDay(next.dueOn)}`) : `платени ${formatPercent(percent)}`}
       </span>
     </>
   );
@@ -106,7 +107,7 @@ export function NextInstallment({ view, claims, portalPublicId, canAct }: { view
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="truncate font-semibold">{next.title}</span>
         <span className="font-semibold whitespace-nowrap tabular-nums">{formatCents(next.remainingMinor, next.currency)}</span>
-        {claimed ? <Badge variant="warning-soft">Чака потвърждение</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
+        {claimed ? <Badge variant="warning-soft">Чака потвърждение от фирмата</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
       </span>
     </span>
   );

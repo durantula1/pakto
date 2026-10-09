@@ -54,7 +54,7 @@ export const paymentTermsField = z
   .superRefine((terms, context) => {
     if (!terms.length) return;
     const total = Math.round(terms.reduce((sum, term) => sum + term.percent, 0) * 100) / 100;
-    if (total !== 100) context.addIssue({ code: "custom", message: `Плащанията трябва да са общо 100%, сега са ${total}%.` });
+    if (total !== 100) context.addIssue({ code: "custom", message: `Плащанията трябва да са общо 100 %, сега са ${total.toString().replace(".", ",")} %.` });
   });
 
 /** Sum of the percentages, rounded to cents of a percent. */
@@ -67,7 +67,8 @@ export function termAmounts(totalMinor: bigint, terms: Pick<PaymentTerm, "percen
   let assigned = 0n;
   return terms.map((term, index) => {
     if (index === terms.length - 1) return totalMinor - assigned;
-    const amount = (totalMinor * BigInt(Math.round(Number(term.percent) * 100))) / 10000n;
+    // Rounded to the nearest cent: truncating pushed every lost fraction onto the last term (1,10 instead of 1,08).
+    const amount = (totalMinor * BigInt(Math.round(Number(term.percent) * 100)) + 5000n) / 10000n;
     assigned += amount;
     return amount;
   });

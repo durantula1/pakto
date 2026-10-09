@@ -47,5 +47,6 @@ export async function renderChangePdf(document: NonNullable<Awaited<ReturnType<t
   const code = documentCode(document.kind, document.sequenceNumber);
   // A decided version names the person as they signed it; the contact may have been edited since.
   const buffer = await renderToBuffer(ChangePdfDocument({ organization: document.organizationName, logo: logo ? { ...logo, size: document.organizationLogoSize } : null, project: document.projectName, siteAddress: document.siteAddress, contact: decision?.typedName ?? document.contactName ?? "Клиент", kind: document.kind, code, revision, lines, schedule, paymentTerms, absorbedChanges, decision: decision ? { ...decision, signature } : null, photos }));
-  return { buffer, filename: `${document.kind === "offer" ? "oferta" : "promyana"}-${document.sequenceNumber}-v${revision.revisionNumber}.pdf` };
+  // The file is named as the app names the document ("ОФ-001-v2.pdf"); `asciiFilename` is the fallback for old mail clients and headers.
+  return { buffer, filename: `${code}-v${revision.revisionNumber}.pdf`, asciiFilename: `${document.kind === "offer" ? "oferta" : "promyana"}-${document.sequenceNumber}-v${revision.revisionNumber}.pdf` };
 }

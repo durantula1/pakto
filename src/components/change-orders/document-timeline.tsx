@@ -8,6 +8,8 @@ import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
+import { eventDetail } from "@/modules/change-orders/event-detail";
+import { dateWithTime } from "@/lib/dates";
 
 export const eventLabels: Record<string, string> = {
   change_created: "Създадена чернова",
@@ -48,6 +50,7 @@ export const eventLabels: Record<string, string> = {
   approver_changed: "Сменен одобряващ",
   payment_claimed: "Клиентът отбеляза плащане",
   payment_disputed: "Клиентът оспори плащане",
+  payment_claim_rejected: "Фирмата още не потвърди платеното от клиента",
   client_merged: "Клиентът е обединен с повтарящ се запис",
   client_anonymized: "Клиентът е анонимизиран",
   client_message: "Съобщение от клиента",
@@ -81,13 +84,13 @@ const eventTones: Record<string, string> = {
   document_canceled: "bg-tile-coral-foreground",
 };
 
-const dateTime = (value: Date) => new Intl.DateTimeFormat("bg-BG", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Sofia" }).format(value);
+const dateTime = (value: Date) => dateWithTime.format(value);
 
 export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions, events, olderEventsHref, latestEventsHref }: {
   changeOrderId: string;
   approvedRevisionId: number | null;
   revisions: Array<{ id: number; revisionNumber: number; status: string; frozenAt: Date | null; total: string; currency: string }>;
-  events: Array<{ id: number; eventType: string; createdAt: Date }>;
+  events: Array<{ id: number; eventType: string; createdAt: Date; metadata?: unknown }>;
   olderEventsHref: string | null;
   latestEventsHref: string | null;
 }) {
@@ -131,6 +134,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
                   <span aria-hidden="true" className={cn("relative mt-1.5 size-2.5 shrink-0 rounded-full", eventTones[event.eventType] ?? "bg-muted-foreground/50")} />
                   <div>
                     <p className="text-sm font-medium">{eventLabels[event.eventType] ?? event.eventType}</p>
+                    {eventDetail(event) ? <p className="mt-0.5 text-sm break-words whitespace-pre-line text-muted-foreground">„{eventDetail(event)}“</p> : null}
                     <p className="text-xs text-muted-foreground">{dateTime(event.createdAt)}</p>
                   </div>
                 </li>

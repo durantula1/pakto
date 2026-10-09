@@ -88,7 +88,7 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
             description={isDraft ? undefined : "Пренасят се в новата версия. Можеш да ги смениш, след като я запазиш."}
           />
         }
-        initial={{ id: change.id, documentKind: change.documentKind, title: change.title, description: change.description, reason: change.reason, changeKind: change.changeKind, subtotal: change.subtotal, taxRate: change.taxRate, scheduleImpactType: change.scheduleImpactType, scheduleImpactDays: change.scheduleImpactDays, agreedDeadline: change.agreedDeadline, clientNote: change.clientNote, discountType: change.discountType, discountValue: change.discountValue, lineItems: change.lineItems, schedule: change.schedule, paymentTerms: change.paymentTerms, absorbedChangeIds: change.absorbedChanges.map((item) => item.id) }}
+        initial={{ id: change.id, revisionId: change.revisionId, documentKind: change.documentKind, title: change.title, description: change.description, reason: change.reason, changeKind: change.changeKind, subtotal: change.subtotal, taxRate: change.taxRate, scheduleImpactType: change.scheduleImpactType, scheduleImpactDays: change.scheduleImpactDays, agreedDeadline: change.agreedDeadline, clientNote: change.clientNote, discountType: change.discountType, discountValue: change.discountValue, lineItems: change.lineItems, schedule: change.schedule, paymentTerms: change.paymentTerms, absorbedChangeIds: change.absorbedChanges.map((item) => item.id) }}
       />
     </PageShell>
   );

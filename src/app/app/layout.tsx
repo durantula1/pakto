@@ -39,8 +39,9 @@ import { getAccountSummary } from "@/modules/account/queries";
 import { countUnreadNotifications, recentNotifications } from "@/modules/notifications/queries";
 import { CommandPalette, type PaletteLink } from "@/components/workspace/command-palette";
 import { NotificationBell, NotificationBellFallback } from "@/components/notifications/notification-bell";
+import { dateOnly } from "@/lib/dates";
 
-const deletionDateFormat = new Intl.DateTimeFormat("bg-BG", { dateStyle: "long", timeZone: "Europe/Sofia" });
+const deletionDateFormat = dateOnly;
 
 export default async function WorkspaceLayout({
   children,
@@ -149,7 +150,7 @@ export default async function WorkspaceLayout({
         </header>
         {/* Collapsing gives the content the room the sidebar frees, not just a left shift. */}
         <main className="max-w-content px-4 pt-2 pb-6 transition-[max-width] duration-200 motion-reduce:transition-none sm:px-6 lg:pr-7 lg:pl-4 lg:group-data-[sidebar=collapsed]/shell:max-w-[93.5rem]">
-          {pendingDeletion ? <div className="mb-6"><DeletionPendingBanner deleteOn={deletionDateFormat.format(accountDeletionDate(pendingDeletion)).replace(/\.$/, "")} companyName={account?.closureRequested ? context.organizationName : null} /></div> : null}
+          {pendingDeletion ? <div className="mb-6"><DeletionPendingBanner deleteOn={deletionDateFormat.format(accountDeletionDate(pendingDeletion))} companyName={account?.closureRequested ? context.organizationName : null} /></div> : null}
           {account?.consentMissing ? <div className="mb-6"><ConsentBanner /></div> : null}
           {children}
         </main>

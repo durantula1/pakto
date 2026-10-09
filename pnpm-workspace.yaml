@@ -15,3 +15,7 @@ overrides:
   sharp: 0.35.5
   # postcss pulls 1.2.1, which a crafted source map can stall (build time only).
   source-map-js: 1.2.2
+  # Only reached through the video workspace (Remotion), never the site; patched anyway.
+  fast-uri@3: 3.1.8
+  js-yaml@4: 4.3.2
+  postcss-selector-parser@7: 7.1.6

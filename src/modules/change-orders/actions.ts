@@ -42,6 +42,7 @@ import { attempt, type ActionResult } from "@/lib/action-result";
 import { emailClient } from "@/modules/notifications/client";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
+import { documentCode } from "@/modules/change-orders/labels";
 
 /** `createdId` comes back instead of a redirect when the form still has files to upload. */
 export type QuickChangeState = { error?: string; createdId?: string };
@@ -75,7 +76,7 @@ const offerLineSchema = z.object({
 const offerSchema = z.object({
   projectId: z.uuid(),
   title: z.string().trim().min(3, "Добави кратко заглавие.").max(180),
-  description: z.string().trim().min(5, "Опиши работата.").max(5000),
+  description: z.string().trim().min(5, "Попълни „Обхват на работата“.").max(5000),
   taxRate: z.coerce.number().min(0).max(100),
   discountType: z.union([z.literal(""), z.enum(["percent", "amount"])]).optional(),
   discountValue: z.union([z.literal(""), z.coerce.number().min(0).max(999999999)]).optional(),
@@ -458,6 +459,8 @@ export async function createOfferAction(
 
 const revisionSchema = z.object({
   changeOrderId: z.uuid(),
+  /** The version the editor was opened on: if a colleague saved a newer one meanwhile, this save is refused instead of overwriting it. */
+  baseRevisionId: z.coerce.number().int().positive().optional(),
   title: z.string().trim().min(3).max(180),
   description: z.string().trim().min(5).max(5000),
   reason: z.string().trim().max(2000).optional(),
@@ -539,45 +542,53 @@ export async function createDocumentRevisionAction(_state: QuickChangeState, for
   }
   const overLimit = document.documentKind === "change" && projectState ? creditOverLimit(baseline, projectState.pendingDocuments, total, data.changeOrderId) : null;
   if (overLimit) return { error: overLimit };
-  await db.transaction(async (tx) => {
-    const [current] = await tx.select({ id: changeOrderRevisions.id, status: changeOrderRevisions.status, revisionNumber: changeOrderRevisions.revisionNumber, currency: changeOrderRevisions.currency })
-      .from(changeOrders).innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
-      .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.organizationId, context.organizationId)))
-      .for("update").limit(1);
-    if (!current || !revisableStatus(document.documentKind, current.status)) throw new Error("Тази версия не може да бъде редактирана.");
-    // An approved offer stays in force (approved_revision_id) until the client approves the new version.
-    // A sent version the client has not decided on yet is taken back; the row lock above keeps a concurrent client decision out.
-    const withdrawn = current.status === "sent" || current.status === "viewed";
-    if (current.status === "draft" || withdrawn) await tx.update(changeOrderRevisions).set({ status: "superseded" }).where(eq(changeOrderRevisions.id, current.id));
-    if (withdrawn) await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: document.projectId, changeOrderId: data.changeOrderId, revisionId: current.id, actorType: "staff", actorId: context.userId, eventType: "revision_withdrawn", visibility: "client", metadata: { revisionNumber: current.revisionNumber } });
-    const [revision] = await tx.insert(changeOrderRevisions).values({
-      changeOrderId: data.changeOrderId, revisionNumber: current.revisionNumber + 1,
-      title: data.title, description: data.description, reason: data.reason || null,
-      changeKind: document.documentKind === "offer" ? "addition" : data.changeKind,
-      currency: current.currency, subtotal: subtotal.toFixed(2), taxRate: data.taxRate.toFixed(2), ...discountColumns(discount, offerPrice.discountAmount),
-      taxAmount: taxAmount.toFixed(2), total: total.toFixed(2),
-      scheduleImpactType: document.documentKind === "offer" ? "none" : data.scheduleImpactType,
-      scheduleImpactDays: scheduleDays,
-      agreedDeadline: data.agreedDeadline || null, clientNote: data.clientNote || null,
-      createdBy: context.userId,
-    }).returning({ id: changeOrderRevisions.id });
-    if (!revision) throw new Error("Версията не беше създадена.");
-    if (document.documentKind === "offer") await tx.insert(changeOrderLineItems).values(priced.map((line, index) => ({ revisionId: revision.id, position: index + 1, description: line.description, quantity: line.quantity.toFixed(3), unit: line.unit || null, unitPrice: line.unitPrice.toFixed(2), lineTotal: line.lineTotal.toFixed(2) })));
-    if (document.documentKind === "offer") await writeOfferExtras(tx, revision.id, data.schedule, data.paymentTerms, await absorbableChanges(tx, data.changeOrderId, data.absorbedChanges));
-    // The new version starts with the files of the previous one; the stored objects are shared.
-    const carried = await tx.select().from(changeAttachments).where(eq(changeAttachments.revisionId, current.id));
-    if (carried.length) {
-      await tx.insert(changeAttachments).values(carried.map((attachment) => ({
-        organizationId: attachment.organizationId, projectId: attachment.projectId, changeOrderId: attachment.changeOrderId, revisionId: revision.id,
-        storagePath: attachment.storagePath, originalName: attachment.originalName, kind: attachment.kind, mimeType: attachment.mimeType,
-        byteSize: attachment.byteSize, sha256: attachment.sha256, visibility: attachment.visibility, createdBy: attachment.createdBy,
-      })));
-    }
-    await tx.update(changeOrders).set({ currentRevisionId: revision.id, lifecycleStatus: "draft", updatedAt: new Date() }).where(eq(changeOrders.id, data.changeOrderId));
-    await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: document.projectId, changeOrderId: data.changeOrderId, revisionId: revision.id, actorType: "staff", actorId: context.userId, eventType: "revision_created", visibility: "internal", metadata: { revisionNumber: current.revisionNumber + 1 } });
-  });
+  let savedDraft = false;
+  try {
+    await db.transaction(async (tx) => {
+      const [current] = await tx.select({ id: changeOrderRevisions.id, status: changeOrderRevisions.status, revisionNumber: changeOrderRevisions.revisionNumber, currency: changeOrderRevisions.currency })
+        .from(changeOrders).innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
+        .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.organizationId, context.organizationId)))
+        .for("update").limit(1);
+      if (!current || !revisableStatus(document.documentKind, current.status)) throw new Error("Тази версия не може да бъде редактирана.");
+      savedDraft = current.status === "draft";
+      if (data.baseRevisionId && data.baseRevisionId !== current.id) throw new Error("Друг колега току-що промени тази оферта. Презареди, за да видиш промените. Твоите редакции не са записани.");
+      // An approved offer stays in force (approved_revision_id) until the client approves the new version.
+      // A sent version the client has not decided on yet is taken back; the row lock above keeps a concurrent client decision out.
+      const withdrawn = current.status === "sent" || current.status === "viewed";
+      if (current.status === "draft" || withdrawn) await tx.update(changeOrderRevisions).set({ status: "superseded" }).where(eq(changeOrderRevisions.id, current.id));
+      if (withdrawn) await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: document.projectId, changeOrderId: data.changeOrderId, revisionId: current.id, actorType: "staff", actorId: context.userId, eventType: "revision_withdrawn", visibility: "client", metadata: { revisionNumber: current.revisionNumber } });
+      const [revision] = await tx.insert(changeOrderRevisions).values({
+        changeOrderId: data.changeOrderId, revisionNumber: current.revisionNumber + 1,
+        title: data.title, description: data.description, reason: data.reason || null,
+        changeKind: document.documentKind === "offer" ? "addition" : data.changeKind,
+        currency: current.currency, subtotal: subtotal.toFixed(2), taxRate: data.taxRate.toFixed(2), ...discountColumns(discount, offerPrice.discountAmount),
+        taxAmount: taxAmount.toFixed(2), total: total.toFixed(2),
+        scheduleImpactType: document.documentKind === "offer" ? "none" : data.scheduleImpactType,
+        scheduleImpactDays: scheduleDays,
+        agreedDeadline: data.agreedDeadline || null, clientNote: data.clientNote || null,
+        createdBy: context.userId,
+      }).returning({ id: changeOrderRevisions.id });
+      if (!revision) throw new Error("Версията не беше създадена.");
+      if (document.documentKind === "offer") await tx.insert(changeOrderLineItems).values(priced.map((line, index) => ({ revisionId: revision.id, position: index + 1, description: line.description, quantity: line.quantity.toFixed(3), unit: line.unit || null, unitPrice: line.unitPrice.toFixed(2), lineTotal: line.lineTotal.toFixed(2) })));
+      if (document.documentKind === "offer") await writeOfferExtras(tx, revision.id, data.schedule, data.paymentTerms, await absorbableChanges(tx, data.changeOrderId, data.absorbedChanges));
+      // The new version starts with the files of the previous one; the stored objects are shared.
+      const carried = await tx.select().from(changeAttachments).where(eq(changeAttachments.revisionId, current.id));
+      if (carried.length) {
+        await tx.insert(changeAttachments).values(carried.map((attachment) => ({
+          organizationId: attachment.organizationId, projectId: attachment.projectId, changeOrderId: attachment.changeOrderId, revisionId: revision.id,
+          storagePath: attachment.storagePath, originalName: attachment.originalName, kind: attachment.kind, mimeType: attachment.mimeType,
+          byteSize: attachment.byteSize, sha256: attachment.sha256, visibility: attachment.visibility, createdBy: attachment.createdBy,
+        })));
+      }
+      await tx.update(changeOrders).set({ currentRevisionId: revision.id, lifecycleStatus: "draft", updatedAt: new Date() }).where(eq(changeOrders.id, data.changeOrderId));
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: document.projectId, changeOrderId: data.changeOrderId, revisionId: revision.id, actorType: "staff", actorId: context.userId, eventType: "revision_created", visibility: "internal", metadata: { revisionNumber: current.revisionNumber + 1 } });
+    });
+  } catch (error) {
+    // A stale editor or a version that is no longer editable: told on the form, the typed values stay.
+    return { error: error instanceof Error ? error.message : "Версията не беше запазена. Опитай отново." };
+  }
   revalidatePath(`/app/offers/${data.changeOrderId}`);
-  if (formData.get("intent") !== "send") redirect(`/app/offers/${data.changeOrderId}?notice=revision-saved`);
+  if (formData.get("intent") !== "send") redirect(`/app/offers/${data.changeOrderId}?notice=${savedDraft ? "draft-saved" : "revision-saved"}`);
   // "Запази и изпрати": the new version goes to the client right away. If sending fails
   // (no approver, no right to send), the version stays a draft and the page says so.
   let notice = "revision-saved-not-sent";
@@ -797,7 +808,13 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
           schedule: await transaction.select().from(changeOrderScheduleItems).where(eq(changeOrderScheduleItems.revisionId, revision.id)).orderBy(changeOrderScheduleItems.position),
         },
       ) : null;
-      return { projectId: change.projectId, contact, documentKind: change.documentKind, title: revision.title, revisionNumber: revision.revisionNumber, diff };
+      return {
+        projectId: change.projectId, contact, documentKind: change.documentKind, title: revision.title, revisionNumber: revision.revisionNumber, diff,
+        total: revision.total, currency: revision.currency, validUntil: revision.status === "draft" ? responseDueAt : revision.responseDueAt,
+        // Read again: the first send may have renumbered the document.
+        sequenceNumber: (await transaction.select({ value: changeOrders.sequenceNumber }).from(changeOrders).where(eq(changeOrders.id, change.id)).limit(1))[0]?.value ?? 0,
+        changeKind: revision.changeKind,
+      };
     },
   );
 
@@ -810,7 +827,9 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
   return email;
 }
 
-async function emailPortalLink(input: { organizationName: string; projectId: string; contact: { id: string; name: string; email: string | null }; documentKind: "offer" | "change"; title: string; revisionNumber: number; diff: RevisionDiff | null }): Promise<SentEmail> {
+const dayFormatter = new Intl.DateTimeFormat("bg-BG", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Sofia" });
+
+async function emailPortalLink(input: { organizationName: string; projectId: string; contact: { id: string; name: string; email: string | null }; documentKind: "offer" | "change"; title: string; revisionNumber: number; diff: RevisionDiff | null; total: string; currency: string; validUntil: Date | null; sequenceNumber: number; changeKind: string }): Promise<SentEmail> {
   if (!input.contact.email) return "no-email";
   const url = await getActivePortalLink(input.projectId, input.contact.id);
   if (!url) throw new Error("Няма активен линк към портала.");
@@ -818,10 +837,18 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
   const diff = input.diff;
   const [project] = await getDatabase().select({ name: projects.name }).from(projects).where(eq(projects.id, input.projectId)).limit(1);
   const subject = projectSubject(project?.name, diff ? `${input.organizationName} обнови ${kind}: ${input.title}` : `${input.organizationName} Ви изпрати ${kind}: ${input.title}`);
+  const symbol = currencySymbol(input.currency);
+  // What the client is asked to agree to, in one line: for a change, its effect rather than a bare "промяна".
+  const amount = input.documentKind === "offer" || input.changeKind === "addition"
+    ? `${input.documentKind === "offer" ? "Цена" : "Допълнителна работа"}: ${input.documentKind === "offer" ? "" : "+"}${formatAmount(input.total)} ${symbol}`
+    : input.changeKind === "credit" ? `Намаление: ${formatAmount(input.total)} ${symbol}`
+    : "Без промяна в цената";
+  const validity = input.validUntil ? `Валидна до ${dayFormatter.format(input.validUntil)}` : null;
+  const facts = [`${documentCode(input.documentKind, input.sequenceNumber)} · версия ${input.revisionNumber}`, amount, validity].filter((line): line is string => !!line);
   const intro = diff
     ? `${input.organizationName} обнови ${kind} „${input.title}“. Версия ${input.revisionNumber} заменя версия ${diff.previousNumber}.`
     : `${input.organizationName} Ви изпрати ${kind} „${input.title}“ (версия ${input.revisionNumber}).`;
-  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${formatAmount(diff.totalBefore)} → ${formatAmount(diff.totalAfter)} ${currencySymbol(diff.currency)}` : null;
+  const totalLine = diff && diff.totalBefore !== diff.totalAfter ? `Сума: ${formatAmount(diff.totalBefore)} ${currencySymbol(diff.currency)} → ${formatAmount(diff.totalAfter)} ${currencySymbol(diff.currency)}` : null;
   const changeLines = diff ? [...(totalLine ? [totalLine] : []), ...diff.changes] : [];
   const changesText = changeLines.length ? `\n\nКакво се промени:\n${changeLines.map((line) => `• ${line}`).join("\n")}` : "";
   const changesHtml = changeLines.length ? `<p style="margin:16px 0 4px;font-weight:600">Какво се промени</p><ul style="margin:0;padding-left:20px">${changeLines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>` : "";
@@ -829,8 +856,8 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
     kind: "offer_sent",
     to: input.contact.email,
     subject,
-    text: `Здравейте, ${input.contact.name}!\n\n${intro}${changesText}\n\nПрегледайте я тук: ${url}\n\nЗа да потвърдите решението си, ще получите еднократен код на този имейл.`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте ${input.documentKind === "offer" ? "офертата" : "промяната"}</a></p><p style="color:#71717a">За да потвърдите решението си, ще получите еднократен код на този имейл. Не препращайте този линк.</p></div>`,
+    text: `Здравейте, ${input.contact.name}!\n\n${intro}\n${facts.join("\n")}${changesText}\n\nПрегледайте я тук: ${url}\n\nЗа да потвърдите решението си, ще получите еднократен код на този имейл.`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin:0;padding:12px;border-radius:8px;background:#f4f4f5">${facts.map(escapeHtml).join("<br>")}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте ${input.documentKind === "offer" ? "офертата" : "промяната"}</a></p><p style="color:#71717a">За да потвърдите решението си, ще получите еднократен код на този имейл. Не препращайте този линк.</p></div>`,
   });
   return "sent";
 }

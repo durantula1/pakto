@@ -44,7 +44,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
               <AutoSaveStatus />
             </AutoSaveForm>
           </SettingsRow>
-          <SettingsRow label="Телефон на фирмата" description="По желание. Клиентите го виждат в портала като бутони „Обадете се“ и Viber." htmlFor="organization-phone">
+          <SettingsRow label="Телефон на фирмата" description="По желание. Клиентите ще виждат в портала бутони „Обадете се“ и Viber." htmlFor="organization-phone">
             <AutoSaveForm action={updateOrganizationPhoneAction} className="flex w-full flex-wrap items-center gap-2">
               <Input id="organization-phone" name="phone" type="tel" defaultValue={organization.phone ?? ""} maxLength={30} autoComplete="tel" placeholder="+359 888 123 456" className="h-9 @xl:max-w-sm" />
               <AutoSaveStatus />
@@ -64,7 +64,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
           <SettingsRow label="Валидност на офертите" description="Клиентът вижда до кога важи цената. След края офертата изтича." htmlFor="offer-validity">
             <AutoSaveForm action={updateOfferValidityAction} className="flex w-full flex-wrap items-center gap-2">
               <div className="flex h-9 items-center overflow-hidden rounded-lg border border-input bg-transparent focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
-                <input id="offer-validity" name="offerValidityDays" type="number" inputMode="numeric" min={1} max={180} defaultValue={organization.offerValidityDays} required className="h-full w-16 bg-transparent px-2.5 text-right tabular-nums outline-none" />
+                <input id="offer-validity" name="offerValidityDays" type="text" inputMode="numeric" maxLength={3} defaultValue={organization.offerValidityDays} required className="h-full w-16 bg-transparent px-2.5 text-right tabular-nums outline-none" />
                 <span className="px-2.5 text-muted-foreground">дни</span>
               </div>
               <AutoSaveStatus />

@@ -180,7 +180,8 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
   const settled = view.hasAgreement && view.remainingMinor <= 0n;
   const overpaid = view.remainingMinor < 0n;
   const pendingClaims = claims.filter((claim) => claim.status === "pending");
-  const rejected = claims.filter((claim) => claim.status === "rejected");
+  // A refused "Платих" stops being shown once the company has recorded a payment for the same installment: the question is answered.
+  const rejected = claims.filter((claim) => claim.status === "rejected" && !(claim.installmentId && view.receipts.some((receipt) => receipt.installmentId === claim.installmentId && !receipt.correctionOfId)));
   const now = today();
   const balance = <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
     {view.hasAgreement ? <>
@@ -214,7 +215,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
           title={item.title}
           sub={[offerOf(item.offerId), !paid && item.receivedMinor > 0n ? `платено ${formatCents(item.receivedMinor, item.currency)}` : null].filter(Boolean).join(" · ") || null}
           amount={formatCents(cents(item.amount), item.currency)}
-          badge={paid ? <Badge variant="success-soft">Платено</Badge> : claimed ? <Badge variant="warning-soft">Чака фирмата</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
+          badge={paid ? <Badge variant="success-soft">Платено</Badge> : claimed ? <Badge variant="warning-soft">Чака потвърждение от фирмата</Badge> : overdue ? <Badge variant="danger-soft">Просрочено</Badge> : null}
         />;
         return <li key={item.id} className="py-3">
           {!paid && !claimed && canAct && item.id !== claimedElsewhere
@@ -233,7 +234,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
             title="Отбелязано от вас"
             sub={claim.status === "pending" ? "влиза в платеното, след като фирмата го потвърди" : null}
             amount={<span className="text-muted-foreground">{formatCents(cents(claim.amount), claim.currency)}</span>}
-            badge={claim.status === "pending" ? <Badge variant="warning-soft">Чака фирмата</Badge> : <Badge variant="danger-soft">Непотвърдено</Badge>}
+            badge={claim.status === "pending" ? <Badge variant="warning-soft">Чака потвърждение от фирмата</Badge> : <Badge variant="danger-soft">Непотвърдено</Badge>}
           />
           {claim.response ? <Quote by="Фирмата:" tone="warning" className="mt-2 sm:ml-[6.25rem]">{claim.response}</Quote> : null}
         </li>)}

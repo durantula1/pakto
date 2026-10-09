@@ -32,11 +32,9 @@ import { MotionDetails } from "@/components/ui/motion-details";
 import { clientNavigation } from "@/modules/change-portal/session";
 import { maskEmail } from "@/lib/email/send";
 import { scopeView } from "@/modules/projects/scope";
+import { dateOnly } from "@/lib/dates";
 
-const dateFormat = new Intl.DateTimeFormat("bg-BG", {
-  dateStyle: "long",
-  timeZone: "Europe/Sofia",
-});
+const dateFormat = dateOnly;
 
 /** "9 окт." already ends the sentence; "15 май" needs its full stop. */
 const sentenceEnd = (text: string) => (text.endsWith(".") ? text : `${text}.`);
@@ -183,8 +181,8 @@ export default async function PortalProjectPage({
             Обектът е приключен
             {data.project.completedAt
               ? ` на ${dateFormat.format(data.project.completedAt)}`
-              : ""}
-            . Всичко остава тук за справка.
+              : "."}{" "}
+            Всичко остава тук за справка.
           </span>
         </p>
       ) : null}
@@ -253,7 +251,7 @@ export default async function PortalProjectPage({
         </div>
       ) : (
         <p className="rounded-3xl bg-card p-5 text-sm leading-6 text-muted-foreground">
-          Цената, плащанията и графикът ще се появят тук, след като одобрите
+          Плащанията и графикът ще се появят тук, след като одобрите
           оферта.
         </p>
       )}

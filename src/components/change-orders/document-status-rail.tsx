@@ -35,15 +35,11 @@ import { remindClientAction } from "@/modules/change-orders/reminder-actions";
 import { formatAmount } from "@/lib/money";
 import { cents, formatCents } from "@/modules/projects/state";
 import { currencySymbol } from "@/lib/money";
+import { dateWithTime } from "@/lib/dates";
 
 type Document = NonNullable<Awaited<ReturnType<typeof getChangeOrder>>>;
 
-const dateTime = (value: Date) =>
-  new Intl.DateTimeFormat("bg-BG", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Europe/Sofia",
-  }).format(value);
+const dateTime = (value: Date) => dateWithTime.format(value);
 /** `23.09, 16:09`; the year only when it is not the current one. Keeps the status band on one line. */
 const shortDateTime = (value: Date) => {
   const year = (date: Date) => new Intl.DateTimeFormat("en", { year: "numeric", timeZone: "Europe/Sofia" }).format(date);
@@ -401,8 +397,9 @@ export function DocumentFacts({
               {discount
                 ? `${discountLabel(change.discountType, change.discountValue)} −${money(discount)} · `
                 : ""}
-              Основа {money(change.subtotal)} · {vatLabel(change.taxRate)}{" "}
-              {money(change.taxAmount)}
+              {/* A reduction has a negative total, so its base and VAT carry the same sign. */}
+              Основа {Number(change.total) < 0 ? "−" : ""}{money(change.subtotal)} · {vatLabel(change.taxRate)}{" "}
+              {Number(change.total) < 0 ? "−" : ""}{money(change.taxAmount)}
             </p>
           </div>
           <p className="flex items-center gap-2 border-t pt-3 text-sm">

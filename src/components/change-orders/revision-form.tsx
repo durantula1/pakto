@@ -1,6 +1,7 @@
 "use client";
 
-import { startTransition, useActionState, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { sofiaTodayIso } from "@/lib/sofia-today";
 import Link from "next/link";
 import { Send } from "lucide-react";
@@ -26,7 +27,7 @@ import { currencySymbol } from "@/lib/money";
 
 type ChangeKind = "addition" | "credit" | "no_cost" | "schedule_only";
 export type RevisionFormInitial = {
-  id: string; documentKind: "offer" | "change"; title: string; description: string;
+  id: string; /** The version the editor was opened on. */ revisionId: number; documentKind: "offer" | "change"; title: string; description: string;
   reason: string | null; changeKind: ChangeKind;
   subtotal: string; taxRate: string; scheduleImpactType: "none" | "days" | "unknown";
   scheduleImpactDays: number | null; agreedDeadline: string | null;
@@ -45,7 +46,7 @@ export type AbsorbableChange = { id: string; sequenceNumber: number; title: stri
 const changeKinds: Array<{ value: ChangeKind; label: string }> = [
   { value: "addition", label: "Допълнителна работа" },
   { value: "credit", label: "Намаление" },
-  { value: "no_cost", label: "Без цена" },
+  { value: "no_cost", label: "Без промяна в цената" },
   { value: "schedule_only", label: "Само срок" },
 ];
 
@@ -91,6 +92,37 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   const today = sofiaTodayIso();
   const [localError, setLocalError] = useState("");
   const [confirmSend, setConfirmSend] = useState<FormData | null>(null);
+  // Unsaved work: set by typing in any field, or by a state-held part (lines, terms, ...) differing from how the editor opened.
+  const router = useRouter();
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const typed = useRef(false);
+  const stateKey = JSON.stringify([lines, taxRate, discountType, discountValue, changeKind, changePrice, scheduleType, deadline, scheduleRows, termRows, absorbed]);
+  const openedWith = useRef(stateKey);
+  const latestKey = useRef(stateKey);
+  useEffect(() => { latestKey.current = stateKey; });
+  useEffect(() => {
+    const isDirty = () => typed.current || latestKey.current !== openedWith.current;
+    const form = document.getElementById(formId);
+    const mark = () => { typed.current = true; };
+    form?.addEventListener("input", mark);
+    // The browser's own "leave this page?" for closing the tab or reloading.
+    const beforeUnload = (event: BeforeUnloadEvent) => { if (isDirty()) event.preventDefault(); };
+    // Links back to the document (the "Отказ" beside the buttons, the one in the header, the back arrow) ask first.
+    const onClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a[href]");
+      if (!link || link.getAttribute("href") !== cancelHref || !isDirty()) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setConfirmLeave(true);
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    document.addEventListener("click", onClick, true);
+    return () => {
+      form?.removeEventListener("input", mark);
+      window.removeEventListener("beforeunload", beforeUnload);
+      document.removeEventListener("click", onClick, true);
+    };
+  }, [formId, cancelHref]);
   const error = localError || state.error;
 
   const payload = linesPayload(lines);
@@ -154,6 +186,14 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   return (
     <div className="flex flex-col gap-4">
       <ConfirmDialog
+        isOpen={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        title="Имаш незаписани промени"
+        description="Ако напуснеш сега, написаното в тази версия няма да се запази."
+        confirmLabel="Напусни без запис"
+        onConfirm={() => { typed.current = false; openedWith.current = latestKey.current; router.push(cancelHref); }}
+      />
+      <ConfirmDialog
         isOpen={confirmSend !== null}
         onOpenChange={(open) => { if (!open) setConfirmSend(null); }}
         tone="default"
@@ -175,6 +215,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
         <div className="flex min-w-0 flex-col gap-4">
           <form noValidate id={formId} onSubmit={validate} className="flex flex-col gap-4">
             <input type="hidden" name="changeOrderId" value={initial.id} />
+            <input type="hidden" name="baseRevisionId" value={initial.revisionId} />
             <input type="hidden" name="lines" value={JSON.stringify(payload)} />
             {isOffer ? <>
               <input type="hidden" name="schedule" value={JSON.stringify(schedulePayload(scheduleRows))} />

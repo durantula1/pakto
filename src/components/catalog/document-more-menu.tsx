@@ -66,7 +66,7 @@ export function DocumentMoreMenu({ changeOrderId, kind, title, pdfHref, canCopy,
       {renegotiateHref ? (
         <Dialog isOpen={renegotiateOpen} onOpenChange={setRenegotiateOpen} className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Да предоговоря ли одобрената оферта?</DialogTitle>
+            <DialogTitle>Да предоговорим ли офертата?</DialogTitle>
             <DialogDescription>
               Правиш нова версия на вече договореното. Одобрената версия остава в сила, докато клиентът не одобри новата.
               За допълнителна работа или корекция на част от обхвата използвай „Нова промяна“.
