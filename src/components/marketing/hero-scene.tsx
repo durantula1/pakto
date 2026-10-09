@@ -81,8 +81,7 @@ const payments = [
  * whole story in one loop: the offer is sent, opened, confirmed with the code from the email and
  * approved; the stamp lands and the first payment opens. The markup is the approved final state
  * (what reduced motion shows); the loop is CSS, see "Hero scene" in marketing.css. The `mf-ink`
- * filter roughens the stamp (the hero's bottom line and the closing seal in landing-experience.tsx
- * use it too).
+ * filter roughens the stamp (the closing seal in landing-experience.tsx uses it too).
  */
 export function HeroScene() {
   return (
