@@ -8,10 +8,9 @@ const nextConfig: NextConfig = {
     authInterrupts: true,
     // Hover upgrades a partial prefetch to the full dynamic payload, so the click paints from cache.
     dynamicOnHover: true,
-    // CSS arrives inside the HTML, so the first paint does not wait for a stylesheet round trip
-    // (Lighthouse mobile: FCP 1.5 s → see docs). Costs ~30 KB on each full page load; client-side
-    // navigations do not re-download it.
-    inlineCss: true,
+    // No inlineCss: it put the 210 KB stylesheet into the HTML three times (the <style> plus two copies in
+    // the RSC payload), 822 KB of HTML for the landing page. As a cached <link> the page is 180 KB and
+    // Lighthouse mobile goes from 71-78 to 85-91 (TBT 300-480 ms → 90-150 ms, FCP 1.7 s → 1.4 s).
     // "Връзка с нас" sends up to 10 MB of screenshots in one action (plus multipart overhead);
     // the proxy buffers the same body, so both limits move together.
     serverActions: { bodySizeLimit: "12mb" },
