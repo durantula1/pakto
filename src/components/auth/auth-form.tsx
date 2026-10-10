@@ -31,9 +31,9 @@ export function AuthForm({ mode, next, defaultEmail, google }: { mode: "sign-in"
     {google ? <GoogleSignIn next={next} /> : null}
     <form ref={formRef} noValidate action={formAction} className="space-y-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      {mode === "sign-up" && <label className="block text-sm font-medium">Име<input name="displayName" required autoComplete="name" className={authInputClass} /></label>}
-      <label className="block text-sm font-medium">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className={authInputClass} /></label>
-      <label className="block text-sm font-medium"><span className="flex items-baseline justify-between">Парола{mode === "sign-in" && <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground hover:text-foreground">Забравена?</Link>}</span>
+      {mode === "sign-up" && <label className="block text-sm font-medium text-muted-foreground transition-colors focus-within:text-foreground">Име<input name="displayName" required autoComplete="name" className={authInputClass} /></label>}
+      <label className="block text-sm font-medium text-muted-foreground transition-colors focus-within:text-foreground">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className={authInputClass} /></label>
+      <label className="block text-sm font-medium text-muted-foreground transition-colors focus-within:text-foreground"><span className="flex items-baseline justify-between">Парола{mode === "sign-in" && <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground hover:text-foreground">Забравена?</Link>}</span>
         <span className="relative mt-1.5 block">
           <input name="password" type={showPassword ? "text" : "password"} required minLength={8} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} className={cn(authInputClass, "mt-0 pr-11")} />
           <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Скрий паролата" : "Покажи паролата"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 grid w-9 place-items-center justify-items-end text-muted-foreground hover:text-foreground">

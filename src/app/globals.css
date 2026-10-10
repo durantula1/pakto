@@ -189,6 +189,12 @@
     );
     padding-bottom: env(safe-area-inset-bottom);
   }
+  /* Browser autofill paints fields pale blue or yellow; keep them on the paper of the palette. */
+  .auth-input:-webkit-autofill {
+    -webkit-text-fill-color: var(--foreground);
+    box-shadow: 0 0 0 100rem var(--background) inset;
+    caret-color: var(--foreground);
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;

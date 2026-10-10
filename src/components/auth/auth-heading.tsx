@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /** Underlined fields of the auth screens: a line to write on, not a box. */
 export const authInputClass =
-  "mt-1.5 h-11 w-full border-b border-foreground/35 bg-transparent px-0 outline-none transition-colors focus:border-primary-ink focus:shadow-[0_1px_0_var(--primary-ink)]";
+  "auth-input mt-1.5 h-11 text-foreground w-full border-b border-foreground/35 bg-transparent px-0 outline-none transition-[border-color,box-shadow] focus:border-primary focus:shadow-[0_1px_0_var(--primary)]";
 
 /** The small heading above an auth form, with the way to the other form on the same line. */
 export function AuthHeading({
