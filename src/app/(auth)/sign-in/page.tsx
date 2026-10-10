@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth/auth-form";
+import { AuthHeading } from "@/components/auth/auth-heading";
 import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { inviteEmailFor } from "@/lib/auth/invite-email";
@@ -21,13 +22,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   const defaultEmail = await inviteEmailFor(safeNext);
   return (
     <div className="w-full">
-      <p className="text-sm font-semibold text-primary-ink">Вход в профила</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-        Вход
-      </h1>
-      <p className="mb-8 mt-2 text-muted-foreground">
-        Влез, за да продължиш работата си.
-      </p>
+      <AuthHeading title="Вход в профила" question="Нямаш профил?" link={{ href: `/sign-up${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}`, label: "Регистрация →" }} />
       {account === "gone" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Този профил вече не съществува. Регистрирай се отново, ако искаш да го ползваш пак.</p> : null}
       {account === "password-updated" ? <p role="status" className="mb-6 rounded-xl bg-tile-mint px-3 py-2.5 text-sm text-tile-mint-foreground">Паролата е сменена. Влез с новата парола.</p> : null}
       {account === "deletion-scheduled" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Профилът ще бъде изтрит след {ACCOUNT_DELETION_GRACE_DAYS} дни. Ако се откажеш, влез отново преди това и отмени изтриването.</p> : null}

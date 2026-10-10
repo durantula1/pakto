@@ -4,7 +4,9 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { authInputClass } from "@/components/auth/auth-heading";
 import { LEGAL_DOCUMENTS } from "@/lib/legal";
+import { cn } from "@/lib/utils";
 import { useKeepFormValues } from "@/lib/use-keep-form-values";
 import { googleSignInAction, resendConfirmationAction, signInAction, signUpAction } from "@/modules/auth/actions";
 
@@ -29,41 +31,38 @@ export function AuthForm({ mode, next, defaultEmail, google }: { mode: "sign-in"
     {google ? <GoogleSignIn next={next} /> : null}
     <form ref={formRef} noValidate action={formAction} className="space-y-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      {mode === "sign-up" && <label className="block text-sm font-medium">Име<input name="displayName" required autoComplete="name" className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>}
-      <label className="block text-sm font-medium">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>
-      <label className="block text-sm font-medium">Парола
+      {mode === "sign-up" && <label className="block text-sm font-medium">Име<input name="displayName" required autoComplete="name" className={authInputClass} /></label>}
+      <label className="block text-sm font-medium">Имейл<input name="email" type="email" required autoComplete="email" defaultValue={defaultEmail} className={authInputClass} /></label>
+      <label className="block text-sm font-medium"><span className="flex items-baseline justify-between">Парола{mode === "sign-in" && <Link href="/forgot-password" className="text-xs font-medium text-muted-foreground hover:text-foreground">Забравена?</Link>}</span>
         <span className="relative mt-1.5 block">
-          <input name="password" type={showPassword ? "text" : "password"} required minLength={8} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} className="h-10 w-full rounded-xl border bg-background pl-3 pr-11 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" />
-          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Скрий паролата" : "Покажи паролата"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 grid w-10 place-items-center text-muted-foreground hover:text-foreground">
+          <input name="password" type={showPassword ? "text" : "password"} required minLength={8} autoComplete={mode === "sign-in" ? "current-password" : "new-password"} className={cn(authInputClass, "mt-0 pr-11")} />
+          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Скрий паролата" : "Покажи паролата"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 grid w-9 place-items-center justify-items-end text-muted-foreground hover:text-foreground">
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </span>
       </label>
-      {mode === "sign-up" && <label className="flex items-start gap-2.5 text-sm text-muted-foreground"><input name="acceptLegal" type="checkbox" required className="mt-0.5 size-4 shrink-0 accent-primary" /><span>Приемам <Link href={LEGAL_DOCUMENTS.terms.href} target="_blank" className="font-medium text-foreground underline underline-offset-4">Условията за ползване</Link> и <Link href={LEGAL_DOCUMENTS.privacy.href} target="_blank" className="font-medium text-foreground underline underline-offset-4">Политиката за поверителност</Link>.</span></label>}
-      {mode === "sign-in" && <div className="-mt-2 text-right"><Link href="/forgot-password" className="text-xs font-medium text-muted-foreground hover:text-foreground">Забравена парола?</Link></div>}
       {state.error && <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">{state.error}</p>}
-      <button disabled={pending} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60">{pending && <LoaderCircle className="size-4 animate-spin" />}{mode === "sign-in" ? "Влез" : "Създай профил"}</button>
-      <p className="text-center text-sm text-muted-foreground">{mode === "sign-in" ? "Нямаш профил?" : "Вече имаш профил?"} <Link className="font-semibold text-foreground underline underline-offset-4" href={withNext(mode === "sign-in" ? "/sign-up" : "/sign-in")}>{mode === "sign-in" ? "Регистрирай се" : "Влез"}</Link></p>
+      <button disabled={pending} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60">{pending && <LoaderCircle className="size-4 animate-spin" />}{mode === "sign-in" ? "Влез" : "Създай профил"}</button>
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">Продължавайки, приемаш <Link href={LEGAL_DOCUMENTS.terms.href} target="_blank" className="underline underline-offset-4 hover:text-foreground">Условията</Link> и <Link href={LEGAL_DOCUMENTS.privacy.href} target="_blank" className="underline underline-offset-4 hover:text-foreground">Политиката за поверителност</Link>.</p>
     </form>
     {state.unconfirmedEmail ? <div className="mt-4"><ResendConfirmation key={state.unconfirmedEmail} email={state.unconfirmedEmail} next={next} /></div> : null}
   </>;
 }
 
-/** Its own form above the email one; a new account made here accepts the terms by the note under the button. */
+/** Its own form above the email one; the note under the email form covers a new account made here too. */
 function GoogleSignIn({ next }: { next?: string }) {
-  return <div className="mb-6">
+  return <div className="mb-5">
     <form action={googleSignInAction}>
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <GoogleButton />
     </form>
-    <p className="mt-2 text-center text-xs text-muted-foreground">Продължавайки с Google, приемаш <Link href={LEGAL_DOCUMENTS.terms.href} target="_blank" className="underline underline-offset-4">Условията</Link> и <Link href={LEGAL_DOCUMENTS.privacy.href} target="_blank" className="underline underline-offset-4">Политиката за поверителност</Link>.</p>
-    <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />или с имейл<span className="h-px flex-1 bg-border" /></div>
+    <div className="mt-5 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />или с имейл<span className="h-px flex-1 bg-border" /></div>
   </div>;
 }
 
 function GoogleButton() {
   const { pending } = useFormStatus();
-  return <button disabled={pending} className="inline-flex h-10 w-full items-center justify-center gap-2.5 rounded-xl border bg-background px-4 text-sm font-semibold hover:bg-muted disabled:opacity-60">
+  return <button disabled={pending} className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border bg-transparent px-4 text-sm font-semibold hover:bg-muted disabled:opacity-60">
     {pending ? <LoaderCircle className="size-4 animate-spin" /> : <svg viewBox="0 0 48 48" aria-hidden className="size-4.5">
       <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
       <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />

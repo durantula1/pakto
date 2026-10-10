@@ -73,9 +73,7 @@ export async function signUpAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message };
   }
-  if (formData.get("acceptLegal") !== "on") {
-    return { error: "Приеми Условията и Политиката за поверителност, за да продължиш." };
-  }
+  // Sending the form accepts the terms (the note under the button, as for Google); the consent is recorded below.
   if (!(await allowAuthAttempt("sign-up", parsed.data.email))) return { error: TOO_MANY };
 
   const safeNext = safeNextPath(formData.get("next"));
