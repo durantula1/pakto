@@ -44,7 +44,7 @@ export async function createClientAction(formData: FormData): Promise<ActionResu
     notes: data.notes || null,
   }));
   revalidatePath("/app/clients");
-  redirect(`/app/clients/${clientId}`);
+  redirect(`/app/clients/${clientId}?notice=client-created`);
 }
 
 /**

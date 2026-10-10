@@ -296,3 +296,10 @@ html[data-navigating] #workspace-shell main {
   margin-inline-start: -0.25rem;
   color: var(--destructive);
 }
+
+/* The part of a form a failed check points at: outlined in red for a moment after the scroll (`revealProblem`). */
+[data-problem] {
+  outline: 2px solid var(--destructive);
+  outline-offset: 3px;
+  border-radius: var(--radius-2xl, 1rem);
+}

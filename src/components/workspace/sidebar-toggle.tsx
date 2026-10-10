@@ -21,7 +21,8 @@ export function SidebarToggle() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "b" && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey) {
+      // Autofill and some IME events fire keydown without a `key`.
+      if (event.key?.toLowerCase() === "b" && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey) {
         event.preventDefault();
         toggle();
       }

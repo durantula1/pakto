@@ -2,13 +2,14 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { sofiaTodayIso } from "@/lib/sofia-today";
-import { Pencil } from "lucide-react";
+import { ArrowRight, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 
 import { StagedAttachments, useUploadStagedFiles } from "@/components/change-orders/staged-attachments";
 import { ScheduleEditor, schedulePayload, scheduleRowsFrom, type ScheduleRow } from "@/components/change-orders/schedule-editor";
 import { DocumentBody } from "@/components/change-orders/document-body";
+import { FormProblem, revealProblem } from "@/components/change-orders/form-problem";
 import { PaymentTermsEditor, termRowsFrom, termsPayload, termsProblem, type TermRow } from "@/components/change-orders/payment-terms-editor";
 import { LineItemsEditor, blankLine, formatMoney, linesPayload, priceLines, type Line } from "@/components/change-orders/line-items-editor";
 import { VatRateField } from "@/components/change-orders/vat-rate-field";
@@ -173,25 +174,34 @@ export function OfferForm({
     window.location.reload();
   }
 
+  // Each failed check names its message and the part of the form to scroll to.
+  function problem(message: string, sectionId: string, focusId?: string) {
+    setLocalError(message);
+    revealProblem(sectionId, focusId);
+  }
+
   function openPreview() {
-    if (!projectId) return setLocalError("Избери обект.");
-    if (title.trim().length < 3) return setLocalError("Добави кратко заглавие.");
-    if (description.trim().length < 5) return setLocalError("Попълни „Обхват на работата“.");
-    if (!deadline) return setLocalError("Посочи договорен краен срок.");
-    if (!payload.length) return setLocalError("Добави поне една услуга или материал.");
+    if (!projectId) return problem("Избери обект.", "offer-basics", "projectId");
+    if (title.trim().length < 3) return problem("Добави кратко заглавие.", "offer-basics", "offer-title");
+    if (description.trim().length < 5) return problem("Попълни „Обхват на работата“.", "offer-basics", "offer-description");
+    if (!deadline) return problem("Посочи договорен краен срок.", "offer-deadline");
+    if (!payload.length) return problem("Добави поне една услуга или материал.", "offer-lines");
     if (payload.some((line) => line.description.length < 2)) {
-      return setLocalError("Добави описание на всяка услуга и материал.");
+      return problem("Добави описание на всяка услуга и материал.", "offer-lines");
     }
     if (payload.some((line) => line.quantity <= 0)) {
-      return setLocalError("Количеството трябва да е над 0.");
+      return problem("Количеството трябва да е над 0.", "offer-lines");
     }
     const termsError = termsProblem(termRows);
-    if (termsError) return setLocalError(termsError);
+    if (termsError) return problem(termsError, "offer-terms");
     setLocalError("");
     setStep("preview");
+    window.scrollTo({ top: 0 });
   }
 
   const error = localError || state.error;
+  const busy = pending || !!state.createdId;
+  const submitLabel = uploadProgress ? `Качване на файлове ${uploadProgress.done + 1}/${uploadProgress.total}…` : busy ? "Запазване…" : "Създай черновата";
 
   return (
     <div>
@@ -217,7 +227,7 @@ export function OfferForm({
       {step === "edit" ? (
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5">
         <div className="space-y-4">
-          <section className="rounded-2xl border bg-card p-4">
+          <section id="offer-basics" className="rounded-2xl border bg-card p-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="block text-sm">
                 <label htmlFor="projectId" className="mb-1.5 block font-medium">
@@ -237,6 +247,7 @@ export function OfferForm({
               <label className="block text-sm">
                 <span className="mb-1.5 block font-medium">Заглавие</span>
                 <Input
+                  id="offer-title"
                   value={title}
                   required
                   placeholder="Какво предлагаш"
@@ -248,6 +259,7 @@ export function OfferForm({
             <label className="mt-3 block text-sm">
               <span className="mb-1.5 block font-medium">Обхват</span>
               <Textarea
+                id="offer-description"
                 value={description}
                 required
                 placeholder="Какво включва работата и какво остава извън нея."
@@ -257,7 +269,7 @@ export function OfferForm({
             </label>
           </section>
 
-          <LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog={canSaveCatalog} />
+          <div id="offer-lines" className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog={canSaveCatalog} /></div>
 
           {/* Side by side only when the column is wide enough; beside the menu and the bill it is not. */}
           <section className="@container rounded-2xl border bg-card p-4"><div className="grid gap-4 @xl:grid-cols-2 @xl:gap-6">
@@ -265,7 +277,7 @@ export function OfferForm({
             <DiscountField key={formKey} defaultType={discountType} defaultValue={discountValue} onChange={(type, value) => { setDiscountType(type); setDiscountValue(value); }} />
           </div></section>
 
-          <label className="block rounded-2xl border bg-card p-4 text-sm font-medium">Договорен краен срок
+          <label id="offer-deadline" className="block rounded-2xl border bg-card p-4 text-sm font-medium">Договорен краен срок
             <div className="mt-2"><DatePicker aria-label="Договорен краен срок" required min="today" value={deadline} onChange={setDeadline} /></div>
           </label>
 
@@ -274,7 +286,7 @@ export function OfferForm({
             <ScheduleEditor rows={scheduleRows} setRows={setScheduleRows} deadline={deadline} today={today} />
           </section>
 
-          <section className="rounded-2xl border bg-card p-4">
+          <section id="offer-terms" className="rounded-2xl border bg-card p-4">
             <p className="mb-2 text-sm font-medium">Плащане <span className="font-normal text-muted-foreground">(по желание)</span></p>
             <PaymentTermsEditor rows={termRows} setRows={setTermRows} total={totals.total} stages={schedule.map((line) => line.title)} />
           </section>
@@ -311,6 +323,13 @@ export function OfferForm({
           <p className="mt-3 text-xs text-muted-foreground">
             {deadline ? `Срок до ${deadline.split("-").reverse().join(".")}` : "Посочи договорен краен срок"}
           </p>
+          {/* Wide screens: the next step sits under the total it is about and stays in sight with it. */}
+          <div className="mt-4 hidden flex-col gap-3 border-t pt-4 lg:flex">
+            {error ? <FormProblem>{error}</FormProblem> : null}
+            <Button type="button" className="h-11 w-full gap-2 font-semibold" onPress={openPreview}>
+              Преглед <ArrowRight className="size-4" />
+            </Button>
+          </div>
         </aside>
       </div>
       ) : null}
@@ -332,9 +351,9 @@ export function OfferForm({
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5">
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl border border-dashed border-primary/40 px-4 py-3">
-              <p className="font-mono text-xs tracking-wide text-primary-ink uppercase">Чернова · {projectName}</p>
+              <p className="font-mono text-xs tracking-wide text-primary-ink uppercase">Преглед · {projectName}</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight">{title}</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">Така ще я види клиентът. Докато не я изпратиш, само ти я виждаш.</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Клиентът я вижда, едва след като я изпратиш.</p>
             </div>
             <DocumentBody document={{
               documentKind: "offer",
@@ -361,45 +380,33 @@ export function OfferForm({
             <p className="border-t border-sidebar-border pt-3 text-sm">Срок <strong>до {formatDay(deadline)}</strong></p>
             {paymentTerms.length ? <p className="text-sm text-sidebar-foreground/80">{paymentTerms.length === 1 ? "1 плащане" : `${paymentTerms.length} плащания`}{schedule.length ? ` · ${schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}` : ""}</p> : schedule.length ? <p className="text-sm text-sidebar-foreground/80">{schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}</p> : null}
             {files.length ? <p className="text-sm text-sidebar-foreground/80">{files.length === 1 ? "1 прикачен файл" : `${files.length} прикачени файла`}</p> : null}
+            <div className="hidden flex-col gap-2 border-t border-sidebar-border pt-4 lg:flex">
+              {error ? <FormProblem className="rounded-lg bg-card p-2">{error}</FormProblem> : null}
+              <Button type="submit" isDisabled={busy} className="h-11 w-full font-semibold">{submitLabel}</Button>
+              <Button type="button" variant="ghost" className="h-10 w-full gap-2 text-sidebar-foreground hover:bg-white/10 hover:text-white" onPress={() => setStep("edit")}>
+                <Pencil className="size-4" /> Редакция
+              </Button>
+            </div>
           </aside>
         </div>
-        {error ? (
-          <p
-            role="alert"
-            className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"
-          >
-            {error}
-          </p>
-        ) : null}
-        <div className="sticky bottom-20 z-20 mt-4 flex items-center justify-between gap-2 border-t bg-background/95 py-3 backdrop-blur lg:bottom-0">
-          <Button type="button" variant="ghost" className="h-11 gap-2 px-3" onPress={() => setStep("edit")}>
-            <Pencil className="size-4" /> Редакция
-          </Button>
-          <Button type="submit" isDisabled={pending || !!state.createdId} className="h-11 px-6 font-semibold">
-            {uploadProgress ? `Качване на файлове ${uploadProgress.done + 1}/${uploadProgress.total}…` : pending || state.createdId ? "Запазване…" : "Създай черновата"}
-          </Button>
+        {/* Phones: the next step stays in reach above the bottom navigation, the reason it failed right above it. */}
+        <div className="sticky bottom-20 z-20 mt-4 flex flex-col gap-2 border-t bg-background/95 py-3 backdrop-blur lg:hidden">
+          {error ? <FormProblem>{error}</FormProblem> : null}
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" aria-label="Редакция" className="size-11 shrink-0 p-0" onPress={() => setStep("edit")}>
+              <Pencil className="size-4" />
+            </Button>
+            <Button type="submit" isDisabled={busy} className="h-11 flex-1 font-semibold">{submitLabel}</Button>
+          </div>
         </div>
         </form>
       ) : (
-        <>
-          {error ? (
-            <p
-              role="alert"
-              className="mt-4 rounded-xl bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {error}
-            </p>
-          ) : null}
-          <div className="sticky bottom-20 z-20 mt-4 border-t bg-background/95 py-3 backdrop-blur lg:bottom-0">
-            <Button
-              type="button"
-              className="inline-flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
-              onPress={openPreview}
-            >
-              Преглед
-            </Button>
-          </div>
-        </>
+        <div className="sticky bottom-20 z-20 mt-4 flex flex-col gap-2 border-t bg-background/95 py-3 backdrop-blur lg:hidden">
+          {error ? <FormProblem>{error}</FormProblem> : null}
+          <Button type="button" className="h-11 w-full gap-2 font-semibold" onPress={openPreview}>
+            Преглед <ArrowRight className="size-4" />
+          </Button>
+        </div>
       )}
     </div>
   );

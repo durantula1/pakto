@@ -183,6 +183,9 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
   // A refused "Платих" stops being shown once the company has recorded a payment for the same installment: the question is answered.
   const rejected = claims.filter((claim) => claim.status === "rejected" && !(claim.installmentId && view.receipts.some((receipt) => receipt.installmentId === claim.installmentId && !receipt.correctionOfId)));
   const now = today();
+  const hasEntries = view.receipts.length > 0 || pendingClaims.length > 0 || rejected.length > 0;
+  // With nothing recorded yet, one line in the balance card says so instead of a card of its own.
+  const emptyInBalance = showBalance && !hasEntries;
   const balance = <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
     {view.hasAgreement ? <>
       <span>Платено <strong className="whitespace-nowrap tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> <span className="whitespace-nowrap text-muted-foreground">от {formatCents(view.contractMinor, view.currency)}</span></span>
@@ -199,6 +202,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
       {view.hasAgreement ? <PaidBar className="mt-3" paidMinor={view.paidMinor} contractMinor={view.contractMinor} /> : (
         <p className="mt-2 text-xs text-muted-foreground">{view.scope === "none" ? "Плащания, които още не са отнесени към конкретна оферта." : "Колко остава ще се вижда тук, след като одобрите офертата."}</p>
       )}
+      {emptyInBalance ? <p className="mt-3 border-t border-dashed pt-3 text-sm text-muted-foreground">Още няма записани плащания.</p> : null}
     </section> : canAct && !settled ? <section className="rounded-3xl bg-card px-5 py-3">
       <ClaimPaymentRow row={<span className="text-sm text-muted-foreground">Платили сте нещо, което не е тук?</span>} trigger="Отбележете плащане" triggerClassName="h-10 px-3 text-sm" portalPublicId={portalPublicId} offerId={view.offer?.id ?? null} />
     </section> : null}
@@ -225,9 +229,10 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
       })}</ol>
     </section> : null}
 
-    <section className="space-y-2">
-      <PaperLabel>Плащания</PaperLabel>
-      {view.receipts.length || pendingClaims.length || rejected.length ? <ol className="divide-y divide-dashed rounded-3xl bg-card px-5">
+    {emptyInBalance ? null : <section className="space-y-2">
+      {/* "Получени", not "Плащания": the page heading above already says that. */}
+      <PaperLabel>Получени</PaperLabel>
+      {hasEntries ? <ol className="divide-y divide-dashed rounded-3xl bg-card px-5">
         {[...pendingClaims, ...rejected].map((claim) => <li key={claim.id} className="py-3">
           <Entry
             date={formatDay(claim.paidOn)}
@@ -260,6 +265,6 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
           </li>;
         })}
       </ol> : <p className="rounded-3xl bg-card px-5 py-4 text-sm text-muted-foreground">Още няма записани плащания.</p>}
-    </section>
+    </section>}
   </div>;
 }

@@ -30,7 +30,7 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey) && !event.altKey) {
+      if (event.key?.toLowerCase() === "k" && (event.metaKey || event.ctrlKey) && !event.altKey) {
         event.preventDefault();
         setOpen((value) => !value);
       }

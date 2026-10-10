@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Ban, CalendarDays, CheckCircle2, ChevronDown, Clock3, Download, FilePlus2, FileText, History, Info, FileDiff, TriangleAlert } from "lucide-react";
 import { PortalDocumentLayout } from "@/components/portal/document-layout";
 import { PortalDecisionForm } from "@/components/portal/decision-form";
-import { DecisionDone } from "@/components/portal/decision-done";
+import { decisionNext } from "@/components/portal/decision-done";
 import { PortalEmailVerification } from "@/components/portal/email-verification";
 import { maskEmail } from "@/lib/email/send";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,7 @@ const eventLabels: Record<string, string> = {
   acceptance_issues: "Изпратени забележки по работата",
 };
 
-type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode };
+type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode; note?: string | null };
 const statusStyles: Record<Status["tone"], { className: string; icon: typeof Info }> = {
   success: { className: "bg-tile-mint text-tile-mint-foreground", icon: CheckCircle2 },
   info: { className: "bg-tile-blue text-tile-blue-foreground", icon: Info },
@@ -79,7 +79,10 @@ function StatusLine({ status }: { status: Status }) {
   return (
     <p role="status" className={cn("mt-4 flex items-start gap-3 rounded-3xl p-2 pr-4 text-sm leading-6", className)}>
       <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-card/80"><Icon className="size-4" /></span>
-      <span className="self-center">{status.text}</span>
+      <span className="flex flex-col self-center">
+        <span>{status.text}</span>
+        {status.note ? <span className="opacity-80">{status.note}</span> : null}
+      </span>
     </p>
   );
 }
@@ -233,6 +236,9 @@ export default async function PortalChangePage({
   );
 
   const waiting = ["sent", "viewed"].includes(change.status);
+  // Right after deciding, the status line also says what happens next. It belongs to the version that was
+  // decided: a new version must not keep the old "Искането е изпратено".
+  const justDecided = data.decision?.decision === query.decision ? decisionNext(query.decision) : null;
   const decidedOn = data.decision ? `${dateTime(data.decision.createdAt)} · ${data.decision.typedName}` : "";
   const stillInForce = inForce ? ` В сила остава ${inForceLabel}.` : "";
   const status: Status | null = awaitingDecision
@@ -246,7 +252,7 @@ export default async function PortalChangePage({
           : waiting
             ? { tone: "info", text: projectActive ? "Чака решението на одобряващия, посочен от фирмата." : "Обектът е приключен и тази версия вече не чака решение." }
             : data.decision?.decision === "approved"
-              ? { tone: "success", text: <>Одобрихте на {decidedOn}{data.decision.verifiedEmail ? <span className="opacity-80"> · потвърдено с код до {maskEmail(data.decision.verifiedEmail)}</span> : null}</> }
+              ? { tone: "success", text: <><strong className="font-semibold">Одобрихте</strong> · {decidedOn}{data.decision.verifiedEmail ? <span className="opacity-80"> · потвърдено с код до {maskEmail(data.decision.verifiedEmail)}</span> : null}</> }
               : data.decision?.decision === "declined"
                 ? { tone: "muted", text: `Отказахте на ${decidedOn}.${stillInForce}` }
                 : data.decision?.decision === "changes_requested"
@@ -349,8 +355,6 @@ export default async function PortalChangePage({
           ) : null}
         </div>
       </div>
-      {/* The banner belongs to the version that was decided: a new version must not keep the old "Искането е изпратено". */}
-      <DecisionDone decision={data.decision?.decision === query.decision ? query.decision : undefined} />
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-1.5 text-sm">
           <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 font-medium", isOffer ? "bg-tile-blue text-tile-blue-foreground" : "bg-tile-lilac text-tile-lilac-foreground")}>
@@ -361,10 +365,10 @@ export default async function PortalChangePage({
           {parentOffer ? <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="rounded-full bg-card px-3 py-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">към {documentName("offer", parentOffer.sequenceNumber)}</Link> : null}
           {!awaitingDecision ? <span className="rounded-full bg-card px-3 py-1 font-semibold tabular-nums">{!isOffer && changeMinor === 0n ? "без промяна в цената" : formatCents(changeMinor, change.currency)}</span> : null}
           {/* The same word as on the project page, so the client recognises the offer. */}
-          {offerState?.inForce ? <Badge variant={offerStatusTones[offerState.status]}>{offerStatusLabels[offerState.status]}</Badge> : null}
+          {offerState?.inForce && !(offerState.status === "in_force" && data.decision?.decision === "approved") ? <Badge variant={offerStatusTones[offerState.status]}>{offerStatusLabels[offerState.status]}</Badge> : null}
         </p>
         <h1 className="mt-3 text-[2.25rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">{change.title}</h1>
-        {status ? <StatusLine status={status} /> : null}
+        {status ? <StatusLine status={{ ...status, note: justDecided }} /> : null}
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FormProblem, revealProblem } from "@/components/change-orders/form-problem";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -143,12 +144,15 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
 
   function validate(event: FormEvent<HTMLFormElement>) {
     let message = "";
+    // The part of the form to scroll to when a check fails.
+    let section = `${formId}-lines`;
     if (isOffer && !payload.length) message = "Добави поне една услуга или материал.";
     else if (payload.some((line) => line.description.length < 2)) message = "Добави описание на всяка услуга и материал.";
     else if (payload.some((line) => !(line.quantity > 0))) message = "Количеството трябва да е над 0.";
-    else if (!isOffer && pricedChange && !(bill.subtotal > 0)) message = "Посочи сума над 0 или избери „Без промяна в цената“.";
-    else if (isOffer) message = termsProblem(termRows) ?? "";
+    else if (!isOffer && pricedChange && !(bill.subtotal > 0)) { message = "Посочи сума над 0 или избери „Без промяна в цената“."; section = `${formId}-price`; }
+    else if (isOffer) { message = termsProblem(termRows) ?? ""; section = `${formId}-terms`; }
     setLocalError(message);
+    if (message) revealProblem(section);
     // Sent by hand, not as a form action: React resets the form after an action, and React Aria's
     // checkboxes then snap back, so a failed save quietly unticked "already includes this change".
     event.preventDefault();
@@ -236,10 +240,10 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                 <input type="hidden" name="changeKind" value="addition" />
                 <input type="hidden" name="subtotal" value="0" />
                 <input type="hidden" name="scheduleImpactType" value="none" />
-                <LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog minQuantity={0} currency={currency} />
+                <div id={`${formId}-lines`} className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog minQuantity={0} currency={currency} /></div>
               </>
             ) : (
-              <EditorSection title="Цена">
+              <EditorSection id={`${formId}-price`} title="Цена">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field>
                     <FieldLabel>Вид промяна</FieldLabel>
@@ -300,7 +304,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             ) : null}
 
             {isOffer ? (
-              <EditorSection title="Плащане" description="По желание. Клиентът ги одобрява с офертата; след одобрение стават вноски.">
+              <EditorSection id={`${formId}-terms`} title="Плащане" description="По желание. Клиентът ги одобрява с офертата; след одобрение стават вноски.">
                 <PaymentTermsEditor rows={termRows} setRows={setTermRows} total={bill.total} stages={schedulePayload(scheduleRows).map((line) => line.title)} />
               </EditorSection>
             ) : null}
@@ -372,8 +376,8 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
           </div>
           <div className="flex flex-col gap-2 border-t pt-4">
             <p className="text-xs text-muted-foreground">{outcome}</p>
-            {error ? <p role="alert" className="rounded-lg bg-destructive/10 p-2 text-sm text-destructive">{error}</p> : null}
             <div className="hidden flex-col gap-2 lg:flex">
+              {error ? <FormProblem className="rounded-lg bg-destructive/10 p-2">{error}</FormProblem> : null}
               {submitButtons(false)}
               <Link href={cancelHref} className="inline-flex h-9 items-center justify-center rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">Отказ</Link>
             </div>
@@ -387,15 +391,16 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
           <span className="text-muted-foreground">Общо · версия {nextVersion}</span>
           <span className="font-semibold tabular-nums">{sign}{formatMoney(bill.total)} {currencySymbol(currency)}</span>
         </p>
+        {error ? <FormProblem>{error}</FormProblem> : null}
         <div className="flex gap-2">{submitButtons(true)}</div>
       </div>
     </div>
   );
 }
 
-function EditorSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+function EditorSection({ id, title, description, children }: { id?: string; title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border bg-card">
+    <section id={id} className="rounded-2xl border bg-card">
       <div className="border-b px-4 py-3">
         <h2 className="text-sm font-semibold">{title}</h2>
         {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
