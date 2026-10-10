@@ -51,6 +51,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 | `EMAIL_FROM` | app | `Pakto <info@pakto.net>`; трябва да е същата кутия като `SMTP_USER`, иначе Hostinger отказва писмото. |
 | `EMAIL_DAILY_LIMIT` | app | `1000` (Email Starter: 1000 писма за 24 часа). При 90 % известията и напомнянията чакат; кодовете, линковете и поканите минават винаги. |
 | `SUPPORT_EMAIL` | app | `info@pakto.net`: тук идват съобщенията от „Връзка с нас“ (`/contact`) със снимките. |
+| `PLATFORM_ADMIN_EMAILS` | app | `mitqqq35@gmail.com` (по подразбиране в `deploy/compose.yml`, може да се смени в `.env`). Имейлите, разделени със запетая, които виждат `/app/admin`: метрики за всички фирми. Изисква потвърден имейл; за всички останали страницата връща 404. Профилите с тези имейли, техните `+` варианти и фирмите им никога не влизат в метриките. |
 | `FILES_DIR` | app | `/data/files` (томът `files`); локално `.data/files`. |
 | `APP_TAG` | `.env` | Кой образ тече; пише го `deploy.sh`. |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | offsite | Cloudflare R2, токен „Object Read & Write“ само за bucket `pakto-backups`. |

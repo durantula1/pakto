@@ -24,6 +24,7 @@ const labels: Record<string, string> = {
   "/app/settings/notifications": "Известия",
   "/app/settings/privacy": "Данни и профил",
   "/app/settings/organization": "Фирма",
+  "/app/admin": "Админ",
 };
 
 /** The record name a detail page publishes for its own path; the layout cannot know it. */

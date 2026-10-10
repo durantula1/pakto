@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button as AriaButton, Header } from "react-aria-components";
-import { Bell, Building2, ChevronsUpDown, CircleUserRound, LifeBuoy, LogOut, ShieldCheck } from "lucide-react";
+import { Bell, Building2, ChartNoAxesColumn, ChevronsUpDown, CircleUserRound, LifeBuoy, LogOut, ShieldCheck } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -17,6 +17,8 @@ type Props = {
   roleLabel: string;
   organizationName: string;
   owner: boolean;
+  /** One of PLATFORM_ADMIN_EMAILS: adds the link to /app/admin. */
+  admin: boolean;
   /** `sidebar`: full-width row at the bottom of the desktop sidebar. `header`: round avatar in the mobile header. */
   variant: "sidebar" | "header";
 };
@@ -35,7 +37,7 @@ function UserAvatar({ name, className }: { name: string; className?: string }) {
 }
 
 /** Account, settings and sign-out in one place, like the user menu in shadcn-admin. */
-export function UserMenu({ name, email, roleLabel, organizationName, owner, variant }: Props) {
+export function UserMenu({ name, email, roleLabel, organizationName, owner, admin, variant }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [signingOut, startSignOut] = useTransition();
@@ -44,6 +46,7 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, vari
     { id: "/app/settings/notifications", label: "Известия", icon: Bell },
     { id: "/app/settings/privacy", label: "Данни и профил", icon: ShieldCheck },
     ...(owner ? [{ id: "/app/settings/organization", label: "Фирма", icon: Building2 }] : []),
+    ...(admin ? [{ id: "/app/admin", label: "Админ", icon: ChartNoAxesColumn }] : []),
   ];
 
   function onAction(key: React.Key) {

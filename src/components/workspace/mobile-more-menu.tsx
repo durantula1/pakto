@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
+import { BookOpen, ChartNoAxesColumn, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-export function MobileMoreMenu({ owner, finance }: { owner: boolean; finance: boolean }) {
+export function MobileMoreMenu({ owner, finance, admin }: { owner: boolean; finance: boolean; admin: boolean }) {
   const [open, setOpen] = useState(false);
   const items = [
     { href: "/app", label: "Работен преглед", icon: LayoutDashboard },
@@ -16,6 +16,7 @@ export function MobileMoreMenu({ owner, finance }: { owner: boolean; finance: bo
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: Euro }] : []),
     { href: "/app/settings", label: "Настройки", icon: Settings },
     { href: "/app/guide", label: "Как работи", icon: Compass },
+    ...(admin ? [{ href: "/app/admin", label: "Админ", icon: ChartNoAxesColumn }] : []),
     { href: "/contact?from=/app", label: "Връзка с нас", icon: LifeBuoy },
   ];
   return <SheetTrigger isOpen={open} onOpenChange={setOpen}>

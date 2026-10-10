@@ -15,6 +15,8 @@ const serverEnvironmentSchema = z.object({
   FILES_DIR: z.string().min(1).default(".data/files"),
   EMAIL_FROM: z.string().min(1).default("Pakto <notifications@example.com>"),
   SUPPORT_EMAIL: z.email().optional(),
+  // Comma-separated staff emails that see /app/admin (metrics across every company).
+  PLATFORM_ADMIN_EMAILS: z.string().default(""),
 });
 
 export type ServerEnvironment = z.infer<typeof serverEnvironmentSchema>;
@@ -34,6 +36,7 @@ export function getServerEnvironment(): ServerEnvironment {
     FILES_DIR: process.env.FILES_DIR || undefined,
     EMAIL_FROM: process.env.EMAIL_FROM,
     SUPPORT_EMAIL: process.env.SUPPORT_EMAIL || undefined,
+    PLATFORM_ADMIN_EMAILS: process.env.PLATFORM_ADMIN_EMAILS || undefined,
   });
 
   return cachedEnvironment;

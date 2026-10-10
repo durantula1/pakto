@@ -9,6 +9,7 @@ import {
   Compass,
   Bell,
   Building2,
+  ChartNoAxesColumn,
   CirclePlus,
   FileText,
   Euro,
@@ -36,6 +37,7 @@ import { can, roleLabel } from "@/lib/authz/permissions";
 import { getOptionalTenantContext, getSessionUserId } from "@/lib/authz/tenant-context";
 import { accountDeletionDate } from "@/lib/legal";
 import { getAccountSummary } from "@/modules/account/queries";
+import { isPlatformAdmin } from "@/modules/platform-admin/access";
 import { countUnreadNotifications, recentNotifications } from "@/modules/notifications/queries";
 import { CommandPalette, type PaletteLink } from "@/components/workspace/command-palette";
 import { NotificationBell, NotificationBellFallback } from "@/components/notifications/notification-bell";
@@ -50,7 +52,7 @@ export default async function WorkspaceLayout({
 }) {
   // The account row needs only the user id from the session, so it is read alongside the membership.
   const userId = await getSessionUserId();
-  const [context, account, cookieStore] = await Promise.all([getOptionalTenantContext(), userId ? getAccountSummary(userId) : null, cookies()]);
+  const [context, account, cookieStore, admin] = await Promise.all([getOptionalTenantContext(), userId ? getAccountSummary(userId) : null, cookies(), isPlatformAdmin()]);
   if (!context) redirect("/onboarding");
   // New owners and new team members see the welcome screens once, wherever they enter the app.
   if (account && !account.welcomeSeen) redirect("/welcome");
@@ -66,6 +68,7 @@ export default async function WorkspaceLayout({
     roleLabel: roleLabel(context),
     organizationName: context.organizationName,
     owner: context.role === "owner",
+    admin,
   };
   const quickCreate = can(context, "offers.edit")
     ? { href: "/app/offers/new", label: "Нова оферта" }
@@ -88,6 +91,8 @@ export default async function WorkspaceLayout({
       ...(owner ? [{ href: "/app/team", label: "Екип", icon: <Users className="size-4" /> }] : []),
       { href: "/app/settings", label: "Настройки", icon: <Settings className="size-4" /> },
     ] },
+    // Only for the operators in PLATFORM_ADMIN_EMAILS; /app/admin itself checks again.
+    ...(admin ? [{ label: "Pakto", links: [{ href: "/app/admin", label: "Админ", icon: <ChartNoAxesColumn className="size-4" /> }] }] : []),
     { label: "Помощ", links: [
       { href: "/app/guide", label: "Как работи", icon: <Compass className="size-4" /> },
       { href: "/contact?from=/app", label: "Връзка с нас", icon: <LifeBuoy className="size-4" /> },
@@ -104,6 +109,7 @@ export default async function WorkspaceLayout({
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: "team" as const }] : []),
     { href: "/app/settings", label: "Настройки", icon: "settings" },
     { href: "/app/guide", label: "Как работи", icon: "guide" },
+    ...(admin ? [{ href: "/app/admin", label: "Админ", icon: "admin" as const }] : []),
     { href: "/contact?from=/app", label: "Съобщи за проблем", icon: "support" },
   ];
   const paletteActions: PaletteLink[] = [
@@ -170,7 +176,7 @@ export default async function WorkspaceLayout({
           {clients
             ? <NavLink href="/app/clients" label="Клиенти" icon={<Contact className="size-5" />} variant="tab" />
             : <NavLink href="/app/notifications" label="Известия" icon={<Bell className="size-5" />} badge={unreadBadge} variant="tab" />}
-          <MobileMoreMenu owner={owner} finance={finance} />
+          <MobileMoreMenu owner={owner} finance={finance} admin={admin} />
         </nav>
       </section>
     </div>
