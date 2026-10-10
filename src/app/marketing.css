@@ -403,65 +403,59 @@ html[data-auth="in"] .mf-when-out {
 }
 
 /*
- * Hero scene: one 12 s loop, about 7 s of story and a hold on the final frame. The markup is that
- * final, approved state (what reduced motion shows); every rule below starts from the earlier state,
- * plays its beat, holds, and goes back to the start at 95-99 % so the loop restarts clean
- * (version 1 slides back under the paper). Beats (% of the loop, 1 s ≈ 8.3 %): 4-12 the price counts
- * 450 to 384, the version swaps and version 1 slides out behind the paper, 14 notification,
- * 21 the phone wakes, 26-38 code, 38 code confirmed, 44 the tap, 46 button, 50 the stamp, 53 footer,
- * 56-61 the fingerprint types out. `on-N` appears at N %, `off-N` is the state it replaces.
+ * Hero scene: one 16 s loop, about 12 s of story and a hold on the final frame. It follows the
+ * product step by step. The markup is the final, approved state (what reduced motion shows); every
+ * rule below starts from the earlier state, plays its beat, holds, and goes back to the start at
+ * 95-99 % so the loop restarts clean. Beats (% of the loop, 1 s = 6.25 %): 0-9 version 1 lies
+ * alone ("Прегледана"); 9-14 version 2 arrives on top ("Изпратена") while version 1 slides back,
+ * 11 version 1 becomes "Заменена"; 14-18 what changed; 19-37 the email about the new version
+ * (about 2 s on screen); 34-37 the client opens it, the phone wakes, 36 version 2 becomes
+ * "Прегледана"; 41-60 the email with the code; 50-57 the code is typed, 58 the sixth digit submits
+ * ("Записваме…"); 61 "Одобрено" in the portal; 63 "Одобрена" for the team and the stamp; 66 footer;
+ * 69-74 the fingerprint. `on-N` appears at N %, `off-N` is the state it replaces.
  */
-@property --mf-price {
-  syntax: "<integer>";
-  inherits: true;
-  initial-value: 384;
-}
-
 :where(.mf-scene) [class*="mf-sc-"] {
-  animation-duration: 12s;
+  animation-duration: 16s;
   animation-iteration-count: infinite;
   animation-fill-mode: both;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.mf-sc-price::after {
-  counter-reset: mf-price var(--mf-price);
-  content: counter(mf-price);
+.mf-sc-on-11 {
+  animation-name: mf-sc-on-11;
 }
-.mf-sc-price {
-  --mf-price: 384;
-  animation-name: mf-sc-price;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+.mf-sc-off-11 {
+  animation-name: mf-sc-off-11;
 }
-.mf-sc-on-6 {
-  animation-name: mf-sc-on-6;
+.mf-sc-on-36 {
+  animation-name: mf-sc-on-36;
 }
-.mf-sc-off-6 {
-  animation-name: mf-sc-off-6;
+.mf-sc-off-36 {
+  animation-name: mf-sc-off-36;
 }
-.mf-sc-on-12 {
-  animation-name: mf-sc-on-12;
+.mf-sc-on-58 {
+  animation-name: mf-sc-on-58;
 }
-.mf-sc-off-12 {
-  animation-name: mf-sc-off-12;
+.mf-sc-off-58 {
+  animation-name: mf-sc-off-58;
 }
-.mf-sc-on-38 {
-  animation-name: mf-sc-on-38;
+.mf-sc-on-61 {
+  animation-name: mf-sc-on-61;
 }
-.mf-sc-off-38 {
-  animation-name: mf-sc-off-38;
+.mf-sc-off-61 {
+  animation-name: mf-sc-off-61;
 }
-.mf-sc-on-46 {
-  animation-name: mf-sc-on-46;
+.mf-sc-on-63 {
+  animation-name: mf-sc-on-63;
 }
-.mf-sc-off-46 {
-  animation-name: mf-sc-off-46;
+.mf-sc-off-63 {
+  animation-name: mf-sc-off-63;
 }
-.mf-sc-on-51 {
-  animation-name: mf-sc-on-51;
+.mf-sc-ghost {
+  animation-name: mf-sc-ghost;
 }
-.mf-sc-off-51 {
-  animation-name: mf-sc-off-51;
+.mf-sc-enter {
+  animation-name: mf-sc-enter;
 }
 .mf-sc-rows {
   animation-name: mf-sc-rows;
@@ -472,17 +466,11 @@ html[data-auth="in"] .mf-when-out {
 .mf-sc-notif {
   animation-name: mf-sc-notif;
 }
+.mf-sc-notif2 {
+  animation-name: mf-sc-notif2;
+}
 .mf-sc-code {
   animation-name: mf-sc-code;
-}
-.mf-sc-press {
-  animation-name: mf-sc-press;
-}
-.mf-sc-ripple {
-  animation-name: mf-sc-ripple;
-}
-.mf-sc-btn {
-  animation-name: mf-sc-btn;
 }
 .mf-sc-stamp {
   animation-name: mf-sc-stamp;
@@ -496,9 +484,6 @@ html[data-auth="in"] .mf-when-out {
 .mf-sc-hash {
   animation-name: mf-sc-hash;
 }
-.mf-sc-ghost {
-  animation-name: mf-sc-ghost;
-}
 .mf-sc-code {
   animation-timing-function: linear;
 }
@@ -506,26 +491,12 @@ html[data-auth="in"] .mf-when-out {
   animation-timing-function: steps(18, end);
 }
 
-@keyframes mf-sc-price {
+@keyframes mf-sc-on-11 {
   0%,
-  4% {
-    --mf-price: 450;
-  }
-  12%,
-  95% {
-    --mf-price: 384;
-  }
-  99%,
-  100% {
-    --mf-price: 450;
-  }
-}
-@keyframes mf-sc-on-6 {
-  0%,
-  6% {
+  11% {
     opacity: 0;
   }
-  8%,
+  13%,
   95% {
     opacity: 1;
   }
@@ -534,12 +505,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 0;
   }
 }
-@keyframes mf-sc-off-6 {
+@keyframes mf-sc-off-11 {
   0%,
-  6% {
+  11% {
     opacity: 1;
   }
-  8%,
+  13%,
   95% {
     opacity: 0;
   }
@@ -548,12 +519,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 1;
   }
 }
-@keyframes mf-sc-on-12 {
+@keyframes mf-sc-on-36 {
   0%,
-  12% {
+  36% {
     opacity: 0;
   }
-  14%,
+  38%,
   95% {
     opacity: 1;
   }
@@ -562,12 +533,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 0;
   }
 }
-@keyframes mf-sc-off-12 {
+@keyframes mf-sc-off-36 {
   0%,
-  12% {
+  36% {
     opacity: 1;
   }
-  14%,
+  38%,
   95% {
     opacity: 0;
   }
@@ -576,12 +547,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 1;
   }
 }
-@keyframes mf-sc-on-38 {
+@keyframes mf-sc-on-58 {
   0%,
-  38% {
+  58% {
     opacity: 0;
   }
-  40%,
+  60%,
   95% {
     opacity: 1;
   }
@@ -590,12 +561,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 0;
   }
 }
-@keyframes mf-sc-off-38 {
+@keyframes mf-sc-off-58 {
   0%,
-  38% {
+  58% {
     opacity: 1;
   }
-  40%,
+  60%,
   95% {
     opacity: 0;
   }
@@ -604,12 +575,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 1;
   }
 }
-@keyframes mf-sc-on-46 {
+@keyframes mf-sc-on-61 {
   0%,
-  46% {
+  61% {
     opacity: 0;
   }
-  48%,
+  63%,
   95% {
     opacity: 1;
   }
@@ -618,12 +589,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 0;
   }
 }
-@keyframes mf-sc-off-46 {
+@keyframes mf-sc-off-61 {
   0%,
-  46% {
+  61% {
     opacity: 1;
   }
-  48%,
+  63%,
   95% {
     opacity: 0;
   }
@@ -632,12 +603,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 1;
   }
 }
-@keyframes mf-sc-on-51 {
+@keyframes mf-sc-on-63 {
   0%,
-  51% {
+  63% {
     opacity: 0;
   }
-  53%,
+  65%,
   95% {
     opacity: 1;
   }
@@ -646,12 +617,12 @@ html[data-auth="in"] .mf-when-out {
     opacity: 0;
   }
 }
-@keyframes mf-sc-off-51 {
+@keyframes mf-sc-off-63 {
   0%,
-  51% {
+  63% {
     opacity: 1;
   }
-  53%,
+  65%,
   95% {
     opacity: 0;
   }
@@ -660,70 +631,112 @@ html[data-auth="in"] .mf-when-out {
     opacity: 1;
   }
 }
-/* Version 1 starts hidden under the paper and slides back out once version 2 replaces it. */
+/* Version 1 starts where version 2 will land, then is pushed up and to the left behind it. */
 @keyframes mf-sc-ghost {
   0%,
-  6% {
-    translate: 18% 27%;
+  9% {
+    translate: 0 0;
     rotate: -3deg;
   }
   14%,
   95% {
-    translate: 0 0;
+    translate: -9cqw -15cqw;
     rotate: -9deg;
   }
   99%,
   100% {
-    translate: 18% 27%;
+    translate: 0 0;
     rotate: -3deg;
   }
 }
-@keyframes mf-sc-rows {
+/* Version 2 slides in on top. */
+@keyframes mf-sc-enter {
   0%,
-  5% {
+  9% {
     opacity: 0;
-    translate: 0.75rem 0;
+    translate: 2.5rem 1.5rem;
+    scale: 0.96;
   }
-  10%,
+  13.5%,
   95% {
-    opacity: 1;
-    translate: 0 0;
-  }
-  99%,
-  100% {
-    opacity: 0;
-    translate: 0.75rem 0;
-  }
-}
-/* The phone is dim until the notification wakes it (a veil over the screen fades out). */
-@keyframes mf-sc-screen {
-  0%,
-  16% {
-    opacity: 0.7;
-  }
-  21%,
-  95% {
-    opacity: 0;
-  }
-  99%,
-  100% {
-    opacity: 0.7;
-  }
-}
-@keyframes mf-sc-notif {
-  0%,
-  13% {
-    opacity: 0;
-    translate: 0 -1rem;
-    scale: 0.94;
-  }
-  17%,
-  28% {
     opacity: 1;
     translate: 0 0;
     scale: 1;
   }
-  32%,
+  99%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes mf-sc-rows {
+  0%,
+  14% {
+    opacity: 0;
+    translate: 0.75rem 0;
+  }
+  18%,
+  95% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  99%,
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+/* The phone is dim until the client opens the email (a veil over the screen fades out). */
+@keyframes mf-sc-screen {
+  0%,
+  34% {
+    opacity: 0.7;
+  }
+  37.5%,
+  95% {
+    opacity: 0;
+  }
+  99%,
+  100% {
+    opacity: 0.7;
+  }
+}
+/* The two emails, about 2 s each: the new version, then the code. */
+@keyframes mf-sc-notif {
+  0%,
+  18.75% {
+    opacity: 0;
+    translate: 0 -1rem;
+    scale: 0.94;
+  }
+  21%,
+  35% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  37.5%,
+  100% {
+    opacity: 0;
+    translate: 0 -0.5rem;
+    scale: 0.97;
+  }
+}
+@keyframes mf-sc-notif2 {
+  0%,
+  41% {
+    opacity: 0;
+    translate: 0 -1rem;
+    scale: 0.94;
+  }
+  44%,
+  57.5% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+  60%,
   100% {
     opacity: 0;
     translate: 0 -0.5rem;
@@ -733,79 +746,36 @@ html[data-auth="in"] .mf-when-out {
 /* Six digits typed one after another (the grid underneath keeps the empty cells). */
 @keyframes mf-sc-code {
   0%,
-  26% {
+  50% {
     clip-path: inset(0 100% 0 0);
     animation-timing-function: steps(6, end);
   }
-  38%,
+  57.5%,
   95% {
     clip-path: inset(0 0 0 0);
+    animation-timing-function: linear;
   }
   99%,
   100% {
     clip-path: inset(0 100% 0 0);
-  }
-}
-/* The tap: the button dips, then a ring spreads from it. */
-@keyframes mf-sc-press {
-  0%,
-  43% {
-    scale: 1;
-  }
-  45% {
-    scale: 0.95;
-  }
-  48%,
-  100% {
-    scale: 1;
-  }
-}
-@keyframes mf-sc-ripple {
-  0%,
-  45% {
-    opacity: 0;
-    scale: 0.6;
-  }
-  46% {
-    opacity: 0.7;
-    scale: 0.8;
-  }
-  53%,
-  100% {
-    opacity: 0;
-    scale: 1.6;
-  }
-}
-@keyframes mf-sc-btn {
-  0%,
-  46% {
-    background-color: #102b38;
-  }
-  48%,
-  95% {
-    background-color: #16623f;
-  }
-  99%,
-  100% {
-    background-color: #102b38;
   }
 }
 /* Falls fast, lands, settles; the sheet dips a touch when it lands. */
 @keyframes mf-sc-stamp {
   0%,
-  50% {
+  63% {
     opacity: 0;
     scale: 1.7;
     rotate: -16deg;
     animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
   }
-  53% {
+  65.5% {
     opacity: 0.9;
     scale: 0.94;
     rotate: -7deg;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
-  56%,
+  68%,
   95% {
     opacity: 0.9;
     scale: 1;
@@ -814,30 +784,30 @@ html[data-auth="in"] .mf-when-out {
   99%,
   100% {
     opacity: 0;
-    scale: 1.7;
-    rotate: -16deg;
+    scale: 1;
+    rotate: -7deg;
   }
 }
 @keyframes mf-sc-nudge {
   0%,
-  52% {
+  65% {
     translate: 0 0;
   }
-  53.5% {
+  66.2% {
     translate: 0 0.2rem;
   }
-  57%,
+  69%,
   100% {
     translate: 0 0;
   }
 }
 @keyframes mf-sc-footer {
   0%,
-  53% {
+  66% {
     clip-path: inset(100% 0 0 0);
     opacity: 0;
   }
-  57%,
+  69.5%,
   95% {
     clip-path: inset(0 0 0 0);
     opacity: 1;
@@ -850,10 +820,10 @@ html[data-auth="in"] .mf-when-out {
 }
 @keyframes mf-sc-hash {
   0%,
-  56% {
+  69% {
     clip-path: inset(0 100% 0 0);
   }
-  61%,
+  74%,
   95% {
     clip-path: inset(0 0 0 0);
   }
