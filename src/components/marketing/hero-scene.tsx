@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { Check, Lock, Mail } from "lucide-react";
 
 import { HeroParallax } from "./hero-parallax";
@@ -6,82 +5,13 @@ import { HeroParallax } from "./hero-parallax";
 /** The client's six-digit code from the email. */
 const code = ["3", "8", "2", "1", "5", "0"] as const;
 
-/*
- * The bezel, in the units of a 608 × 608 viewBox centred on the scene: a watch-like dial whose
- * upper arc is the life of the offer (sent → opened → code → approved) and whose lower arc is the
- * payment plan that opens after the "yes". Angles are in degrees, 0 at three o'clock, clockwise.
- */
-const VIEW = 608;
-const CENTER = VIEW / 2;
-const RADIUS = 290;
-const LABEL_RADIUS = RADIUS + 16;
-
-const point = (radius: number, angle: number) => {
-  const rad = (angle * Math.PI) / 180;
-  return [
-    CENTER + radius * Math.cos(rad),
-    CENTER + radius * Math.sin(rad),
-  ] as const;
-};
-const fixed = (n: number) => Number(n.toFixed(2));
-const arc = (from: number, to: number, radius = RADIUS) => {
-  const [x1, y1] = point(radius, from);
-  const [x2, y2] = point(radius, to);
-  const large = to - from > 180 ? 1 : 0;
-  return `M${fixed(x1)} ${fixed(y1)}A${radius} ${radius} 0 ${large} 1 ${fixed(x2)} ${fixed(y2)}`;
-};
-/** Position of a label or marker as a share of the scene, for absolutely placed HTML. */
-const place = (radius: number, angle: number): CSSProperties => {
-  const [x, y] = point(radius, angle);
-  return { left: `${(x / VIEW) * 100}%`, top: `${(y / VIEW) * 100}%` };
-};
-
-/** Ticks every 3°, longer every 15° and 30°, drawn inward from the bezel. */
-const ticks = (major: boolean) =>
-  Array.from({ length: 120 }, (_, i) => i)
-    .filter((i) => (i % 10 === 0) === major)
-    .map((i) => {
-      const length = i % 10 === 0 ? 14 : i % 5 === 0 ? 9 : 5;
-      const [x1, y1] = point(RADIUS, i * 3);
-      const [x2, y2] = point(RADIUS - length, i * 3);
-      return `M${fixed(x1)} ${fixed(y1)}L${fixed(x2)} ${fixed(y2)}`;
-    })
-    .join("");
-
-/** The arc runs from -178° to the approval at -50°; each event sits at its share of that length. */
-const ARC_FROM = -178;
-const APPROVED = -50;
-const events = [
-  { angle: -140, label: "Изпратена", detail: "14:28", beat: 3 },
-  { angle: -112, label: "Отворена", detail: "14:30", beat: 21 },
-  { angle: -82, label: "Код ✓", detail: "14:31", beat: 38 },
-] as const;
-
-/** 30 / 40 / 30 % of 384 €, on the lower half of the bezel. */
-const payments = [
-  {
-    from: 74,
-    to: 100,
-    label: "Аванс 30%",
-    detail: "115,20 € · дължим",
-    due: true,
-  },
-  { from: 104, to: 140, label: "Междинно 40%", detail: "153,60 €", due: false },
-  {
-    from: 144,
-    to: 172,
-    label: "Остатък 30%",
-    detail: "115,20 € · 16.10",
-    due: false,
-  },
-] as const;
-
 /**
- * Hero visual: the approved offer (paper) and the client's phone inside a dial. The bezel tells the
- * whole story in one loop: the offer is sent, opened, confirmed with the code from the email and
- * approved; the stamp lands and the first payment opens. The markup is the approved final state
- * (what reduced motion shows); the loop is CSS, see "Hero scene" in marketing.css. The `mf-ink`
- * filter roughens the stamp (the closing seal in landing-experience.tsx uses it too).
+ * Hero visual: the approved offer (paper) and the client's phone, with the replaced version 1
+ * behind the paper. The story plays once and stays on its last frame: the price drops from 450 € to
+ * 384 € and version 1 slides back, the notification wakes the phone, the client types the code from
+ * the email and approves, the stamp lands. The markup is that final state (what reduced motion
+ * shows); the timing is CSS, see "Hero scene" in marketing.css. The `mf-ink` filter roughens the
+ * stamp (the closing seal in landing-experience.tsx uses it too).
  */
 export function HeroScene() {
   return (
@@ -90,9 +20,8 @@ export function HeroScene() {
         Промяна ПР-042 по обект „Кухня · Лозенец“, версия 2: общо 384 € с ДДС
         вместо 450 €, краен срок 16.10 вместо 10.10. Изпратена в 14:28, отворена
         в 14:30, Иван Петров я одобрява в 14:32 с 6-цифрен код от имейла.
-        Офертата получава печат „Одобрено“ и се отварят плащанията по етапи:
-        аванс 30% (115,20 €, дължим), междинно 40% и остатък 30% при предаване
-        на 16.10.
+        Офертата получава печат „Одобрено“. Зад нея стои заменената версия 1 за
+        450 € със срок 10.10.
       </figcaption>
 
       <svg aria-hidden="true" className="absolute size-0">
@@ -107,197 +36,29 @@ export function HeroScene() {
         </filter>
       </svg>
 
-      {/* Text scales with the dial itself (38 units across = 1 rem at the full 38 rem size), a little
+      {/* Text scales with the scene itself (38 units across = 1 rem at the full 38 rem size), a little
           larger on small screens so the labels stay legible. */}
       <HeroParallax className="aspect-square w-full text-[#102b38] [--demo-size:calc(100cqw/34)] sm:[--demo-size:calc(100cqw/36)] lg:[--demo-size:calc(100cqw/38)]">
-        {/* The dial: rings, ticks, the story arc and the payment plan, with their labels. */}
-        <div className="mf-layer [--depth:-0.3]">
-          <div className="absolute inset-[12%] rounded-full bg-[radial-gradient(closest-side,rgb(255_118_95/22%),rgb(255_118_95/6%)_55%,transparent)]" />
-          <svg
-            viewBox={`0 0 ${VIEW} ${VIEW}`}
-            className="absolute inset-0 size-full overflow-visible"
-            fill="none"
-          >
-            <defs>
-              <filter id="mf-dial-glow">
-                <feGaussianBlur stdDeviation="4" />
-              </filter>
-            </defs>
-            <circle
-              cx={CENTER}
-              cy={CENTER}
-              r="168"
-              stroke="rgb(16 43 56 / 0.14)"
-            />
-            <circle
-              cx={CENTER}
-              cy={CENTER}
-              r="232"
-              stroke="rgb(16 43 56 / 0.22)"
-              strokeDasharray="2 6"
-            />
-            <circle
-              cx={CENTER}
-              cy={CENTER}
-              r={RADIUS}
-              stroke="rgb(16 43 56 / 0.14)"
-            />
-            <path
-              d={ticks(false)}
-              stroke="rgb(16 43 56 / 0.3)"
-              strokeWidth="0.8"
-            />
-            <path
-              d={ticks(true)}
-              stroke="rgb(16 43 56 / 0.3)"
-              strokeWidth="1.4"
-            />
-
-            {/* Payment plan: grey segments, the advance fills in coral once the offer is approved. */}
-            {payments.map((payment) => (
-              <path
-                key={payment.label}
-                d={arc(payment.from, payment.to)}
-                stroke="rgb(16 43 56 / 0.28)"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-            ))}
-            <path
-              d={arc(payments[0].from, payments[0].to)}
-              pathLength={100}
-              strokeDasharray="100"
-              className="mf-sc-seg"
-              stroke="#ff765f"
-              strokeOpacity="0.2"
-              strokeWidth="16"
-              strokeLinecap="round"
-            />
-            <path
-              d={arc(payments[0].from, payments[0].to)}
-              pathLength={100}
-              strokeDasharray="100"
-              className="mf-sc-seg"
-              stroke="#ff765f"
-              strokeWidth="7"
-              strokeLinecap="round"
-            />
-
-            {/* From the approval to the payments: what comes next. */}
-            <path
-              d={arc(APPROVED, 70)}
-              className="mf-sc-future"
-              stroke="#ff765f"
-              strokeOpacity="0.45"
-              strokeWidth="1.6"
-              strokeDasharray="1 7"
-              strokeLinecap="round"
-            />
-
-            {/* The story arc, with a soft glow under it. */}
-            <path
-              d={arc(ARC_FROM, APPROVED)}
-              pathLength={100}
-              strokeDasharray="100"
-              className="mf-sc-arc"
-              stroke="#ff765f"
-              strokeWidth="6"
-              strokeLinecap="round"
-              opacity="0.35"
-              filter="url(#mf-dial-glow)"
-            />
-            <path
-              d={arc(ARC_FROM, APPROVED)}
-              pathLength={100}
-              strokeDasharray="100"
-              className="mf-sc-arc"
-              stroke="#ff765f"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-
-            {events.map((event) => {
-              const [x, y] = point(RADIUS, event.angle);
-              return (
-                <circle
-                  key={event.label}
-                  className={`mf-sc-on-${event.beat}`}
-                  cx={fixed(x)}
-                  cy={fixed(y)}
-                  r="4.5"
-                  fill="#102b38"
-                  stroke="#fffdf7"
-                  strokeWidth="2"
-                />
-              );
-            })}
-            {(() => {
-              const [x, y] = point(RADIUS, APPROVED);
-              return (
-                <g className="mf-sc-on-50">
-                  <circle
-                    className="mf-sc-head origin-center [transform-box:fill-box]"
-                    cx={fixed(x)}
-                    cy={fixed(y)}
-                    r="15"
-                    fill="#ff765f"
-                    opacity="0.22"
-                  />
-                  <circle
-                    cx={fixed(x)}
-                    cy={fixed(y)}
-                    r="6"
-                    fill="#ff765f"
-                    stroke="#fffdf7"
-                    strokeWidth="2"
-                  />
-                </g>
-              );
-            })()}
-          </svg>
-
-          {events.map((event) => (
-            <p
-              key={event.label}
-              className={`mf-sc-on-${event.beat} absolute -translate-x-1/2 -translate-y-full whitespace-nowrap text-center demo-text-11 font-extrabold leading-tight max-sm:demo-text-15`}
-              style={place(LABEL_RADIUS, event.angle)}
-            >
-              {event.label}
-              <span className="block font-mono demo-text-9 max-sm:hidden font-semibold tracking-[0.06em] text-[#52707d]">
-                {event.detail}
-              </span>
-            </p>
-          ))}
-          <p
-            className="mf-sc-on-50 absolute -translate-x-1/2 -translate-y-full whitespace-nowrap text-center demo-text-11 font-extrabold leading-tight text-[#b5412d] max-sm:demo-text-15"
-            style={place(LABEL_RADIUS, APPROVED)}
-          >
-            Одобрена
-            <span className="block font-mono demo-text-9 max-sm:hidden font-semibold tracking-[0.06em] text-[#52707d]">
-              14:32 · Иван Петров
-            </span>
-          </p>
-
-          {payments.map((payment) => {
-            const middle = (payment.from + payment.to) / 2;
-            const onTheLeft = Math.cos((middle * Math.PI) / 180) < -0.35;
-            return (
-              <p
-                key={payment.label}
-                className={`absolute whitespace-nowrap demo-text-11 font-extrabold leading-tight max-sm:demo-text-15 ${
-                  onTheLeft
-                    ? "-translate-x-full -translate-y-1/2 text-right"
-                    : "-translate-x-1/2 text-center"
-                } ${payment.due ? "mf-sc-due text-[#b5412d]" : "text-[#52707d]"}`}
-                style={place(LABEL_RADIUS + 4, middle)}
-              >
-                {payment.label}
-                <span className="block font-mono demo-text-9 max-sm:hidden font-semibold tracking-[0.06em] text-[#52707d]">
-                  {payment.detail}
-                </span>
+        {/* Version 1, replaced: pushed back behind the paper when version 2 takes its place. */}
+        <div className="mf-layer [--depth:0.2]">
+          <div className="mf-sc-ghost absolute top-[6.6%] left-[-3.2%] w-1/2 [transform:perspective(75rem)_rotateY(9deg)_rotateX(3deg)] -rotate-9">
+            <div className="rounded-[1rem] border border-[#102b38]/10 bg-[#fbf6e8] px-[12.6%] pt-[11.6%] pb-[30%] text-[#7d8f96] shadow-[0_2px_4px_rgb(16_43_56/5%),0_30px_50px_-24px_rgb(16_43_56/30%)]">
+              <p className="font-mono demo-text-10 font-bold tracking-[0.08em] text-[#c98a7d]">
+                ПР-042 · в. 1 · ЗАМЕНЕНА
               </p>
-            );
-          })}
+              <p className="mt-[0.2em] truncate demo-text-18 font-black tracking-[-0.04em]">
+                Кухня · Лозенец
+              </p>
+              <p className="mt-[0.9em] demo-text-40 font-black leading-none tracking-[-0.06em] tabular-nums">
+                <s className="decoration-[#e85f48] decoration-[0.08em]">
+                  450 €
+                </s>
+              </p>
+              <p className="mt-[0.9em] font-mono demo-text-10 font-bold">
+                СРОК 10.10
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="mf-layer [--depth:0.5]">
@@ -500,7 +261,7 @@ export function HeroScene() {
                     <span className="grid size-[1.4em] shrink-0 place-items-center rounded-full bg-[#d9f3cf]">
                       <Check className="size-[0.9em]" />
                     </span>
-                    Код потвърден
+                    Кодът е потвърден
                   </p>
                   <p className="mf-sc-on-38 mt-[0.6em] demo-text-9 leading-snug text-[#52707d] max-sm:hidden">
                     С одобрението приемате цена 384 € и срок 16.10.
