@@ -326,7 +326,7 @@ function OfferCard({
         } as CSSProperties
       }
     >
-      <span className="absolute bottom-full left-[0.2em] pb-[0.5em] demo-text-11 font-extrabold whitespace-nowrap text-[#52707d]">
+      <span className="absolute bottom-full left-[0.2em] @max-xl:right-[0.2em] @max-xl:left-auto pb-[0.5em] demo-text-11 font-extrabold whitespace-nowrap text-[#52707d]">
         {trade.label}
       </span>
       <header className="flex items-start justify-between gap-[0.6em] px-[7%] pt-[6%]">
@@ -415,7 +415,8 @@ function Phone({ trade }: { trade: Trade }) {
                 </span>
                 <span className="min-w-0">
                   <span className="flex justify-between gap-[0.5em] font-extrabold text-[#102b38]">
-                    Pakto <span className="font-medium text-[#52707d]">сега</span>
+                    Pakto{" "}
+                    <span className="font-medium text-[#52707d]">сега</span>
                   </span>
                   <span className="line-clamp-3">
                     {trade.company} Ви изпрати оферта: {trade.title}

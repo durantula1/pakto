@@ -453,7 +453,8 @@ html[data-auth="in"] .mf-when-out {
 
 @container (width < 36rem) {
   .mf-hf-card {
-    left: 68%;
+    left: 65%;
+    width: calc(var(--u) * 15.5);
   }
 }
 
