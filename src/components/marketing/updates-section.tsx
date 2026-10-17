@@ -92,7 +92,7 @@ function Preview({ index }: { index: number }) {
             Мария Георгиева одобри „Украса и цветя“
           </p>
           <p className="mt-0.5 text-xs text-[#52707d]">
-            Обект „Сватба · 14 юни“ · преди 2 сек.
+            Сватба · 14 юни · преди 2 сек.
           </p>
         </div>
       </div>

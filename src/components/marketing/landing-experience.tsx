@@ -23,7 +23,7 @@ import { PlatformTour } from "./platform-tour";
 import { ProcessVideo } from "./process-video";
 import { ProblemSection } from "./problem-section";
 import { MobileCtaBar } from "./mobile-cta-bar";
-import { HeroScene } from "./hero-scene";
+import { HeroFlow } from "./hero-flow";
 import { SiteFooter } from "./site-chrome";
 import { HeroReveal, Reveal } from "./reveal";
 import { SecuritySection } from "./security-section";
@@ -191,16 +191,16 @@ export function LandingExperience() {
           <section className="mf-hero relative overflow-hidden px-[6vw] pb-20 pt-32 lg:flex lg:min-h-[min(100svh,56rem)] lg:flex-col lg:pb-8 lg:pt-28">
             <div className="mf-hero-grid absolute inset-0" />
 
-            {/* One left edge for the whole text column; the card takes the right five columns. */}
+            {/* One left edge for the whole text column; the offers and the client's phone take the right half. */}
             <div className="relative z-10 mx-auto grid w-full max-w-[93.75rem] items-center gap-14 lg:my-auto lg:grid-cols-12 lg:gap-10">
-              <div className="lg:col-span-7">
+              <div className="lg:col-span-6">
                 <HeroReveal className="mf-kicker mb-7 flex items-center gap-3">
                   <span className="size-2 rounded-full bg-[#ff765f]" />
                   ОФЕРТИ И ПРОМЕНИ, ОДОБРЕНИ ПРЕДИ РАБОТАТА
                 </HeroReveal>
                 <HeroReveal solid delay={0.06}>
                   <h1 className="mf-hero-title relative z-20">
-                    ВСЯКА ПРОМЯНА
+                    ВСЯКА ОФЕРТА
                     <br />
                     С ЦЕНА, СРОК И
                     <br />
@@ -209,9 +209,9 @@ export function LandingExperience() {
                 </HeroReveal>
                 <HeroReveal delay={0.14} className="relative z-20 mt-10">
                   <p className="max-w-[28rem] text-pretty text-lg leading-8 text-[#284955] lg:text-xl">
-                    Офертите и допълнителната работа стават ясни версии, които
-                    клиентът одобрява от телефона си. Без регистрация за клиента и
-                    без спорове след това.
+                    За всеки бизнес, който работи с оферти. Клиентът одобрява от
+                    телефона си с код от имейла, без регистрация, а всяка промяна е
+                    нова версия.
                   </p>
                   <div
                     id="hero-cta"
@@ -241,36 +241,10 @@ export function LandingExperience() {
                 </HeroReveal>
               </div>
 
-              <div className="lg:col-span-5">
-                <HeroScene />
+              <div className="lg:col-span-6">
+                <HeroFlow />
               </div>
             </div>
-
-            {/* The promise in three steps, in the words of the headline: price and deadline, the "yes", no disputes. */}
-            <HeroReveal
-              delay={0.5}
-              className="relative z-10 mx-auto mt-10 w-full max-w-[93.75rem] lg:mt-6"
-            >
-              <ol className="flex flex-col gap-x-5 gap-y-2 border-t border-[#102b38]/15 pt-5 text-[#284955] sm:flex-row sm:flex-wrap sm:items-center">
-                <li className="flex items-center gap-x-5">
-                  <span>
-                    <b className="font-bold text-[#102b38]">Давате цена и срок</b>
-                  </span>
-                  <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-[#e85f48] max-sm:hidden" />
-                </li>
-                <li className="flex items-center gap-x-5">
-                  <span>
-                    Клиентът{" "}
-                    <b className="font-bold text-[#102b38]">одобрява с код</b>,
-                    получен на имейла
-                  </span>
-                  <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-[#e85f48] max-sm:hidden" />
-                </li>
-                <li>
-                  <b className="font-bold text-[#102b38]">Работите</b> без спорове
-                </li>
-              </ol>
-            </HeroReveal>
           </section>
 
           <div className="mf-defer">
@@ -320,7 +294,7 @@ export function LandingExperience() {
                   </span>
                   <br />
                   <i>– записано.</i>
-                  {/* The hero's ink seal (`#mf-ink` lives in hero-scene.tsx), pressed once more as the page closes. */}
+                  {/* The hero's ink seal (`#mf-ink` lives in hero-flow.tsx), pressed once more as the page closes. */}
                   <m.span
                     aria-hidden="true"
                     className="relative mt-4 inline-block rounded-lg border-[0.25rem] border-[#102b38] px-3 py-2 lg:ml-[0.3em] lg:mt-0 lg:border-[0.3125rem] lg:px-5 lg:py-3 text-center align-middle font-mono normal-case leading-normal tracking-normal text-[#102b38] mix-blend-multiply [filter:url(#mf-ink)]"
@@ -344,7 +318,7 @@ export function LandingExperience() {
                 </h2>
                 <div className="mt-12 flex flex-col gap-6 border-t border-[#102b38]/35 pt-7 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-lg text-base leading-7">
-                    Регистрираш фирмата, създаваш обект и изпращаш първата
+                    Регистрираш фирмата, добавяш клиент и изпращаш първата
                     оферта още днес. Клиентът я одобрява от телефона си.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">

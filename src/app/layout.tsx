@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   applicationName: "Pakto",
   openGraph: {
     title: "Pakto",
-    description: "Оферти и промени по обекта, одобрени с код от клиента.",
+    description: "Оферти и промени, одобрени от клиента с код от имейла.",
     locale: "bg_BG",
     type: "website",
     siteName: "Pakto",
