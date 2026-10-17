@@ -26,7 +26,7 @@ UPDATE app.clients SET
 UPDATE app.project_contacts SET
   name = 'Клиент ' || left(id::text, 4), email = 'contact-' || left(id::text, 8) || '@example.test', phone = '+359000000000';
 UPDATE app.organizations SET phone = '+359000000000';
-UPDATE app.projects SET site_address = 'Адрес на обекта';
+UPDATE app.projects SET site_address = 'Адрес на проекта';
 
 -- Traces of who decided what from where
 UPDATE app.portal_decisions SET typed_name = 'Клиент', ip = NULL, user_agent = NULL, verified_email = 'client@example.test';

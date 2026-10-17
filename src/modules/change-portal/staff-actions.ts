@@ -66,7 +66,7 @@ export async function createOrRotatePortalLinkAction(formData: FormData): Promis
           eq(projectContacts.projectId, projectId), isNull(projectContacts.removedAt),
           contactId ? eq(projectContacts.id, contactId) : and(eq(projectContacts.isPrimary, true), eq(projectContacts.portalRole, "approver")),
         )).limit(1);
-      if (!contact) throw new Error("Обектът няма такъв клиентски контакт.");
+      if (!contact) throw new Error("Проектът няма такъв клиентски контакт.");
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`${projectId}:${contact.id}`}))`);
       const grants = await tx.select({ id: portalGrants.id, tokenHash: portalGrants.tokenHash, tokenCiphertext: portalGrants.tokenCiphertext, expiresAt: portalGrants.expiresAt }).from(portalGrants)
         .where(and(eq(portalGrants.projectId, projectId), eq(portalGrants.projectContactId, contact.id), isNull(portalGrants.revokedAt)));
@@ -136,7 +136,7 @@ export async function addViewerAction(formData: FormData): Promise<ActionResult>
       if (existing) {
         const [already] = await tx.select({ id: projectContacts.id }).from(projectContacts)
           .where(and(eq(projectContacts.projectId, projectId), eq(projectContacts.clientId, existing.id), isNull(projectContacts.removedAt))).limit(1);
-        if (already) throw new Error("Този клиент вече е в обекта.");
+        if (already) throw new Error("Този клиент вече е в проекта.");
       }
       const newClientId = existing?.id ?? await createClient(tx, { organizationId: context.organizationId, createdBy: context.userId, ...person });
       const [contact] = await tx.insert(projectContacts).values({

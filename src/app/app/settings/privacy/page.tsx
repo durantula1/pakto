@@ -33,7 +33,7 @@ export default async function PrivacySettingsPage() {
     <SettingsGroup title="Твоите данни">
       <SettingsRow
         label="Изтегли данните си"
-        description="Профил, членства, достъп до обекти, известия и действия в един JSON файл. Обектите и офертите са на фирмата и ги изтегля собственикът."
+        description="Профил, членства, достъп до проекти, известия и действия в един JSON файл. Проектите и офертите са на фирмата и ги изтегля собственикът."
         align="end"
       >
         <ExportDataLink label="Изтегли данните (JSON)" />

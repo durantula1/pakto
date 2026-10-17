@@ -165,7 +165,7 @@ export async function getFunnel(filters: AdminFilters) {
   return [
     { key: "signups", label: "Регистрации", value: toNumber(row?.signups) },
     { key: "organizations", label: "Създадена фирма", value: toNumber(row?.organizations) },
-    { key: "project", label: "Първи обект", value: toNumber(row?.with_project) },
+    { key: "project", label: "Първи проект", value: toNumber(row?.with_project) },
     { key: "document", label: "Първа оферта", value: toNumber(row?.with_document) },
     { key: "sent", label: "Изпратена на клиент", value: toNumber(row?.with_sent) },
     { key: "viewed", label: "Клиентът я отвори", value: toNumber(row?.with_viewed) },

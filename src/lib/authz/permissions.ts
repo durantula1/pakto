@@ -15,18 +15,18 @@ export type Permission = (typeof PERMISSION_KEYS)[number];
 
 export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label: string; description: string }[] }[] = [
   {
-    label: "Обекти",
+    label: "Проекти",
     items: [
-      { key: "projects.create", label: "Създава обекти", description: "Нови обекти и клиенти." },
+      { key: "projects.create", label: "Създава проекти", description: "Нови проекти и клиенти." },
       { key: "milestones.manage", label: "Управлява етапи", description: "Отбелязва етапи като започнати или завършени." },
-      { key: "clients.manage", label: "Редактира клиенти", description: "Името и контактите на клиента във всичките му обекти. Нужен е достъп до всички обекти." },
+      { key: "clients.manage", label: "Редактира клиенти", description: "Името и контактите на клиента във всичките му проекти. Нужен е достъп до всички проекти." },
     ],
   },
   {
     label: "Оферти",
     items: [
       { key: "offers.edit", label: "Прави оферти", description: "Създава и редактира оферти." },
-      { key: "changes.draft", label: "Подготвя промени", description: "Чернови на допълнителна работа по обекта." },
+      { key: "changes.draft", label: "Подготвя промени", description: "Чернови на допълнителна работа по проекта." },
       { key: "documents.send", label: "Изпраща на клиента", description: "Замразява офертата или промяната и я праща за решение." },
       { key: "drafts.view_all", label: "Вижда чужди чернови", description: "Без това вижда само своите чернови и изпратените оферти и промени." },
       { key: "notes.view", label: "Вътрешни бележки", description: "Вижда бележките, които клиентът не вижда." },

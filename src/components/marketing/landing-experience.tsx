@@ -174,7 +174,7 @@ export function LandingExperience() {
                   prefetch={true}
                   className="mf-when-in flex items-center gap-2 rounded-full border border-[#102b38]/40 bg-[#ff765f] px-4 py-2.5 font-mono text-[0.6875rem] font-bold tracking-[0.09em] text-[#102b38]"
                 >
-                  КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-3.5" />
+                  КЪМ ПРОЕКТИТЕ <ArrowUpRight className="size-3.5" />
                 </Link>
                 {/* Returning users sign in from the sign-up page's "Влез" link or the footer. */}
                 <Link
@@ -218,7 +218,7 @@ export function LandingExperience() {
                     className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4"
                   >
                     <Link href="/app" className="mf-when-in mf-primary-button">
-                      КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
+                      КЪМ ПРОЕКТИТЕ <ArrowRight className="size-4" />
                     </Link>
                     <Link
                       href="/sign-up"
@@ -322,7 +322,7 @@ export function LandingExperience() {
                     оферта още днес. Клиентът я одобрява от телефона си.
                   </p>
                   <Link href="/app" className="mf-when-in mf-dark-button">
-                    КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />
+                    КЪМ ПРОЕКТИТЕ <ArrowUpRight className="size-4" />
                   </Link>
                   <Link
                     href="/sign-up"

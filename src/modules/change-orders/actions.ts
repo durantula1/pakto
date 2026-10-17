@@ -195,7 +195,7 @@ export async function createChangeOrderAction(
     )
     .limit(1)
     .then((rows) => rows[0]);
-  if (!project) return { error: "Обектът не е намерен." };
+  if (!project) return { error: "Проектът не е намерен." };
 
   const baseline = await database
     .select({
@@ -221,11 +221,11 @@ export async function createChangeOrderAction(
     return { error: "Промяна се прави само към одобрена оферта." };
   }
   if (baseline.projectId !== data.projectId) {
-    return { error: "Избери оферта от същия обект." };
+    return { error: "Избери оферта от същия проект." };
   }
 
   try { await requireActiveProject(context.organizationId, data.projectId); }
-  catch (error) { return { error: error instanceof Error ? error.message : "Обектът не е активен." }; }
+  catch (error) { return { error: error instanceof Error ? error.message : "Проектът не е активен." }; }
   const projectState = await getProjectState(context.organizationId, data.projectId);
   const offerState = projectState?.offers.find((offer) => offer.id === data.baselineOfferId);
   if (!offerState?.inForce) return { error: "Промяна се прави само към одобрена оферта в сила." };
@@ -349,10 +349,10 @@ export async function createOfferAction(
     )
     .limit(1)
     .then((rows) => rows[0]);
-  if (!project) return { error: "Обектът не е намерен." };
+  if (!project) return { error: "Проектът не е намерен." };
 
   try { await requireActiveProject(context.organizationId, data.projectId); }
-  catch (error) { return { error: error instanceof Error ? error.message : "Обектът не е активен." }; }
+  catch (error) { return { error: error instanceof Error ? error.message : "Проектът не е активен." }; }
 
   const [organization] = await database
     .select({
@@ -734,7 +734,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
           ),
         )
         .limit(1);
-      if (!contact) throw new Error("Обектът няма одобряващ.");
+      if (!contact) throw new Error("Проектът няма одобряващ.");
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${`${change.projectId}:${contact.id}`}))`);
 
       const now = new Date();

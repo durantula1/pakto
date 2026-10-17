@@ -22,12 +22,12 @@ export function ProjectCombobox({
   id,
   defaultValue,
   allLabel,
-  placeholder = "Търси обект",
+  placeholder = "Търси проект",
   isRequired,
   activeOnly = false,
   className,
   inputClassName,
-  "aria-label": ariaLabel = "Обект",
+  "aria-label": ariaLabel = "Проект",
   onChange,
 }: {
   name?: string;
@@ -111,7 +111,7 @@ export function ProjectCombobox({
       >
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"
-          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !loaded ? "Търсене…" : activeOnly ? "Няма намерени активни обекти." : "Няма намерени обекти."}</p>}
+          renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !loaded ? "Търсене…" : activeOnly ? "Няма намерени активни проекти." : "Няма намерени проекти."}</p>}
         >
           {(item: ProjectOption) => <ListBoxItem
             id={item.id}

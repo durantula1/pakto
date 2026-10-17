@@ -20,13 +20,13 @@ export function NewClientDialog() {
       <Dialog className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Нов клиент</DialogTitle>
-          <DialogDescription>После от картата му можеш да добавиш обект и да изпратиш оферта.</DialogDescription>
+          <DialogDescription>После от картата му можеш да добавиш проект и да изпратиш оферта.</DialogDescription>
         </DialogHeader>
         <ActionForm action={createClientAction} success="Клиентът е добавен" redirects className="grid gap-4 sm:grid-cols-2">
           <Field className="sm:col-span-2"><FieldLabel htmlFor="new-client-name">Име</FieldLabel><Input id="new-client-name" name="name" required minLength={2} maxLength={160} autoFocus className="h-11" /></Field>
           <Field><FieldLabel htmlFor="new-client-phone">Телефон</FieldLabel><Input id="new-client-phone" name="phone" type="tel" maxLength={40} className="h-11" /></Field>
           <Field><FieldLabel htmlFor="new-client-email">Имейл</FieldLabel><Input id="new-client-email" name="email" type="email" className="h-11" /></Field>
-          <Field className="sm:col-span-2"><FieldLabel htmlFor="new-client-address">Адрес за кореспонденция</FieldLabel><Input id="new-client-address" name="address" maxLength={300} className="h-11" /><FieldDescription>По желание. Адресите на обектите са в самите обекти.</FieldDescription></Field>
+          <Field className="sm:col-span-2"><FieldLabel htmlFor="new-client-address">Адрес за кореспонденция</FieldLabel><Input id="new-client-address" name="address" maxLength={300} className="h-11" /><FieldDescription>По желание. Адресите на проектите са в самите проекти.</FieldDescription></Field>
           <Field className="sm:col-span-2"><FieldLabel htmlFor="new-client-notes">Бележка</FieldLabel><Textarea id="new-client-notes" name="notes" maxLength={2000} rows={3} placeholder="Вижда се само от екипа" /></Field>
           <div className="flex justify-end gap-2 sm:col-span-2"><DialogClose>Отказ</DialogClose><ActionSubmit>Добави клиента</ActionSubmit></div>
         </ActionForm>

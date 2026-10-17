@@ -34,7 +34,7 @@ export async function requestUnlockCodeAction(_: UnlockState, formData: FormData
     const session = await clientSessionFor(projectPublicId);
     if (session.unlocked) return { done: true };
     const email = await clientVerifiedEmail(session.clientId);
-    if (!email) return { error: "Първо потвърдете имейла си в този обект." };
+    if (!email) return { error: "Първо потвърдете имейла си в този проект." };
     const otpId = await issueOtp({ sessionId: session.id, contactId: session.contactId, purpose: "unlock", email, ip: clientIp(await headers()) });
     return { otpId, sentTo: maskEmail(email) };
   } catch (cause) {

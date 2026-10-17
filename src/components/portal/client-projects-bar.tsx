@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { offlineSafe } from "@/lib/offline-safe";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowLeftRight, Building2, Check, X } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, FolderKanban, Check, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,7 +13,7 @@ import { OtpInput } from "@/components/portal/otp-input";
 import { confirmUnlockCodeAction, requestUnlockCodeAction, type UnlockState } from "@/modules/change-portal/client-session-actions";
 
 /**
- * In the project header: "← Вашите обекти" once the session is unlocked, else one quiet row that
+ * In the project header: "← Вашите проекти" once the session is unlocked, else one quiet row that
  * sends a code to the confirmed email. It never names the other projects.
  */
 export function ClientProjectsBar({ projectPublicId, organizationName, navigation }: {
@@ -29,10 +29,10 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (navigation.unlocked || confirmState.done || requestState.done) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-sidebar px-3.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите обекти</Link>
+        <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-sidebar px-3.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите проекти</Link>
         {navigation.unlocked && navigation.projects.length > 1 ? (
           <DropdownMenuTrigger>
-            <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Изберете обект</Button>
+            <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Изберете проект</Button>
             <DropdownMenu
               placement="bottom start"
               className="min-w-64"
@@ -50,7 +50,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
             </DropdownMenu>
           </DropdownMenuTrigger>
         ) : null}
-        {confirmState.done ? <span role="status" className="text-muted-foreground">Готово. Вече виждате всичките си обекти.</span> : null}
+        {confirmState.done ? <span role="status" className="text-muted-foreground">Готово. Вече виждате всичките си проекти.</span> : null}
       </div>
     );
   }
@@ -58,16 +58,16 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-        <Building2 className="size-4" /> Покажете всички мои обекти
+        <FolderKanban className="size-4" /> Покажете всички мои проекти
       </button>
     );
   }
 
   return (
     <div className="flex items-start gap-2 rounded-xl bg-sidebar px-4 py-3 text-sm text-sidebar-foreground">
-      <Building2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+      <FolderKanban className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p>Ще изпратим код на имейла ви. След него тук виждате всичките си обекти при {organizationName}.</p>
+        <p>Ще изпратим код на имейла ви. След него тук виждате всичките си проекти при {organizationName}.</p>
         <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={navigation.maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
       </div>
       <button type="button" onClick={() => setOpen(false)} aria-label="Затворете" className="-m-2 grid size-11 place-items-center rounded text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
@@ -123,18 +123,18 @@ export function UnlockProjectsCard({ projectPublicId, hidden, maskedEmail }: { p
 
   return (
     <div className="flex items-start gap-3 rounded-2xl bg-sidebar px-4 py-4 text-sm text-sidebar-foreground">
-      <Building2 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+      <FolderKanban className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-white">{hidden === 1 ? "Имате още 1 обект" : `Имате още ${hidden} обекта`}</p>
+        <p className="font-semibold text-white">{hidden === 1 ? "Имате още 1 проект" : `Имате още ${hidden} проекта`}</p>
         {confirmState.done || requestState.done ? (
-          <p role="status" className="mt-1">Готово. Зареждаме всичките ви обекти…</p>
+          <p role="status" className="mt-1">Готово. Зареждаме всичките ви проекти…</p>
         ) : maskedEmail ? (
           <>
             <p className="mt-1">За да ги видите тук, въведете код, който ще изпратим на имейла ви.</p>
             <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
           </>
         ) : (
-          <p className="mt-1">Ще ги видите тук, след като потвърдите имейла си в някой обект.</p>
+          <p className="mt-1">Ще ги видите тук, след като потвърдите имейла си в някой проект.</p>
         )}
       </div>
     </div>

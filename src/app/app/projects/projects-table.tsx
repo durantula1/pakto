@@ -11,10 +11,10 @@ import { seesClients } from "@/modules/clients/access";
 import { countProjects, listProjects } from "@/modules/projects/queries";
 import { projectStatusBadgeVariants, projectStatusLabels } from "./[projectId]/project-skeleton";
 
-const label = "Обекти";
+const label = "Проекти";
 
 const columns: DataTableColumn[] = [
-  { id: "name", header: "Обект", skeleton: "stack" },
+  { id: "name", header: "Проект", skeleton: "stack" },
   { id: "client", header: "Клиент" },
   { id: "status", header: "Статус", skeleton: "badge" },
   { id: "open", header: "Отворени", className: "text-right" },
@@ -32,7 +32,7 @@ export async function ProjectsTable({ context, filters, page, searchState }: {
   ]);
   if (!projects.length && page > lastPage(total)) redirect(pageHref("/app/projects", searchState, "page", lastPage(total)));
   const linkClients = seesClients(context);
-  if (!projects.length) return <EmptyState title="Добави първия обект" description="Преди да изпратиш оферта, ти трябват обект и одобряващ." />;
+  if (!projects.length) return <EmptyState title="Добави първия проект" description="Преди да изпратиш оферта, ти трябват проект и одобряващ." />;
   return <DataTable
     label={label}
     columns={columns}

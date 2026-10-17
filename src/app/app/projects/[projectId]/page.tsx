@@ -48,7 +48,7 @@ const DOCUMENTS_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/projects/[projectId]">): Promise<Metadata> {
   const [{ projectId }, context] = await Promise.all([params, requireTenantContext()]);
-  return { title: (await getProjectTitle(context, projectId)) ?? "Обекти" };
+  return { title: (await getProjectTitle(context, projectId)) ?? "Проекти" };
 }
 
 export default async function ProjectPage({ params, searchParams }: PageProps<"/app/projects/[projectId]">) {
@@ -126,7 +126,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       <DetailHeader
         inBreadcrumb
         backHref="/app/projects"
-        backLabel="Обекти"
+        backLabel="Проекти"
         title={project.name}
         status={<Badge variant={projectStatusBadgeVariants[project.status as keyof typeof projectStatusBadgeVariants] ?? "secondary"} className="h-6 px-2.5">{projectStatusLabels[project.status] ?? project.status}</Badge>}
         metadata={<>
@@ -150,7 +150,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       {!active ? (
         <p role="status" className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm">
           <Lock className="size-4 shrink-0 text-muted-foreground" />
-          <span>{project.status === "archived" ? "Обектът е в архива и е само за четене." : `Обектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt)}` : ""}${project.completedAt ? "" : "."} Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
+          <span>{project.status === "archived" ? "Проектът е в архива и е само за четене." : `Проектът е приключен${project.completedAt ? ` на ${dayFormat.format(project.completedAt)}` : ""}${project.completedAt ? "" : "."} Плащания и въпроси остават възможни; за нови оферти и етапи го отвори отново от менюто.`}</span>
         </p>
       ) : null}
       <div className={projectStatsClassName}>
@@ -231,7 +231,7 @@ async function ProjectDocuments({ documents, path }: { documents: ReturnType<typ
   const { offersTotal, changesTotal, offersCurrent, changesCurrent, offers, changes } = await documents;
   const params = { tab: "documents", offersPage: offersCurrent > 1 ? String(offersCurrent) : undefined, changesPage: changesCurrent > 1 ? String(changesCurrent) : undefined };
   return <>
-    <DocumentTable label="Оферти" empty="Започни с оферта за този обект." rows={offers} pagination={<ListPagination path={path} params={params} page={offersCurrent} total={offersTotal} pageSize={DOCUMENTS_PAGE_SIZE} pageParam="offersPage" />} />
+    <DocumentTable label="Оферти" empty="Започни с оферта за този проект." rows={offers} pagination={<ListPagination path={path} params={params} page={offersCurrent} total={offersTotal} pageSize={DOCUMENTS_PAGE_SIZE} pageParam="offersPage" />} />
     <DocumentTable label="Промени" empty="Промяна се появява след одобрена оферта." rows={changes} pagination={<ListPagination path={path} params={params} page={changesCurrent} total={changesTotal} pageSize={DOCUMENTS_PAGE_SIZE} pageParam="changesPage" />} />
   </>;
 }

@@ -5,7 +5,7 @@ import { DownloadTray } from "@/components/workspace/download-tray";
 import { getPortalSession } from "@/modules/change-portal/session";
 
 export const metadata: Metadata = {
-  title: "Вашият обект",
+  title: "Вашият проект",
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 };

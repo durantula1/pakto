@@ -8,7 +8,7 @@ import {
   BookOpen,
   Compass,
   Bell,
-  Building2,
+  FolderKanban,
   ChartNoAxesColumn,
   CirclePlus,
   FileText,
@@ -81,7 +81,7 @@ export default async function WorkspaceLayout({
   const groups: { label: string; links: { href: string; label: string; icon: React.ReactNode; badge?: React.ReactNode }[] }[] = [
     { label: "Работа", links: [
       { href: "/app", label: "Работен преглед", icon: <LayoutDashboard className="size-4" /> },
-      { href: "/app/projects", label: "Обекти", icon: <Building2 className="size-4" /> },
+      { href: "/app/projects", label: "Проекти", icon: <FolderKanban className="size-4" /> },
       ...(clients ? [{ href: "/app/clients", label: "Клиенти", icon: <Contact className="size-4" /> }] : []),
       { href: "/app/offers", label: "Оферти", icon: <FileText className="size-4" /> },
     ] },
@@ -100,7 +100,7 @@ export default async function WorkspaceLayout({
   ];
   const palettePages: PaletteLink[] = [
     { href: "/app", label: "Работен преглед", icon: "dashboard" },
-    { href: "/app/projects", label: "Обекти", icon: "projects" },
+    { href: "/app/projects", label: "Проекти", icon: "projects" },
     ...(clients ? [{ href: "/app/clients", label: "Клиенти", icon: "clients" as const }] : []),
     { href: "/app/offers", label: "Оферти", icon: "offers" },
     { href: "/app/notifications", label: "Известия", icon: "notifications" },
@@ -113,7 +113,7 @@ export default async function WorkspaceLayout({
     { href: "/contact?from=/app", label: "Съобщи за проблем", icon: "support" },
   ];
   const paletteActions: PaletteLink[] = [
-    ...(can(context, "projects.create") ? [{ href: "/app/projects?new=1", label: "Нов обект", icon: "projects" as const, command: "new-project" as const }] : []),
+    ...(can(context, "projects.create") ? [{ href: "/app/projects?new=1", label: "Нов проект", icon: "projects" as const, command: "new-project" as const }] : []),
     ...(can(context, "offers.edit") ? [{ href: "/app/offers/new", label: "Нова оферта", icon: "offers" as const }] : []),
     ...(can(context, "changes.draft") ? [{ href: "/app/offers/changes/new", label: "Нова промяна", icon: "offers" as const }] : []),
   ];
@@ -162,7 +162,7 @@ export default async function WorkspaceLayout({
         </main>
         <DownloadTray aboveMobileNav />
         <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 items-center gap-1 border-t bg-card px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 text-foreground lg:hidden">
-          <NavLink href="/app/projects" label="Обекти" icon={<Building2 className="size-5" />} variant="tab" />
+          <NavLink href="/app/projects" label="Проекти" icon={<FolderKanban className="size-5" />} variant="tab" />
           <NavLink href="/app/offers" label="Оферти" icon={<FileText className="size-5" />} variant="tab" />
           {quickCreate ? <Link
             href={quickCreate.href}

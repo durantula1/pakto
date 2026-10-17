@@ -28,7 +28,7 @@ async function checkedProjectIds(organizationId: string, values: FormDataEntryVa
   if (!ids.length) return ids;
   const rows = await getDatabase().select({ id: projects.id }).from(projects)
     .where(and(eq(projects.organizationId, organizationId), inArray(projects.id, ids)));
-  if (rows.length !== new Set(ids).size) throw new Error("Един от обектите вече не е наличен. Презареди страницата.");
+  if (rows.length !== new Set(ids).size) throw new Error("Един от проектите вече не е наличен. Презареди страницата.");
   return [...new Set(ids)];
 }
 
@@ -49,7 +49,7 @@ export async function createTeamInviteAction(_: InviteState, formData: FormData)
     const email = z.email("Въведи валиден имейл адрес.").parse(String(formData.get("email") ?? "").trim().toLowerCase());
     const preset = z.enum(["field", "office", "owner"]).parse(formData.get("preset"));
     const scope = preset === "owner" ? { allProjects: false, projectIds: [] } : await projectScope(context.organizationId, formData);
-    if (preset !== "owner" && !scope.allProjects && !scope.projectIds.length) return { error: "Избери поне един обект или „Всички обекти“." };
+    if (preset !== "owner" && !scope.allProjects && !scope.projectIds.length) return { error: "Избери поне един проект или „Всички проекти“." };
     const db = getDatabase();
     if (preset === "owner") {
       const owners = await db.select({ userId: organizationMembers.userId }).from(organizationMembers)

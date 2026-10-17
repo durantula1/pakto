@@ -10,7 +10,7 @@ import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { parsePage } from "@/lib/pagination";
 import { ProjectsTable, ProjectsTableSkeleton } from "./projects-table";
 
-export const metadata: Metadata = { title: "Обекти" };
+export const metadata: Metadata = { title: "Проекти" };
 
 export default async function ProjectsPage({ searchParams }: PageProps<"/app/projects">) {
   const [context, params] = await Promise.all([requireTenantContext(), searchParams]);
@@ -22,7 +22,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/app/pro
   return (
     <PageShell>
       <PageHeader page="projects" actions={can(context, "projects.create") ? <NewProjectSheet defaultOpen={params.new === "1"} /> : null} />
-      <ListFilters query={query} status={status} statusOptions={[{ value: "all", label: "Всички" }, { value: "active", label: "Активни" }, { value: "completed", label: "Приключени" }, { value: "archived", label: "Архив" }]} placeholder="Обект, адрес или клиент" />
+      <ListFilters query={query} status={status} statusOptions={[{ value: "all", label: "Всички" }, { value: "active", label: "Активни" }, { value: "completed", label: "Приключени" }, { value: "archived", label: "Архив" }]} placeholder="Проект, адрес или клиент" />
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<ProjectsTableSkeleton />}>
         <ProjectsTable
           context={context}

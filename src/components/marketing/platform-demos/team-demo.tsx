@@ -62,7 +62,7 @@ export function TeamDemo() {
             ТАКА ГО ВИЖДА ГЕОРГИ
           </p>
           <div className="mt-2 space-y-1 demo-text-11 font-bold">
-            {["Обекти", "Оферти и промени", "Известия"].map((item) => (
+            {["Проекти", "Оферти и промени", "Известия"].map((item) => (
               <p key={item} className="rounded-md bg-[#f4efe4] px-2 py-1.5">
                 {item}
               </p>

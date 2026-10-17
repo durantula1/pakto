@@ -53,11 +53,11 @@ export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSel
   return <div className="flex flex-col gap-3">
     <input type="hidden" name="scope" value={allProjects ? "all" : "selected"} />
     {!allProjects ? selected.map((project) => <input key={project.id} type="hidden" name="projectIds" value={project.id} />) : null}
-    <Segmented label="Достъп до обекти" value={allProjects} disabled={disabled} onChange={onAllProjectsChange} options={[{ value: true, label: "Всички обекти" }, { value: false, label: "Избрани обекти" }]} />
-    {allProjects ? <p className="text-sm text-muted-foreground">Вижда всички текущи и бъдещи обекти на фирмата.</p> : <>
+    <Segmented label="Достъп до проекти" value={allProjects} disabled={disabled} onChange={onAllProjectsChange} options={[{ value: true, label: "Всички проекти" }, { value: false, label: "Избрани проекти" }]} />
+    {allProjects ? <p className="text-sm text-muted-foreground">Вижда всички текущи и бъдещи проекти на фирмата.</p> : <>
       <ProjectSearch disabled={disabled} selected={selected} onAdd={(project) => onSelectedChange([...selected, project])} />
       {selected.length ? (
-        <ul aria-label="Избрани обекти" className="flex flex-wrap gap-1.5">
+        <ul aria-label="Избрани проекти" className="flex flex-wrap gap-1.5">
           {visible.map((project) => (
             <li key={project.id} title={project.siteAddress ?? undefined} className="flex h-8 max-w-full items-center gap-0.5 rounded-lg border bg-card pl-2.5 text-sm font-medium">
               <span className="truncate">{project.name}</span>
@@ -78,7 +78,7 @@ export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSel
             </button>
           </li> : null}
         </ul>
-      ) : <p className="text-sm text-muted-foreground">Няма избрани обекти. Потърси и добави обектите, до които човекът ще има достъп.</p>}
+      ) : <p className="text-sm text-muted-foreground">Няма избрани проекти. Потърси и добави проектите, до които човекът ще има достъп.</p>}
     </>}
   </div>;
 }
@@ -105,7 +105,7 @@ function ProjectSearch({ selected, onAdd, disabled }: { selected: ProjectOption[
   const items = options.filter((option) => !selected.some((item) => item.id === option.id));
 
   return <ComboBox
-    aria-label="Добави обект"
+    aria-label="Добави проект"
     items={items}
     inputValue={inputValue}
     onInputChange={setInputValue}
@@ -123,7 +123,7 @@ function ProjectSearch({ selected, onAdd, disabled }: { selected: ProjectOption[
     <div className="relative">
       <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
-        placeholder="Търси обект за добавяне"
+        placeholder="Търси проект за добавяне"
         className="flex h-9 w-full rounded-lg border border-input bg-transparent pr-8 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
       />
       {loading ? <Loader2 className="absolute top-1/2 right-2.5 size-4 -translate-y-1/2 animate-spin text-muted-foreground" /> : null}
@@ -134,7 +134,7 @@ function ProjectSearch({ selected, onAdd, disabled }: { selected: ProjectOption[
     >
       <ListBox
         className="max-h-72 overflow-y-auto p-1 outline-hidden"
-        renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading ? "Търсене…" : options.length ? "Всички намерени обекти са добавени." : "Няма намерени обекти."}</p>}
+        renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading ? "Търсене…" : options.length ? "Всички намерени проекти са добавени." : "Няма намерени проекти."}</p>}
       >
         {(item: ProjectOption) => <ListBoxItem
           id={item.id}

@@ -41,7 +41,7 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
       <p className="mt-2 text-muted-foreground">{invite.inviterName ? `${invite.inviterName} те кани` : "Поканен си"} като <strong className="text-foreground">{roleLabel(invite)}</strong>.</p>
     </div>
     <div className="rounded-xl bg-secondary p-4 text-sm">
-      <p className="font-medium">Обекти: {invite.role === "owner" || invite.allProjects ? "всички" : invite.projectIds.length ? `${invite.projectIds.length} избрани` : "ще бъдат добавени"}</p>
+      <p className="font-medium">Проекти: {invite.role === "owner" || invite.allProjects ? "всички" : invite.projectIds.length ? `${invite.projectIds.length} избрани` : "ще бъдат добавени"}</p>
       <ul className="mt-2 grid gap-1">
         {granted.map((item) => <li key={item.key} className="flex items-center gap-2"><Check className="size-4 text-primary-ink" />{item.label}</li>)}
       </ul>

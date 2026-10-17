@@ -20,7 +20,7 @@ export default async function WorkPage({ searchParams }: PageProps<"/app/work">)
   return (
     <PageShell>
       <PageHeader page="work" />
-      <ListFilters query={query} status={range} statusOptions={stageRangeOptions} placeholder="Етап, обект или клиент" />
+      <ListFilters query={query} status={range} statusOptions={stageRangeOptions} placeholder="Етап, проект или клиент" />
       {/* Keyed by the filters so a new search shows the table skeleton instead of stale rows. */}
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<StagesTableSkeleton />}>
         <StagesTable context={context} range={range} query={query} page={page} searchState={searchState} />

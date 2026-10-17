@@ -83,7 +83,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               cells: [
                 <div key="member"><p className="font-medium">{member.displayName ?? member.email ?? "Служител"}{member.userId === context.userId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(ти)</span> : null}</p><p className="text-sm text-muted-foreground">{member.email ?? "—"}</p></div>,
                 <Badge key="role" variant={owner ? "default" : "secondary"}>{roleLabel(member)}</Badge>,
-                <span key="projects" className="whitespace-nowrap">{owner || member.allProjects ? "Всички" : member.projectIds.length ? `${member.projectIds.length} ${member.projectIds.length === 1 ? "обект" : "обекта"}` : <span className="text-muted-foreground">Няма</span>}</span>,
+                <span key="projects" className="whitespace-nowrap">{owner || member.allProjects ? "Всички" : member.projectIds.length ? `${member.projectIds.length} ${member.projectIds.length === 1 ? "проект" : "проекта"}` : <span className="text-muted-foreground">Няма</span>}</span>,
                 <div key="access" className="flex min-w-28 items-center gap-2" title={`${granted} от ${PERMISSION_KEYS.length} права`}>
                   <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${(granted / PERMISSION_KEYS.length) * 100}%` }} /></div>
                   <span className="text-xs tabular-nums text-muted-foreground">{granted}/{PERMISSION_KEYS.length}</span>
@@ -99,7 +99,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <TabsContent id="invites" className="pt-4">
         {pendingInvites.length ? <DataTable
           label="Чакащи покани"
-          columns={[{ id: "email", header: "Имейл", mobile: "primary" }, { id: "role", header: "Роля" }, { id: "projects", header: "Обекти" }, { id: "expires", header: "Валидна до" }, { id: "action", header: "" }]}
+          columns={[{ id: "email", header: "Имейл", mobile: "primary" }, { id: "role", header: "Роля" }, { id: "projects", header: "Проекти" }, { id: "expires", header: "Валидна до" }, { id: "action", header: "" }]}
           rows={pendingInvites.map((invite) => ({
             id: invite.id,
             cells: [

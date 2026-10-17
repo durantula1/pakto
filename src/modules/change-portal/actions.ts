@@ -56,7 +56,7 @@ async function decisionContext(data: z.infer<typeof decisionSchema>) {
   if (data.decision === "changes_requested" && !data.comment) throw new Error("Опишете накратко какво да се промени.");
   const session = await getPortalSession(data.projectPublicId);
   if (!session || session.contactRole !== "approver") throw new Error("Решението може да вземе само одобряващият, посочен от фирмата.");
-  if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържете се с фирмата.");
+  if (session.projectStatus !== "active") throw new Error("Проектът е приключен. Свържете се с фирмата.");
   // The decision code goes to the contact's email, so the first decision also confirms it.
   if (!session.contactEmail) throw new Error("Първо потвърдете имейла си.");
   if (await isOrganizationStaff(session.organizationId)) {
@@ -277,7 +277,7 @@ export async function disputeDecisionAction(_: DecisionState, formData: FormData
   if (!data.success || !decisionId) return { error: "Линкът за оспорване вече не работи. Свържете се с фирмата." };
   const target = await getDisputeTarget(decisionId);
   if (!target) return { error: "Решението не е намерено." };
-  if (target.accessRevoked && !target.disputed) return { error: `Достъпът ви до този обект е спрян. Свържете се с ${target.organizationName}.` };
+  if (target.accessRevoked && !target.disputed) return { error: `Достъпът ви до този проект е спрян. Свържете се с ${target.organizationName}.` };
   if (!target.disputed) {
     const ip = clientIp(await headers());
     await getDatabase().transaction(async (tx) => {
@@ -363,7 +363,7 @@ export async function disputePaymentAction(formData: FormData): Promise<{ error?
   if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
   // Like "Платих": the approver answers for the money, an observer only watches.
   if (session.contactRole !== "approver") return { error: "Плащане може да оспори само одобряващият, посочен от фирмата." };
-  if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
+  if (session.projectStatus === "archived") return { error: "Проектът е приключен. Свържете се директно с фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
     await getDatabase().transaction(async (tx) => {
@@ -410,7 +410,7 @@ export async function claimPaymentAction(formData: FormData): Promise<{ error?: 
   const data = parsed.data;
   const session = await getPortalSession(data.projectPublicId);
   if (!session) return { error: "Сесията изтече. Отворете отново линка от имейла." };
-  if (session.projectStatus === "archived") return { error: "Обектът е приключен. Свържете се директно с фирмата." };
+  if (session.projectStatus === "archived") return { error: "Проектът е приключен. Свържете се директно с фирмата." };
   if (session.contactRole !== "approver") return { error: "Плащане може да съобщи само одобряващият, посочен от фирмата." };
   if (await isOrganizationStaff(session.organizationId)) return { error: "Излез от служебния профил, за да действаш като клиент." };
   try {
@@ -468,7 +468,7 @@ async function acceptanceSession(projectPublicId: string) {
   const session = await getPortalSession(projectPublicId);
   if (!session || session.contactRole !== "approver") throw new Error("Работата може да приеме само одобряващият, посочен от фирмата.");
   if (!session.contactEmailVerifiedAt || !session.contactEmail) throw new Error("Първо потвърдете имейла си.");
-  if (session.projectStatus !== "active") throw new Error("Обектът е приключен. Свържете се с фирмата.");
+  if (session.projectStatus !== "active") throw new Error("Проектът е приключен. Свържете се с фирмата.");
   if (await isOrganizationStaff(session.organizationId)) throw new Error("Излез от служебния профил, за да действаш като клиент.");
   return session;
 }

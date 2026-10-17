@@ -218,7 +218,7 @@ export function DesktopClip({ layout }: { layout: Layout }) {
           }}
         >
           {/* Behind the chat, the company's Pakto is open on the project. */}
-          <FirmShell crumb="Обекти / Кухня · Лозенец">{null}</FirmShell>
+          <FirmShell crumb="Проекти / Кухня · Лозенец">{null}</FirmShell>
           <Screen from={at("record")} duration={beats.record.duration}>
             <DeskRecord />
           </Screen>

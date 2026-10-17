@@ -1,4 +1,4 @@
-import { Building2, CalendarX2, Hourglass, PencilLine } from "lucide-react";
+import { FolderKanban, CalendarX2, Hourglass, PencilLine } from "lucide-react";
 
 import Link from "next/link";
 
@@ -49,8 +49,8 @@ function StagesHeader({ total }: { total?: number }) {
 }
 
 const stats = [
-  // Same icons as elsewhere: Building2 is "Обекти" in the navigation, PencilLine is "Коригирай" on a document.
-  { key: "activeProjects", label: "Активни обекти", icon: Building2, href: "/app/projects?status=active" },
+  // Same icons as elsewhere: FolderKanban is "Проекти" in the navigation, PencilLine is "Коригирай" on a document.
+  { key: "activeProjects", label: "Активни проекти", icon: FolderKanban, href: "/app/projects?status=active" },
   { key: "awaitingDecision", label: "Чакат решение", icon: Hourglass, href: "/app/offers?status=waiting" },
   { key: "overdueMilestones", label: "Просрочени етапи", icon: CalendarX2, href: "/app/work?status=overdue" },
   { key: "changesRequested", label: "Искат промяна", icon: PencilLine, href: "/app/offers?status=changes_requested" },
@@ -102,9 +102,9 @@ export async function DashboardContent({ context }: { context: TenantContext }) 
         ],
       }))}
       />
-    </section> : <EmptyState title="Още няма оферти" description={can(context, "offers.edit") || can(context, "projects.create") ? "Започни с обект и клиент, после направи оферта към него." : "Когато ти възложат обект, ще го видиш тук."}>
+    </section> : <EmptyState title="Още няма оферти" description={can(context, "offers.edit") || can(context, "projects.create") ? "Започни с проект и клиент, после направи оферта към него." : "Когато ти възложат проект, ще го видиш тук."}>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
-        {can(context, "projects.create") ? <Link href="/app/projects?new=1" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Нов обект</Link> : null}
+        {can(context, "projects.create") ? <Link href="/app/projects?new=1" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">Нов проект</Link> : null}
         {can(context, "offers.edit") ? <Link href="/app/offers/new" className="inline-flex h-9 items-center rounded-lg border px-4 text-sm font-medium">Нова оферта</Link> : null}
       </div>
     </EmptyState>}

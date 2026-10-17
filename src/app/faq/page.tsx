@@ -105,7 +105,7 @@ export default function FaqPage() {
                   href="/app"
                   className="mf-when-in mf-dark-button shrink-0"
                 >
-                  КЪМ ОБЕКТИТЕ <ArrowUpRight className="size-4" />
+                  КЪМ ПРОЕКТИТЕ <ArrowUpRight className="size-4" />
                 </Link>
                 <Link
                   href="/sign-up"

@@ -204,7 +204,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
       action={canRecord ? <RecordPaymentDialog projectId={projectId} offerOptions={offerOptions} remaining={{ cents: Number(offer.remainingMinor), currency: offer.currency }} installments={view.installments.filter((item) => item.remainingMinor > 0n).map((item) => ({ id: item.id, title: item.title, offerLabel: null }))} /> : null}
     />
     <ReceiptsTable projectId={projectId} state={state} receipts={view.receipts} disputes={inbox.disputes} canRecord={canRecord} footer={capped && allReceiptsHref ? <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
-      <p className="text-muted-foreground">Показани са последните плащания по обекта</p>
+      <p className="text-muted-foreground">Показани са последните плащания по проекта</p>
       <Link href={allReceiptsHref} className="font-medium text-primary-ink underline">Всички плащания</Link>
     </div> : undefined} />
   </div>;

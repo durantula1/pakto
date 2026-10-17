@@ -62,12 +62,12 @@ export const eventLabels: Record<string, string> = {
   payment_plan_adjusted: "Платежният план е коригиран",
   payment_plan_review: "Платежният план чака преглед",
   portal_links_resent: "Линковете към портала са изпратени отново",
-  project_created: "Създаден обект",
-  project_updated: "Обновени данни на обекта",
-  project_completed: "Обектът е приключен",
-  project_reopened: "Обектът е отворен отново",
-  project_archived: "Обектът е архивиран",
-  project_restored: "Обектът е върнат от архива",
+  project_created: "Създаден проект",
+  project_updated: "Обновени данни на проекта",
+  project_completed: "Проектът е приключен",
+  project_reopened: "Проектът е отворен отново",
+  project_archived: "Проектът е архивиран",
+  project_restored: "Проектът е върнат от архива",
 };
 
 /** Events worth a colored dot: the client's decisions and disputes. */

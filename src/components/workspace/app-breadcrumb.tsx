@@ -8,8 +8,8 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 /** Labels match the sidebar, so the last crumb reads as the page title. */
 const labels: Record<string, string> = {
   "/app": "Работен преглед",
-  "/app/projects": "Обекти",
-  "/app/projects/new": "Нов обект",
+  "/app/projects": "Проекти",
+  "/app/projects/new": "Нов проект",
   "/app/work": "Етапи",
   "/app/clients": "Клиенти",
   "/app/offers": "Оферти",

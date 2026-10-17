@@ -41,7 +41,7 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
           </div>
           {target.accessRevoked && !target.disputed ? (
             <p className="rounded-xl bg-muted p-4 text-sm">
-              Достъпът ви до този обект е спрян, затова решението не може да се оспори оттук. Свържете се с {target.organizationName}.
+              Достъпът ви до този проект е спрян, затова решението не може да се оспори оттук. Свържете се с {target.organizationName}.
             </p>
           ) : target.disputed || query.done ? (
             <p className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary-ink">

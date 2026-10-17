@@ -310,7 +310,7 @@ function Caret({ frame }: { frame: number }) {
 const nav = [
   {
     group: "Работа",
-    links: ["Работен преглед", "Обекти", "Клиенти", "Оферти"],
+    links: ["Работен преглед", "Проекти", "Клиенти", "Оферти"],
   },
   { group: "Финанси", links: ["Плащания"] },
   { group: "Фирма", links: ["Каталог", "Екип", "Настройки"] },
@@ -446,7 +446,7 @@ export function DeskRecord() {
     }),
   );
   return (
-    <FirmShell crumb="Обекти / Кухня · Лозенец / Нова промяна">
+    <FirmShell crumb="Проекти / Кухня · Лозенец / Нова промяна">
       <PageTitle
         title="Промяна · ПР-042"
         chip={
@@ -630,7 +630,7 @@ export function DeskFirmStatus({
     },
   ];
   return (
-    <FirmShell crumb="Обекти / Кухня · Лозенец / ПР-042">
+    <FirmShell crumb="Проекти / Кухня · Лозенец / ПР-042">
       <PageTitle
         title="Промяна · ПР-042"
         chip={
@@ -759,7 +759,7 @@ export function DeskRevise() {
   const frame = useCurrentFrame();
   const sent = frame >= 138;
   return (
-    <FirmShell crumb="Обекти / Кухня · Лозенец / ПР-042">
+    <FirmShell crumb="Проекти / Кухня · Лозенец / ПР-042">
       <Notice
         frame={frame}
         from={2}

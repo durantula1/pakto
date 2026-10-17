@@ -32,8 +32,8 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
   const [open, setOpen] = useState<"edit" | Exclude<MenuId, "export"> | null>(null);
   const close = () => setOpen(null);
   const archive = client.archivedAt
-    ? { label: "Върни от архива", icon: ArchiveRestore, title: "Да върна ли клиента от архива?", description: "Клиентът отново се появява в търсенето при нов обект.", confirm: "Върни", archived: "false", success: "Клиентът е върнат" }
-    : { label: "Архивирай", icon: Archive, title: "Да архивирам ли клиента?", description: "Изчезва от търсенето при нов обект. Обектите и историята му остават. Възможно е само когато няма активен обект.", confirm: "Архивирай", archived: "true", success: "Клиентът е архивиран" };
+    ? { label: "Върни от архива", icon: ArchiveRestore, title: "Да върна ли клиента от архива?", description: "Клиентът отново се появява в търсенето при нов проект.", confirm: "Върни", archived: "false", success: "Клиентът е върнат" }
+    : { label: "Архивирай", icon: Archive, title: "Да архивирам ли клиента?", description: "Изчезва от търсенето при нов проект. Проектите и историята му остават. Възможно е само когато няма активен проект.", confirm: "Архивирай", archived: "true", success: "Клиентът е архивиран" };
 
   const menu: { id: MenuId; label: string; icon: typeof Archive; destructive?: boolean }[] = canArchive
     ? [
@@ -87,7 +87,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
         <Dialog isOpen={open === "edit"} onOpenChange={(value) => !value && close()} className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Данни на клиента</DialogTitle>
-            <DialogDescription>Промените влизат във всички негови обекти.</DialogDescription>
+            <DialogDescription>Промените влизат във всички негови проекти.</DialogDescription>
           </DialogHeader>
           <ActionForm action={updateClientAction} success="Клиентът е записан" onSuccess={close} className="grid gap-4 sm:grid-cols-2">
             <input type="hidden" name="clientId" value={client.id} />
@@ -98,7 +98,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
             ) : (
               <Field><FieldLabel htmlFor="client-email">Имейл</FieldLabel><Input id="client-email" name="email" type="email" defaultValue={client.email ?? ""} className="h-11" /></Field>
             )}
-            <Field className="sm:col-span-2"><FieldLabel htmlFor="client-address">Адрес за кореспонденция</FieldLabel><Input id="client-address" name="address" maxLength={300} defaultValue={client.address ?? ""} className="h-11" /><FieldDescription>По желание. Адресите на обектите са в самите обекти.</FieldDescription></Field>
+            <Field className="sm:col-span-2"><FieldLabel htmlFor="client-address">Адрес за кореспонденция</FieldLabel><Input id="client-address" name="address" maxLength={300} defaultValue={client.address ?? ""} className="h-11" /><FieldDescription>По желание. Адресите на проектите са в самите проекти.</FieldDescription></Field>
             <Field className="sm:col-span-2"><FieldLabel htmlFor="client-notes">Бележка</FieldLabel><Textarea id="client-notes" name="notes" maxLength={2000} rows={3} defaultValue={client.notes ?? ""} placeholder="Вижда се само от екипа" /></Field>
             <div className="flex justify-end gap-2 sm:col-span-2"><DialogClose>Отказ</DialogClose><ActionSubmit>Запази</ActionSubmit></div>
           </ActionForm>
@@ -124,7 +124,7 @@ export function ClientActions({ client, canEdit, canArchive, emailLocked, hasAct
         <Dialog isOpen={open === "anonymize"} onOpenChange={(value) => !value && close()} role="alertdialog" isDismissable={false} showCloseButton={false} className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Да анонимизирам ли клиента?</DialogTitle>
-            <DialogDescription>Името, имейлът, телефонът и бележките се изтриват от клиента и от всички обекти, а линковете му спират. Решенията остават с името и имейла, с които са взети. Това не може да се върне.</DialogDescription>
+            <DialogDescription>Името, имейлът, телефонът и бележките се изтриват от клиента и от всички проекти, а линковете му спират. Решенията остават с името и имейла, с които са взети. Това не може да се върне.</DialogDescription>
           </DialogHeader>
           <ActionForm action={anonymizeClientAction} success="Клиентът е анонимизиран" onSuccess={close} className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <input type="hidden" name="clientId" value={client.id} />

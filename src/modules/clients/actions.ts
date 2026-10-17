@@ -106,7 +106,7 @@ export async function setClientArchivedAction(formData: FormData): Promise<Actio
       const [open] = await db.select({ id: projects.id }).from(projects)
         .where(and(eq(projects.clientId, clientId), eq(projects.organizationId, context.organizationId), eq(projects.status, "active"), isNull(projects.archivedAt)))
         .limit(1);
-      if (open) throw new Error("Клиентът има активен обект. Приключи обектите му, преди да го архивираш.");
+      if (open) throw new Error("Клиентът има активен проект. Приключи проектите му, преди да го архивираш.");
     }
     await db.update(clients).set({ archivedAt: archived === "true" ? new Date() : null, updatedAt: new Date() })
       .where(and(eq(clients.id, clientId), eq(clients.organizationId, context.organizationId)));
@@ -146,7 +146,7 @@ export async function mergeClientsAction(formData: FormData): Promise<ActionResu
         .groupBy(projectContacts.projectId)
         .having(sql`count(distinct ${projectContacts.clientId}) > 1`)
         .limit(1);
-      if (shared) throw new Error("И двамата са поканени в един и същ обект. Премахни единия от обекта и опитай отново.");
+      if (shared) throw new Error("И двамата са поканени в един и същ проект. Премахни единия от проекта и опитай отново.");
 
       // The only path allowed to move a project to another client (trigger projects_protect_client).
       await tx.execute(sql`select set_config('app.client_merge', 'on', true)`);
@@ -197,7 +197,7 @@ export async function anonymizeClientAction(formData: FormData): Promise<ActionR
       if (!client) throw new Error("Клиентът не е намерен.");
       const [open] = await tx.select({ id: projects.id }).from(projects)
         .where(and(eq(projects.clientId, clientId), eq(projects.status, "active"), isNull(projects.archivedAt))).limit(1);
-      if (open) throw new Error("Клиентът има активен обект. Приключи го, преди да анонимизираш клиента.");
+      if (open) throw new Error("Клиентът има активен проект. Приключи го, преди да анонимизираш клиента.");
 
       const now = new Date();
       const erased = "Анонимизиран клиент";

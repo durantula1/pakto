@@ -39,10 +39,10 @@ export function ClientsDemo() {
       frameRef={ref}
       crumb="КЛИЕНТИ / ИВАН ПЕТРОВ"
       title="Иван Петров"
-      status={<StatusChip tone="info">2 ОБЕКТА</StatusChip>}
+      status={<StatusChip tone="info">2 ПРОЕКТА</StatusChip>}
     >
       <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
-        ОБЕКТИ НА КЛИЕНТА
+        ПРОЕКТИ НА КЛИЕНТА
       </p>
       <div className="mt-2 min-h-[6.75rem] space-y-2">
         <AnimatePresence initial={false}>
@@ -77,7 +77,7 @@ export function ClientsDemo() {
       >
         <div className="flex items-center justify-between">
           <p className="font-mono demo-text-8 tracking-[0.12em] text-[#b8ced2]">
-            ЕТАПИ · ВСИЧКИ ОБЕКТИ
+            ЕТАПИ · ВСИЧКИ ПРОЕКТИ
           </p>
           <CalendarClock className="size-3.5 text-[#b8ced2]" />
         </div>

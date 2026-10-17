@@ -20,9 +20,9 @@ import { createProjectAction } from "@/modules/projects/actions";
 export function NewProjectForm({ defaultClient = null }: { defaultClient?: ClientOption | null }) {
   const [mode, setMode] = useState<"new" | "existing">(defaultClient ? "existing" : "new");
   return (
-    <ActionForm action={createProjectAction} success="Обектът е създаден" redirects className="grid gap-5">
+    <ActionForm action={createProjectAction} success="Проектът е създаден" redirects className="grid gap-5">
       <Field>
-        <FieldLabel htmlFor="project-name">Име на обекта</FieldLabel>
+        <FieldLabel htmlFor="project-name">Име на проекта</FieldLabel>
         <Input id="project-name" name="name" required autoFocus className="h-11" placeholder="Апартамент Иванови" />
       </Field>
       <Field>
@@ -67,7 +67,7 @@ export function NewProjectForm({ defaultClient = null }: { defaultClient?: Clien
           </div>
         </>
       )}
-      <ActionSubmit className="h-11">Създай обекта</ActionSubmit>
+      <ActionSubmit className="h-11">Създай проекта</ActionSubmit>
     </ActionForm>
   );
 }
@@ -78,8 +78,8 @@ function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOptio
   return (
     <>
       <SheetHeader className="px-6 pt-6">
-        <SheetTitle className="text-lg font-semibold">Нов обект</SheetTitle>
-        <SheetDescription>Добави обекта и одобряващия.</SheetDescription>
+        <SheetTitle className="text-lg font-semibold">Нов проект</SheetTitle>
+        <SheetDescription>Добави проекта и одобряващия.</SheetDescription>
       </SheetHeader>
       <div className="px-6 pb-8">
         <NewProjectForm defaultClient={defaultClient} />
@@ -89,10 +89,10 @@ function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOptio
 }
 
 /**
- * "Нов обект" opens a panel over the list instead of a separate page. `defaultOpen` comes from
+ * "Нов проект" opens a panel over the list instead of a separate page. `defaultOpen` comes from
  * `/app/projects?new=1`, where every other "create a project" link points; closing drops the parameter.
  */
-export function NewProjectSheet({ defaultClient = null, label = "Нов обект", defaultOpen = false }: { defaultClient?: ClientOption | null; label?: string; defaultOpen?: boolean }) {
+export function NewProjectSheet({ defaultClient = null, label = "Нов проект", defaultOpen = false }: { defaultClient?: ClientOption | null; label?: string; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   function onOpenChange(value: boolean) {
     setOpen(value);

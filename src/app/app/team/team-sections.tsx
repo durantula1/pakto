@@ -11,7 +11,7 @@ export const searchLabel = "Търси човек";
 export const memberColumns: DataTableColumn[] = [
   { id: "member", header: "Член", skeleton: "stack" },
   { id: "role", header: "Роля", skeleton: "badge" },
-  { id: "projects", header: "Обекти" },
+  { id: "projects", header: "Проекти" },
   { id: "access", header: "Права" },
   { id: "status", header: "Статус", skeleton: "badge" },
   { id: "joined", header: "Добавен", className: "text-right" },

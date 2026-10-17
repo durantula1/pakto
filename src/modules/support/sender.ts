@@ -32,7 +32,7 @@ export const describeSender = cache(async (): Promise<{ email: string | null; li
         ["Клиент", client.clientName],
         ["Потвърден имейл", email],
         ["Фирма", `${client.organizationName} (${client.organizationId})`],
-        ["Обекти", client.projects.map((project) => project.name).join(", ") || null],
+        ["Проекти", client.projects.map((project) => project.name).join(", ") || null],
       ],
     };
   }

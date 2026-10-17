@@ -86,7 +86,7 @@ export function FinanceDemo() {
           <p className="demo-text-13 font-black">Септември 2026</p>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {["Период", "Обект", "Вид плащане", "Начин"].map((filter) => (
+          {["Период", "Проект", "Вид плащане", "Начин"].map((filter) => (
             <span
               key={filter}
               className="flex items-center gap-1 rounded-full bg-[#c5e3e5]/70 px-2.5 py-1 demo-text-9 font-bold"

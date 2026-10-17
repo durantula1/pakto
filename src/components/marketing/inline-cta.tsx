@@ -10,7 +10,7 @@ export function InlineCta({ title }: { title: string }) {
       </p>
       <div className="flex flex-col gap-2 sm:items-end">
         <Link href="/app" className="mf-when-in mf-primary-button">
-          КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
+          КЪМ ПРОЕКТИТЕ <ArrowRight className="size-4" />
         </Link>
         <Link
           href="/sign-up"

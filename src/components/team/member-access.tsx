@@ -102,7 +102,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
       <input type="hidden" name="userId" value={userId} />
       {permissions.map((key) => <input key={key} type="hidden" name="permissions" value={key} />)}
 
-      <Section title="Роля и обекти">
+      <Section title="Роля и проекти">
         <div className="-my-4 divide-y">
           <SettingRow label="Роля">
             <Segmented
@@ -113,7 +113,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
             />
             <p className="text-sm text-muted-foreground">{preset ? PRESETS[preset].description : "Отделни права, избрани ръчно по-долу."}</p>
           </SettingRow>
-          <SettingRow label="Обекти">
+          <SettingRow label="Проекти">
             <ProjectScope allProjects={allProjects} selected={selected} onAllProjectsChange={setAllProjects} onSelectedChange={setSelected} />
           </SettingRow>
         </div>
@@ -129,7 +129,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
         >
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">Права · {permissions.length} от {PERMISSION_KEYS.length}</span>
-            <span className="block text-xs text-muted-foreground">Какво може да прави в обектите, до които има достъп.</span>
+            <span className="block text-xs text-muted-foreground">Какво може да прави в проектите, до които има достъп.</span>
           </span>
           <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary-ink">
             {open ? "Скрий" : "Промени права"}

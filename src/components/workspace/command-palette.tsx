@@ -2,19 +2,19 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, BookOpen, Building2, ChartNoAxesColumn, CirclePlus, Compass, Contact, Euro, FileText, LayoutDashboard, LifeBuoy, Search, Settings, Users, type LucideIcon } from "lucide-react";
+import { Bell, BookOpen, ChartNoAxesColumn, CirclePlus, Compass, Contact, Euro, FileText, FolderKanban, LayoutDashboard, LifeBuoy, Search, Settings, Users, type LucideIcon } from "lucide-react";
 
 import { NewProjectSheetControlled } from "@/components/projects/new-project-form";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut } from "@/components/ui/command";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { searchWorkspaceAction, type SearchHit } from "@/modules/workspace/search-actions";
 
-const pageIcons = { dashboard: LayoutDashboard, projects: Building2, clients: Contact, offers: FileText, catalog: BookOpen, finance: Euro, team: Users, settings: Settings, guide: Compass, notifications: Bell, support: LifeBuoy, admin: ChartNoAxesColumn } satisfies Record<string, LucideIcon>;
+const pageIcons = { dashboard: LayoutDashboard, projects: FolderKanban, clients: Contact, offers: FileText, catalog: BookOpen, finance: Euro, team: Users, settings: Settings, guide: Compass, notifications: Bell, support: LifeBuoy, admin: ChartNoAxesColumn } satisfies Record<string, LucideIcon>;
 
 /** A page or action for the palette; the icon is a name, since the server layout builds the list. */
 export type PaletteLink = { href: string; label: string; icon: keyof typeof pageIcons; command?: "new-project" };
 
-const hitIcons: Record<SearchHit["kind"], LucideIcon> = { project: Building2, client: Contact, offer: FileText };
+const hitIcons: Record<SearchHit["kind"], LucideIcon> = { project: FolderKanban, client: Contact, offer: FileText };
 
 /**
  * ⌘K: jump to a page, start something new, or find a project, client or offer by name. Pages and
@@ -73,13 +73,13 @@ export function CommandPalette({ pages, actions }: { pages: PaletteLink[]; actio
     <>
       <button type="button" onClick={() => setOpen(true)} className="hidden h-9 w-72 items-center gap-2 rounded-lg border bg-card pr-1.5 pl-3 text-sm text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground md:flex xl:w-80">
         <Search className="size-4 shrink-0" />
-        <span className="flex-1 truncate text-left">Търси обект, клиент, оферта…</span>
+        <span className="flex-1 truncate text-left">Търси проект, клиент, оферта…</span>
         <kbd className="rounded-md bg-muted px-1.5 py-0.5 font-sans text-2xs font-semibold">⌘K</kbd>
       </button>
       <button type="button" onClick={() => setOpen(true)} aria-label="Търсене" className="grid size-9 place-items-center rounded-lg border bg-card md:hidden"><Search className="size-4" /></button>
-      <CommandDialog open={open} onOpenChange={change} title="Търсене" description="Търси обект, клиент или оферта или отвори страница." className="sm:max-w-xl">
+      <CommandDialog open={open} onOpenChange={change} title="Търсене" description="Търси проект, клиент или оферта или отвори страница." className="sm:max-w-xl">
         <Command inputValue={query} onInputChange={setQuery}>
-          <CommandInput placeholder="Търси обект, клиент, оферта или страница…" />
+          <CommandInput placeholder="Търси проект, клиент, оферта или страница…" />
           <CommandList
             aria-label="Резултати"
             className="max-h-[min(26rem,60dvh)]"

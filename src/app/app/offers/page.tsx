@@ -25,7 +25,7 @@ export default async function OffersPage({ searchParams }: PageProps<"/app/offer
   return (
     <PageShell>
       <PageHeader page="offers" actions={can(context, "offers.edit") ? <PageAction href="/app/offers/new" hideOnMobile>Нова оферта</PageAction> : null} />
-      <ListFilters query={query} status={status} projectFilter project={project} statusOptions={[{ value: "all", label: "Всички" }, { value: "draft", label: "Чернова" }, { value: "sent", label: "Изпратена" }, { value: "viewed", label: "Прегледана" }, { value: "waiting", label: "Чакат решение" }, { value: "approved", label: "Одобрена" }, { value: "declined", label: "Отказана" }, { value: "changes_requested", label: "Иска промяна" }]} placeholder="Заглавие или обект" />
+      <ListFilters query={query} status={status} projectFilter project={project} statusOptions={[{ value: "all", label: "Всички" }, { value: "draft", label: "Чернова" }, { value: "sent", label: "Изпратена" }, { value: "viewed", label: "Прегледана" }, { value: "waiting", label: "Чакат решение" }, { value: "approved", label: "Одобрена" }, { value: "declined", label: "Отказана" }, { value: "changes_requested", label: "Иска промяна" }]} placeholder="Заглавие или проект" />
       {/* Keyed by the filters so a new search shows the table skeleton instead of stale rows. */}
       <Suspense key={JSON.stringify({ ...searchState, page })} fallback={<OffersTableSkeleton />}>
         <OffersTable

@@ -19,7 +19,7 @@ export function QuickChangeDemo() {
   return (
     <DemoFrame
       frameRef={ref}
-      crumb="ОБЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
+      crumb="ПРОЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
       title="Бърза промяна · ПР-042"
       status={
         <StatusChip tone={step >= 5 ? "info" : "muted"}>

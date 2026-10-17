@@ -71,7 +71,7 @@ function AccessVisual({ organizationName, roleLabel }: { organizationName: strin
         </div>
       </div>
       <ul className="mt-5 space-y-2">
-        {["Обектите, до които имаш достъп", "Офертите и промените по тях", "Известия, когато клиентът реши"].map((item) => (
+        {["Проектите, до които имаш достъп", "Офертите и промените по тях", "Известия, когато клиентът реши"].map((item) => (
           <li key={item} className="flex items-center gap-2.5 rounded-xl bg-[#f4efe4] px-3 py-2.5 text-xs font-bold">
             <span className="grid size-4 shrink-0 place-items-center rounded-full bg-[#bceba8]"><Check className="size-2.5" /></span>
             {item}
@@ -129,7 +129,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       kicker: "ДОБРЕ ДОШЪЛ",
       title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-[#ff765f]">Договореното – записано и потвърдено.</span></>,
       text: `Pakto пази какво сте договорили с клиента: офертата, всяка промяна, сроковете и плащанията. ${owner ? "" : `Вече си в екипа на „${organizationName}“. `}Ето най-важното за минута.`,
-      points: ["Всичко по обекта на едно място", "Клиентът решава от телефона", "Всяко „да“ остава записано"],
+      points: ["Всичко по проекта на едно място", "Клиентът решава от телефона", "Всяко „да“ остава записано"],
       visual: <HelloVisual />,
     },
     {
@@ -169,16 +169,16 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
         id: "team",
         kicker: "ЕКИП",
         title: "Покани екипа си.",
-        text: "Всеки член вижда само обектите, които му дадеш, и прави само това, което ролята му позволява.",
-        points: ["Покана по имейл", "Роли и права по обекти", "Финансите се скриват с едно превключване"],
+        text: "Всеки член вижда само проектите, които му дадеш, и прави само това, което ролята му позволява.",
+        points: ["Покана по имейл", "Роли и права по проекти", "Финансите се скриват с едно превключване"],
         visual: <TeamDemo />,
       }
       : {
         id: "access",
         kicker: "ТВОЯТ ДОСТЪП",
         title: "Виждаш това, което ти трябва.",
-        text: `Имаш достъп до избрани обекти на „${organizationName}“. Какво можеш да правиш в тях, зависи от ролята ти.`,
-        points: ["Обектите, по които работиш", "Известия за решенията на клиента", "Достъпът се сменя от собственика"],
+        text: `Имаш достъп до избрани проекти на „${organizationName}“. Какво можеш да правиш в тях, зависи от ролята ти.`,
+        points: ["Проектите, по които работиш", "Известия за решенията на клиента", "Достъпът се сменя от собственика"],
         visual: <AccessVisual organizationName={organizationName} roleLabel={roleLabel} />,
       },
     {
@@ -186,7 +186,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       kicker: "ГОТОВО",
       title: "Да започваме.",
       text: owner
-        ? "Създай първия обект и изпрати първата оферта. Ако се чудиш нещо, „Как работи“ е винаги в менюто."
+        ? "Създай първия проект и изпрати първата оферта. Ако се чудиш нещо, „Как работи“ е винаги в менюто."
         : "Отвори работния преглед и виж какво чака теб. Ако се чудиш нещо, „Как работи“ е винаги в менюто.",
       points: [],
       final: true,
@@ -228,7 +228,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
   }, [active, goTo]);
 
   const primaryNext = owner && createsProjects
-    ? { href: "/app/projects?new=1", label: "Създай първия обект" }
+    ? { href: "/app/projects?new=1", label: "Създай първия проект" }
     : editsOffers
       ? { href: "/app/offers/new", label: "Нова оферта" }
       : { href: "/app", label: "Към работния преглед" };

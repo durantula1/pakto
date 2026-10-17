@@ -82,7 +82,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
           </SettingsRow>
         </SettingsGroup>
 
-        <SettingsGroup title="Автоматични писма към клиента" description="Пращат се сутрин, само по активни обекти. Ръчното „Напомни на клиента“ винаги е налично.">
+        <SettingsGroup title="Автоматични писма към клиента" description="Пращат се сутрин, само по активни проекти. Ръчното „Напомни на клиента“ винаги е налично.">
           <AutoSaveForm action={updateClientRemindersAction} className="flex w-full flex-col">
             <SettingsRow label="Напомняне, ако няма отговор" description="Клиентът получава едно учтиво писмо, ако не е отговорил на офертата до избрания ден.">
               <AutoSaveSelect label="Напомняне, ако няма отговор" name="nudge" value={String(organization.clientNudgeAfterDays)} options={[[0, "Изключено"], [1, "След 1 ден"], [2, "След 2 дни"], [3, "След 3 дни"], [5, "След 5 дни"], [7, "След 7 дни"], [10, "След 10 дни"], [14, "След 14 дни"]].map(([value, label]) => ({ value: String(value), label: String(label) }))} />
@@ -99,7 +99,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
       </TabsContent>
       <TabsContent id="data" className="flex flex-col gap-7 pt-4">
         <SettingsGroup title="Данни">
-          <SettingsRow label="Изтегли данните на фирмата" description="Обекти, контакти, оферти с версиите им, решения, етапи и плащания в един JSON файл." align="end">
+          <SettingsRow label="Изтегли данните на фирмата" description="Проекти, контакти, оферти с версиите им, решения, етапи и плащания в един JSON файл." align="end">
             <ExportDataLink href="/api/organization/export" label="Изтегли данните (JSON)" fileLabel="Данните на фирмата · JSON" />
           </SettingsRow>
         </SettingsGroup>

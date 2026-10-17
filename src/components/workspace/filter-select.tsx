@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const fieldNames: Record<string, string> = { kind: "Вид", method: "Начин на плащане", installmentId: "За вноска", status: "Статус", client: "Клиент", project: "Обект" };
+const fieldNames: Record<string, string> = { kind: "Вид", method: "Начин на плащане", installmentId: "За вноска", status: "Статус", client: "Клиент", project: "Проект" };
 
 export function FilterSelect({ name, value, options, className, label }: {
   name: string;

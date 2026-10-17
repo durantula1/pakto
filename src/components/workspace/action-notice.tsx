@@ -7,7 +7,7 @@ import { toast } from "sonner";
 const messages: Record<string, string> = {
   "invite-created": "Поканата е създадена",
   "client-created": "Клиентът е добавен",
-  "project-created": "Обектът е създаден",
+  "project-created": "Проектът е създаден",
   "offer-created": "Офертата е създадена",
   "change-created": "Промяната е създадена",
   "revision-saved": "Новата версия е запазена",

@@ -181,7 +181,7 @@ export function OfferForm({
   }
 
   function openPreview() {
-    if (!projectId) return problem("Избери обект.", "offer-basics", "projectId");
+    if (!projectId) return problem("Избери проект.", "offer-basics", "projectId");
     if (title.trim().length < 3) return problem("Добави кратко заглавие.", "offer-basics", "offer-title");
     if (description.trim().length < 5) return problem("Попълни „Обхват на работата“.", "offer-basics", "offer-description");
     if (!deadline) return problem("Посочи договорен краен срок.", "offer-deadline");
@@ -205,7 +205,7 @@ export function OfferForm({
 
   return (
     <div>
-      {initial ? <p className="mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">Попълнено от <span className="font-semibold">{initial.source}</span>. Провери обекта, цените и срока, преди да продължиш.</p> : null}
+      {initial ? <p className="mb-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">Попълнено от <span className="font-semibold">{initial.source}</span>. Провери проекта, цените и срока, преди да продължиш.</p> : null}
       {restored ? <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
         <p>Възстановихме незавършената ти оферта.</p>
         <Button type="button" variant="ghost" className="h-8 px-2" onPress={discardDraft}>Започни отначало</Button>
@@ -231,13 +231,13 @@ export function OfferForm({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="block text-sm">
                 <label htmlFor="projectId" className="mb-1.5 block font-medium">
-                  Обект
+                  Проект
                 </label>
                 <ProjectCombobox
                   key={formKey}
                   id="projectId"
                   defaultValue={project}
-                  placeholder="Избери обект"
+                  placeholder="Избери проект"
                   isRequired
                   activeOnly
                   inputClassName="h-10"

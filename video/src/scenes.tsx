@@ -351,7 +351,7 @@ export function RecordScene() {
   return (
     <div style={{ height: "100%", position: "relative" }}>
       <AppHeader
-        crumb="ОБЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
+        crumb="ПРОЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
         title="Бърза промяна · ПР-042"
         status={
           <Chip tone={sent ? "info" : "muted"}>
@@ -790,7 +790,7 @@ export function ReviseScene() {
         style={{ transform: `translateY(${banner}px)` }}
       />
       <AppHeader
-        crumb="ОБЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
+        crumb="ПРОЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
         title="Промяна · ПР-042"
         status={
           <Chip tone={sent ? "info" : "muted"}>
@@ -1292,7 +1292,7 @@ export function FirmWaiting({
         style={{ transform: `translateY(${banner}px)` }}
       />
       <AppHeader
-        crumb="ОБЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
+        crumb="ПРОЕКТ / КУХНЯ · ЛОЗЕНЕЦ"
         title="Промяна · ПР-042"
         status={
           <Chip tone={approved ? "ok" : "info"}>

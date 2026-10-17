@@ -43,7 +43,7 @@ const steps = [
   {
     kicker: "4 · ОДОБРЯВА С КОД",
     title: "Едно „да“, което остава записано.",
-    text: "Решението, часът и отпечатъкът на версията се пазят в историята на обекта.",
+    text: "Решението, часът и отпечатъкът на версията се пазят в историята на проекта.",
     at: 0.8,
   },
 ] as const;
@@ -432,7 +432,7 @@ export function VersionScene() {
 
             <m.div style={{ opacity: cta, visibility: ctaVisibility }} className="mt-10 flex justify-center lg:justify-start">
               <Link href="/app" className="mf-when-in mf-primary-button">
-                КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
+                КЪМ ПРОЕКТИТЕ <ArrowRight className="size-4" />
               </Link>
               <Link href="/sign-up" prefetch={false} className="mf-when-out mf-primary-button">
                 ИЗПРАТИ ПЪРВАТА СИ ОФЕРТА <ArrowRight className="size-4" />

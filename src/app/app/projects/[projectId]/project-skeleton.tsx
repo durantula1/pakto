@@ -32,7 +32,7 @@ export const projectStatsClassName = "grid grid-cols-2 gap-3 xl:grid-cols-4";
 export function ProjectPageSkeleton() {
   return (
     <PageShell loading>
-      <DetailHeaderSkeleton backLabel="Обекти" inBreadcrumb />
+      <DetailHeaderSkeleton backLabel="Проекти" inBreadcrumb />
       <div className={projectStatsClassName}>
         {(Object.keys(projectStatLabels) as Array<keyof typeof projectStatLabels>).map((key) => <StatCardSkeleton key={key} label={projectStatLabels[key]} tone={projectStatTones[key]} hint />)}
       </div>

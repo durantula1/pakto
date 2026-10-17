@@ -11,7 +11,7 @@ import {
 import {
   Bell,
   BookOpen,
-  Building2,
+  FolderKanban,
   CalendarX2,
   Contact,
   Euro,
@@ -33,7 +33,7 @@ const nav = [
     group: "Работа",
     links: [
       { label: "Работен преглед", icon: LayoutDashboard },
-      { label: "Обекти", icon: Building2 },
+      { label: "Проекти", icon: FolderKanban },
       { label: "Клиенти", icon: Contact },
       { label: "Оферти", icon: FileText },
     ],
@@ -51,7 +51,7 @@ const nav = [
 
 /** The dashboard's four cards, with the numbers of the story (ПР-042, ОФ-019 and two other clients). */
 const stats = [
-  { label: "Активни обекти", value: 4, icon: Building2, hint: "" },
+  { label: "Активни проекти", value: 4, icon: FolderKanban, hint: "" },
   { label: "Чакат решение", value: 2, icon: Hourglass, hint: "от 2 клиента" },
   {
     label: "Просрочени етапи",

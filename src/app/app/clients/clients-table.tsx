@@ -12,7 +12,7 @@ const label = "Клиенти";
 
 const columns: DataTableColumn[] = [
   { id: "name", header: "Клиент", skeleton: "stack" },
-  { id: "projects", header: "Обекти", className: "text-right" },
+  { id: "projects", header: "Проекти", className: "text-right" },
   { id: "waiting", header: "Чака клиента", skeleton: "badge", className: "text-right" },
 ];
 
@@ -30,7 +30,7 @@ export async function ClientsTable({ context, filters, page, searchState }: {
   if (!clients.length) {
     return filters.query || filters.archived
       ? <EmptyState title="Няма намерени клиенти" description="Опитай с друго име, имейл или телефон." />
-      : <EmptyState title="Още няма клиенти" description="Добави клиент с „Нов клиент“ или направо с нов обект." />;
+      : <EmptyState title="Още няма клиенти" description="Добави клиент с „Нов клиент“ или направо с нов проект." />;
   }
   return <DataTable
     label={label}

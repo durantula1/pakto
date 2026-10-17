@@ -111,7 +111,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
 
     <Text style={styles.title}>{revision.title}</Text>
     <View style={styles.facts}>
-      <View style={styles.fact}><Text style={styles.factLabel}>Обект</Text><Text>{project}</Text></View>
+      <View style={styles.fact}><Text style={styles.factLabel}>Проект</Text><Text>{project}</Text></View>
       <View style={styles.fact}><Text style={styles.factLabel}>Клиент</Text><Text>{contact}</Text></View>
       <View style={styles.fact}><Text style={styles.factLabel}>Адрес</Text><Text>{siteAddress}</Text></View>
       <View style={styles.fact}><Text style={styles.factLabel}>{kind === "offer" ? "Срок за изпълнение" : "Нов краен срок"}</Text><Text>{deadline ?? (kind === "offer" ? "Не е посочен" : "Без промяна")}</Text></View>

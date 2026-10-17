@@ -64,7 +64,7 @@ export function ListFilters({ query, status, statusOptions, projectFilter, proje
 }) {
   return <FilterBar className={className}>
     <SearchField query={query} placeholder={placeholder} label={label} />
-    {projectFilter ? <Field className={projectFieldClassName}><FieldLabel>Обект</FieldLabel><ProjectCombobox key={project?.id ?? "all"} name="projectId" defaultValue={project} allLabel="Всички обекти" /></Field> : null}
+    {projectFilter ? <Field className={projectFieldClassName}><FieldLabel>Проект</FieldLabel><ProjectCombobox key={project?.id ?? "all"} name="projectId" defaultValue={project} allLabel="Всички проекти" /></Field> : null}
     <Field className={statusFieldClassName}><FieldLabel>Статус</FieldLabel><FilterSelect name="status" value={status} options={statusOptions} /></Field>
   </FilterBar>;
 }
@@ -76,7 +76,7 @@ export function ListFiltersSkeleton({ projectFilter, label = "Търси", class
 }) {
   return <FilterBarSkeleton className={className} fields={[
     { label, className: searchFieldClassName },
-    ...(projectFilter ? [{ label: "Обект", className: projectFieldClassName }] : []),
+    ...(projectFilter ? [{ label: "Проект", className: projectFieldClassName }] : []),
     { label: "Статус", className: statusFieldClassName },
   ]} />;
 }

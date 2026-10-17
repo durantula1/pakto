@@ -188,7 +188,7 @@ export async function acceptLegalDocumentsAction(): Promise<ActionResult> {
 async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyName: string | null) {
   const date = dateOnly.format(deleteOn);
   const link = `${getPublicEnvironment().NEXT_PUBLIC_APP_URL}/sign-in`;
-  const what = companyName ? `Профилът ти и фирмата „${companyName}“ с всички обекти, оферти и плащания ще бъдат изтрити` : "Профилът ще бъде изтрит";
+  const what = companyName ? `Профилът ти и фирмата „${companyName}“ с всички проекти, оферти и плащания ще бъдат изтрити` : "Профилът ще бъде изтрит";
   await sendEmail({
     kind: "account_deletion",
     to,

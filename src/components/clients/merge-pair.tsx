@@ -12,7 +12,7 @@ function Person({ client }: { client: Side }) {
     <div className="min-w-0">
       <p className="font-medium">{client.name}</p>
       <p className="truncate text-sm text-muted-foreground">{[client.phone, client.email].filter(Boolean).join(" · ") || "Без контакти"}</p>
-      <p className="text-sm text-muted-foreground">{client.projects} {client.projects === 1 ? "обект" : "обекта"}</p>
+      <p className="text-sm text-muted-foreground">{client.projects} {client.projects === 1 ? "проект" : "проекта"}</p>
     </div>
   );
 }
@@ -22,7 +22,7 @@ function KeepButton({ keep, merge }: { keep: Side; merge: Side }) {
     <ConfirmDialog
       trigger={<Button type="button" variant="outline" className="h-9 bg-card">Остави „{keep.name}“</Button>}
       title={`Да обединя ли „${merge.name}“ с „${keep.name}“?`}
-      description={`Обектите и поканите на „${merge.name}“ минават към „${keep.name}“. Историята и решенията остават непроменени. Сливането не може да се върне.`}
+      description={`Проектите и поканите на „${merge.name}“ минават към „${keep.name}“. Историята и решенията остават непроменени. Сливането не може да се върне.`}
       confirmLabel="Обедини"
       tone="default"
       action={mergeClientsAction}

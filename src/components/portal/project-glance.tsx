@@ -30,7 +30,7 @@ const panels: Record<
   },
   money: {
     label: "Плащания",
-    title: "Плащания по обекта",
+    title: "Плащания по проекта",
     icon: Wallet,
     tile: "bg-tile-sand text-tile-sand-foreground",
     frame: "bg-tile-sand/45",

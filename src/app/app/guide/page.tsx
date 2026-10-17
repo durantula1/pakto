@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard } from "lucide-react";
+import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard } from "lucide-react";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
 import { ScenarioPlayer } from "@/components/guide/scenario-player";
@@ -14,8 +14,8 @@ const promises = [
 ];
 
 const clientRules = [
-  { icon: Contact, title: "Един клиент – няколко обекта", text: "Един клиент може да има няколко обекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
-  { icon: Building2, title: "Обектът е адресът на работата", text: "Нов адрес за същия клиент е нов обект: „Нов обект“ → „Съществуващ клиент“. Нова работа на същия адрес е нова оферта в същия обект." },
+  { icon: Contact, title: "Един клиент – няколко проекта", text: "Един клиент може да има няколко проекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
+  { icon: FolderKanban, title: "Проектът е една работа за един клиент", text: "Нова работа за същия клиент е нов проект: „Нов проект“ → „Съществуващ клиент“. Още работа по същия проект е нова оферта в него." },
 ];
 
 const statuses: Array<{ status: string; text: string }> = [
@@ -53,7 +53,7 @@ export default function GuidePage() {
       </div>
 
       <section className="rounded-2xl border bg-card p-4 sm:p-6">
-        <h2 className="text-lg font-semibold">Клиенти и обекти</h2>
+        <h2 className="text-lg font-semibold">Клиенти и проекти</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {clientRules.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">

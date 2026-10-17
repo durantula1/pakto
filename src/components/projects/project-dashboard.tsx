@@ -136,7 +136,7 @@ export function ProjectDashboard({ state, today, showPayments, showDrafts, openD
             <span className="text-muted-foreground">Общо договорено</span>
             <strong className="tabular-nums">{formatCents(state.contractMinor, state.currency)}</strong>
           </div> : null}
-        </> : <EmptyResult title="Още няма оферти." description="Започни с оферта за този обект." />}
+        </> : <EmptyResult title="Още няма оферти." description="Започни с оферта за този проект." />}
       </OverviewCard>
 
     </div>

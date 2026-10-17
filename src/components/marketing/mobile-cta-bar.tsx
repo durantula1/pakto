@@ -56,7 +56,7 @@ export function MobileCtaBar({
       }`}
     >
       <Link href="/app" className="mf-when-in mf-primary-button w-full">
-        КЪМ ОБЕКТИТЕ <ArrowRight className="size-4" />
+        КЪМ ПРОЕКТИТЕ <ArrowRight className="size-4" />
       </Link>
       <Link
         href="/sign-up"

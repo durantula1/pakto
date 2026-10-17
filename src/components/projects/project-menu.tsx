@@ -15,10 +15,10 @@ import { moveProjectAction, updateProjectDetailsAction } from "@/modules/project
 type Move = "complete" | "reopen" | "archive" | "restore";
 
 const moves: Record<Move, { label: string; icon: typeof Archive; title: string; description: string; confirm: string; success: string }> = {
-  complete: { label: "Приключи обекта", icon: CheckCheck, title: "Да приключа ли обекта?", description: "Клиентът вижда, че обектът е приключен, и спира да получава напомняния. Плащания и въпроси остават възможни. Можеш да го отвориш отново.", confirm: "Приключи", success: "Обектът е приключен" },
-  reopen: { label: "Отвори отново", icon: RotateCcw, title: "Да отворя ли обекта отново?", description: "Обектът става активен: отново можеш да пращаш оферти и да местиш етапи.", confirm: "Отвори", success: "Обектът е отворен отново" },
-  archive: { label: "Архивирай", icon: Archive, title: "Да архивирам ли обекта?", description: "Изчезва от списъците и става само за четене. Клиентът продължава да вижда портала за справка.", confirm: "Архивирай", success: "Обектът е в архива" },
-  restore: { label: "Върни от архива", icon: ArchiveRestore, title: "Да върна ли обекта от архива?", description: "Връща се в списъка като приключен.", confirm: "Върни", success: "Обектът е върнат" },
+  complete: { label: "Приключи проекта", icon: CheckCheck, title: "Да приключа ли проекта?", description: "Клиентът вижда, че проектът е приключен, и спира да получава напомняния. Плащания и въпроси остават възможни. Можеш да го отвориш отново.", confirm: "Приключи", success: "Проектът е приключен" },
+  reopen: { label: "Отвори отново", icon: RotateCcw, title: "Да отворя ли проекта отново?", description: "Проектът става активен: отново можеш да пращаш оферти и да местиш етапи.", confirm: "Отвори", success: "Проектът е отворен отново" },
+  archive: { label: "Архивирай", icon: Archive, title: "Да архивирам ли проекта?", description: "Изчезва от списъците и става само за четене. Клиентът продължава да вижда портала за справка.", confirm: "Архивирай", success: "Проектът е в архива" },
+  restore: { label: "Върни от архива", icon: ArchiveRestore, title: "Да върна ли проекта от архива?", description: "Връща се в списъка като приключен.", confirm: "Върни", success: "Проектът е върнат" },
 };
 
 /**
@@ -44,7 +44,7 @@ export function ProjectMenu({ project, canManage, isOwner, openItems }: {
   return (
     <>
       <DropdownMenuTrigger>
-        <Button type="button" variant="outline" size="icon" className="size-8 bg-card" aria-label="Още действия за обекта"><EllipsisVertical className="size-4" /></Button>
+        <Button type="button" variant="outline" size="icon" className="size-8 bg-card" aria-label="Още действия за проекта"><EllipsisVertical className="size-4" /></Button>
         <DropdownMenu placement="bottom end" onAction={(key) => setOpen(key as "edit" | Move)} className="min-w-56">
           {items.map((item) => (
             <DropdownMenuItem key={item.id} id={item.id} textValue={item.label} className="min-h-11 gap-2">
@@ -56,10 +56,10 @@ export function ProjectMenu({ project, canManage, isOwner, openItems }: {
 
       <Dialog isOpen={open === "edit"} onOpenChange={(value) => !value && close()} className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Данни на обекта</DialogTitle>
+          <DialogTitle>Данни на проекта</DialogTitle>
           <DialogDescription>Името и адресът се виждат и в портала на клиента.</DialogDescription>
         </DialogHeader>
-        <ActionForm action={updateProjectDetailsAction} success="Обектът е записан" onSuccess={close} className="grid gap-3">
+        <ActionForm action={updateProjectDetailsAction} success="Проектът е записан" onSuccess={close} className="grid gap-3">
           <input type="hidden" name="projectId" value={project.id} />
           <Field><FieldLabel htmlFor="project-name">Име</FieldLabel><Input id="project-name" name="name" required minLength={2} maxLength={160} defaultValue={project.name} autoFocus /></Field>
           <Field><FieldLabel htmlFor="project-address">Адрес</FieldLabel><Input id="project-address" name="siteAddress" required minLength={3} maxLength={300} defaultValue={project.siteAddress} /></Field>

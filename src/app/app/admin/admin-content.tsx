@@ -89,7 +89,7 @@ const organizationColumns: DataTableColumn[] = [
   { id: "name", header: "Фирма", skeleton: "stack" },
   { id: "created", header: "Създадена" },
   { id: "members", header: "Екип", className: "text-right" },
-  { id: "projects", header: "Обекти", className: "text-right" },
+  { id: "projects", header: "Проекти", className: "text-right" },
   { id: "offers", header: "Оферти", className: "text-right" },
   { id: "sent", header: "Изпратени версии", className: "text-right" },
   { id: "activity", header: "Последна активност" },
@@ -109,12 +109,12 @@ export async function AdminContent({ filters }: { filters: AdminFilters }) {
   const funnelTop = Math.max(...funnel.map((step) => step.value), 1);
 
   return <div className="flex flex-col gap-8">
-    <Section title="Растеж" description={`Регистрации, фирми и обекти. Новите са ${inPeriod}.`}>
+    <Section title="Растеж" description={`Регистрации, фирми и проекти. Новите са ${inPeriod}.`}>
       <div className={statsClassName}>
         <StatCard label="Потребители" value={number.format(growth.users)} hint={`+${number.format(growth.usersNew)} ${inPeriod}`} icon={<Users className="size-5" />} />
         <StatCard label="Потвърден имейл" value={number.format(growth.usersVerified)} hint={`${share(growth.usersVerified, growth.users)} от всички`} />
         <StatCard label="Фирми" value={number.format(growth.organizations)} hint={`+${number.format(growth.organizationsNew)} ${inPeriod}`} icon={<Building2 className="size-5" />} />
-        <StatCard label="Обекти" value={number.format(growth.projects)} hint={`+${number.format(growth.projectsNew)} ${inPeriod}`} />
+        <StatCard label="Проекти" value={number.format(growth.projects)} hint={`+${number.format(growth.projectsNew)} ${inPeriod}`} />
       </div>
       <ChartCard title={`Нови потребители и фирми. ${bucketText[filters.period]}`}>
         <AdminChart data={growth.chart} series={[

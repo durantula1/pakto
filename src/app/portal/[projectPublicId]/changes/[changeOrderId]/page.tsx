@@ -250,7 +250,7 @@ export default async function PortalChangePage({
         : change.status === "superseded"
           ? { tone: "info", text: `Фирмата обновява ${isOffer ? "тази оферта" : "тази промяна"}. Ще получите имейл, когато новата версия е готова за решение.${stillInForce}` }
           : waiting
-            ? { tone: "info", text: projectActive ? "Чака решението на одобряващия, посочен от фирмата." : "Обектът е приключен и тази версия вече не чака решение." }
+            ? { tone: "info", text: projectActive ? "Чака решението на одобряващия, посочен от фирмата." : "Проектът е приключен и тази версия вече не чака решение." }
             : data.decision?.decision === "approved"
               ? { tone: "success", text: <><strong className="font-semibold">Одобрихте</strong> · {decidedOn}{data.decision.verifiedEmail ? <span className="opacity-80"> · потвърдено с код до {maskEmail(data.decision.verifiedEmail)}</span> : null}</> }
               : data.decision?.decision === "declined"
@@ -288,7 +288,7 @@ export default async function PortalChangePage({
           <>
             <p className="text-sm text-sidebar-foreground/75">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
             <p className="text-4xl font-semibold tracking-tight text-white tabular-nums">{formatCents(changeMinor, change.currency)}</p>
-            {!isOffer && changeMinor === 0n ? <p className="text-sm text-sidebar-foreground/75">Цената на обекта не се променя.</p> : null}
+            {!isOffer && changeMinor === 0n ? <p className="text-sm text-sidebar-foreground/75">Цената на проекта не се променя.</p> : null}
           </>
         )}
         <p className="text-xs text-sidebar-foreground/65">

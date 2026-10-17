@@ -191,14 +191,14 @@ export function QuickChangeForm({
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="projectId" className="mb-2 block text-sm font-medium">
-            Обект
+            Проект
           </label>
           <ProjectCombobox
             key={pickerKey}
             id="projectId"
             name="projectId"
             defaultValue={project}
-            placeholder="Избери обект"
+            placeholder="Избери проект"
             isRequired
             activeOnly
             inputClassName="h-12 text-base"
@@ -217,7 +217,7 @@ export function QuickChangeForm({
             name="baselineOfferId"
             placeholder={
               !projectId
-                ? "Първо избери обект"
+                ? "Първо избери проект"
                 : loadingOffers
                   ? "Зареждане…"
                   : "Избери оферта"
@@ -243,7 +243,7 @@ export function QuickChangeForm({
           </Select>
           {projectId && !loadingOffers && !visibleOffers.length ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              Няма одобрена оферта за този обект.
+              Няма одобрена оферта за този проект.
             </p>
           ) : null}
         </div>

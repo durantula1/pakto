@@ -21,7 +21,7 @@ import { dateWithTime } from "@/lib/dates";
 export const metadata: Metadata = { title: "Клиент" };
 
 const baseColumns: DataTableColumn[] = [
-  { id: "name", header: "Обект", skeleton: "stack" },
+  { id: "name", header: "Проект", skeleton: "stack" },
   { id: "status", header: "Статус", skeleton: "badge" },
   { id: "documents", header: "Оферти и промени", className: "text-right" },
   { id: "waiting", header: "Чака клиента", skeleton: "badge", className: "text-right" },
@@ -33,8 +33,8 @@ const dateTime = dateWithTime;
 type Totals = { contract: bigint; paid: bigint; remaining: bigint };
 
 function projectsSummary(total: number, active: number) {
-  if (!total) return "Още няма обекти";
-  const noun = total === 1 ? "обект" : "обекта";
+  if (!total) return "Още няма проекти";
+  const noun = total === 1 ? "проект" : "проекта";
   if (active === total) return `${total} ${noun}${total === 1 ? ", активен" : ", всички активни"}`;
   return `${total} ${noun} · ${active} ${active === 1 ? "активен" : "активни"}`;
 }
@@ -103,15 +103,15 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
       ) : null}
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-semibold">Обекти</h2>
+          <h2 className="text-base font-semibold">Проекти</h2>
           {can(context, "projects.create") && !client.archivedAt
             ? <NewProjectSheet defaultClient={{ id: client.id, name: client.name, email: client.email, phone: client.phone, projects: client.projects.length }} />
             : null}
         </div>
         {!client.projects.length ? (
-          <EmptyState illustration={false} title="Още няма обекти" description="Добави първия обект с „Нов обект“. Клиентът вече е избран." />
+          <EmptyState illustration={false} title="Още няма проекти" description="Добави първия проект с „Нов проект“. Клиентът вече е избран." />
         ) : <DataTable
-          label="Обекти на клиента"
+          label="Проекти на клиента"
           columns={columns}
           rows={client.projects.map((project) => ({
             id: project.id,

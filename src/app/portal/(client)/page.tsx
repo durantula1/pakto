@@ -63,7 +63,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
         {steps.length ? <h2 className="mt-2 px-1 text-xl font-semibold tracking-tight">Чака от вас</h2> : null}
         <PortalSteps steps={steps} calm={!decisionMade} />
 
-        <h2 className="mt-4 px-1 text-xl font-semibold tracking-tight">Вашите обекти</h2>
+        <h2 className="mt-4 px-1 text-xl font-semibold tracking-tight">Вашите проекти</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {cards.map(({ project, card }) => {
             const done = project.archived || project.status !== "active";
@@ -90,7 +90,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                     </div>
                   </div>
                 ) : null}
-                {done ? <p className="rounded-2xl bg-tile-stone px-3.5 py-3 text-sm text-tile-stone-foreground">Обектът е приключен. Всичко остава тук за справка.</p> : (
+                {done ? <p className="rounded-2xl bg-tile-stone px-3.5 py-3 text-sm text-tile-stone-foreground">Проектът е приключен. Всичко остава тук за справка.</p> : (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-mint px-3.5 py-3 text-tile-mint-foreground">
                       {/* "Следва" only above a stage; with none left or none yet it is just the work. */}
@@ -107,7 +107,7 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary-ink" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете обекта</span>}
+                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary-ink" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете проекта</span>}
                   <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"><ArrowUpRight className="size-4" /></span>
                 </div>
               </Link>

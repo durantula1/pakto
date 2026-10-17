@@ -5,7 +5,7 @@ import { PageShell } from "@/components/workspace/page/page-shell";
 export default function NewProjectLoading() {
   return (
     <PageShell width="narrow" loading>
-      <PageHeader page="newProject" back={{ label: "Обекти" }} />
+      <PageHeader page="newProject" back={{ label: "Проекти" }} />
       <FormSkeleton title="Основна информация" fields={8} />
     </PageShell>
   );

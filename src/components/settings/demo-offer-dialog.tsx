@@ -125,7 +125,7 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
   const { document } = demoOffer;
   const sent = new Date();
   const facts: [string, string][] = [
-    ["Обект", demoOffer.project],
+    ["Проект", demoOffer.project],
     ["Клиент", demoOffer.contact],
     ["Адрес", demoOffer.siteAddress],
     ["Срок за изпълнение", date.format(new Date(`${demoOffer.agreedDeadline}T12:00:00Z`))],

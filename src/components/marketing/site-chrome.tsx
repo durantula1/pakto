@@ -39,7 +39,7 @@ export function SubpageHeader() {
             href="/app"
             className="mf-when-in flex items-center gap-2 border border-[#102b38]/50 bg-[#ff765f] px-4 py-2.5 text-sm font-bold"
           >
-            Към обектите <ArrowUpRight className="size-4" />
+            Към проектите <ArrowUpRight className="size-4" />
           </Link>
           <Link
             href="/sign-up"

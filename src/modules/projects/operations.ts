@@ -44,7 +44,7 @@ async function offerOf(db: Executor, organizationId: string, projectId: string, 
   if (!offerId) return null;
   const [offer] = await db.select({ id: changeOrders.id }).from(changeOrders)
     .where(and(eq(changeOrders.id, offerId), eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), eq(changeOrders.documentKind, "offer"))).limit(1);
-  if (!offer) throw new Error("Офертата не е от този обект.");
+  if (!offer) throw new Error("Офертата не е от този проект.");
   return offer.id;
 }
 
@@ -232,7 +232,7 @@ async function checkedStage(db: Executor, projectId: string, milestoneId: string
   if (!milestoneId) return null;
   const [milestone] = await db.select({ id: projectMilestones.id, offerId: projectMilestones.offerId }).from(projectMilestones)
     .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId))).limit(1);
-  if (!milestone) throw new Error("Етапът не принадлежи на този обект.");
+  if (!milestone) throw new Error("Етапът не принадлежи на този проект.");
   if (milestone.offerId !== offerId) throw new Error("Етапът е от друга оферта.");
   return milestone.id;
 }
@@ -305,7 +305,7 @@ async function receiptOffer(db: Executor, organizationId: string, projectId: str
   if (installmentId) {
     const [installment] = await db.select({ id: paymentInstallments.id, offerId: paymentInstallments.offerId }).from(paymentInstallments)
       .where(and(eq(paymentInstallments.id, installmentId), eq(paymentInstallments.projectId, projectId))).limit(1);
-    if (!installment) throw new Error("Вноската не принадлежи на този обект.");
+    if (!installment) throw new Error("Вноската не принадлежи на този проект.");
     return installment.offerId;
   }
   if (offerId) return offerOf(db, organizationId, projectId, offerId);
@@ -351,7 +351,7 @@ async function assertWithinRemaining(organizationId: string, projectId: string, 
   const symbol = currencySymbol(state.currency);
   throw new Error(state.remainingMinor > 0n
     ? `Сумата е с ${formatAmount((Number(over) / 100).toFixed(2))} ${symbol} над остатъка (${formatAmount((Number(state.remainingMinor) / 100).toFixed(2))} ${symbol}). Провери я или отбележи, че е надплащане.`
-    : "Обектът вече е изплатен. Провери сумата или отбележи, че е надплащане.");
+    : "Проектът вече е изплатен. Провери сумата или отбележи, че е надплащане.");
 }
 
 export async function recordReceiptAction(formData: FormData): Promise<ActionResult> {

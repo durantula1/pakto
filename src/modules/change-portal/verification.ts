@@ -22,7 +22,7 @@ const purposeText: Record<Purpose, string> = {
   claim: "потвърждаване на имейла Ви",
   email_change: "смяна на имейла Ви",
   decision: "потвърждаване на решението Ви",
-  unlock: "показване на всичките Ви обекти",
+  unlock: "показване на всичките Ви проекти",
   acceptance: "приемане на работата",
 };
 

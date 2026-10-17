@@ -21,7 +21,7 @@ import { createClient } from "@/modules/clients/operations";
 import { clientConfirmedEmail, findClientDuplicate, findUsableClient } from "@/modules/clients/queries";
 
 const projectSchema = z.object({
-  name: z.string().trim().min(2, "Въведи име на обекта.").max(160),
+  name: z.string().trim().min(2, "Въведи име на проекта.").max(160),
   siteAddress: z.string().trim().min(3, "Въведи адрес.").max(300),
   reference: z.string().trim().max(80).optional(),
   contactName: z.string().trim().max(160).optional(),
@@ -48,7 +48,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
     if (contact.name.length < 2) return { error: "Въведи име на клиента." };
     const duplicate = await findClientDuplicate(context, contact);
     if (duplicate) {
-      return { error: `Клиент с този имейл или телефон вече съществува: ${duplicate.name} (${duplicate.projects} ${duplicate.projects === 1 ? "обект" : "обекта"}). Избери го от „Съществуващ клиент“.` };
+      return { error: `Клиент с този имейл или телефон вече съществува: ${duplicate.name} (${duplicate.projects} ${duplicate.projects === 1 ? "проект" : "проекта"}). Избери го от „Съществуващ клиент“.` };
     }
   }
 
@@ -73,7 +73,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
         createdBy: context.userId,
       })
       .returning({ id: projects.id });
-    if (!project) throw new Error("Обектът не беше създаден.");
+    if (!project) throw new Error("Проектът не беше създаден.");
 
     await transaction.insert(projectMembers).values({
       projectId: project.id,
@@ -108,7 +108,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
 
 const detailsSchema = z.object({
   projectId: z.uuid(),
-  name: z.string().trim().min(2, "Въведи име на обекта.").max(160),
+  name: z.string().trim().min(2, "Въведи име на проекта.").max(160),
   siteAddress: z.string().trim().min(3, "Въведи адрес.").max(300),
   reference: z.string().trim().max(80).optional(),
 });
@@ -129,13 +129,13 @@ export async function updateProjectDetailsAction(formData: FormData): Promise<Ac
     await getDatabase().transaction(async (tx) => {
       const [before] = await tx.select({ name: projects.name, siteAddress: projects.siteAddress }).from(projects)
         .where(and(eq(projects.id, data.projectId), eq(projects.organizationId, context.organizationId))).for("update").limit(1);
-      if (!before) throw new Error("Обектът не е намерен.");
+      if (!before) throw new Error("Проектът не е намерен.");
       await tx.update(projects).set({ name: data.name, siteAddress: data.siteAddress, reference: data.reference || null, updatedAt: new Date() })
         .where(eq(projects.id, data.projectId));
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, actorType: "staff", actorId: context.userId, eventType: "project_updated", visibility: "internal", metadata: { before, name: data.name, siteAddress: data.siteAddress } });
     });
     refreshProject(data.projectId);
-  }, "Обектът не беше записан.");
+  }, "Проектът не беше записан.");
 }
 
 type LifecycleMove = { from: ("active" | "completed" | "archived")[]; to: "active" | "completed" | "archived"; event: string; ownerOnly?: boolean; visibility: "client" | "internal" };
@@ -161,8 +161,8 @@ export async function moveProjectAction(formData: FormData): Promise<ActionResul
     await getDatabase().transaction(async (tx) => {
       const [project] = await tx.select({ status: projects.status }).from(projects)
         .where(and(eq(projects.id, projectId), eq(projects.organizationId, context.organizationId))).for("update").limit(1);
-      if (!project) throw new Error("Обектът не е намерен.");
-      if (!step.from.includes(project.status)) throw new Error("Обектът вече е в друго състояние. Презареди страницата.");
+      if (!project) throw new Error("Проектът не е намерен.");
+      if (!step.from.includes(project.status)) throw new Error("Проектът вече е в друго състояние. Презареди страницата.");
       const now = new Date();
       await tx.update(projects).set({
         status: step.to,
@@ -173,5 +173,5 @@ export async function moveProjectAction(formData: FormData): Promise<ActionResul
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, actorType: "staff", actorId: context.userId, eventType: step.event, visibility: step.visibility, metadata: {} });
     });
     refreshProject(projectId);
-  }, "Състоянието на обекта не беше сменено.");
+  }, "Състоянието на проекта не беше сменено.");
 }

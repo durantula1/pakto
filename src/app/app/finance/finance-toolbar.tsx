@@ -103,7 +103,7 @@ export function FinanceToolbar({ filters, defaults, project, client }: {
     <div className={widths.project}>
       <ProjectCombobox
         key={project?.id ?? "all"}
-        allLabel="Всички обекти"
+        allLabel="Всички проекти"
         defaultValue={project}
         onChange={(next) => apply({ projectId: next?.id ?? "all" })}
       />

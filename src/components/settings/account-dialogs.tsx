@@ -66,7 +66,7 @@ export function LeaveOrganizationDialog({ organizationName, blocker }: { organiz
           <DialogHeader>
             <DialogTitle>Да напуснеш „{organizationName}“?</DialogTitle>
             <DialogDescription>
-              Губиш достъп до обектите и офертите веднага. Собствениците ще получат известие.
+              Губиш достъп до проектите и офертите веднага. Собствениците ще получат известие.
               Профилът ти остава и може да бъдеш поканен отново.
             </DialogDescription>
           </DialogHeader>
@@ -91,7 +91,7 @@ export function DeleteAccountDialog({ plan, graceDays, hasPassword }: { plan: Ac
             <DialogTitle>{company ? "Изтриване на профила и фирмата" : "Изтриване на профила"}</DialogTitle>
             <DialogDescription>
               {company
-                ? <>Ти си единственият член на „{company}“. Заедно с профила ще изтрием фирмата, всички обекти, оферти, плащания и клиентски линкове.</>
+                ? <>Ти си единственият член на „{company}“. Заедно с профила ще изтрием фирмата, всички проекти, оферти, плащания и клиентски линкове.</>
                 : "Ще излезеш от всички устройства."}{" "}
               Изтриването става след {graceDays} дни. Дотогава можеш да влезеш и да го отмениш.
             </DialogDescription>

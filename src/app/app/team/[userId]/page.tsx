@@ -55,12 +55,12 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
       />
 
       {!active ? (
-        <EmptyState illustration={false} title="Този човек няма достъп до фирмата." description="Правата и обектите вече не важат." />
+        <EmptyState illustration={false} title="Този човек няма достъп до фирмата." description="Правата и проектите вече не важат." />
       ) : member.role === "owner" ? (
         <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
           <section className="rounded-2xl border bg-card p-4">
             <h2 className="text-sm font-semibold">Права</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Собственикът има всички права и вижда всички текущи и бъдещи обекти на фирмата.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Собственикът има всички права и вижда всички текущи и бъдещи проекти на фирмата.</p>
           </section>
           <AccessCard>
             {isSelf ? <p className="text-sm text-muted-foreground">Това е твоят профил. Ролята на собственик се сменя от друг собственик.</p> : (

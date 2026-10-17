@@ -90,7 +90,7 @@ export function DocumentPageSkeleton() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle>Клиент и обект</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Клиент и проект</CardTitle></CardHeader>
               <CardContent className="flex flex-col gap-2">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-4 w-56 max-w-full" />

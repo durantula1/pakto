@@ -283,7 +283,7 @@ export function DocumentStatusCard({
               </p>
             ) : null}
             <p className="mt-1 text-muted-foreground">
-              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава обектът се води по версия {inForce.revisionNumber}{inForceChanges.length ? " и одобрените промени" : ""}.
+              Версия {change.revisionNumber} влиза в сила, след като клиентът я одобри. Дотогава проектът се води по версия {inForce.revisionNumber}{inForceChanges.length ? " и одобрените промени" : ""}.
             </p>
           </div>
         ) : null}
@@ -423,7 +423,7 @@ export function DocumentFacts({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Клиент и обект</CardTitle>
+          <CardTitle>Клиент и проект</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2 text-sm">
           <p className="flex items-center gap-2 font-medium">

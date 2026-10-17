@@ -4,7 +4,7 @@ import { DetailHeaderSkeleton } from "@/components/workspace/detail-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
 
 const columns: DataTableColumn[] = [
-  { id: "name", header: "Обект", skeleton: "stack" },
+  { id: "name", header: "Проект", skeleton: "stack" },
   { id: "status", header: "Статус", skeleton: "badge" },
   { id: "documents", header: "Оферти и промени", className: "text-right" },
   { id: "waiting", header: "Чака клиента", skeleton: "badge", className: "text-right" },
@@ -26,10 +26,10 @@ export default function ClientLoading() {
       </div>
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-base font-semibold">Обекти</h2>
+          <h2 className="text-base font-semibold">Проекти</h2>
           <Skeleton className="h-10 w-32 rounded-xl" />
         </div>
-        <DataTableSkeleton label="Обекти на клиента" columns={columns} rows={3} className="min-h-0" />
+        <DataTableSkeleton label="Проекти на клиента" columns={columns} rows={3} className="min-h-0" />
       </section>
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">

@@ -54,9 +54,9 @@ export async function requireProjectCapability(
     .from(projects)
     .where(and(eq(projects.id, projectId), eq(projects.organizationId, context.organizationId)))
     .limit(1);
-  if (!project) throw new Error("Обектът не е намерен.");
+  if (!project) throw new Error("Проектът не е намерен.");
   if (member.role === "owner") return member;
-  if (!member.allProjects && !project.assigned) throw new Error("Нямаш достъп до този обект.");
+  if (!member.allProjects && !project.assigned) throw new Error("Нямаш достъп до този проект.");
   if (capability === "view") return member;
   if (capabilityPermissions[capability].some((permission) => member.permissions.includes(permission))) return member;
   if (capability === "payment") throw new Error("Ролята ти не включва записване на плащания. Попитай собственика на фирмата.");

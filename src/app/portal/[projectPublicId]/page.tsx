@@ -178,7 +178,7 @@ export default async function PortalProjectPage({
         >
           <Lock className="size-4 shrink-0 text-muted-foreground" />
           <span>
-            Обектът е приключен
+            Проектът е приключен
             {data.project.completedAt
               ? ` на ${dateFormat.format(data.project.completedAt)}`
               : "."}{" "}

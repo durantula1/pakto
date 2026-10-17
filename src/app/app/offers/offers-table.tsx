@@ -32,7 +32,7 @@ export async function OffersTable({ filters, page, searchState }: {
     countChangeOrders(filters),
   ]);
   if (!offers.length && page > lastPage(total)) redirect(pageHref("/app/offers", searchState, "page", lastPage(total)));
-  if (!offers.length) return <EmptyState title="Няма оферти" description="Започни с оферта към обекта. Промените се добавят вътре в одобрената оферта." />;
+  if (!offers.length) return <EmptyState title="Няма оферти" description="Започни с оферта към проекта. Промените се добавят вътре в одобрената оферта." />;
   const changeCounts = await countChangesByOffer(filters.context, offers.map((offer) => offer.id));
   return <DataTable
     label={label}

@@ -97,7 +97,7 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
           >
             <span className="truncate">{item.name}</span>
             {item.id === ALL ? null : <span className="truncate text-xs text-muted-foreground">
-              {[item.phone, item.email].filter(Boolean).join(" · ") || "Без контакти"} · {item.projects} {item.projects === 1 ? "обект" : "обекта"}
+              {[item.phone, item.email].filter(Boolean).join(" · ") || "Без контакти"} · {item.projects} {item.projects === 1 ? "проект" : "проекта"}
             </span>}
           </ListBoxItem>}
         </ListBox>
