@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { LocaleProvider } from "@/components/locale-provider";
+import { CookieConsent } from "@/components/marketing/cookie-consent";
 import { Toaster } from "@/components/ui/sonner";
 import { authHintScript } from "@/lib/auth/session-hint";
 import { productDefinition } from "@/lib/seo/site";
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <LocaleProvider>{children}</LocaleProvider>
+        <CookieConsent />
         <Toaster richColors position="top-right" visibleToasts={3} />
       </body>
     </html>

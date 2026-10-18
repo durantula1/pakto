@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
+import { CookieSettingsButton } from "@/components/marketing/cookie-consent";
 import { LEGAL_DOCUMENTS } from "@/lib/legal";
 import { productDefinition } from "@/lib/seo/site";
 
@@ -124,6 +125,11 @@ export function SiteFooter() {
                     </Link>
                   </li>
                 ))}
+                {column.title === "Pakto" ? (
+                  <li>
+                    <CookieSettingsButton className="inline-block py-1 transition-colors hover:text-[#ff765f]" />
+                  </li>
+                ) : null}
               </ul>
             </div>
           ))}

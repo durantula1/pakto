@@ -4,7 +4,7 @@
  */
 export const LEGAL_DOCUMENTS = {
   terms: { version: "2026-10-07", href: "/terms", label: "Условия за ползване" },
-  privacy: { version: "2026-10-07", href: "/privacy", label: "Политика за поверителност" },
+  privacy: { version: "2026-10-18", href: "/privacy", label: "Политика за поверителност" },
 } as const;
 
 export type LegalDocument = keyof typeof LEGAL_DOCUMENTS;

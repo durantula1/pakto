@@ -2,7 +2,6 @@
 
 import { randomUUID } from "node:crypto";
 
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
@@ -19,7 +18,8 @@ import {
 } from "@/modules/organizations/logo";
 import { isLogoSize } from "@/modules/organizations/logo-box";
 
-export type OnboardingState = { error?: string };
+/** `ok`: the company exists; the form reports the sign-up conversion and then opens /app. */
+export type OnboardingState = { error?: string; ok?: boolean };
 
 const onboardingSchema = z.object({
   displayName: z.string().trim().min(2).max(100),
@@ -47,7 +47,7 @@ export async function completeOnboardingAction(
     return { error: "Фирмата не беше създадена. Опитай отново." };
   }
 
-  redirect("/app");
+  return { ok: true };
 }
 
 export async function updateOrganizationAction(formData: FormData) {

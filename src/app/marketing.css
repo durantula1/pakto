@@ -486,7 +486,8 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-phone {
   position: absolute;
   top: 2%;
-  left: 1%;
+  /* Out past the frame (the hero clips it), so the phone covers less of the middle offer. */
+  left: -4%;
   z-index: 20;
   width: calc(var(--u) * 12.5);
   transform: rotate(-3deg);
@@ -579,9 +580,9 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-arc {
   position: absolute;
   top: 4%;
-  left: 27%;
+  left: 22%;
   z-index: 15;
-  width: 40%;
+  width: 45%;
   height: 20%;
   overflow: visible;
   opacity: 0.25;
@@ -610,7 +611,7 @@ html[data-auth="in"] .mf-when-out {
   left: 64%;
 }
 .mf-hf-run-back {
-  left: 28%;
+  left: 23%;
 }
 .mf-hf-scene[data-step="0"] .mf-hf-run-out {
   animation: mf-hf-out 1.6s 0.2s var(--mf-ease-in-out) both;
@@ -626,12 +627,13 @@ html[data-auth="in"] .mf-when-out {
 }
 @keyframes mf-hf-out {
   from { left: 64%; }
-  to { left: 26%; }
+  to { left: 21%; }
 }
 @keyframes mf-hf-back {
-  from { left: 28%; }
+  from { left: 23%; }
   to { left: 62%; }
 }
+
 /* Left-right is linear in time, up-down eases: together they draw the arc. */
 @keyframes mf-hf-hop {
   0% {

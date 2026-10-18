@@ -40,22 +40,27 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    // Nothing loads from another site, so everything is 'self'. Scripts keep 'unsafe-inline' for Next's inline
-    // bootstrap (nonces would make every page dynamic); the policy still stops outside scripts, plugins, <base>
-    // tricks, forms posting elsewhere and requests to other hosts. blob:/data: are image previews and fonts.
-    const contentSecurityPolicy = [
-      "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
-      "font-src 'self' data:",
-      "media-src 'self'",
-      "connect-src 'self'",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-    ].join("; ");
+    // Everything is 'self', except the Google Ads tag on the public pages (loaded only after cookie consent,
+    // src/lib/analytics/google-ads.ts). Scripts keep 'unsafe-inline' for Next's inline bootstrap (nonces would
+    // make every page dynamic); the policy still stops other outside scripts, plugins, <base> tricks, forms
+    // posting elsewhere and requests to other hosts. blob:/data: are image previews and fonts.
+    const contentSecurityPolicy = (googleAds: boolean) => {
+      const google = (hosts: string) => (googleAds ? ` ${hosts}` : "");
+      return [
+        "default-src 'self'",
+        `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}${google("https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.google.com")}`,
+        "style-src 'self' 'unsafe-inline'",
+        `img-src 'self' data: blob:${google("https://www.googletagmanager.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.googleadservices.com https://www.google.com https://www.google.bg")}`,
+        "font-src 'self' data:",
+        "media-src 'self'",
+        `connect-src 'self'${google("https://www.googletagmanager.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.googleadservices.com https://www.google.com https://www.google.bg")}`,
+        ...(googleAds ? ["frame-src https://www.googletagmanager.com https://td.doubleclick.net https://bid.g.doubleclick.net"] : []),
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+      ].join("; ");
+    };
     // Every page: no framing by other sites (clickjacking), no MIME sniffing, no full URLs to other
     // sites. HSTS is set by Caddy on the VPS (deploy/Caddyfile), where https ends.
     const siteHeaders = [
@@ -74,7 +79,12 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: siteHeaders },
       // Pages only: a policy on a PDF response can stop the browser's own PDF viewer.
-      { source: "/((?!api/).*)", headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy }] },
+      { source: "/((?!api/).*)", headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy(true) }] },
+      // The workspace and the client's portal never load the Google tag, so they keep the policy without Google.
+      ...["/app", "/app/:path*", "/portal/:path*", "/access/:path*", "/welcome"].map((source) => ({
+        source,
+        headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy(false) }],
+      })),
       { source: "/portal/:path*", headers: portalHeaders },
       { source: "/access/:path*", headers: portalHeaders },
     ];
