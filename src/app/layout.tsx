@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Suspense } from "react";
 import { LocaleProvider } from "@/components/locale-provider";
+import { AttributionCapture } from "@/components/marketing/attribution-capture";
 import { CookieConsent } from "@/components/marketing/cookie-consent";
 import { Toaster } from "@/components/ui/sonner";
+import { attributionBootstrapScript } from "@/lib/analytics/attribution";
+import { googleTagBootstrapScript } from "@/lib/analytics/google-ads";
 import { authHintScript } from "@/lib/auth/session-hint";
 import { productDefinition } from "@/lib/seo/site";
 import "./globals.css";
@@ -59,9 +63,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Before the first paint: marks <html data-auth> so the marketing pages show the right buttons (no flash).
             The root layout is never rendered again on the client, so this runs once per page load; `AuthHint` covers client navigations. */}
         <script dangerouslySetInnerHTML={{ __html: authHintScript }} />
+        {/* Before paint: keep the landing query across the click to /sign-up, then load the Ads tag on public pages. */}
+        <script
+          dangerouslySetInnerHTML={{ __html: attributionBootstrapScript }}
+        />
+        <script
+          dangerouslySetInnerHTML={{ __html: googleTagBootstrapScript }}
+        />
       </head>
       <body className="flex min-h-full flex-col">
         <LocaleProvider>{children}</LocaleProvider>
+        <Suspense fallback={null}>
+          <AttributionCapture />
+        </Suspense>
         <CookieConsent />
         <Toaster richColors position="top-right" visibleToasts={3} />
       </body>

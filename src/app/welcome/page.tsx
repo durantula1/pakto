@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
+import { SignupConversionSlot } from "@/components/analytics/signup-conversion-slot";
 import { WelcomeCarousel } from "@/components/onboarding/welcome-carousel";
 import { can, roleLabel } from "@/lib/authz/permissions";
 import { getOptionalTenantContext } from "@/lib/authz/tenant-context";
@@ -17,7 +18,9 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
   if (account.welcomeSeen && again === undefined) redirect("/app");
   const firstName = account.displayName.trim().split(/\s+/)[0] ?? "";
   return (
-    <WelcomeCarousel
+    <>
+      <SignupConversionSlot />
+      <WelcomeCarousel
       firstName={firstName}
       organizationName={context.organizationName}
       owner={context.role === "owner"}
@@ -26,5 +29,6 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
       createsProjects={can(context, "projects.create")}
       editsOffers={can(context, "offers.edit")}
     />
+    </>
   );
 }

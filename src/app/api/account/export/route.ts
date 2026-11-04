@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getDatabase } from "@/db";
 import {
   authSessions, authUsers, changeOrders, organizationMembers, organizations, profiles, projectMembers,
-  projects, staffNotifications, timelineEvents, userConsents,
+  projects, signupAttributions, staffNotifications, timelineEvents, userConsents,
 } from "@/db/schema";
 import { getSessionUser } from "@/lib/auth/server";
 
@@ -23,7 +23,7 @@ export async function GET() {
     createdAt: authUsers.createdAt,
     lastSignInAt: sql<Date | null>`(select max(${authSessions.createdAt}) from ${authSessions} where ${authSessions.userId} = ${authUsers.id})`,
   }).from(authUsers).where(eq(authUsers.id, user.id)).limit(1);
-  const [[profile], memberships, projectAccess, consents, notifications, createdProjects, createdDocuments, activity] = await Promise.all([
+  const [[profile], memberships, projectAccess, consents, notifications, createdProjects, createdDocuments, activity, [attribution]] = await Promise.all([
     db.select({ displayName: profiles.displayName, email: profiles.email, phone: profiles.phone, createdAt: profiles.createdAt, updatedAt: profiles.updatedAt, deletionRequestedAt: profiles.deletionRequestedAt })
       .from(profiles).where(eq(profiles.id, user.id)).limit(1),
     db.select({ organization: organizations.name, role: organizationMembers.role, status: organizationMembers.status, permissions: organizationMembers.permissions, allProjects: organizationMembers.allProjects, joinedAt: organizationMembers.createdAt })
@@ -45,6 +45,8 @@ export async function GET() {
       .from(timelineEvents).innerJoin(projects, eq(projects.id, timelineEvents.projectId))
       .where(and(eq(timelineEvents.actorType, "staff"), eq(timelineEvents.actorId, user.id)))
       .orderBy(desc(timelineEvents.createdAt)),
+    db.select({ method: signupAttributions.method, firstTouch: signupAttributions.firstTouch, lastTouch: signupAttributions.lastTouch, createdAt: signupAttributions.createdAt })
+      .from(signupAttributions).where(eq(signupAttributions.userId, user.id)).limit(1),
   ]);
 
   const exportedAt = new Date();
@@ -59,6 +61,7 @@ export async function GET() {
     createdProjects,
     createdDocuments,
     activity,
+    signup: attribution ?? null,
   };
   const filename = `pakto-my-data-${exportedAt.toISOString().slice(0, 10)}.json`;
   return new Response(JSON.stringify(body, null, 2), {

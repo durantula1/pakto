@@ -18,7 +18,7 @@ import {
 } from "@/modules/organizations/logo";
 import { isLogoSize } from "@/modules/organizations/logo-box";
 
-/** `ok`: the company exists; the form reports the sign-up conversion and then opens /app. */
+/** `ok`: the company exists; the form then opens /app. The Ads conversion is not this step. */
 export type OnboardingState = { error?: string; ok?: boolean };
 
 const onboardingSchema = z.object({

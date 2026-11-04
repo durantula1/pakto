@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import {
   CONSENT_CHANGE_EVENT,
   CONSENT_OPEN_EVENT,
+  isPrivatePath,
   loadGoogleTag,
   openConsentSettings,
   readConsent,
@@ -14,17 +15,15 @@ import {
   type Consent,
 } from "@/lib/analytics/google-ads";
 
-/** Signed-in workspace, the client's portal and the routes behind them: no banner and no Google tag. */
-const PRIVATE_PATH = /^\/(app|portal|access|api|welcome)(\/|$)/;
-
 /**
- * The cookie banner of the public pages, and the switch for the Google tag. It shows on the first
- * visit and again from the „Бисквитки“ link in the footer; the choice is kept in localStorage.
+ * The cookie banner of the public pages. The Google tag itself loads on those pages either way
+ * (Consent Mode); this only records the choice. It shows on the first visit and again from the
+ * „Бисквитки“ link in the footer; the choice is kept in localStorage.
  * „Приемам“ and „Отказ“ look the same on purpose: refusing must be as easy as accepting.
  */
 export function CookieConsent() {
   const pathname = usePathname();
-  const isPrivate = PRIVATE_PATH.test(pathname);
+  const isPrivate = isPrivatePath(pathname);
   // undefined until mounted, so the server render and the first client render agree.
   const [consent, setConsent] = useState<Consent | null | undefined>(undefined);
   const [reopened, setReopened] = useState(false);
@@ -42,8 +41,8 @@ export function CookieConsent() {
   }, []);
 
   useEffect(() => {
-    if (consent === "granted" && !isPrivate) loadGoogleTag();
-  }, [consent, isPrivate]);
+    if (!isPrivate) loadGoogleTag();
+  }, [isPrivate]);
 
   if (isPrivate || consent === undefined || (consent !== null && !reopened)) return null;
 

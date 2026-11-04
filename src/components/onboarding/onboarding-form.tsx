@@ -4,17 +4,16 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { completeOnboardingAction } from "@/modules/organizations/actions";
-import { trackSignUp } from "@/lib/analytics/google-ads";
 import { useKeepFormValues } from "@/lib/use-keep-form-values";
 
 export function OnboardingForm({ defaultName }: { defaultName: string }) {
   const [state, action, pending] = useActionState(completeOnboardingAction, {});
   const formRef = useKeepFormValues(state);
   const router = useRouter();
-  // A new company is the sign-up that Google Ads counts; it is sent only with the visitor's consent.
+  // The Ads conversion already fired when this account was created. Creating the company only opens the app.
   useEffect(() => {
-    if (state.ok) void trackSignUp().then(() => router.replace("/app"));
-  }, [state, router]);
+    if (state.ok) router.replace("/app");
+  }, [state.ok, router]);
   const busy = pending || state.ok;
   return <form noValidate ref={formRef} action={action} className="mt-8 space-y-5">
     <label className="block text-sm font-medium">Твоето име<input name="displayName" required defaultValue={defaultName} className="mt-1.5 h-10 w-full rounded-xl border bg-background px-3 outline-none focus:border-primary focus:ring-3 focus:ring-primary/15" /></label>
