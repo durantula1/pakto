@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 
+import { SignupConversionSlot } from "@/components/analytics/signup-conversion-slot";
 import { Wordmark } from "@/components/brand/wordmark";
 import { PERMISSION_GROUPS, can, roleLabel } from "@/lib/authz/permissions";
 import { hashPortalToken } from "@/lib/crypto/portal-token";
@@ -14,7 +15,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Покана в екип" };
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <main className="grid min-h-dvh place-items-center bg-background p-4">
+  return <main className="grid min-h-dvh place-items-center bg-background p-4"><SignupConversionSlot />
     <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-card shadow-sm">
       <div className="bg-sidebar px-6 py-5"><Wordmark inverse href={null} /></div>
       <div className="flex flex-col gap-5 p-6">{children}</div>

@@ -1,13 +1,14 @@
 import "server-only";
 
 import { randomBytes } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
 import {
   organizationMembers,
   organizations,
   profiles,
+  signupAttributions,
 } from "@/db/schema";
 
 function slugify(value: string) {
@@ -41,6 +42,7 @@ export async function bootstrapOrganization(input: {
       .limit(1);
 
     if (existing) {
+      await linkSignupOrganization(transaction, input.userId, existing.organizationId);
       return existing.organizationId;
     }
 
@@ -72,7 +74,20 @@ export async function bootstrapOrganization(input: {
       status: "active",
     });
 
+    await linkSignupOrganization(transaction, input.userId, organization.id);
     return organization.id;
   });
+}
+
+/** The signup row is written before a company exists. Filled in when this user gets one. */
+function linkSignupOrganization(
+  transaction: Parameters<Parameters<ReturnType<typeof getDatabase>["transaction"]>[0]>[0],
+  userId: string,
+  organizationId: string,
+) {
+  return transaction
+    .update(signupAttributions)
+    .set({ organizationId })
+    .where(and(eq(signupAttributions.userId, userId), isNull(signupAttributions.organizationId)));
 }
 

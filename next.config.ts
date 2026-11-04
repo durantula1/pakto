@@ -40,10 +40,12 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
-    // Everything is 'self', except the Google Ads tag on the public pages (loaded only after cookie consent,
+    // Everything is 'self', except the Google Ads tag on public pages (Consent Mode,
     // src/lib/analytics/google-ads.ts). Scripts keep 'unsafe-inline' for Next's inline bootstrap (nonces would
     // make every page dynamic); the policy still stops other outside scripts, plugins, <base> tricks, forms
     // posting elsewhere and requests to other hosts. blob:/data: are image previews and fonts.
+    // /welcome is allowed too: a new account's one conversion is sent from there when that carousel is the
+    // first signed-in page. The tag is not injected on /welcome otherwise. /app, the portal and /access stay closed.
     const contentSecurityPolicy = (googleAds: boolean) => {
       const google = (hosts: string) => (googleAds ? ` ${hosts}` : "");
       return [
@@ -81,7 +83,7 @@ const nextConfig: NextConfig = {
       // Pages only: a policy on a PDF response can stop the browser's own PDF viewer.
       { source: "/((?!api/).*)", headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy(true) }] },
       // The workspace and the client's portal never load the Google tag, so they keep the policy without Google.
-      ...["/app", "/app/:path*", "/portal/:path*", "/access/:path*", "/welcome"].map((source) => ({
+      ...["/app", "/app/:path*", "/portal/:path*", "/access/:path*"].map((source) => ({
         source,
         headers: [{ key: "Content-Security-Policy", value: contentSecurityPolicy(false) }],
       })),

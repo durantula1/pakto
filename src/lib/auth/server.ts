@@ -14,6 +14,7 @@ import { getDatabase } from "@/db";
 import { authAccounts, authSessions, authUsers, authVerifications, profiles } from "@/db/schema";
 import { escapeHtml, sendEmail } from "@/lib/email/send";
 import { getPublicEnvironment } from "@/lib/env/public";
+import { recordSignupAttribution } from "@/lib/analytics/record-signup-attribution";
 import { recordLegalConsent } from "@/modules/account/mutations";
 
 /** Session cookies are `pakto.session_token` (and `__Secure-pakto…` over https). */
@@ -117,7 +118,12 @@ export const auth = betterAuth({
           await getDatabase().insert(profiles).values({ id: user.id, displayName: user.name, email: user.email.toLowerCase() })
             .onConflictDoNothing();
           // A Google sign-up has no checkbox: the button says that continuing accepts the terms and the privacy policy.
-          if (context?.path?.startsWith("/callback/")) await recordLegalConsent(user.id);
+          const google = context?.path?.startsWith("/callback/");
+          if (google) await recordLegalConsent(user.id);
+          // Only a real insert reaches this hook, so a duplicate email does not get a conversion row.
+          await recordSignupAttribution(user.id, google ? "google" : "email").catch((cause) => {
+            console.error("[signup-attribution]", cause instanceof Error ? cause.message : "failed");
+          });
         },
       },
       // The profile keeps a copy of the sign-in email for team lists and invites.

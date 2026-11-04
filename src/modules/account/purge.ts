@@ -3,7 +3,8 @@ import "server-only";
 import { and, eq, isNull, lte, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { authUsers, notificationPreferences, organizationMembers, organizations, profiles, projectMembers, staffNotifications, teamInvites, userConsents } from "@/db/schema";
+import { authUsers, notificationPreferences, organizationMembers, organizations, profiles, projectMembers, signupAttributions, staffNotifications, teamInvites, userConsents } from "@/db/schema";
+import { withoutAdClickIds } from "@/lib/analytics/touch";
 import { ACCOUNT_DELETION_GRACE_DAYS } from "@/lib/legal";
 import { removeFolder } from "@/lib/storage";
 import { getAccountDeletionPlan } from "@/modules/account/queries";
@@ -53,6 +54,12 @@ export async function purgeDueAccounts(now = new Date()) {
       await tx.delete(staffNotifications).where(eq(staffNotifications.userId, account.id));
       await tx.delete(notificationPreferences).where(eq(notificationPreferences.userId, account.id));
       await tx.delete(userConsents).where(eq(userConsents.userId, account.id));
+      const [attribution] = await tx.select({ firstTouch: signupAttributions.firstTouch, lastTouch: signupAttributions.lastTouch })
+        .from(signupAttributions).where(eq(signupAttributions.userId, account.id)).limit(1);
+      if (attribution) {
+        const stripped = withoutAdClickIds({ first: attribution.firstTouch, last: attribution.lastTouch });
+        await tx.update(signupAttributions).set({ firstTouch: stripped.first, lastTouch: stripped.last }).where(eq(signupAttributions.userId, account.id));
+      }
       if (account.email) {
         await tx.update(teamInvites).set({ revokedAt: now })
           .where(and(eq(teamInvites.email, account.email), isNull(teamInvites.acceptedAt), isNull(teamInvites.revokedAt)));

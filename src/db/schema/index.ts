@@ -19,6 +19,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { AttributionTouch } from "@/lib/analytics/touch";
 
 export const appSchema = pgSchema("app");
 
@@ -121,6 +122,21 @@ export const organizations = appSchema.table(
   },
   (table) => [uniqueIndex("organizations_slug_uidx").on(table.slug)],
 );
+
+/**
+ * Marketing touch captured at registration. `organization_id` is filled when the user gets a company.
+ * Click ids are absent when the visitor refused cookies. The previous app ignores the table;
+ * ON DELETE SET NULL keeps `app.purge_organization()` working.
+ */
+export const signupAttributions = appSchema.table("signup_attributions", {
+  userId: uuid("user_id").primaryKey(),
+  organizationId: uuid("organization_id").references(() => organizations.id, { onDelete: "set null" }),
+  method: text("method", { enum: ["email", "google"] }).notNull().default("email"),
+  firstTouch: jsonb("first_touch").$type<AttributionTouch>().notNull().default({}),
+  lastTouch: jsonb("last_touch").$type<AttributionTouch>().notNull().default({}),
+  conversionReportedAt: timestamp("conversion_reported_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [index("signup_attributions_organization_idx").on(table.organizationId)]);
 
 export const organizationMembers = appSchema.table(
   "organization_members",

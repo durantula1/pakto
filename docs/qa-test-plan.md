@@ -140,6 +140,19 @@
 
 ---
 
+## 10. Google Ads (ръчно)
+
+Тагът е `AW-18520453989`. Конверсията е само „Submit lead form“: `send_to` = `AW-18520453989/OfQjCNm7naEdEOXmnv9E` (константата `SIGN_UP_SEND_TO` в `src/lib/analytics/google-ads.ts`). Една на нов профил, `transaction_id` = id на потребителя. Не се брои създаването на фирма и не се брои повторно изпращане на вече регистриран имейл.
+
+| ID | Сценарий | Очаквано |
+|---|---|---|
+| ADS-01 | Публична страница, банерът още не е пипнат | В мрежата има `googletagmanager.com/gtag/js?id=AW-18520453989`. Няма бисквитка `_gcl`. В `pakto_attr` / `localStorage["pakto-attr"]` няма `gclid` |
+| ADS-02 | „Приемам“, после `/?gclid=TEST123&utm_campaign=nisha` → линк към /sign-up | След отваряне на /sign-up `gclid` и `utm_campaign` са в `pakto_attr` (и в localStorage `pakto-attr`), first и last |
+| ADS-03 | „Отказ“ със същия адрес | `utm_campaign` се пази, `gclid` не. Няма `_gcl` |
+| ADS-04 | Успешна регистрация (нов имейл → линк от писмото → /onboarding, или „Продължи с Google“) | Една заявка към googleadservices.com или google.com, която съдържа `OfQjCNm7naEdEOXmnv9E` и `transaction_id` = id на потребителя. Панелът „Провери имейла си“ още не я праща (същият екран се показва и за вече регистриран имейл). Презареждане на /onboarding не праща втора |
+| ADS-05 | Парола под 8 знака, или имейл, който вече има профил | Няма заявка, която съдържа `OfQjCNm7naEdEOXmnv9E` |
+| ADS-06 | След ADS-02 и реална регистрация | `select user_id, last_touch->>'utm_campaign' from app.signup_attributions order by created_at desc limit 5` показва `nisha`. Обобщение: `select coalesce(last_touch->>'utm_campaign', '(няма)') as utm_campaign, count(*) from app.signup_attributions group by 1 order by 2 desc` |
+
 ## Ред на изпълнение
 
 1. **Основният път (около 1 час):** START-01…03 → OFF-01, 03 → DEC-01…04 → DEC-05 → VER-01 → DEC-02 → VER-04 → PAY-01…03 → ACP-01 → END-01.
