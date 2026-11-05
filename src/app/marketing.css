@@ -672,12 +672,82 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-scene:not([data-step="0"]) .mf-hf-send-2 {
   display: inline;
 }
-.mf-hf-scene[data-step="0"] .mf-hf-send {
-  animation: mf-hf-press 4.2s 2.6s both;
+/* The send button is pressed (ring, ripple, dip), and turns into "Изпратена" right then. */
+.mf-hf-send {
+  overflow: hidden;
 }
-@keyframes mf-hf-press {
-  0%, 40%, 60%, 100% { transform: none; }
-  50% { transform: scale(0.94); }
+.mf-hf-scene[data-step="0"] .mf-hf-send {
+  animation: mf-hf-press-send 0.8s 2.4s both;
+}
+.mf-hf-scene[data-step="0"] .mf-hf-send-1 {
+  animation: mf-hf-gone 0.25s 2.7s both;
+}
+.mf-hf-scene[data-step="0"] .mf-hf-send-2 {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  animation: mf-hf-come 0.25s 2.7s both;
+}
+@keyframes mf-hf-gone {
+  to { opacity: 0; }
+}
+@keyframes mf-hf-come {
+  to { opacity: 1; }
+}
+@keyframes mf-hf-press-send {
+  0% { background: var(--mf-coral); transform: none; box-shadow: 0 0 0 0 rgb(255 118 95 / 0%); }
+  35% { background: var(--mf-coral); transform: scale(0.93); box-shadow: 0 0 0 0.35rem rgb(255 118 95 / 40%); }
+  100% { background: var(--mf-sky); transform: none; box-shadow: 0 0 0 0 rgb(255 118 95 / 0%); }
+}
+
+/* The client's taps on the phone: a dip, a ring and a ripple from the middle of the button. */
+.mf-hf-ap {
+  position: relative;
+  overflow: hidden;
+}
+.mf-hf-ap::after,
+.mf-hf-send::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  margin: -0.5rem 0 0 -0.5rem;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 55%);
+  opacity: 0;
+  pointer-events: none;
+}
+.mf-hf-send::after {
+  background: rgb(16 43 56 / 22%);
+}
+.mf-hf-scene[data-step="1"] .mf-hf-sc-mail .mf-hf-ap,
+.mf-hf-scene[data-step="2"] .mf-hf-sc-offer .mf-hf-ap {
+  animation: mf-hf-tap 0.8s 1.6s both;
+}
+.mf-hf-scene[data-step="3"] .mf-hf-sc-code .mf-hf-ap {
+  animation: mf-hf-tap 0.8s 2.1s both;
+}
+.mf-hf-scene[data-step="1"] .mf-hf-sc-mail .mf-hf-ap::after,
+.mf-hf-scene[data-step="2"] .mf-hf-sc-offer .mf-hf-ap::after {
+  animation: mf-hf-ripple 0.8s 1.6s both;
+}
+.mf-hf-scene[data-step="3"] .mf-hf-sc-code .mf-hf-ap::after {
+  animation: mf-hf-ripple 0.8s 2.1s both;
+}
+.mf-hf-scene[data-step="0"] .mf-hf-send::after {
+  animation: mf-hf-ripple 0.8s 2.4s both;
+}
+@keyframes mf-hf-tap {
+  35% { transform: scale(0.93); filter: brightness(0.85); box-shadow: 0 0 0 0.35rem rgb(255 118 95 / 45%); }
+  100% { transform: none; box-shadow: 0 0 0 0 rgb(255 118 95 / 0%); }
+}
+@keyframes mf-hf-ripple {
+  0% { opacity: 0.9; transform: scale(0); }
+  100% { opacity: 0; transform: scale(16); }
 }
 
 .mf-hf-row {
@@ -1229,6 +1299,15 @@ html[data-auth="in"] .mf-when-out {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 1rem;
   }
+}
+
+/* The scene's own buttons answer a real press too: the sector chips sink into their shadow. */
+.mf-hf-chips button:active {
+  transform: translate(0.1rem, 0.1rem);
+  box-shadow: 0 0 0 var(--mf-ink);
+}
+.mf-hf-steps button:active {
+  transform: scale(0.97);
 }
 
 /* Held (pointer over it, off screen, hidden tab): freeze what is running. */
