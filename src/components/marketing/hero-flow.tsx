@@ -1,6 +1,16 @@
 "use client";
 
-import { Check, Mail } from "lucide-react";
+import {
+  Bell,
+  Check,
+  Contact,
+  Euro,
+  FileText,
+  FolderKanban,
+  LayoutDashboard,
+  Mail,
+  Plus,
+} from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -162,6 +172,20 @@ const extraTrades = [
   "ИТ поддръжка",
 ];
 
+/** The owner's sidebar (as in src/app/app/layout.tsx), trimmed to fit the mockup. */
+const nav = [
+  {
+    group: "Работа",
+    links: [
+      { label: "Работен преглед", icon: LayoutDashboard },
+      { label: "Проекти", icon: FolderKanban },
+      { label: "Клиенти", icon: Contact },
+      { label: "Оферти", icon: FileText },
+    ],
+  },
+  { group: "Финанси", links: [{ label: "Плащания", icon: Euro }] },
+];
+
 const code = ["4", "8", "2", "9", "1", "3"] as const;
 
 export function HeroFlow() {
@@ -297,7 +321,6 @@ export function HeroFlow() {
   };
 
   const data = sectors[Math.min(sector, sectors.length - 1)];
-  const others = sectors.filter((_, index) => index !== sector).slice(0, 4);
   const listed = [
     data,
     sectors[(sector + 1) % sectors.length],
@@ -359,28 +382,6 @@ export function HeroFlow() {
         </div>
 
         <div aria-hidden="true" className="mf-hf-stage text-[#102b38]">
-          {/* Offers of the other trades, behind the window. */}
-          <div className="mf-hf-fan">
-            {others.map((item, index) => (
-              <div
-                key={item.number}
-                className="mf-hf-fc"
-                style={
-                  {
-                    "--r": [7, -5, 10, -9][index],
-                    "--tx": [2, 5, -1, 3][index],
-                    "--ty": [-1, 5, 11, 17][index],
-                  } as CSSProperties
-                }
-              >
-                <small>{item.label}</small>
-                <b>{item.title}</b>
-                <i>✓</i>
-                <em>{item.total.replace(",00", "")}</em>
-              </div>
-            ))}
-          </div>
-
           {swipe && (
             <div key={swipe.key} className="mf-hf-swipe">
               {swipe.text}
@@ -414,71 +415,106 @@ export function HeroFlow() {
           {/* The admin panel: the offer is written and sent, and later shows as approved. */}
           <div className="mf-hf-win">
             <div className="mf-hf-chrome">
-              <i />
-              <span>{data.company} · админ панел</span>
-              <small>ПАНЕЛ</small>
+              <span className="mf-hf-dots">
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className="mf-hf-url">pakto.net/app</span>
             </div>
             <div className="mf-hf-wb">
-              <div className="mf-hf-sb">
-                <span data-on="true">Проекти</span>
-                <span>Оферти</span>
-                <span>Клиенти</span>
-                <span>Плащания</span>
-              </div>
-              <div className="mf-hf-mn">
-                <div className="mf-hf-view mf-hf-view-new">
-                  <div className="mf-hf-ttl">
-                    <span>Нова оферта · {data.number}</span>
-                    <span className={`mf-hf-ch ${sentLabel[1]}`}>
-                      {sentLabel[0]}
-                    </span>
+              <aside className="mf-hf-sb">
+                <div className="mf-hf-brand">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a small static mark inside a decorative mockup */}
+                  <img src="/pakto-mark.svg" alt="" />
+                  <b>{data.company}</b>
+                </div>
+                {nav.map(({ group, links }) => (
+                  <div key={group} className="mf-hf-group">
+                    <small>{group}</small>
+                    {links.map(({ label, icon: Icon }) => (
+                      <p key={label} data-on={label === "Проекти"}>
+                        <Icon /> {label}
+                      </p>
+                    ))}
                   </div>
-                  <p className="mf-hf-meta">
-                    Клиент: {data.client} · срок {data.deadline}
-                  </p>
-                  {data.lines.map(([name, qty, amount], index) => (
-                    <div
-                      key={name}
-                      className="mf-hf-line"
-                      style={{ "--n": index } as CSSProperties}
-                    >
-                      <span>{name}</span>
-                      <span>{qty}</span>
-                      <span>{amount}</span>
-                    </div>
-                  ))}
-                  <div className="mf-hf-total">
-                    <span>Общо</span>
-                    <b>{data.total}</b>
-                  </div>
+                ))}
+              </aside>
+              <div className="mf-hf-main">
+                <div className="mf-hf-top">
+                  <b>
+                    {shown === 5 ? "Проекти" : `Нова оферта · ${data.number}`}
+                  </b>
+                  <span className="mf-hf-bell">
+                    <Bell />
+                    <i>1</i>
+                  </span>
                   <span className="mf-hf-send">
                     <span className="mf-hf-send-1">Изпрати на клиента →</span>
                     <span className="mf-hf-send-2">✓ Изпратена</span>
                   </span>
+                  <span className="mf-hf-new">
+                    <Plus /> Нова оферта
+                  </span>
                 </div>
-                <div className="mf-hf-view mf-hf-view-list">
-                  <div className="mf-hf-ttl">
-                    <span>Проекти</span>
-                    <span className="mf-hf-ch ok">на живо</span>
-                  </div>
-                  {listed.map((item, index) => (
-                    <div
-                      key={item.number}
-                      className="mf-hf-row"
-                      data-hot={index === 0}
-                    >
-                      <div>
-                        <span>{item.title}</span>
-                        <small>
-                          {item.number} · {item.client}
-                        </small>
+                <div className="mf-hf-mn">
+                  <div className="mf-hf-view mf-hf-view-new">
+                    <div className="mf-hf-card">
+                      <div className="mf-hf-ttl">
+                        <span>{data.title}</span>
+                        <span className={`mf-hf-ch ${sentLabel[1]}`}>
+                          {sentLabel[0]}
+                        </span>
                       </div>
-                      <span>{item.total}</span>
-                      <span className={`mf-hf-ch ${["ok", "wt", "sn"][index]}`}>
-                        {["Одобрена ✓", "Чака отговор", "Изпратена"][index]}
-                      </span>
+                      <p className="mf-hf-meta">
+                        Клиент: {data.client} · срок {data.deadline}
+                      </p>
+                      <div className="mf-hf-head">
+                        <span>Позиция</span>
+                        <span>Количество</span>
+                        <span>Сума</span>
+                      </div>
+                      {data.lines.map(([name, qty, amount], index) => (
+                        <div
+                          key={name}
+                          className="mf-hf-line"
+                          style={{ "--n": index } as CSSProperties}
+                        >
+                          <span>{name}</span>
+                          <span>{qty}</span>
+                          <span>{amount}</span>
+                        </div>
+                      ))}
+                      <div className="mf-hf-total">
+                        <span>Общо с ДДС</span>
+                        <b>{data.total}</b>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                  <div className="mf-hf-view mf-hf-view-list">
+                    <div className="mf-hf-card">
+                      {listed.map((item, index) => (
+                        <div
+                          key={item.number}
+                          className="mf-hf-row"
+                          data-hot={index === 0}
+                        >
+                          <div>
+                            <span>{item.title}</span>
+                            <small>
+                              {item.number} · {item.client}
+                            </small>
+                          </div>
+                          <span>{item.total}</span>
+                          <span
+                            className={`mf-hf-ch ${["ok", "wt", "sn"][index]}`}
+                          >
+                            {["Одобрена ✓", "Чака отговор", "Изпратена"][index]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -561,7 +597,9 @@ function Phone({ data }: { data: Sector }) {
                 си линк.
               </p>
             </div>
-            <div className="mf-hf-ap mf-hf-ap-ink">Отвори офертата</div>
+            <div className="mf-hf-ap mf-hf-ap-ink mf-hf-tap mf-hf-tap-mail">
+              Отвори офертата
+            </div>
           </div>
 
           <div className="mf-hf-sc mf-hf-sc-offer">
@@ -576,7 +614,9 @@ function Phone({ data }: { data: Sector }) {
                 )
                 .join(" · ")}
             </small>
-            <div className="mf-hf-ap">Продължи към кода</div>
+            <div className="mf-hf-ap mf-hf-tap mf-hf-tap-offer">
+              Продължи към кода
+            </div>
           </div>
 
           <div className="mf-hf-sc mf-hf-sc-code">
@@ -588,7 +628,7 @@ function Phone({ data }: { data: Sector }) {
                 </i>
               ))}
             </div>
-            <div className="mf-hf-ap">Одобрявам ✓</div>
+            <div className="mf-hf-ap mf-hf-tap mf-hf-tap-code">Одобрявам ✓</div>
           </div>
 
           <div className="mf-hf-sc mf-hf-sc-done">
