@@ -193,7 +193,7 @@ export function LandingExperience() {
 
             {/* One left edge for the whole text column; the offers and the client's phone take the right half. */}
             <div className="relative z-10 mx-auto grid w-full max-w-[93.75rem] items-center gap-14 lg:my-auto lg:grid-cols-12 lg:gap-10">
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-5">
                 <HeroReveal className="mf-kicker mb-7 flex items-center gap-3">
                   <span className="size-2 rounded-full bg-[#ff765f]" />
                   ОФЕРТИ И ПРОМЕНИ, ОДОБРЕНИ ПРЕДИ РАБОТАТА
@@ -241,7 +241,7 @@ export function LandingExperience() {
                 </HeroReveal>
               </div>
 
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-7">
                 <HeroFlow />
               </div>
             </div>
