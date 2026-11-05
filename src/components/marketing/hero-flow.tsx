@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Mail } from "lucide-react";
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -413,19 +414,37 @@ export function HeroFlow() {
 
           {/* The admin panel: the offer is written and sent, and later shows as approved. */}
           <div className="mf-hf-win">
-            <div className="mf-hf-chrome">
-              <i />
-              <span>{data.company} · админ панел</span>
-              <small>ПАНЕЛ</small>
-            </div>
             <div className="mf-hf-wb">
+              {/* The sidebar of the real admin: a floating card, the mark, the groups. */}
               <div className="mf-hf-sb">
-                <span data-on="true">Проекти</span>
-                <span>Оферти</span>
+                <p className="mf-hf-brand">
+                  <Image
+                    src="/pakto-mark.svg"
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="mf-hf-mark"
+                  />
+                  <span>{data.company}</span>
+                </p>
+                <small>Работа</small>
+                <span>Работен преглед</span>
+                <span data-on={shown === 5}>Проекти</span>
                 <span>Клиенти</span>
+                <span data-on={shown !== 5}>Оферти</span>
+                <small>Финанси</small>
                 <span>Плащания</span>
               </div>
               <div className="mf-hf-mn">
+                <p className="mf-hf-crumb">
+                  {data.company} <i>/</i> {shown === 5 ? "Проекти" : "Оферти"}
+                  {shown === 5 ? null : (
+                    <>
+                      {" "}
+                      <i>/</i> <b>Нова оферта</b>
+                    </>
+                  )}
+                </p>
                 <div className="mf-hf-view mf-hf-view-new">
                   <div className="mf-hf-ttl">
                     <span>Нова оферта · {data.number}</span>
