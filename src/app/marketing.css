@@ -402,11 +402,12 @@ html[data-auth="in"] .mf-when-out {
 }
 
 /*
- * Hero flow (hero-flow.tsx): offers from five businesses fanned out on the right, the client's
- * phone in front on the left. `data-step` on the scene is the client's step (0 email, 1 offer,
- * 2 code, 3 approved); every rule below reacts to it. Sizes inside the stage are in units of
- * `--demo-size` (the stage is 30 units wide on phones, 42 on wider screens), so the whole picture
- * scales from one value.
+ * Hero flow (hero-flow.tsx): the business's admin panel on a desktop, the client's phone in front
+ * of it for the middle four steps, the other four businesses' offers fanned out behind. `data-step`
+ * on the scene is the step (0 the offer is written and sent, 1 email, 2 offer in the portal, 3 code,
+ * 4 approved, 5 the business sees "Одобрена"); every rule below reacts to it. Sizes inside the
+ * stage are in units of `--demo-size` (the stage is 30 units wide on phones, 42 on wider screens),
+ * so the whole picture scales from one value.
  */
 .mf-hf-scene {
   --demo-size: calc(100cqw / 30);
@@ -421,80 +422,275 @@ html[data-auth="in"] .mf-when-out {
 
 .mf-hf-stage {
   position: relative;
-  height: calc(var(--u) * 29);
+  height: calc(var(--u) * 31);
 }
 
-/* The fan: each card turns around a point far below it, by its distance from the middle. */
-.mf-hf-card {
+/* The other four offers: each turns around a point far below it, by its place in the fan. */
+.mf-hf-ghost {
   position: absolute;
-  top: 20%;
-  left: 66%;
-  width: calc(var(--u) * 17);
+  top: 0;
+  left: 50%;
+  z-index: 0;
+  width: calc(var(--u) * 13);
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 1.1);
   border: 1px solid rgb(16 43 56 / 10%);
   border-radius: 1rem;
   background: linear-gradient(160deg, #fffefa, #fbf6e8);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 80%) inset,
-    0 2px 4px rgb(16 43 56 / 6%),
-    0 14px 24px -8px rgb(16 43 56 / 16%),
-    0 40px 70px -24px rgb(16 43 56 / 38%);
-  transform-origin: 50% 230%;
-  transform: translateX(-50%) rotate(calc(var(--p) * 9deg))
-    translateY(calc(var(--a) * 1.5%)) scale(0.94);
-  z-index: calc(10 - var(--a));
+  box-shadow: 0 14px 24px -12px rgb(16 43 56 / 22%);
+  transform-origin: 50% 320%;
+  transform: translateX(-50%) rotate(calc(var(--g) * 6.5deg));
   transition:
     transform 0.9s var(--mf-ease-out),
-    box-shadow 0.6s;
+    opacity 0.6s;
+}
+.mf-hf-ghost[data-hidden="true"] {
+  opacity: 0;
+  transform: translateX(-50%) translateY(calc(var(--u) * 3)) scale(0.8);
 }
 
-.mf-hf-card[data-lead="true"] {
-  transform: translateX(-50%) translateY(-5%) scale(0.98);
+/* The admin panel. It steps aside to the left while the client is on the phone. */
+.mf-hf-win {
+  position: absolute;
+  top: calc(var(--u) * 5);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: calc(var(--u) * 8.6) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgb(16 43 56 / 12%);
+  border-radius: 1.1rem;
+  background: #fffaf0;
+  box-shadow:
+    0 2px 4px rgb(16 43 56 / 6%),
+    0 40px 70px -26px rgb(16 43 56 / 40%);
+  transform-origin: 0 50%;
+  transition:
+    transform 0.8s var(--mf-ease-out),
+    filter 0.6s;
+}
+.mf-hf-scene:is([data-step="1"], [data-step="2"], [data-step="3"], [data-step="4"])
+  .mf-hf-win {
+  transform: translateX(calc(var(--u) * -1.2)) scale(0.97);
+  filter: saturate(0.85);
 }
 
-@container (width < 36rem) {
-  .mf-hf-card {
-    left: 65%;
-    width: calc(var(--u) * 15.5);
+.mf-hf-side {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 0.2);
+  padding: calc(var(--u) * 1) calc(var(--u) * 0.7);
+  background: var(--mf-ink);
+  color: rgb(232 241 237 / 78%);
+}
+.mf-hf-side > p {
+  color: #e8f1ed;
+}
+.mf-hf-side > span[data-on="true"] {
+  background: #18394c;
+  color: #fffaf0;
+}
+
+.mf-hf-main {
+  position: relative;
+  min-width: 0;
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 1.3);
+  background: var(--mf-paper);
+}
+
+.mf-hf-view {
+  position: absolute;
+  inset: calc(var(--u) * 3.6) calc(var(--u) * 1.3) calc(var(--u) * 1);
+  opacity: 0;
+  transform: translateY(0.6rem);
+  pointer-events: none;
+  transition:
+    opacity 0.5s,
+    transform 0.5s var(--mf-ease-out);
+}
+.mf-hf-view-form {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: calc(var(--u) * 0.9);
+}
+.mf-hf-scene:is([data-step="0"], [data-step="1"]) .mf-hf-view-form,
+.mf-hf-scene:is([data-step="2"], [data-step="3"], [data-step="4"], [data-step="5"])
+  .mf-hf-view-list {
+  opacity: 1;
+  transform: none;
+}
+
+.mf-hf-panel {
+  min-width: 0;
+  padding: calc(var(--u) * 0.9);
+  border: 1px solid rgb(16 43 56 / 10%);
+  border-radius: 0.9rem;
+  background: #fffaf0;
+}
+.mf-hf-cap {
+  margin-bottom: calc(var(--u) * 0.6);
+  color: #52707d;
+  font-size: calc(var(--u) * 0.6);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.mf-hf-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--u) * 0.5);
+  margin-bottom: calc(var(--u) * 0.45);
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 0.65);
+  border: 1px solid rgb(16 43 56 / 12%);
+  border-radius: 0.6rem;
+  background: #fff;
+  font-size: calc(var(--u) * 0.72);
+  white-space: nowrap;
+}
+
+/* The lines of the offer appear one after another while it is written. */
+.mf-hf-row {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 0.5s,
+    transform 0.5s var(--mf-ease-out);
+}
+.mf-hf-scene:is([data-step="0"], [data-step="1"]) .mf-hf-row {
+  opacity: 1;
+  transform: none;
+}
+.mf-hf-row:nth-of-type(2) { transition-delay: 0.5s; }
+.mf-hf-row:nth-of-type(3) { transition-delay: 1s; }
+.mf-hf-row:nth-of-type(4) { transition-delay: 1.5s; }
+
+.mf-hf-send {
+  display: block;
+  margin-top: calc(var(--u) * 0.8);
+  padding: calc(var(--u) * 0.75) 0;
+  border-radius: 999px;
+  background: var(--mf-coral);
+  color: var(--mf-ink);
+  font-size: calc(var(--u) * 0.78);
+  font-weight: 800;
+  text-align: center;
+  transition: background 0.3s;
+}
+.mf-hf-scene[data-step="0"] .mf-hf-send {
+  animation: mf-hf-press 4.6s both;
+}
+.mf-hf-scene[data-step="1"] .mf-hf-send {
+  background: var(--mf-lime);
+}
+@keyframes mf-hf-press {
+  0%, 62% {
+    background: var(--mf-coral);
+    transform: none;
+  }
+  70% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0.35rem rgb(255 118 95 / 35%);
+  }
+  100% {
+    background: var(--mf-lime);
+    transform: none;
   }
 }
 
-/* The middle offer lights up when it is sent (sky) and when it is approved (lime). */
-.mf-hf-scene[data-step="0"] .mf-hf-card[data-lead="true"] {
-  box-shadow:
-    0 0 0 3px var(--mf-sky),
-    0 30px 60px -24px rgb(16 43 56 / 45%);
+.mf-hf-table {
+  margin-top: calc(var(--u) * 0.8);
+  overflow: hidden;
+  border: 1px solid rgb(16 43 56 / 10%);
+  border-radius: 0.9rem;
+  background: #fffaf0;
 }
-.mf-hf-scene[data-step="3"] .mf-hf-card[data-lead="true"] {
-  box-shadow:
-    0 0 0 3px var(--mf-lime),
-    0 30px 60px -24px rgb(16 43 56 / 45%);
+.mf-hf-tr {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 4) minmax(0, 1fr) calc(var(--u) * 5.4) calc(var(--u) * 5.2);
+  gap: calc(var(--u) * 0.5);
+  align-items: center;
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 0.8);
+  border-top: 1px solid rgb(16 43 56 / 8%);
+  font-size: calc(var(--u) * 0.72);
+}
+.mf-hf-th {
+  border-top: 0;
+  color: #52707d;
+  font-size: calc(var(--u) * 0.58);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.mf-hf-tr[data-lead="true"] {
+  background: #dcf3d1;
 }
 
-.mf-hf-stamp {
+/* How the business learns: the toast comes in when the client has approved. */
+.mf-hf-toast {
+  position: absolute;
+  top: calc(var(--u) * 5.4);
+  right: calc(var(--u) * 1.2);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.6);
+  max-width: calc(var(--u) * 15);
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 0.9);
+  border-radius: 0.9rem;
+  background: var(--mf-ink);
+  color: #fffaf0;
+  box-shadow: 0 16px 30px -12px rgb(16 43 56 / 55%);
   opacity: 0;
-  transform: rotate(-7deg) scale(1.7);
+  transform: translateY(-0.8rem) scale(0.96);
   transition:
-    opacity 0.25s 0.2s,
-    transform 0.45s 0.2s var(--mf-ease-pop);
+    opacity 0.4s,
+    transform 0.55s var(--mf-ease-pop);
 }
-.mf-hf-card[data-signed="true"] .mf-hf-stamp {
-  opacity: 0.92;
-  transform: rotate(-7deg);
+.mf-hf-scene[data-step="5"] .mf-hf-toast {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.6s;
 }
 
-/* The client's phone. It leans in a little while the client is on it. */
+/* The sector word: a solid tile on the corner of the window. It rolls in when the sector changes. */
+.mf-hf-word {
+  position: absolute;
+  bottom: calc(var(--u) * 4);
+  left: calc(var(--u) * -1.2);
+  z-index: 8;
+  overflow: hidden;
+  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.1) calc(var(--u) * 0.8);
+  border-radius: 0.9rem;
+  background: var(--mf-coral);
+  color: var(--mf-ink);
+  box-shadow: 0 18px 30px -14px rgb(16 43 56 / 50%);
+  transform: rotate(-3deg);
+  animation: mf-hf-roll 0.7s var(--mf-ease-out) both;
+}
+@keyframes mf-hf-roll {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) rotate(-3deg);
+  }
+}
+
+/* The client's phone: it slides in over the window for the four client steps. */
 .mf-hf-phone {
   position: absolute;
-  top: 2%;
-  /* Out past the frame (the hero clips it), so the phone covers less of the middle offer. */
-  left: -4%;
+  right: calc(var(--u) * -1);
+  bottom: 0;
   z-index: 20;
   width: calc(var(--u) * 12.5);
-  transform: rotate(-3deg);
-  transition: transform 0.8s var(--mf-ease-out);
+  opacity: 0;
+  transform: translate(calc(var(--u) * 3), calc(var(--u) * 2)) rotate(2deg) scale(0.92);
+  transition:
+    transform 0.8s var(--mf-ease-out),
+    opacity 0.5s;
 }
-.mf-hf-scene:is([data-step="1"], [data-step="2"]) .mf-hf-phone {
-  transform: rotate(-1deg) scale(1.04);
+.mf-hf-scene:is([data-step="1"], [data-step="2"], [data-step="3"], [data-step="4"])
+  .mf-hf-phone {
+  opacity: 1;
+  transform: rotate(-2deg);
 }
 
 .mf-hf-screen {
@@ -509,29 +705,29 @@ html[data-auth="in"] .mf-when-out {
     opacity 0.45s,
     transform 0.6s var(--mf-ease-out);
 }
-.mf-hf-scene[data-step="0"] .mf-hf-screen-0,
 .mf-hf-scene[data-step="1"] .mf-hf-screen-1,
 .mf-hf-scene[data-step="2"] .mf-hf-screen-2,
-.mf-hf-scene[data-step="3"] .mf-hf-screen-3 {
+.mf-hf-scene[data-step="3"] .mf-hf-screen-3,
+.mf-hf-scene[data-step="4"] .mf-hf-screen-4 {
   opacity: 1;
   transform: none;
 }
 
-/* The email lands on the lock screen when the envelope reaches the phone. */
+/* The email lands on the lock screen as the phone comes in. */
 .mf-hf-notif {
   opacity: 0;
   transform: translateY(-0.8rem) scale(0.96);
   transition:
-    opacity 0.4s 1.5s,
-    transform 0.55s 1.5s var(--mf-ease-pop);
+    opacity 0.4s 0.9s,
+    transform 0.55s 0.9s var(--mf-ease-pop);
 }
-.mf-hf-scene[data-step="0"] .mf-hf-notif {
+.mf-hf-scene[data-step="1"] .mf-hf-notif {
   opacity: 1;
   transform: none;
 }
 
 /* The client taps "Одобрявам". */
-.mf-hf-scene[data-step="1"] .mf-hf-tap {
+.mf-hf-scene[data-step="2"] .mf-hf-tap {
   animation: mf-hf-tap 0.6s 2.4s both;
 }
 @keyframes mf-hf-tap {
@@ -550,7 +746,7 @@ html[data-auth="in"] .mf-when-out {
     color 0.12s,
     border-color 0.12s;
 }
-.mf-hf-scene[data-step="2"] .mf-hf-code > span {
+.mf-hf-scene[data-step="3"] .mf-hf-code > span {
   border-color: var(--mf-ink);
   color: var(--mf-ink);
 }
@@ -564,7 +760,7 @@ html[data-auth="in"] .mf-when-out {
   opacity: 0.35;
   transition: opacity 0.3s 2.5s;
 }
-.mf-hf-scene[data-step="2"] .mf-hf-saving {
+.mf-hf-scene[data-step="3"] .mf-hf-saving {
   opacity: 1;
 }
 
@@ -572,106 +768,37 @@ html[data-auth="in"] .mf-when-out {
   transform: scale(0.4);
   transition: transform 0.55s 0.15s var(--mf-ease-pop);
 }
-.mf-hf-scene[data-step="3"] .mf-hf-check {
+.mf-hf-scene[data-step="4"] .mf-hf-check {
   transform: none;
 }
 
-/* The way between the offer and the phone: an envelope out, a check back. */
-.mf-hf-arc {
-  position: absolute;
-  top: 4%;
-  left: 22%;
-  z-index: 15;
-  width: 45%;
-  height: 20%;
-  overflow: visible;
-  opacity: 0.25;
-  pointer-events: none;
-  transition: opacity 0.5s;
-}
-.mf-hf-scene:is([data-step="0"], [data-step="3"]) .mf-hf-arc {
-  opacity: 1;
-}
-
-.mf-hf-runner {
-  position: absolute;
-  top: 19%;
-  z-index: 25;
-}
-.mf-hf-runner > span {
-  display: grid;
-  place-items: center;
-  width: calc(var(--u) * 2.4);
-  height: calc(var(--u) * 2.4);
-  border-radius: calc(var(--u) * 0.7);
-  box-shadow: 0 10px 20px -8px rgb(16 43 56 / 60%);
+.mf-hf-stamp {
   opacity: 0;
+  transform: rotate(-7deg) scale(1.7);
+  transition:
+    opacity 0.25s 0.5s,
+    transform 0.45s 0.5s var(--mf-ease-pop);
 }
-.mf-hf-run-out {
-  left: 64%;
-}
-.mf-hf-run-back {
-  left: 23%;
-}
-.mf-hf-scene[data-step="0"] .mf-hf-run-out {
-  animation: mf-hf-out 1.6s 0.2s var(--mf-ease-in-out) both;
-}
-.mf-hf-scene[data-step="3"] .mf-hf-run-back {
-  animation: mf-hf-back 1.6s 0.1s var(--mf-ease-in-out) both;
-}
-.mf-hf-scene[data-step="0"] .mf-hf-run-out > span {
-  animation: mf-hf-hop 1.6s 0.2s ease-in-out both;
-}
-.mf-hf-scene[data-step="3"] .mf-hf-run-back > span {
-  animation: mf-hf-hop 1.6s 0.1s ease-in-out both;
-}
-@keyframes mf-hf-out {
-  from { left: 64%; }
-  to { left: 21%; }
-}
-@keyframes mf-hf-back {
-  from { left: 23%; }
-  to { left: 62%; }
+.mf-hf-scene[data-step="4"] .mf-hf-stamp {
+  opacity: 0.92;
+  transform: rotate(-7deg);
 }
 
-/* Left-right is linear in time, up-down eases: together they draw the arc. */
-@keyframes mf-hf-hop {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.6);
-  }
-  15% {
-    opacity: 1;
-    transform: translateY(calc(var(--u) * -2.4));
-  }
-  50% {
-    transform: translateY(calc(var(--u) * -4.2));
-  }
-  85% {
-    opacity: 1;
-    transform: translateY(calc(var(--u) * -2.4));
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(0) scale(0.6);
-  }
-}
-
-/* The client's four steps: the one on screen fills while it lasts, the ones behind turn green. */
+/* The six steps: the one on screen fills while it lasts, the ones behind turn green. */
 .mf-hf-steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
   margin-top: 1.25rem;
 }
 .mf-hf-steps li {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
-  column-gap: 0.6rem;
+  column-gap: 0.5rem;
   align-content: start;
   overflow: hidden;
-  padding: 0.75rem 0.8rem 0.9rem;
+  padding: 0.65rem 0.7rem 0.85rem;
   border: 1px solid rgb(16 43 56 / 10%);
   border-radius: 0.9rem;
   background: rgb(255 253 247 / 60%);
@@ -683,25 +810,25 @@ html[data-auth="in"] .mf-when-out {
     transform 0.5s var(--mf-ease-out);
 }
 .mf-hf-steps b {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.3;
 }
 .mf-hf-step-n {
   display: grid;
   grid-row: span 2;
   place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border-radius: 999px;
   background: rgb(16 43 56 / 8%);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 800;
   transition:
     background 0.4s,
     color 0.4s;
 }
 .mf-hf-step-text {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.35;
 }
 .mf-hf-steps li::after {
@@ -730,8 +857,13 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-steps li[data-state="active"]::after {
   animation: mf-hf-fill var(--mf-hf-dur) linear forwards;
 }
+/* A finished step is solid, so it never looks like one that was skipped. */
 .mf-hf-steps li[data-state="done"] {
   color: #16623f;
+}
+.mf-hf-steps li[data-state="done"]::after {
+  width: 100%;
+  background: #16623f;
 }
 .mf-hf-steps li[data-state="done"] .mf-hf-step-n {
   background: var(--mf-lime);
@@ -740,7 +872,7 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-steps li[data-state="done"] .mf-hf-step-n::before {
   content: "✓";
   color: #16623f;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }
 @keyframes mf-hf-fill {
   to {
@@ -748,12 +880,52 @@ html[data-auth="in"] .mf-when-out {
   }
 }
 
+/* A phone-wide stage: the side menu goes, the panel gets the whole width. */
+@container (width < 36rem) {
+  .mf-hf-win {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mf-hf-side {
+    display: none;
+  }
+  .mf-hf-field,
+  .mf-hf-tr {
+    font-size: calc(var(--u) * 0.62);
+  }
+  .mf-hf-send {
+    font-size: calc(var(--u) * 0.62);
+    white-space: nowrap;
+  }
+  .mf-hf-tr {
+    grid-template-columns: calc(var(--u) * 3.6) minmax(0, 1fr) calc(var(--u) * 5) calc(var(--u) * 4.6);
+    gap: calc(var(--u) * 0.35);
+  }
+  .mf-hf-th {
+    font-size: calc(var(--u) * 0.5);
+    letter-spacing: 0;
+  }
+}
+
+/* Six steps in a narrow column: no number circle and no sub-line, the title and the bar say it. */
+@container (width < 48rem) {
+  .mf-hf-step-text,
+  .mf-hf-step-n {
+    display: none;
+  }
+  .mf-hf-steps li {
+    display: block;
+    padding: 0.65rem 0.6rem 0.85rem;
+  }
+  .mf-hf-steps b {
+    font-size: 0.8125rem;
+  }
+  .mf-hf-steps li[data-state="done"] b::before {
+    content: "✓ ";
+  }
+}
 @container (width < 36rem) {
   .mf-hf-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .mf-hf-step-text {
-    display: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -768,7 +940,50 @@ html[data-auth="in"] .mf-when-out {
     animation: none !important;
     transition: none !important;
   }
-  .mf-hf-runner {
-    display: none;
+}
+
+/* Trades under the hero (audience-strip.tsx): two rows sliding in opposite directions. */
+.mf-audience-row {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.mf-audience-track {
+  display: flex;
+  gap: 0.75rem;
+  width: max-content;
+  animation: mf-audience-slide 55s linear infinite;
+}
+.mf-audience-track[data-reverse="true"] {
+  animation-direction: reverse;
+  animation-duration: 65s;
+}
+.mf-audience-row:hover .mf-audience-track {
+  animation-play-state: paused;
+}
+.mf-audience-tag {
+  padding: 0.7rem 1.3rem;
+  border: 1px solid rgb(16 43 56 / 12%);
+  border-radius: 999px;
+  background: #fffaf0;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.mf-audience-tag:nth-child(4n + 1) {
+  border-color: var(--mf-ink);
+  background: var(--mf-ink);
+  color: #fffaf0;
+}
+.mf-audience-tag:nth-child(4n + 3) {
+  background: #dcf3d1;
+}
+@keyframes mf-audience-slide {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mf-audience-track {
+    animation: none;
   }
 }

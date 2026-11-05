@@ -23,6 +23,7 @@ import { PlatformTour } from "./platform-tour";
 import { ProcessVideo } from "./process-video";
 import { ProblemSection } from "./problem-section";
 import { MobileCtaBar } from "./mobile-cta-bar";
+import { AudienceStrip } from "./audience-strip";
 import { HeroFlow } from "./hero-flow";
 import { SiteFooter } from "./site-chrome";
 import { HeroReveal, Reveal } from "./reveal";
@@ -246,6 +247,8 @@ export function LandingExperience() {
               </div>
             </div>
           </section>
+
+          <AudienceStrip />
 
           <div className="mf-defer">
             <ProblemSection />
