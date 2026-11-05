@@ -446,6 +446,16 @@ html[data-auth="in"] .mf-when-out {
   transform: translate(-0.1rem, -0.1rem);
   box-shadow: 0.2rem 0.2rem 0 var(--mf-ink);
 }
+.mf-hf-chips button:active {
+  transform: translate(0.1rem, 0.1rem) scale(0.96);
+  box-shadow: 0 0 0 var(--mf-ink);
+  transition-duration: 0.06s;
+}
+.mf-hf-chips button:focus-visible,
+.mf-hf-steps button:focus-visible {
+  outline: 2px solid var(--mf-coral);
+  outline-offset: 3px;
+}
 .mf-hf-chips button[aria-pressed="true"] {
   background: var(--mf-ink);
   color: #fffaf0;
@@ -1179,6 +1189,22 @@ html[data-auth="in"] .mf-when-out {
   opacity: 0.55;
   transition: opacity 0.3s;
 }
+.mf-hf-steps button:hover {
+  opacity: 1;
+}
+.mf-hf-steps button {
+  transition:
+    opacity 0.3s,
+    transform 0.15s var(--mf-ease-out);
+}
+.mf-hf-steps button:hover b {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.mf-hf-steps button:active {
+  transform: scale(0.95);
+  transition-duration: 0.06s;
+}
 .mf-hf-steps li[data-state="active"] button {
   opacity: 1;
 }
@@ -1188,9 +1214,13 @@ html[data-auth="in"] .mf-when-out {
 .mf-hf-bar {
   display: block;
   height: 0.2rem;
+  transition: height 0.2s;
   overflow: hidden;
   border-radius: 9px;
   background: rgb(16 43 56 / 15%);
+}
+.mf-hf-steps button:hover .mf-hf-bar {
+  height: 0.35rem;
 }
 .mf-hf-bar i {
   display: block;
