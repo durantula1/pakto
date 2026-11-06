@@ -147,10 +147,20 @@ const steps = [
   ["Научаваш", "АДМИН ПАНЕЛ"],
 ] as const;
 
-/** How long each step stays on screen, in ms: slow enough to read what happens. */
-const durations = [5200, 3600, 3600, 4200, 3600, 4600] as const;
-/** Second and later laps run faster: the visitor has seen how it goes. */
-const FAST = 0.62;
+/**
+ * How long each step stays on screen, in ms. Steps 0-3 end in a tap: the cursor presses the button
+ * at `taps[i]` (the same times are in marketing.css, `--tap-N`) and the next step starts 400 ms
+ * later, so the scene changes right after the press and not after a pause.
+ */
+const taps = [4500, 3000, 3000, 3500] as const;
+const durations = [
+  taps[0] + 400,
+  taps[1] + 400,
+  taps[2] + 400,
+  taps[3] + 400,
+  3400,
+  4800,
+] as const;
 const FINALE_MS = 7000;
 
 const extraTrades = [
@@ -191,7 +201,6 @@ const code = ["4", "8", "2", "9", "1", "3"] as const;
 export function HeroFlow() {
   const [sector, setSector] = useState(0);
   const [step, setStep] = useState(0);
-  const [lap, setLap] = useState(false);
   const [moving, setMoving] = useState(false);
   const [swipe, setSwipe] = useState<{ key: number; text: string } | null>(
     null,
@@ -209,8 +218,8 @@ export function HeroFlow() {
   const fin = sector === FINALE;
   const duration = useCallback(
     (index: number, onFinale: boolean) =>
-      onFinale ? FINALE_MS : durations[index] * (lap ? FAST : 1),
-    [lap],
+      onFinale ? FINALE_MS : durations[index],
+    [],
   );
   // Time left in the current step, kept across pauses so the stepper's fill and the step agree.
   const remaining = useRef<number>(durations[0]);
@@ -254,7 +263,7 @@ export function HeroFlow() {
   }, []);
 
   /** The coral swipe names the next trade; halfway through, the scene underneath changes. */
-  const slam = useCallback((next: number, fast: boolean) => {
+  const slam = useCallback((next: number) => {
     timers.current.forEach((id) => window.clearTimeout(id));
     timers.current = [];
     setMoving(true);
@@ -266,7 +275,6 @@ export function HeroFlow() {
     timers.current.push(
       window.setTimeout(() => {
         setSector(next);
-        setLap(fast);
       }, 330),
       window.setTimeout(() => {
         const first = next === FINALE ? 5 : 0;
@@ -285,9 +293,9 @@ export function HeroFlow() {
     const timer = window.setTimeout(() => {
       fired = true;
       if (fin) {
-        slam(0, true);
+        slam(0);
       } else if (step === steps.length - 1) {
-        slam(sector + 1, lap);
+        slam(sector + 1);
       } else {
         const next = step + 1;
         remaining.current = duration(next, false);
@@ -302,7 +310,7 @@ export function HeroFlow() {
         remaining.current - (performance.now() - startedAt),
       );
     };
-  }, [paused, step, sector, fin, lap, duration, slam]);
+  }, [paused, step, sector, fin, duration, slam]);
 
   const pick = (index: number) => {
     if (index === sector && !fin) return;
@@ -311,7 +319,7 @@ export function HeroFlow() {
       setStep(index === FINALE ? 5 : 0);
       return;
     }
-    slam(index, index === FINALE);
+    slam(index);
   };
 
   const goStep = (index: number) => {
