@@ -60,6 +60,7 @@ const footerColumns = [
     title: "Продукт",
     links: [
       { href: "/#versions", label: "Как работи" },
+      { href: "/produkt", label: "Пробвай продукта" },
       { href: "/#product", label: "Възможности" },
       { href: "/#security", label: "Сигурност" },
       { href: "/faq", label: "Въпроси" },

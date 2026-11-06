@@ -149,6 +149,12 @@ export function LandingExperience() {
                 >
                   КАК РАБОТИ
                 </a>
+                <Link
+                  href="/produkt"
+                  className="py-2 transition-colors hover:text-[#e85f48]"
+                >
+                  ПРОДУКТЪТ
+                </Link>
                 <a
                   href="#product"
                   className="py-2 transition-colors hover:text-[#e85f48]"
