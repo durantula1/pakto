@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import "@/lib/zod-messages";
@@ -107,6 +107,57 @@ async function recalc(organizationId: string, invoiceId: string) {
   const lines = await db.select().from(invoiceLines).where(and(eq(invoiceLines.invoiceId, invoiceId), eq(invoiceLines.organizationId, organizationId)));
   const totals = invoiceTotals(lines);
   await db.update(invoices).set({ ...totals, updatedAt: new Date() }).where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, organizationId), eq(invoices.status, "draft")));
+}
+
+
+const lineInput = z.object({
+  description: z.string().trim().min(1, "Опиши всеки ред.").max(300),
+  quantity: decimal,
+  unit: z.string().trim().max(20).optional(),
+  unitPrice: decimal,
+  taxRate: decimal,
+});
+
+/** Saves the whole draft at once (header and every line): the editable sheet autosaves through this. */
+export async function saveInvoiceAction(input: unknown): Promise<{ error?: string; subtotal?: string; taxTotal?: string; total?: string }> {
+  try {
+    const data = z
+      .object({
+        invoiceId: z.uuid(),
+        buyerName: z.string().trim().min(1, "Напиши получателя.").max(200),
+        buyerVat: z.string().trim().max(30).optional(),
+        buyerAddress: z.string().trim().max(300).optional(),
+        issueDate: day, supplyDate: day, dueDate: day,
+        note: z.string().trim().max(1000).optional(),
+        lines: z.array(lineInput).min(1, "Добави поне един ред.").max(100),
+      })
+      .parse(input);
+    const context = await invoiceContext();
+    await draftOf(context.organizationId, data.invoiceId);
+    for (const line of data.lines) {
+      if (Number(norm(line.quantity)) <= 0) throw new Error("Количеството трябва да е над нула.");
+      if (Number(norm(line.taxRate)) > 100) throw new Error("ДДС не може да е над 100%.");
+    }
+    const rows = data.lines.map((line, position) => ({
+      organizationId: context.organizationId, invoiceId: data.invoiceId, position, description: line.description,
+      quantity: norm(line.quantity), unit: line.unit || null, unitPrice: norm(line.unitPrice), taxRate: norm(line.taxRate),
+    }));
+    const totals = invoiceTotals(rows);
+    await getDatabase().transaction(async (tx) => {
+      await tx.update(invoices).set({
+        buyerName: data.buyerName, buyerVat: data.buyerVat || null, buyerAddress: data.buyerAddress || null,
+        issueDate: data.issueDate || null, supplyDate: data.supplyDate || null, dueDate: data.dueDate || null,
+        note: data.note || null, ...totals, updatedAt: new Date(),
+      }).where(and(eq(invoices.id, data.invoiceId), eq(invoices.organizationId, context.organizationId), eq(invoices.status, "draft")));
+      await tx.delete(invoiceLines).where(and(eq(invoiceLines.invoiceId, data.invoiceId), eq(invoiceLines.organizationId, context.organizationId)));
+      await tx.insert(invoiceLines).values(rows);
+    });
+    return totals;
+  } catch (cause) {
+    unstable_rethrow(cause);
+    if (cause instanceof z.ZodError) return { error: cause.issues[0]?.message ?? "Фактурата не беше запазена." };
+    return { error: cause instanceof Error ? cause.message : "Фактурата не беше запазена." };
+  }
 }
 
 export async function saveDraftAction(formData: FormData) {
