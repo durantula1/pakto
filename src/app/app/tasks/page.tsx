@@ -132,7 +132,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
           <Link href={link({ scope: "mine" })} aria-pressed={scope === "mine"} className={segmentClassName}>Моите</Link>
           <Link href={link({ scope: "all" })} aria-pressed={scope === "all"} className={segmentClassName}>Всички</Link>
         </div>
-        <FilterNav name="project" label="Проект" value={projectId ?? ""} keep={{ scope }} className="h-10 w-56" options={[{ value: "", label: "Всички проекти" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
+        <FilterNav name="project" label="Проект" value={projectId ?? ""} keep={{ scope }} className="w-fit min-w-56" options={[{ value: "", label: "Всички проекти" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
         {late ? <Badge variant="danger-soft">{late} просрочени</Badge> : null}
       </div>
       <Kanban columns={columns} cards={cards} moveAction={setTaskStatusAction} cardField="taskId" columnField="status" />

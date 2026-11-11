@@ -24,7 +24,8 @@ export function FilterNav({ name, value, options, label, keep = {}, className }:
     <NativeSelect
       aria-label={label}
       value={value}
-      className={className ?? "h-10 w-52"}
+      wrapperClassName={className ?? "w-fit min-w-48"}
+      className="h-10 w-full"
       onChange={(event) => {
         const params = new URLSearchParams();
         for (const [key, kept] of Object.entries(keep)) if (kept) params.set(key, kept);

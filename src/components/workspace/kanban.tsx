@@ -103,7 +103,7 @@ export function Kanban({ columns, cards, moveAction, cardField, columnField, rea
               onDragOver={(event) => { if (dragging) { event.preventDefault(); setOver(column.id); } }}
               onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver((current) => (current === column.id ? null : current)); }}
               onDrop={(event) => { event.preventDefault(); const id = event.dataTransfer.getData("text/plain") || dragging; setOver(null); setDragging(null); if (id) request(id, column.id); }}
-              className={cn("flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border bg-muted/40 transition-colors", active && "border-primary bg-primary/5 ring-2 ring-primary/30")}
+              className={cn("flex w-64 shrink-0 flex-col xl:w-auto xl:min-w-56 xl:flex-1 overflow-hidden rounded-xl border bg-muted/40 transition-colors", active && "border-primary bg-primary/5 ring-2 ring-primary/30")}
             >
               <div className={cn("h-1 shrink-0", toneBar[column.tone])} />
               <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">

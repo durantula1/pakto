@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { FileInput } from "@/components/ui/file-input";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -74,7 +75,7 @@ export default async function IntegrationsPage() {
       </CardContent></Card>
       <Card><CardHeader><CardTitle>Внасяне на клиенти</CardTitle><CardDescription>CSV файл с колони име, имейл, телефон, адрес (първият ред е заглавие). Клиенти с имейл, който вече съществува, се пропускат.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         <ActionForm action={importClientsAction} success="Клиентите са внесени" className="grid gap-3">
-          <Field autoId><FieldLabel>CSV файл</FieldLabel><Input name="file" type="file" accept=".csv,text/csv" required /></Field>
+          <Field autoId><FieldLabel>CSV файл</FieldLabel><FileInput name="file" accept=".csv,text/csv" required /></Field>
           <div><ActionSubmit>Внеси</ActionSubmit></div>
         </ActionForm>
       </CardContent></Card>

@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils"
  * The browser's own select in the Input's clothes. Unlike `Select` it takes plain `<option>`
  * children and submits with the form, which is what the server-rendered module forms need.
  */
-function NativeSelect({ className, children, id, ...props }: React.ComponentProps<"select">) {
+function NativeSelect({ className, wrapperClassName, children, id, ...props }: React.ComponentProps<"select"> & { wrapperClassName?: string }) {
   const fieldId = useFieldId()
   return (
-    <div data-slot="native-select-wrapper" className="group/native-select relative w-full min-w-0">
+    <div data-slot="native-select-wrapper" className={cn("group/native-select relative w-full min-w-0", wrapperClassName)}>
       <select
         data-slot="native-select"
         id={id ?? fieldId}
