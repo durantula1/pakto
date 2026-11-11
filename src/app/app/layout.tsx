@@ -8,6 +8,7 @@ import {
   BookOpen,
   Compass,
   Bell,
+  CheckSquare,
   FolderKanban,
   ChartNoAxesColumn,
   CirclePlus,
@@ -82,6 +83,7 @@ export default async function WorkspaceLayout({
     { label: "Работа", links: [
       { href: "/app", label: "Работен преглед", icon: <LayoutDashboard className="size-4" /> },
       { href: "/app/projects", label: "Проекти", icon: <FolderKanban className="size-4" /> },
+      { href: "/app/tasks", label: "Задачи", icon: <CheckSquare className="size-4" /> },
       ...(clients ? [{ href: "/app/clients", label: "Клиенти", icon: <Contact className="size-4" /> }] : []),
       { href: "/app/offers", label: "Оферти", icon: <FileText className="size-4" /> },
     ] },
@@ -101,6 +103,7 @@ export default async function WorkspaceLayout({
   const palettePages: PaletteLink[] = [
     { href: "/app", label: "Работен преглед", icon: "dashboard" },
     { href: "/app/projects", label: "Проекти", icon: "projects" },
+    { href: "/app/tasks", label: "Задачи", icon: "tasks" },
     ...(clients ? [{ href: "/app/clients", label: "Клиенти", icon: "clients" as const }] : []),
     { href: "/app/offers", label: "Оферти", icon: "offers" },
     { href: "/app/notifications", label: "Известия", icon: "notifications" },

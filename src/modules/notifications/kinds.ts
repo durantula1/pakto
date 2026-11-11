@@ -14,7 +14,7 @@ export const notificationCategories: { id: NotificationCategory; label: string }
 export const categoryRules: Record<Exclude<NotificationCategory, "offers">, { exact: string[]; prefixes: string[] }> = {
   payments: { exact: [], prefixes: ["payment_", "installment_", "receipt_"] },
   clients: { exact: ["client_message", "revision_viewed", "acceptance_accepted", "acceptance_issues"], prefixes: ["contact_", "portal_"] },
-  team: { exact: ["permissions_changed"], prefixes: ["owner_", "member_", "invite_", "invitation_"] },
+  team: { exact: ["permissions_changed"], prefixes: ["owner_", "member_", "invite_", "invitation_", "task_"] },
 };
 
 /** Notices that wait for an answer from the firm while they are unread. */

@@ -9,6 +9,8 @@ export const PERMISSION_KEYS = [
   "payments.record",
   "finance.view",
   "clients.manage",
+  "tasks.assign",
+  "tasks.view_all",
 ] as const;
 
 export type Permission = (typeof PERMISSION_KEYS)[number];
@@ -20,6 +22,13 @@ export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label
       { key: "projects.create", label: "Създава проекти", description: "Нови проекти и клиенти." },
       { key: "milestones.manage", label: "Управлява етапи", description: "Отбелязва етапи като започнати или завършени." },
       { key: "clients.manage", label: "Редактира клиенти", description: "Името и контактите на клиента във всичките му проекти. Нужен е достъп до всички проекти." },
+    ],
+  },
+  {
+    label: "Задачи",
+    items: [
+      { key: "tasks.assign", label: "Дава задачи на други", description: "Назначава и преразпределя задачи. Без това може да си слага задачи само на себе си." },
+      { key: "tasks.view_all", label: "Вижда задачите на всички", description: "Задачите на колегите в проектите, до които има достъп. Без това вижда само своите." },
     ],
   },
   {

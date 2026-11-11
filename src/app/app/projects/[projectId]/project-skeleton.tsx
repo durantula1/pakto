@@ -22,6 +22,7 @@ export const projectTabLabels = {
   overview: "Преглед",
   documents: "Оферти",
   work: "Работа",
+  tasks: "Задачи",
   payments: "Плащания",
   notes: "Бележки",
 };

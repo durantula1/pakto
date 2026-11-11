@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, ChartNoAxesColumn, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
+import { BookOpen, CheckSquare, ChartNoAxesColumn, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ export function MobileMoreMenu({ owner, finance, admin }: { owner: boolean; fina
   const [open, setOpen] = useState(false);
   const items = [
     { href: "/app", label: "Работен преглед", icon: LayoutDashboard },
+    { href: "/app/tasks", label: "Задачи", icon: CheckSquare },
     { href: "/app/catalog", label: "Каталог и шаблони", icon: BookOpen },
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: Users }] : []),
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: Euro }] : []),
