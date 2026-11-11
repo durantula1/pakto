@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { F, Panel, Pill, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { Disclosure, F, Panel, Pill, Stat, StatRow, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
@@ -32,7 +32,23 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
         <F label="Покажи проект"><SelectInput name="project" defaultValue={projectId ?? ""}><option value="">Всички</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
         <button className="h-10 rounded-lg border px-4 text-sm font-medium hover:bg-muted">Покажи</button>
       </form>
-      <p className="text-sm text-muted-foreground">Общо за показаното: <strong className="text-foreground">{formatAmount(total)} €</strong> (без ДДС, ако не си записал иначе).</p>
+      <StatRow>
+        <Stat label="Общо разходи" value={`${formatAmount(total)} €`} hint="Без ДДС, ако не е записано иначе" tone="coral" />
+        <Stat label="Записи" value={items.length} tone="blue" />
+        <Stat label="Доставчици" value={suppliers.length} tone="sand" />
+      </StatRow>
+      <Disclosure label="Нов разход" defaultOpen={!items.length}>
+        <ActionForm action={createExpenseAction} success="Разходът е записан" className={formGrid}>
+          <F label="Проект"><SelectInput name="projectId" defaultValue={projectId ?? ""}><option value="">Общ разход (без проект)</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
+          <F label="Категория"><SelectInput name="category" defaultValue="materials">{Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</SelectInput></F>
+          <F label="За какво"><TextInput name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></F>
+          <F label="Сума (€)"><TextInput name="amount" required inputMode="decimal" placeholder="240,00" /></F>
+          <F label="Дата"><TextInput name="spentOn" type="date" required defaultValue={today} max={today} /></F>
+          <F label="Доставчик"><SelectInput name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</SelectInput></F>
+          <F label="Номер на документ" className="sm:col-span-2"><TextInput name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></F>
+          <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
+        </ActionForm>
+      </Disclosure>
 
       {projectId ? (
         <Panel title="Бюджет и реално изразходено" description="Планираната сума по категория срещу вече записаните разходи.">
@@ -59,19 +75,6 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
         </Panel>
       ) : null}
 
-      <Panel title="Нов разход">
-        <ActionForm action={createExpenseAction} success="Разходът е записан" className={formGrid}>
-          <F label="Проект"><SelectInput name="projectId" defaultValue={projectId ?? ""}><option value="">Общ разход (без проект)</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
-          <F label="Категория"><SelectInput name="category" defaultValue="materials">{Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</SelectInput></F>
-          <F label="За какво"><TextInput name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></F>
-          <F label="Сума (€)"><TextInput name="amount" required inputMode="decimal" placeholder="240,00" /></F>
-          <F label="Дата"><TextInput name="spentOn" type="date" required defaultValue={today} max={today} /></F>
-          <F label="Доставчик"><SelectInput name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</SelectInput></F>
-          <F label="Номер на документ" className="sm:col-span-2"><TextInput name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></F>
-          <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
-        </ActionForm>
-      </Panel>
-
       <Panel title="Разходи">
         {items.length ? (
           <ul className="flex flex-col gap-2">
@@ -93,7 +96,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
         ) : <p className="text-sm text-muted-foreground">Още няма разходи.</p>}
       </Panel>
 
-      <Panel title="Доставчици">
+      <Panel title="Доставчици" description="Към тях можеш да вържеш разход.">
         <ul className="flex flex-wrap gap-2 text-sm">{suppliers.map((supplier) => <li key={supplier.id} className="rounded-full border px-3 py-1">{supplier.name}</li>)}{!suppliers.length ? <li className="text-muted-foreground">Още няма доставчици.</li> : null}</ul>
         <ActionForm action={createSupplierAction} success="Доставчикът е добавен" className={formGrid}>
           <F label="Име"><TextInput name="name" required minLength={2} maxLength={160} /></F>

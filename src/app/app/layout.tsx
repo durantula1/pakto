@@ -10,7 +10,6 @@ import {
   Bell,
   FolderKanban,
   ChartNoAxesColumn,
-  Blocks,
   CirclePlus,
   FileText,
   Euro,
@@ -38,6 +37,7 @@ import { can, roleLabel } from "@/lib/authz/permissions";
 import { getOptionalTenantContext, getSessionUserId } from "@/lib/authz/tenant-context";
 import { accountDeletionDate } from "@/lib/legal";
 import { getAccountSummary } from "@/modules/account/queries";
+import { moduleIcon } from "@/components/modules/icons";
 import { canOpenModule, getEnabledModules } from "@/modules/platform/modules";
 import { MODULES, MODULE_KEYS } from "@/modules/platform/registry";
 import { isPlatformAdmin } from "@/modules/platform-admin/access";
@@ -92,7 +92,7 @@ export default async function WorkspaceLayout({
       { href: "/app/offers", label: "Оферти", icon: <FileText className="size-4" /> },
     ] },
     ...(finance ? [{ label: "Финанси", links: [{ href: "/app/finance", label: "Плащания", icon: <Euro className="size-4" /> }] }] : []),
-    ...(moduleLinks.length ? [{ label: "Модули", links: moduleLinks.map((link) => ({ ...link, icon: <Blocks className="size-4" /> })) }] : []),
+    ...(moduleLinks.length ? [{ label: "Модули", links: moduleLinks.map((link) => { const Icon = moduleIcon(link.href); return { ...link, icon: <Icon className="size-4" /> }; }) }] : []),
     { label: "Фирма", links: [
       { href: "/app/catalog", label: "Каталог", icon: <BookOpen className="size-4" /> },
       ...(owner ? [{ href: "/app/team", label: "Екип", icon: <Users className="size-4" /> }] : []),

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AreaInput, F, Panel, Pill, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { AreaInput, Disclosure, F, Pill, SectionTitle, SelectInput, Stat, StatRow, TextInput, formGrid } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { PageHeader } from "@/components/workspace/page/page-header";
@@ -63,12 +63,58 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
         {manage ? <Link href="/app/tasks/templates" className="ml-auto text-sm font-medium text-primary-ink hover:underline">Шаблони</Link> : null}
       </div>
 
+      <StatRow>
+        <Stat label="Отворени" value={items.filter((task) => task.status !== "done").length} tone="blue" />
+        <Stat label="В работа" value={items.filter((task) => task.status === "doing").length} tone="sand" />
+        <Stat label="Просрочени" value={items.filter((task) => task.status !== "done" && task.dueOn && task.dueOn < today).length} tone={items.some((task) => task.status !== "done" && task.dueOn && task.dueOn < today) ? "coral" : "default"} />
+        <Stat label="Готови" value={items.filter((task) => task.status === "done").length} tone="mint" />
+      </StatRow>
+      {manage ? (
+        <>
+          <Disclosure label="Нова задача" title="Нова задача" defaultOpen={!items.length && status === "open"}>
+            <ActionForm action={createTaskAction} success="Задачата е добавена" className={formGrid}>
+              <F label="Проект">
+                <SelectInput name="projectId" required defaultValue={projectId ?? ""}>
+                  <option value="" disabled>Избери проект</option>
+                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                </SelectInput>
+              </F>
+              <F label="Заглавие"><TextInput name="title" required minLength={2} maxLength={200} placeholder="Например: Поръчай плочки" /></F>
+              <F label="Изпълнител">
+                <SelectInput name="assigneeId" defaultValue={context.userId}>
+                  <option value="">Без изпълнител</option>
+                  {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
+                </SelectInput>
+              </F>
+              <F label="Срок"><TextInput name="dueOn" type="date" /></F>
+              <F label="Приоритет">
+                <SelectInput name="priority" defaultValue="normal">{(["low", "normal", "high"] as const).map((key) => <option key={key} value={key}>{priorityLabels[key]}</option>)}</SelectInput>
+              </F>
+              <F label="Описание" className="sm:col-span-2"><AreaInput name="description" maxLength={4000} /></F>
+              <div className="sm:col-span-2"><ActionSubmit>Добави задачата</ActionSubmit></div>
+            </ActionForm>
+          </Disclosure>
+          {templates.length ? (
+            <Disclosure label="Приложи шаблон към проект" description="Създава задачите от шаблона със срокове, считано от началната дата.">
+              <ActionForm action={applyTemplateAction} success="Задачите са добавени" className={formGrid}>
+                <F label="Шаблон"><SelectInput name="templateId" required>{templates.map((template) => <option key={template.id} value={template.id}>{template.name} ({template.tasks.length})</option>)}</SelectInput></F>
+                <F label="Проект"><SelectInput name="projectId" required defaultValue={projectId ?? ""}><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
+                <F label="Начална дата"><TextInput name="startOn" type="date" defaultValue={today} /></F>
+                <F label="Изпълнител на всички"><SelectInput name="assigneeId" defaultValue=""><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</SelectInput></F>
+                <div className="sm:col-span-2"><ActionSubmit>Приложи</ActionSubmit></div>
+              </ActionForm>
+            </Disclosure>
+          ) : null}
+        </>
+      ) : null}
+
+      <SectionTitle count={items.length}>Задачи</SectionTitle>
       {items.length ? (
         <ul className="flex flex-col gap-2">
           {items.map((task) => {
             const overdue = task.status !== "done" && task.dueOn && task.dueOn < today;
             return (
-              <li key={task.id} className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3">
+              <li key={task.id} className={cn("flex flex-wrap items-center gap-3 rounded-xl border border-l-4 bg-card p-3.5", task.status === "done" ? "border-l-emerald-400" : task.status === "doing" ? "border-l-amber-400" : overdue ? "border-l-destructive" : "border-l-border")}>
                 <div className="min-w-0 flex-1">
                   <Link href={`/app/tasks/${task.id}`} className={cn("font-medium hover:underline", task.status === "done" && "text-muted-foreground line-through")}>{task.title}</Link>
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -106,44 +152,6 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
         <EmptyResult className="rounded-2xl border border-dashed bg-card" title={status === "done" ? "Още няма готови задачи" : "Няма отворени задачи"} description={manage ? "Добави първата по-долу или приложи шаблон към проект." : "Когато ти възложат задача, ще я видиш тук."} />
       )}
 
-      {manage ? (
-        <>
-          <Panel title="Нова задача">
-            <ActionForm action={createTaskAction} success="Задачата е добавена" className={formGrid}>
-              <F label="Проект">
-                <SelectInput name="projectId" required defaultValue={projectId ?? ""}>
-                  <option value="" disabled>Избери проект</option>
-                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                </SelectInput>
-              </F>
-              <F label="Заглавие"><TextInput name="title" required minLength={2} maxLength={200} placeholder="Например: Поръчай плочки" /></F>
-              <F label="Изпълнител">
-                <SelectInput name="assigneeId" defaultValue={context.userId}>
-                  <option value="">Без изпълнител</option>
-                  {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
-                </SelectInput>
-              </F>
-              <F label="Срок"><TextInput name="dueOn" type="date" /></F>
-              <F label="Приоритет">
-                <SelectInput name="priority" defaultValue="normal">{(["low", "normal", "high"] as const).map((key) => <option key={key} value={key}>{priorityLabels[key]}</option>)}</SelectInput>
-              </F>
-              <F label="Описание" className="sm:col-span-2"><AreaInput name="description" maxLength={4000} /></F>
-              <div className="sm:col-span-2"><ActionSubmit>Добави задачата</ActionSubmit></div>
-            </ActionForm>
-          </Panel>
-          {templates.length ? (
-            <Panel title="Приложи шаблон към проект" description="Създава задачите от шаблона със срокове, считано от началната дата.">
-              <ActionForm action={applyTemplateAction} success="Задачите са добавени" className={formGrid}>
-                <F label="Шаблон"><SelectInput name="templateId" required>{templates.map((template) => <option key={template.id} value={template.id}>{template.name} ({template.tasks.length})</option>)}</SelectInput></F>
-                <F label="Проект"><SelectInput name="projectId" required defaultValue={projectId ?? ""}><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
-                <F label="Начална дата"><TextInput name="startOn" type="date" defaultValue={today} /></F>
-                <F label="Изпълнител на всички"><SelectInput name="assigneeId" defaultValue=""><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</SelectInput></F>
-                <div className="sm:col-span-2"><ActionSubmit>Приложи</ActionSubmit></div>
-              </ActionForm>
-            </Panel>
-          ) : null}
-        </>
-      ) : null}
     </PageShell>
   );
 }

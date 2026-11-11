@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { F, Panel, Pill, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { Disclosure, F, Panel, Pill, Stat, StatRow, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
@@ -39,10 +39,14 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
           ))}
         </div>
       ) : null}
-      <p className="text-sm text-muted-foreground">За последните 30 дни: <strong className="text-foreground">{formatMinutes(total)}</strong>, от които фактурируеми <strong className="text-foreground">{formatMinutes(billable)}</strong>.</p>
-
+      <StatRow>
+        <Stat label="Общо, 30 дни" value={formatMinutes(total)} tone="blue" />
+        <Stat label="Фактурируемо" value={formatMinutes(billable)} tone="mint" />
+        <Stat label="Вътрешно" value={formatMinutes(total - billable)} />
+        <Stat label="Проекти" value={byProject.size} tone="sand" />
+      </StatRow>
       {can(context, "time.track") ? (
-        <Panel title="Отчети време">
+        <Disclosure label="Отчети време" defaultOpen={!entries.length}>
           <ActionForm action={logTimeAction} success="Времето е записано" className={formGrid}>
             <F label="Проект"><SelectInput name="projectId" required defaultValue=""><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
             <F label="Дата"><TextInput name="workDate" type="date" required defaultValue={today} max={today} /></F>
@@ -52,7 +56,7 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
             <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="billable" defaultChecked className="size-4" /> Фактурируемо</label>
             <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
           </ActionForm>
-        </Panel>
+        </Disclosure>
       ) : null}
 
       {byProject.size ? (

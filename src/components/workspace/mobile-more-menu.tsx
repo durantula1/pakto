@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Blocks, BookOpen, ChartNoAxesColumn, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
+import { BookOpen, ChartNoAxesColumn, Compass, Euro, LayoutDashboard, LifeBuoy, Menu, Settings, Users } from "lucide-react";
 import { useState } from "react";
 
+import { moduleIcon } from "@/components/modules/icons";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -14,7 +15,7 @@ export function MobileMoreMenu({ owner, finance, admin, modules = [] }: { owner:
     { href: "/app/catalog", label: "Каталог и шаблони", icon: BookOpen },
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: Users }] : []),
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: Euro }] : []),
-    ...modules.map((module) => ({ ...module, icon: Blocks })),
+    ...modules.map((module) => ({ ...module, icon: moduleIcon(module.href) })),
     { href: "/app/settings", label: "Настройки", icon: Settings },
     { href: "/app/guide", label: "Как работи", icon: Compass },
     ...(admin ? [{ href: "/app/admin", label: "Админ", icon: ChartNoAxesColumn }] : []),

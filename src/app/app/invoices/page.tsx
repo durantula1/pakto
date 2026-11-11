@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { F, Panel, Pill, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { Disclosure, F, Panel, Pill, Stat, StatRow, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
@@ -25,6 +25,19 @@ export default async function InvoicesPage() {
   return (
     <PageShell width="wide">
       <PageHeader page="invoices" actions={<><Link href="/app/invoices/template" className="inline-flex h-10 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted">Шаблон и лого</Link><a href="/api/invoices/export" className="inline-flex h-10 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted">Експорт за счетоводителя (CSV)</a></>} />
+      <Disclosure label="Празна фактура">
+        <ActionForm action={createBlankInvoiceAction} success="Чернова е създадена" redirects className={formGrid}>
+          <F label="Клиент (по избор)"><SelectInput name="clientId" defaultValue=""><option value="">Не е от списъка</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</SelectInput></F>
+          <F label="Получател"><TextInput name="buyerName" required minLength={2} maxLength={200} /></F>
+          <div className="sm:col-span-2"><ActionSubmit>Създай</ActionSubmit></div>
+        </ActionForm>
+      </Disclosure>
+      <StatRow>
+        <Stat label="Чернови" value={items.filter((invoice) => invoice.status === "draft").length} />
+        <Stat label="Издадени, неплатени" value={items.filter((invoice) => invoice.status === "issued").length} tone="sand" />
+        <Stat label="Платени" value={items.filter((invoice) => invoice.status === "paid").length} tone="mint" />
+        <Stat label="Вноски за фактуриране" value={installments.length} tone="blue" />
+      </StatRow>
       <Panel title="Фактури">
         {items.length ? (
           <ul className="flex flex-col gap-2">
@@ -52,13 +65,6 @@ export default async function InvoicesPage() {
             ))}
           </ul>
         ) : <p className="text-sm text-muted-foreground">Няма вноски за фактуриране.</p>}
-      </Panel>
-      <Panel title="Празна фактура">
-        <ActionForm action={createBlankInvoiceAction} success="Чернова е създадена" redirects className={formGrid}>
-          <F label="Клиент (по избор)"><SelectInput name="clientId" defaultValue=""><option value="">Не е от списъка</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</SelectInput></F>
-          <F label="Получател"><TextInput name="buyerName" required minLength={2} maxLength={200} /></F>
-          <div className="sm:col-span-2"><ActionSubmit>Създай</ActionSubmit></div>
-        </ActionForm>
       </Panel>
     </PageShell>
   );
