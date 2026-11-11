@@ -41,7 +41,10 @@ export const memberPermission = appSchema.enum("member_permission", [
   "payments.record",
   "finance.view",
   "clients.manage",
+  "tasks.assign",
+  "tasks.view_all",
 ]);
+export const taskStatus = appSchema.enum("task_status", ["todo", "doing", "review", "done"]);
 export const memberStatus = appSchema.enum("member_status", [
   "active",
   "invited",
@@ -1196,4 +1199,34 @@ export const authVerifications = appSchema.table(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("auth_verifications_identifier_idx").on(table.identifier)],
+);
+
+/** Day-to-day work of a project: who does what by when. Internal; the client never sees it. */
+export const tasks = appSchema.table(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: taskStatus("status").notNull().default("todo"),
+    assigneeId: uuid("assignee_id"),
+    dueOn: date("due_on"),
+    createdBy: uuid("created_by").notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.organizationId, table.projectId],
+      foreignColumns: [projects.organizationId, projects.id],
+      name: "tasks_project_tenant_fk",
+    }).onDelete("cascade"),
+    index("tasks_org_status_due_idx").on(table.organizationId, table.status, table.dueOn),
+    index("tasks_project_idx").on(table.projectId),
+    index("tasks_assignee_idx").on(table.organizationId, table.assigneeId).where(sql`${table.assigneeId} is not null`),
+  ],
 );

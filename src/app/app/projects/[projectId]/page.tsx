@@ -20,6 +20,8 @@ import { formatDay } from "@/modules/change-orders/labels";
 import { ListPagination } from "@/components/workspace/list-filters";
 import { PaymentClaimsBlock, PaymentDisputesAlert } from "@/components/projects/project-controls";
 import { ProjectPaymentsSummary, ProjectWorkSummary } from "@/components/projects/project-summary";
+import { TaskBoard } from "@/components/tasks/task-board";
+import { canAssignTasks, listAssignablePeople, listTasks } from "@/modules/tasks/queries";
 import { ClientAccess } from "@/components/projects/client-access";
 import { ProjectMenu } from "@/components/projects/project-menu";
 import { CountPill } from "@/components/workspace/tab-count";
@@ -43,7 +45,7 @@ import { dateOnly } from "@/lib/dates";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = dateOnly;
-const tabs = ["overview", "documents", "work", "payments", "notes"] as const;
+const tabs = ["overview", "documents", "work", "tasks", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/projects/[projectId]">): Promise<Metadata> {
@@ -62,13 +64,15 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  const [member, project, offersTotal, state, inbox, contacts] = await Promise.all([
+  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople] = await Promise.all([
     orForbidden(requireProjectCapability(context, projectId, "view")),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
     getProjectState(context.organizationId, projectId),
     listPaymentInbox(context.organizationId, projectId),
     listProjectContacts(projectId),
+    listTasks(context, { projectId, includeOldDone: true }),
+    listAssignablePeople(context, projectId),
   ]);
   if (!project || !state) notFound();
   const { disputes, claims } = inbox;
@@ -168,6 +172,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           <TabsTrigger id="overview">{projectTabLabels.overview}</TabsTrigger>
           <TabsTrigger id="documents">{projectTabLabels.documents}</TabsTrigger>
           <TabsTrigger id="work">{projectTabLabels.work}</TabsTrigger>
+          <TabsTrigger id="tasks">{projectTabLabels.tasks}{projectTasks.some((item) => item.status !== "done") ? <CountPill value={projectTasks.filter((item) => item.status !== "done").length} /> : null}</TabsTrigger>
           {showPayments ? <TabsTrigger id="payments">{projectTabLabels.payments}{disputes.length || claims.length ? <CountPill value={disputes.length + claims.length} highlight /> : null}</TabsTrigger> : null}
           {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}{notesCount ? <CountPill value={notesCount} /> : null}</TabsTrigger> : null}
         </TabsList>
@@ -189,6 +194,19 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         </TabsContent>
         <TabsContent id="work" className="pt-5">
           <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} />
+        </TabsContent>
+        <TabsContent id="tasks" className="pt-5">
+          <TaskBoard
+            tasks={projectTasks}
+            people={can(member, "tasks.view_all") || canAssignTasks(context) ? taskPeople : taskPeople.filter((person) => person.userId === context.userId)}
+            projects={active ? [{ id: project.id, name: project.name }] : []}
+            fixedProject={{ id: project.id, name: project.name }}
+            today={today}
+            currentUserId={context.userId}
+            canAssign={canAssignTasks(context)}
+            seesEveryone={can(member, "tasks.view_all")}
+            canCreate={active}
+          />
         </TabsContent>
         {showPayments ? <TabsContent id="payments" className="flex flex-col gap-5 pt-5">
           <PaymentClaimsBlock projectId={projectId} claims={pendingClaims} canResolve={canRecordPayments} />
