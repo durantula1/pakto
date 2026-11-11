@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Blocks, Building2, CircleUserRound, ShieldCheck } from "lucide-react";
+import { Bell, Blocks, Building2, Plug, CircleUserRound, ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ const personal = [
 const company = [
   { href: "/app/settings/organization", label: "Фирма", icon: Building2 },
   { href: "/app/settings/modules", label: "Модули", icon: Blocks },
+  { href: "/app/settings/integrations", label: "Интеграции", icon: Plug },
 ];
 
 /** Vertical grouped list on desktop, one horizontally scrolling row of pills on mobile. */

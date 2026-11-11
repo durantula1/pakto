@@ -5,6 +5,7 @@ call() { curl -fsS --max-time 120 -H "Authorization: Bearer $CRON_SECRET" "$APP_
 while true; do
   now=$(date +%H%M)
   call email-outbox
+  call webhooks
   if [ "${CRON_DAILY_JOBS:-on}" != off ]; then
     [ "$now" = "0300" ] && call purge-accounts
     [ "$now" = "0700" ] && call offer-reminders
