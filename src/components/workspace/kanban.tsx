@@ -90,7 +90,7 @@ export function Kanban({ columns, cards, moveAction, cardField, columnField, rea
 
   return (
     <>
-      <div className="-mx-4 flex min-h-[60dvh] items-stretch gap-3 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
+      <div className="-mx-4 flex min-h-[60dvh] snap-x snap-proximity items-stretch gap-3 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
         {columns.map((column) => {
           const inColumn = cards.filter((card) => columnOf(card) === column.id);
           const sum = inColumn.reduce((total, card) => total + (card.amount ?? 0), 0);
@@ -103,15 +103,15 @@ export function Kanban({ columns, cards, moveAction, cardField, columnField, rea
               onDragOver={(event) => { if (dragging) { event.preventDefault(); setOver(column.id); } }}
               onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver((current) => (current === column.id ? null : current)); }}
               onDrop={(event) => { event.preventDefault(); const id = event.dataTransfer.getData("text/plain") || dragging; setOver(null); setDragging(null); if (id) request(id, column.id); }}
-              className={cn("flex w-64 shrink-0 flex-col xl:w-auto xl:min-w-56 xl:flex-1 overflow-hidden rounded-xl border bg-muted/40 transition-colors", active && "border-primary bg-primary/5 ring-2 ring-primary/30")}
+              className={cn("flex w-72 min-w-72 shrink-0 snap-start scroll-ml-4 flex-col overflow-hidden rounded-xl border bg-muted/40 transition-colors", active && "border-primary bg-primary/5 ring-2 ring-primary/30")}
             >
               <div className={cn("h-1 shrink-0", toneBar[column.tone])} />
-              <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
-                <h2 className="truncate text-sm font-semibold">{column.title}</h2>
-                <div className="flex items-center gap-2">
-                  {hasAmounts && sum > 0 ? <span className="text-xs font-medium text-muted-foreground tabular-nums">{formatAmount(sum)} {currency}</span> : null}
+              <header className="flex flex-col gap-0.5 px-3 pt-3 pb-2">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="min-w-0 text-sm font-semibold leading-snug">{column.title}</h2>
                   <Badge variant={toneBadge[column.tone]}>{inColumn.length}</Badge>
                 </div>
+                {hasAmounts ? <p className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">{sum > 0 ? `${formatAmount(sum)} ${currency}` : "Без сума"}</p> : null}
               </header>
               <div className="flex flex-1 flex-col gap-2 px-2 pb-2">
                 {inColumn.map((card) => (
