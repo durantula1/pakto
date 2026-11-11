@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
@@ -55,7 +56,7 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
         <FormSheet label="Отчети време">
           <ActionForm action={logTimeAction} success="Времето е записано" className="grid gap-4 sm:grid-cols-2">
             <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" required defaultValue=""><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
-            <Field autoId><FieldLabel>Дата</FieldLabel><Input name="workDate" type="date" required defaultValue={today} max={today} /></Field>
+            <Field autoId><FieldLabel>Дата</FieldLabel><DatePicker name="workDate" required defaultValue={today} max={today} /></Field>
             <Field autoId><FieldLabel>Часове</FieldLabel><Input name="hours" type="number" min={0} max={24} step={1} defaultValue={1} required /></Field>
             <Field autoId><FieldLabel>Минути</FieldLabel><Input name="minutes" type="number" min={0} max={59} step={5} defaultValue={0} /></Field>
             <Field autoId className="sm:col-span-2"><FieldLabel>Бележка</FieldLabel><Input name="note" maxLength={500} placeholder="Какво беше свършено" /></Field>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -96,7 +97,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
               <ActionForm action={applyTemplateAction} success="Задачите са добавени" className="grid gap-4">
                 <Field autoId><FieldLabel>Шаблон</FieldLabel><NativeSelect name="templateId" required>{templates.map((template) => <option key={template.id} value={template.id}>{template.name} ({template.tasks.length})</option>)}</NativeSelect></Field>
                 <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" required defaultValue={projectId ?? ""}><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
-                <Field autoId><FieldLabel>Начална дата</FieldLabel><Input name="startOn" type="date" defaultValue={today} /></Field>
+                <Field autoId><FieldLabel>Начална дата</FieldLabel><DatePicker name="startOn" defaultValue={today} /></Field>
                 <Field autoId><FieldLabel>Изпълнител на всички</FieldLabel><NativeSelect name="assigneeId" defaultValue=""><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</NativeSelect></Field>
                 <div><ActionSubmit>Приложи</ActionSubmit></div>
               </ActionForm>
@@ -115,7 +116,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
                   {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
                 </NativeSelect>
               </Field>
-              <Field autoId><FieldLabel>Срок</FieldLabel><Input name="dueOn" type="date" /></Field>
+              <Field autoId><FieldLabel>Срок</FieldLabel><DatePicker name="dueOn" /></Field>
               <Field autoId><FieldLabel>В коя колона</FieldLabel><NativeSelect name="status" defaultValue="todo">{(["todo", "doing", "done"] as const).map((key) => <option key={key} value={key}>{statusLabels[key]}</option>)}</NativeSelect></Field>
               <Field autoId><FieldLabel>Приоритет</FieldLabel><NativeSelect name="priority" defaultValue="normal">{(["low", "normal", "high"] as const).map((key) => <option key={key} value={key}>{priorityLabels[key]}</option>)}</NativeSelect>
               </Field>

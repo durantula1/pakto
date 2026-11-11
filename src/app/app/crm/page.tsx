@@ -5,6 +5,7 @@ import { CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { LinkButton } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -86,7 +87,7 @@ export default async function CrmPage() {
               <Field autoId><FieldLabel>Фирма</FieldLabel><NativeSelect name="companyId" defaultValue=""><option value="">Без фирма</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</NativeSelect></Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field autoId><FieldLabel>Ориентировъчна сума (€)</FieldLabel><Input name="value" inputMode="decimal" placeholder="1500" /></Field>
-                <Field autoId><FieldLabel>Очаквано решение</FieldLabel><Input name="expectedCloseOn" type="date" /></Field>
+                <Field autoId><FieldLabel>Очаквано решение</FieldLabel><DatePicker name="expectedCloseOn" /></Field>
               </div>
               <Field autoId><FieldLabel>Откъде дойде</FieldLabel><Input name="source" maxLength={80} placeholder="Препоръка, сайт, реклама…" /></Field>
               <Field autoId><FieldLabel>Бележки</FieldLabel><Textarea name="notes" maxLength={4000} /></Field>

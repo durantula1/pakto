@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -82,7 +83,7 @@ export default async function DealPage({ params }: PageProps<"/app/crm/[dealId]"
           <Field autoId><FieldLabel>Ориентировъчна сума (€)</FieldLabel><Input name="value" inputMode="decimal" defaultValue={deal.value ?? ""} /></Field>
           <Field autoId><FieldLabel>Клиент</FieldLabel><NativeSelect name="clientId" defaultValue={deal.clientId ?? ""}><option value="">Без клиент</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</NativeSelect></Field>
           <Field autoId><FieldLabel>Фирма</FieldLabel><NativeSelect name="companyId" defaultValue={deal.companyId ?? ""}><option value="">Без фирма</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</NativeSelect></Field>
-          <Field autoId><FieldLabel>Очаквано решение</FieldLabel><Input name="expectedCloseOn" type="date" defaultValue={deal.expectedCloseOn ?? ""} /></Field>
+          <Field autoId><FieldLabel>Очаквано решение</FieldLabel><DatePicker name="expectedCloseOn" defaultValue={deal.expectedCloseOn ?? ""} /></Field>
           <Field autoId><FieldLabel>Откъде дойде</FieldLabel><Input name="source" maxLength={80} defaultValue={deal.source ?? ""} /></Field>
           <Field autoId className="sm:col-span-2"><FieldLabel>Бележки</FieldLabel><Textarea name="notes" maxLength={4000} defaultValue={deal.notes ?? ""} /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Запази</ActionSubmit></div>
@@ -94,7 +95,7 @@ export default async function DealPage({ params }: PageProps<"/app/crm/[dealId]"
           <input type="hidden" name="dealId" value={deal.id} />
           <Field autoId><FieldLabel>Вид</FieldLabel><NativeSelect name="kind" defaultValue="call">{Object.entries(kindLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</NativeSelect></Field>
           <Field autoId><FieldLabel>Какво</FieldLabel><Input name="subject" required minLength={2} maxLength={200} placeholder="Обаждане за оглед" /></Field>
-          <Field autoId><FieldLabel>Срок (за „За правене“)</FieldLabel><Input name="dueAt" type="date" /></Field>
+          <Field autoId><FieldLabel>Срок (за „За правене“)</FieldLabel><DatePicker name="dueAt" /></Field>
           <Field autoId className="sm:col-span-2"><FieldLabel>Подробности</FieldLabel><Textarea name="body" maxLength={4000} /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Добави</ActionSubmit></div>
         </ActionForm>

@@ -6,6 +6,7 @@ import { CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { useFieldId } from "@/components/ui/field";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { dateOnly } from "@/lib/dates";
 
@@ -43,6 +44,7 @@ export function DatePicker({
   max?: string;
   "aria-label"?: string;
 }) {
+  const fieldId = useFieldId();
   const [internal, setInternal] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const current = value ?? internal;
@@ -59,7 +61,7 @@ export function DatePicker({
     <>
       {name ? <input type="hidden" name={name} value={current} required={required} /> : null}
       <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
-        <Button id={id} type="button" variant="outline" aria-label={ariaLabel} aria-required={required} className="w-full justify-start font-normal">
+        <Button id={id ?? fieldId} type="button" variant="outline" aria-label={ariaLabel} aria-required={required} className="w-full justify-start font-normal">
           <CalendarIcon data-icon="inline-start" />
           {current ? formatDate(current) : "Избери дата"}
         </Button>

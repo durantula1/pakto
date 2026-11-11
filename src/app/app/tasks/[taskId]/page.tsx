@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -51,7 +52,7 @@ export default async function TaskPage({ params }: PageProps<"/app/tasks/[taskId
             <input type="hidden" name="taskId" value={task.id} />
             <Field autoId className="sm:col-span-2"><FieldLabel>Заглавие</FieldLabel><Input name="title" required minLength={2} maxLength={200} defaultValue={task.title} /></Field>
             <Field autoId><FieldLabel>Изпълнител</FieldLabel><NativeSelect name="assigneeId" defaultValue={task.assigneeId ?? ""}><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</NativeSelect></Field>
-            <Field autoId><FieldLabel>Срок</FieldLabel><Input name="dueOn" type="date" defaultValue={task.dueOn ?? ""} /></Field>
+            <Field autoId><FieldLabel>Срок</FieldLabel><DatePicker name="dueOn" defaultValue={task.dueOn ?? ""} /></Field>
             <Field autoId><FieldLabel>Приоритет</FieldLabel><NativeSelect name="priority" defaultValue={task.priority}><option value="low">Ниска</option><option value="normal">Нормална</option><option value="high">Висока</option></NativeSelect></Field>
             <Field autoId className="sm:col-span-2"><FieldLabel>Описание</FieldLabel><Textarea name="description" maxLength={4000} defaultValue={task.description ?? ""} /></Field>
             <div className="flex flex-wrap gap-2 sm:col-span-2"><ActionSubmit>Запази</ActionSubmit></div>

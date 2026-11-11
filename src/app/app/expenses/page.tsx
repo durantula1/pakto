@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +50,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
           <Field autoId><FieldLabel>Категория</FieldLabel><NativeSelect name="category" defaultValue="materials">{Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</NativeSelect></Field>
           <Field autoId><FieldLabel>За какво</FieldLabel><Input name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></Field>
           <Field autoId><FieldLabel>Сума (€)</FieldLabel><Input name="amount" required inputMode="decimal" placeholder="240,00" /></Field>
-          <Field autoId><FieldLabel>Дата</FieldLabel><Input name="spentOn" type="date" required defaultValue={today} max={today} /></Field>
+          <Field autoId><FieldLabel>Дата</FieldLabel><DatePicker name="spentOn" required defaultValue={today} max={today} /></Field>
           <Field autoId><FieldLabel>Доставчик</FieldLabel><NativeSelect name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</NativeSelect><FieldDescription>Няма го в списъка? <Link href="/app/suppliers" className="font-medium text-primary-ink hover:underline">Добави доставчик</Link>.</FieldDescription></Field>
           <Field autoId className="sm:col-span-2"><FieldLabel>Номер на документ</FieldLabel><Input name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
