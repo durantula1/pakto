@@ -69,6 +69,7 @@ export function InvoiceDocument(props: InvoicePdfProps) {
         {props.status === "void" ? <Text style={styles.watermark}>АНУЛИРАНА</Text> : props.status === "draft" ? <Text style={styles.watermark}>ЧЕРНОВА</Text> : null}
         <View style={styles.header}>
           <View>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
             {props.logo && box ? <Image src={props.logo.data} style={{ width: box.width, height: box.height, objectFit: "contain", marginBottom: 6 }} /> : null}
             {props.headerNote ? <Text style={{ color: muted }}>{props.headerNote}</Text> : null}
           </View>

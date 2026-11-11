@@ -112,3 +112,15 @@ completed -> service -> completed
 
 Installation acceptance uses its own scope and evidence. Approval links are never reused for after-sales access.
 
+
+## Optional modules (2026-11-11)
+
+```text
+task:    todo <-> doing <-> done          (done sets completed_at; reopening clears it)
+deal:    stages of the pipeline; each stage has kind open | won | lost
+         an offer approved by the client moves a linked deal to a won stage
+invoice: draft -> issued -> paid
+         draft | issued -> void           (issued/paid never go back to draft)
+```
+
+An issued invoice and its lines are frozen by the database triggers `protect_issued_invoice` and `protect_issued_invoice_line`: only status moves forward and payment fields change. Offers, their revisions and the portal decisions are not touched by any of these machines.

@@ -36,13 +36,13 @@ export default async function ModulesSettingsPage() {
       <Panel title="Модули" description="Включваш само това, което ти трябва. Изключването скрива модула, но не изтрива нищо: данните са на мястото си, когато го включиш пак. Офертите, клиентският портал и плащанията работят винаги.">
         <ul className="grid gap-3">
           {MODULE_KEYS.map((key) => {
-            const module = MODULES[key];
+            const mod = MODULES[key];
             const on = enabled.has(key);
             return (
               <li key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-medium">{module.label} {on ? <Pill tone="good">Включен</Pill> : <Pill>Изключен</Pill>}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{module.description}</p>
+                  <p className="flex items-center gap-2 font-medium">{mod.label} {on ? <Pill tone="good">Включен</Pill> : <Pill>Изключен</Pill>}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
                   {key === "invoices" ? <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">Преди да издаваш истински фактури, провери със счетоводителя си задължителните реквизити, ДДС и номерацията.</p> : null}
                 </div>
                 <ActionForm action={setModuleAction} success={on ? "Модулът е изключен" : "Модулът е включен"}>

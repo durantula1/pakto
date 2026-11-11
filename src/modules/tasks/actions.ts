@@ -116,7 +116,7 @@ export async function deleteTaskAction(formData: FormData) {
 }
 
 /** One task per line; "Заснемане +3" is due 3 days after the start date. */
-export function parseTemplateLines(text: string) {
+function parseTemplateLines(text: string) {
   return text
     .split("\n")
     .map((line) => line.trim())
