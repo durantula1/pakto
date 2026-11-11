@@ -10,6 +10,7 @@ import {
   Bell,
   FolderKanban,
   ChartNoAxesColumn,
+  Blocks,
   CirclePlus,
   FileText,
   Euro,
@@ -37,6 +38,8 @@ import { can, roleLabel } from "@/lib/authz/permissions";
 import { getOptionalTenantContext, getSessionUserId } from "@/lib/authz/tenant-context";
 import { accountDeletionDate } from "@/lib/legal";
 import { getAccountSummary } from "@/modules/account/queries";
+import { canOpenModule, getEnabledModules } from "@/modules/platform/modules";
+import { MODULES, MODULE_KEYS } from "@/modules/platform/registry";
 import { isPlatformAdmin } from "@/modules/platform-admin/access";
 import { countUnreadNotifications, recentNotifications } from "@/modules/notifications/queries";
 import { CommandPalette, type PaletteLink } from "@/components/workspace/command-palette";
@@ -54,6 +57,9 @@ export default async function WorkspaceLayout({
   const userId = await getSessionUserId();
   const [context, account, cookieStore, admin] = await Promise.all([getOptionalTenantContext(), userId ? getAccountSummary(userId) : null, cookies(), isPlatformAdmin()]);
   if (!context) redirect("/onboarding");
+  // Optional modules the company switched on and this member may open. A company with none sees no extra group.
+  const enabledModules = await getEnabledModules(context.organizationId);
+  const moduleLinks = MODULE_KEYS.filter((key) => MODULES[key].href && canOpenModule(context, enabledModules, key)).map((key) => ({ href: MODULES[key].href!, label: MODULES[key].label }));
   // New owners and new team members see the welcome screens once, wherever they enter the app.
   if (account && !account.welcomeSeen) redirect("/welcome");
   // Streamed into the badge so the shell never waits on it. The layout re-renders on the realtime
@@ -86,6 +92,7 @@ export default async function WorkspaceLayout({
       { href: "/app/offers", label: "Оферти", icon: <FileText className="size-4" /> },
     ] },
     ...(finance ? [{ label: "Финанси", links: [{ href: "/app/finance", label: "Плащания", icon: <Euro className="size-4" /> }] }] : []),
+    ...(moduleLinks.length ? [{ label: "Модули", links: moduleLinks.map((link) => ({ ...link, icon: <Blocks className="size-4" /> })) }] : []),
     { label: "Фирма", links: [
       { href: "/app/catalog", label: "Каталог", icon: <BookOpen className="size-4" /> },
       ...(owner ? [{ href: "/app/team", label: "Екип", icon: <Users className="size-4" /> }] : []),
@@ -105,6 +112,7 @@ export default async function WorkspaceLayout({
     { href: "/app/offers", label: "Оферти", icon: "offers" },
     { href: "/app/notifications", label: "Известия", icon: "notifications" },
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: "finance" as const }] : []),
+    ...moduleLinks.map((link) => ({ ...link, icon: "projects" as const })),
     { href: "/app/catalog", label: "Каталог", icon: "catalog" },
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: "team" as const }] : []),
     { href: "/app/settings", label: "Настройки", icon: "settings" },
@@ -176,7 +184,7 @@ export default async function WorkspaceLayout({
           {clients
             ? <NavLink href="/app/clients" label="Клиенти" icon={<Contact className="size-5" />} variant="tab" />
             : <NavLink href="/app/notifications" label="Известия" icon={<Bell className="size-5" />} badge={unreadBadge} variant="tab" />}
-          <MobileMoreMenu owner={owner} finance={finance} admin={admin} />
+          <MobileMoreMenu owner={owner} finance={finance} admin={admin} modules={moduleLinks} />
         </nav>
       </section>
     </div>

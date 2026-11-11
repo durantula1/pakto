@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Building2, CircleUserRound, ShieldCheck } from "lucide-react";
+import { Bell, Blocks, Building2, CircleUserRound, ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,10 @@ const personal = [
   { href: "/app/settings/notifications", label: "Известия", icon: Bell },
   { href: "/app/settings/privacy", label: "Данни и профил", icon: ShieldCheck },
 ];
-const company = [{ href: "/app/settings/organization", label: "Фирма", icon: Building2 }];
+const company = [
+  { href: "/app/settings/organization", label: "Фирма", icon: Building2 },
+  { href: "/app/settings/modules", label: "Модули", icon: Blocks },
+];
 
 /** Vertical grouped list on desktop, one horizontally scrolling row of pills on mobile. */
 export function SettingsNav({ owner }: { owner: boolean }) {
