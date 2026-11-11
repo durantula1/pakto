@@ -50,7 +50,7 @@ export default async function InvoicesPage() {
               </li>
             ))}
           </ul>
-        ) : <p className="text-sm text-muted-foreground">Още няма фактури. Създай от вноска по-долу или празна.</p>}
+        ) : <p className="text-sm text-muted-foreground">Още няма фактури. Създай от вноска по-долу или започни с празна фактура.</p>}
       </Panel>
       <Panel title="От вноска по оферта" description="Вноските от одобрените оферти, за които още няма фактура. Сумата на вноската се взема като включваща ДДС: провери реда преди да издадеш.">
         {installments.length ? (
