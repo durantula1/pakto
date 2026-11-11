@@ -26,8 +26,8 @@ export function NewProjectForm({ defaultClient = null }: { defaultClient?: Clien
         <Input id="project-name" name="name" required autoFocus className="h-11" placeholder="Апартамент Иванови" />
       </Field>
       <Field>
-        <FieldLabel htmlFor="project-address">Адрес</FieldLabel>
-        <Input id="project-address" name="siteAddress" required className="h-11" placeholder="гр. София, ул. …" />
+        <FieldLabel htmlFor="project-address">Адрес (по избор)</FieldLabel>
+        <Input id="project-address" name="siteAddress" className="h-11" placeholder="гр. София, ул. …" />
       </Field>
       <Field>
         <FieldLabel htmlFor="project-reference">Вътрешен номер</FieldLabel>

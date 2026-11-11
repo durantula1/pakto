@@ -26,7 +26,7 @@ const moves: Record<Move, { label: string; icon: typeof Archive; title: string; 
  * (active → completed → archived). Kept in one menu so the header stays on one line.
  */
 export function ProjectMenu({ project, canManage, isOwner, openItems }: {
-  project: { id: string; name: string; siteAddress: string; reference: string | null; status: "active" | "completed" | "archived" };
+  project: { id: string; name: string; siteAddress: string | null; reference: string | null; status: "active" | "completed" | "archived" };
   canManage: boolean;
   isOwner: boolean;
   /** What is still open, listed before completing ("2 етапа не са завършени"), each linking to where it is handled. */
@@ -62,7 +62,7 @@ export function ProjectMenu({ project, canManage, isOwner, openItems }: {
         <ActionForm action={updateProjectDetailsAction} success="Проектът е записан" onSuccess={close} className="grid gap-3">
           <input type="hidden" name="projectId" value={project.id} />
           <Field><FieldLabel htmlFor="project-name">Име</FieldLabel><Input id="project-name" name="name" required minLength={2} maxLength={160} defaultValue={project.name} autoFocus /></Field>
-          <Field><FieldLabel htmlFor="project-address">Адрес</FieldLabel><Input id="project-address" name="siteAddress" required minLength={3} maxLength={300} defaultValue={project.siteAddress} /></Field>
+          <Field><FieldLabel htmlFor="project-address">Адрес (по избор)</FieldLabel><Input id="project-address" name="siteAddress" minLength={3} maxLength={300} defaultValue={project.siteAddress ?? ""} /></Field>
           <Field><FieldLabel htmlFor="project-reference">Вътрешен номер (по желание)</FieldLabel><Input id="project-reference" name="reference" maxLength={80} defaultValue={project.reference ?? ""} /></Field>
           <div className="flex justify-end gap-2 pt-1"><DialogClose>Отказ</DialogClose><ActionSubmit>Запази</ActionSubmit></div>
         </ActionForm>

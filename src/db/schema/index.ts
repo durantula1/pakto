@@ -41,6 +41,12 @@ export const memberPermission = appSchema.enum("member_permission", [
   "payments.record",
   "finance.view",
   "clients.manage",
+  "tasks.manage",
+  "crm.manage",
+  "time.track",
+  "expenses.manage",
+  "invoices.manage",
+  "reports.view",
 ]);
 export const memberStatus = appSchema.enum("member_status", [
   "active",
@@ -118,6 +124,15 @@ export const organizations = appSchema.table(
     stageWarningDays: integer("stage_warning_days").notNull().default(7),
     /** Set when the sole member deletes their account; app.purge_organization() removes the company later. */
     closureRequestedAt: timestamp("closure_requested_at", { withTimezone: true }),
+    /** What the company does (repairs, agency, services, other). Only picks defaults; never gates a feature. */
+    kind: text("kind"),
+    country: char("country", { length: 2 }).notNull().default("BG"),
+    timezone: text("timezone").notNull().default("Europe/Sofia"),
+    legalName: text("legal_name"),
+    vatId: text("vat_id"),
+    companyIdNumber: text("company_id_number"),
+    legalAddress: text("legal_address"),
+    contactEmail: text("contact_email"),
     ...timestamps,
   },
   (table) => [uniqueIndex("organizations_slug_uidx").on(table.slug)],
@@ -258,6 +273,10 @@ export const clients = appSchema.table(
     address: text("address"),
     notes: text("notes"),
     mergedIntoId: uuid("merged_into_id").references((): AnyPgColumn => clients.id),
+    companyId: uuid("company_id"),
+    tags: text("tags").array().notNull().default([]),
+    ownerId: uuid("owner_id"),
+    custom: jsonb("custom").$type<Record<string, string>>().notNull().default({}),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdBy: uuid("created_by"),
     ...timestamps,
@@ -279,7 +298,8 @@ export const projects = appSchema.table(
       .references(() => organizations.id, { onDelete: "restrict" }),
     publicId: uuid("public_id").notNull().defaultRandom(),
     name: text("name").notNull(),
-    siteAddress: text("site_address").notNull(),
+    /** Optional: a construction habit that other kinds of work do not need. */
+    siteAddress: text("site_address"),
     reference: text("reference"),
     status: projectStatus("status").notNull().default("active"),
     createdBy: uuid("created_by").notNull(),
@@ -289,6 +309,11 @@ export const projects = appSchema.table(
     clientDigestAt: timestamp("client_digest_at", { withTimezone: true }),
     /** The contracting client; set at creation and never changed (a trigger guards it). */
     clientId: uuid("client_id").notNull(),
+    typeId: uuid("type_id"),
+    ownerId: uuid("owner_id"),
+    startsOn: date("starts_on"),
+    dueOn: date("due_on"),
+    custom: jsonb("custom").$type<Record<string, string>>().notNull().default({}),
     ...timestamps,
   },
   (table) => [
@@ -1196,4 +1221,382 @@ export const authVerifications = appSchema.table(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("auth_verifications_identifier_idx").on(table.identifier)],
+);
+
+
+// ---------------------------------------------------------------------------------------------
+// Optional modules (see docs/architecture-decisions.md, "Optional modules"). Every table here is
+// internal to the company; the client portal never reads them. Foreign keys to projects, clients and
+// organizations cascade so app.purge_organization() keeps working without knowing about them.
+// ---------------------------------------------------------------------------------------------
+
+export const organizationModules = appSchema.table(
+  "organization_modules",
+  {
+    organizationId: uuid("organization_id").notNull(),
+    moduleKey: text("module_key").notNull(),
+    plan: text("plan"),
+    enabledBy: uuid("enabled_by"),
+    enabledAt: timestamp("enabled_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.organizationId, table.moduleKey] })],
+);
+
+export const domainEvents = appSchema.table(
+  "domain_events",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    organizationId: uuid("organization_id").notNull(),
+    kind: text("kind").notNull(),
+    subjectType: text("subject_type").notNull(),
+    subjectId: uuid("subject_id"),
+    actorId: uuid("actor_id"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("domain_events_org_idx").on(table.organizationId, table.id.desc())],
+);
+
+export const projectTypes = appSchema.table("project_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  name: text("name").notNull(),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const customFieldDefs = appSchema.table("custom_field_defs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  entity: text("entity", { enum: ["project", "client"] }).notNull(),
+  key: text("key").notNull(),
+  label: text("label").notNull(),
+  kind: text("kind", { enum: ["text", "number", "date", "select"] }).notNull(),
+  options: jsonb("options").$type<string[]>().notNull().default([]),
+  position: integer("position").notNull().default(0),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+});
+
+export const tasks = appSchema.table(
+  "tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    projectId: uuid("project_id").notNull(),
+    offerId: uuid("offer_id"),
+    milestoneId: uuid("milestone_id"),
+    parentId: uuid("parent_id"),
+    title: text("title").notNull(),
+    description: text("description"),
+    status: text("status", { enum: ["todo", "doing", "done"] }).notNull().default("todo"),
+    priority: text("priority", { enum: ["low", "normal", "high"] }).notNull().default("normal"),
+    assigneeId: uuid("assignee_id"),
+    dueOn: date("due_on"),
+    position: integer("position").notNull().default(0),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdBy: uuid("created_by").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("tasks_project_status_idx").on(table.projectId, table.status, table.position)],
+);
+
+export const taskComments = appSchema.table("task_comments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  taskId: uuid("task_id").notNull(),
+  authorId: uuid("author_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const projectTemplates = appSchema.table("project_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  typeId: uuid("type_id"),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const templateTasks = appSchema.table("template_tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  templateId: uuid("template_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  offsetDays: integer("offset_days").notNull().default(0),
+  position: integer("position").notNull().default(0),
+});
+
+export const companies = appSchema.table(
+  "companies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    name: text("name").notNull(),
+    vatId: text("vat_id"),
+    address: text("address"),
+    website: text("website"),
+    phone: text("phone"),
+    email: text("email"),
+    notes: text("notes"),
+    ownerId: uuid("owner_id"),
+    custom: jsonb("custom").$type<Record<string, string>>().notNull().default({}),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdBy: uuid("created_by"),
+    ...timestamps,
+  },
+  (table) => [index("companies_org_name_idx").on(table.organizationId, table.name)],
+);
+
+export const pipelineStages = appSchema.table(
+  "pipeline_stages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    name: text("name").notNull(),
+    position: integer("position").notNull(),
+    kind: text("kind", { enum: ["open", "won", "lost"] }).notNull().default("open"),
+    probability: integer("probability").notNull().default(0),
+  },
+  (table) => [index("pipeline_stages_org_idx").on(table.organizationId, table.position)],
+);
+
+export const deals = appSchema.table(
+  "deals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    title: text("title").notNull(),
+    clientId: uuid("client_id"),
+    companyId: uuid("company_id"),
+    stageId: uuid("stage_id").notNull(),
+    value: numeric("value", { precision: 14, scale: 2 }),
+    currency: char("currency", { length: 3 }).notNull().default("EUR"),
+    expectedCloseOn: date("expected_close_on"),
+    ownerId: uuid("owner_id"),
+    source: text("source"),
+    lostReason: text("lost_reason"),
+    notes: text("notes"),
+    offerId: uuid("offer_id"),
+    projectId: uuid("project_id"),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    createdBy: uuid("created_by").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("deals_org_stage_idx").on(table.organizationId, table.stageId)],
+);
+
+export const activities = appSchema.table("activities", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  kind: text("kind", { enum: ["call", "meeting", "email", "note", "todo"] }).notNull(),
+  subject: text("subject").notNull(),
+  body: text("body"),
+  dealId: uuid("deal_id"),
+  clientId: uuid("client_id"),
+  companyId: uuid("company_id"),
+  dueAt: timestamp("due_at", { withTimezone: true }),
+  doneAt: timestamp("done_at", { withTimezone: true }),
+  assigneeId: uuid("assignee_id"),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const memberRates = appSchema.table(
+  "member_rates",
+  {
+    organizationId: uuid("organization_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    costPerHour: numeric("cost_per_hour", { precision: 10, scale: 2 }).notNull().default("0"),
+    billPerHour: numeric("bill_per_hour", { precision: 10, scale: 2 }).notNull().default("0"),
+    currency: char("currency", { length: 3 }).notNull().default("EUR"),
+  },
+  (table) => [primaryKey({ columns: [table.organizationId, table.userId] })],
+);
+
+export const timeEntries = appSchema.table(
+  "time_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    projectId: uuid("project_id").notNull(),
+    taskId: uuid("task_id"),
+    workDate: date("work_date").notNull(),
+    minutes: integer("minutes").notNull(),
+    billable: boolean("billable").notNull().default(true),
+    note: text("note"),
+    /** Rates at the time of entry, so a later rate change never rewrites past cost. */
+    costRate: numeric("cost_rate", { precision: 10, scale: 2 }).notNull().default("0"),
+    billRate: numeric("bill_rate", { precision: 10, scale: 2 }).notNull().default("0"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("time_entries_org_date_idx").on(table.organizationId, table.workDate.desc())],
+);
+
+export const suppliers = appSchema.table("suppliers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  name: text("name").notNull(),
+  vatId: text("vat_id"),
+  email: text("email"),
+  phone: text("phone"),
+  notes: text("notes"),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const expenses = appSchema.table(
+  "expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    projectId: uuid("project_id"),
+    supplierId: uuid("supplier_id"),
+    category: text("category").notNull().default("materials"),
+    description: text("description").notNull(),
+    documentRef: text("document_ref"),
+    amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
+    currency: char("currency", { length: 3 }).notNull().default("EUR"),
+    spentOn: date("spent_on").notNull(),
+    createdBy: uuid("created_by").notNull(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("expenses_org_date_idx").on(table.organizationId, table.spentOn.desc())],
+);
+
+export const projectBudgetLines = appSchema.table(
+  "project_budget_lines",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    projectId: uuid("project_id").notNull(),
+    category: text("category").notNull(),
+    planned: numeric("planned", { precision: 14, scale: 2 }).notNull(),
+  },
+  (table) => [unique("project_budget_lines_project_category_unique").on(table.projectId, table.category)],
+);
+
+export const invoiceTemplates = appSchema.table("invoice_templates", {
+  organizationId: uuid("organization_id").primaryKey(),
+  showLogo: boolean("show_logo").notNull().default(true),
+  accent: text("accent").notNull().default("#102b38"),
+  title: text("title").notNull().default("Фактура"),
+  headerNote: text("header_note"),
+  footerNote: text("footer_note"),
+  paymentNote: text("payment_note"),
+  updatedBy: uuid("updated_by"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const invoiceSequences = appSchema.table(
+  "invoice_sequences",
+  {
+    organizationId: uuid("organization_id").notNull(),
+    year: integer("year").notNull(),
+    lastNumber: integer("last_number").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.organizationId, table.year] })],
+);
+
+export type InvoiceSeller = {
+  name: string;
+  vatId: string | null;
+  companyIdNumber: string | null;
+  address: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
+export const invoices = appSchema.table(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    projectId: uuid("project_id"),
+    clientId: uuid("client_id"),
+    offerId: uuid("offer_id"),
+    installmentId: uuid("installment_id"),
+    number: text("number"),
+    status: text("status", { enum: ["draft", "issued", "paid", "void"] }).notNull().default("draft"),
+    issueDate: date("issue_date"),
+    supplyDate: date("supply_date"),
+    dueDate: date("due_date"),
+    currency: char("currency", { length: 3 }).notNull().default("EUR"),
+    buyerName: text("buyer_name").notNull(),
+    buyerVat: text("buyer_vat"),
+    buyerAddress: text("buyer_address"),
+    seller: jsonb("seller").$type<InvoiceSeller>(),
+    subtotal: numeric("subtotal", { precision: 14, scale: 2 }).notNull().default("0"),
+    taxTotal: numeric("tax_total", { precision: 14, scale: 2 }).notNull().default("0"),
+    total: numeric("total", { precision: 14, scale: 2 }).notNull().default("0"),
+    note: text("note"),
+    issuedAt: timestamp("issued_at", { withTimezone: true }),
+    issuedBy: uuid("issued_by"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    exportedAt: timestamp("exported_at", { withTimezone: true }),
+    createdBy: uuid("created_by").notNull(),
+    ...timestamps,
+  },
+  (table) => [index("invoices_org_status_idx").on(table.organizationId, table.status, table.issueDate.desc())],
+);
+
+export const invoiceLines = appSchema.table(
+  "invoice_lines",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
+    position: integer("position").notNull().default(0),
+    description: text("description").notNull(),
+    quantity: numeric("quantity", { precision: 14, scale: 3 }).notNull().default("1"),
+    unit: text("unit"),
+    unitPrice: numeric("unit_price", { precision: 14, scale: 2 }).notNull(),
+    taxRate: numeric("tax_rate", { precision: 5, scale: 2 }).notNull().default("0"),
+  },
+  (table) => [index("invoice_lines_invoice_idx").on(table.invoiceId, table.position)],
+);
+
+export const apiKeys = appSchema.table("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  name: text("name").notNull(),
+  prefix: text("prefix").notNull(),
+  keyHash: text("key_hash").notNull().unique(),
+  scopes: text("scopes").array().notNull().default(["read"]),
+  createdBy: uuid("created_by").notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const webhookEndpoints = appSchema.table("webhook_endpoints", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id").notNull(),
+  url: text("url").notNull(),
+  secret: text("secret").notNull(),
+  events: text("events").array().notNull().default([]),
+  active: boolean("active").notNull().default(true),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const webhookDeliveries = appSchema.table(
+  "webhook_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull(),
+    endpointId: uuid("endpoint_id").notNull(),
+    eventId: bigint("event_id", { mode: "number" }).notNull(),
+    status: text("status", { enum: ["pending", "sent", "failed"] }).notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("webhook_deliveries_endpoint_event_idx").on(table.endpointId, table.eventId)],
 );

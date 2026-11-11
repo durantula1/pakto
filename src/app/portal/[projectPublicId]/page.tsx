@@ -149,10 +149,10 @@ export default async function PortalProjectPage({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <p className="inline-flex max-w-full min-w-0 items-center gap-1.5 self-start rounded-full bg-card px-3 py-2 text-sm text-muted-foreground">
+        {data.project.siteAddress ? <p className="inline-flex max-w-full min-w-0 items-center gap-1.5 self-start rounded-full bg-card px-3 py-2 text-sm text-muted-foreground">
           <MapPin className="size-4 shrink-0 text-primary-ink" />
           <span className="truncate">{data.project.siteAddress}</span>
-        </p>
+        </p> : null}
         <h1 className="max-w-[18ch] text-[2rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
           {data.project.name}
         </h1>

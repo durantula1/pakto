@@ -73,7 +73,7 @@ function formatDeadline(value: string | null) {
 }
 
 export function ChangePdfDocument({ organization, logo, project, siteAddress, contact, kind, code, revision, lines, schedule = [], paymentTerms = [], absorbedChanges = [], decision, photos = [] }: {
-  organization: string; logo?: PdfLogo | null; project: string; siteAddress: string; contact: string; kind: "offer" | "change"; code: string;
+  organization: string; logo?: PdfLogo | null; project: string; siteAddress: string | null; contact: string; kind: "offer" | "change"; code: string;
   revision: { title: string; description: string; reason: string | null; revisionNumber: number; changeKind: string; subtotal: string; taxAmount: string; total: string; currency: string; taxRate: string; agreedDeadline: string | null; contentHash: string | null; frozenAt: Date | null; clientNote: string | null; responseDueAt?: Date | null; discountType?: "percent" | "amount" | null; discountValue?: string | null; discountAmount?: string | null };
   lines: Line[];
   /** The indicative schedule of an offer; not a commitment, the agreed deadline is. */
@@ -113,7 +113,7 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
     <View style={styles.facts}>
       <View style={styles.fact}><Text style={styles.factLabel}>Проект</Text><Text>{project}</Text></View>
       <View style={styles.fact}><Text style={styles.factLabel}>Клиент</Text><Text>{contact}</Text></View>
-      <View style={styles.fact}><Text style={styles.factLabel}>Адрес</Text><Text>{siteAddress}</Text></View>
+      {siteAddress ? <View style={styles.fact}><Text style={styles.factLabel}>Адрес</Text><Text>{siteAddress}</Text></View> : null}
       <View style={styles.fact}><Text style={styles.factLabel}>{kind === "offer" ? "Срок за изпълнение" : "Нов краен срок"}</Text><Text>{deadline ?? (kind === "offer" ? "Не е посочен" : "Без промяна")}</Text></View>
       <View style={styles.fact}><Text style={styles.factLabel}>Изпратена</Text><Text>{revision.frozenAt ? dateFormat.format(revision.frozenAt) : "—"}</Text></View>
       {revision.responseDueAt ? <View style={styles.fact}><Text style={styles.factLabel}>Валидна до</Text><Text>{dateFormat.format(revision.responseDueAt)}</Text></View> : null}

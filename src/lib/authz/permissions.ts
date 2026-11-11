@@ -9,6 +9,12 @@ export const PERMISSION_KEYS = [
   "payments.record",
   "finance.view",
   "clients.manage",
+  "tasks.manage",
+  "crm.manage",
+  "time.track",
+  "expenses.manage",
+  "invoices.manage",
+  "reports.view",
 ] as const;
 
 export type Permission = (typeof PERMISSION_KEYS)[number];
@@ -39,6 +45,23 @@ export const PERMISSION_GROUPS: { label: string; items: { key: Permission; label
       { key: "finance.view", label: "Вижда финансите", description: "Секция „Плащания“ и месечната справка." },
     ],
   },
+  {
+    label: "Допълнителни модули",
+    items: [
+      { key: "tasks.manage", label: "Управлява задачи", description: "Създава, възлага и редактира задачи по проектите. Модул „Задачи“." },
+      { key: "crm.manage", label: "Работи със сделките", description: "Сделки, фирми и активности. Модул „CRM“." },
+      { key: "time.track", label: "Отчита време", description: "Вписва собствените си часове по проектите. Модул „Време“." },
+      { key: "expenses.manage", label: "Записва разходи", description: "Разходи, доставчици и бюджет по проект. Модул „Разходи“." },
+      { key: "invoices.manage", label: "Работи с фактури", description: "Чернови, издаване и експорт на фактури. Модул „Фактури“." },
+      { key: "reports.view", label: "Вижда отчетите", description: "Рентабилност и справки. Може да включва суми, които другите не виждат." },
+    ],
+  },
+];
+
+/** The rights every member had before the optional modules existed. The "Координатор" preset stays exactly this. */
+const CORE_PERMISSION_KEYS: Permission[] = [
+  "projects.create", "milestones.manage", "offers.edit", "changes.draft", "documents.send",
+  "drafts.view_all", "notes.view", "payments.record", "finance.view", "clients.manage",
 ];
 
 export const PRESETS = {
@@ -46,7 +69,7 @@ export const PRESETS = {
   office: {
     label: "Координатор",
     description: "Оферти, изпращане към клиента, финанси.",
-    permissions: PERMISSION_KEYS.filter((key) => key !== "payments.record"),
+    permissions: CORE_PERMISSION_KEYS.filter((key) => key !== "payments.record"),
   },
 } satisfies Record<string, { label: string; description: string; permissions: Permission[] }>;
 

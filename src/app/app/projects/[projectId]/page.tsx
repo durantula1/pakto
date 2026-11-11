@@ -130,7 +130,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         title={project.name}
         status={<Badge variant={projectStatusBadgeVariants[project.status as keyof typeof projectStatusBadgeVariants] ?? "secondary"} className="h-6 px-2.5">{projectStatusLabels[project.status] ?? project.status}</Badge>}
         metadata={<>
-          <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4" /> {project.siteAddress}</span>
+          {project.siteAddress ? <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="size-4" /> {project.siteAddress}</span> : null}
           {project.clientId && project.clientName ? (
             seesClients(context)
               ? <Link href={`/app/clients/${project.clientId}`} className="inline-flex items-center gap-1.5 hover:text-foreground hover:underline"><Contact className="size-4" /> {project.clientName}</Link>

@@ -22,7 +22,7 @@ import { clientConfirmedEmail, findClientDuplicate, findUsableClient } from "@/m
 
 const projectSchema = z.object({
   name: z.string().trim().min(2, "Въведи име на проекта.").max(160),
-  siteAddress: z.string().trim().min(3, "Въведи адрес.").max(300),
+  siteAddress: z.union([z.literal(""), z.string().trim().min(3, "Адресът е твърде кратък.").max(300)]).optional(),
   reference: z.string().trim().max(80).optional(),
   contactName: z.string().trim().max(160).optional(),
   contactEmail: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(),
@@ -68,7 +68,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
         organizationId: context.organizationId,
         clientId,
         name: data.name,
-        siteAddress: data.siteAddress,
+        siteAddress: data.siteAddress || null,
         reference: data.reference || null,
         createdBy: context.userId,
       })
@@ -109,7 +109,7 @@ export async function createProjectAction(formData: FormData): Promise<ActionRes
 const detailsSchema = z.object({
   projectId: z.uuid(),
   name: z.string().trim().min(2, "Въведи име на проекта.").max(160),
-  siteAddress: z.string().trim().min(3, "Въведи адрес.").max(300),
+  siteAddress: z.union([z.literal(""), z.string().trim().min(3, "Адресът е твърде кратък.").max(300)]).optional(),
   reference: z.string().trim().max(80).optional(),
 });
 
@@ -130,7 +130,7 @@ export async function updateProjectDetailsAction(formData: FormData): Promise<Ac
       const [before] = await tx.select({ name: projects.name, siteAddress: projects.siteAddress }).from(projects)
         .where(and(eq(projects.id, data.projectId), eq(projects.organizationId, context.organizationId))).for("update").limit(1);
       if (!before) throw new Error("Проектът не е намерен.");
-      await tx.update(projects).set({ name: data.name, siteAddress: data.siteAddress, reference: data.reference || null, updatedAt: new Date() })
+      await tx.update(projects).set({ name: data.name, siteAddress: data.siteAddress || null, reference: data.reference || null, updatedAt: new Date() })
         .where(eq(projects.id, data.projectId));
       await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId: data.projectId, actorType: "staff", actorId: context.userId, eventType: "project_updated", visibility: "internal", metadata: { before, name: data.name, siteAddress: data.siteAddress } });
     });
