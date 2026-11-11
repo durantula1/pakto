@@ -25,6 +25,18 @@ const labels: Record<string, string> = {
   "/app/settings/privacy": "Данни и профил",
   "/app/settings/organization": "Фирма",
   "/app/admin": "Админ",
+  "/app/tasks": "Задачи",
+  "/app/tasks/templates": "Шаблони",
+  "/app/crm": "CRM",
+  "/app/crm/companies": "Фирми",
+  "/app/time": "Време",
+  "/app/expenses": "Разходи",
+  "/app/suppliers": "Доставчици",
+  "/app/invoices": "Фактури",
+  "/app/invoices/template": "Шаблон и лого",
+  "/app/reports": "Отчети",
+  "/app/settings/modules": "Данни за фактури",
+  "/app/settings/integrations": "Интеграции",
 };
 
 /** The record name a detail page publishes for its own path; the layout cannot know it. */

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
 import { can } from "@/lib/authz/permissions";
@@ -31,6 +32,7 @@ export default async function TaskPage({ params }: PageProps<"/app/tasks/[taskId
   const manage = can(context, "tasks.manage");
   return (
     <PageShell width="form">
+      <BreadcrumbCurrent label={task.title} />
       <div className="flex flex-col gap-1">
         <Link href="/app/tasks" className="self-start text-sm text-muted-foreground hover:text-foreground">← Всички задачи</Link>
         <h1 className="text-2xl font-semibold tracking-tight">{task.title}</h1>

@@ -8,6 +8,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { StatCard } from "@/components/workspace/stat-card";
+import { FilterNav } from "@/components/workspace/filter-nav";
 import { FormSheet } from "@/components/workspace/form-sheet";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageHeader } from "@/components/workspace/page/page-header";
@@ -34,28 +35,29 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
   const today = todayInSofia();
   return (
     <PageShell width="wide">
-      <PageHeader page="expenses" />
-      <form className="flex flex-wrap items-end gap-3" method="get">
-        <Field autoId><FieldLabel>Покажи проект</FieldLabel><NativeSelect name="project" defaultValue={projectId ?? ""}><option value="">Всички</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
-        <button className="h-10 rounded-lg border px-4 text-sm font-medium hover:bg-muted">Покажи</button>
-      </form>
+      <PageHeader
+        page="expenses"
+        actions={<>
+          <FilterNav name="project" label="Проект" value={projectId ?? ""} options={[{ value: "", label: "Всички проекти" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
+          <FormSheet label="Нов разход">
+                  <ActionForm action={createExpenseAction} success="Разходът е записан" className="grid gap-4 sm:grid-cols-2">
+                    <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" defaultValue={projectId ?? ""}><option value="">Общ разход (без проект)</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
+                    <Field autoId><FieldLabel>Категория</FieldLabel><NativeSelect name="category" defaultValue="materials">{Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</NativeSelect></Field>
+                    <Field autoId><FieldLabel>За какво</FieldLabel><Input name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></Field>
+                    <Field autoId><FieldLabel>Сума (€)</FieldLabel><Input name="amount" required inputMode="decimal" placeholder="240,00" /></Field>
+                    <Field autoId><FieldLabel>Дата</FieldLabel><DatePicker name="spentOn" required defaultValue={today} max={today} /></Field>
+                    <Field autoId><FieldLabel>Доставчик</FieldLabel><NativeSelect name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</NativeSelect><FieldDescription>Няма го в списъка? <Link href="/app/suppliers" className="font-medium text-primary-ink hover:underline">Добави доставчик</Link>.</FieldDescription></Field>
+                    <Field autoId className="sm:col-span-2"><FieldLabel>Номер на документ</FieldLabel><Input name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></Field>
+                    <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
+                  </ActionForm>
+                </FormSheet>
+        </>}
+      />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Общо разходи" value={`${formatAmount(total)} €`} hint="Без ДДС, ако не е записано иначе" tone="coral" />
         <StatCard label="Записи" value={items.length} tone="blue" />
         <StatCard label="Доставчици" value={suppliers.length} tone="sand" href="/app/suppliers" hint="Управление на доставчиците" />
       </div>
-      <FormSheet label="Нов разход">
-        <ActionForm action={createExpenseAction} success="Разходът е записан" className="grid gap-4 sm:grid-cols-2">
-          <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" defaultValue={projectId ?? ""}><option value="">Общ разход (без проект)</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
-          <Field autoId><FieldLabel>Категория</FieldLabel><NativeSelect name="category" defaultValue="materials">{Object.entries(EXPENSE_CATEGORIES).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</NativeSelect></Field>
-          <Field autoId><FieldLabel>За какво</FieldLabel><Input name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></Field>
-          <Field autoId><FieldLabel>Сума (€)</FieldLabel><Input name="amount" required inputMode="decimal" placeholder="240,00" /></Field>
-          <Field autoId><FieldLabel>Дата</FieldLabel><DatePicker name="spentOn" required defaultValue={today} max={today} /></Field>
-          <Field autoId><FieldLabel>Доставчик</FieldLabel><NativeSelect name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</NativeSelect><FieldDescription>Няма го в списъка? <Link href="/app/suppliers" className="font-medium text-primary-ink hover:underline">Добави доставчик</Link>.</FieldDescription></Field>
-          <Field autoId className="sm:col-span-2"><FieldLabel>Номер на документ</FieldLabel><Input name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></Field>
-          <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
-        </ActionForm>
-      </FormSheet>
 
       {projectId ? (
         <Card><CardHeader><CardTitle>Бюджет и реално изразходено</CardTitle><CardDescription>Планираната сума по категория срещу вече записаните разходи.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">

@@ -10,6 +10,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { BreadcrumbCurrent } from "@/components/workspace/app-breadcrumb";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { getDatabase } from "@/db";
 import { pipelineStages } from "@/db/schema";
@@ -42,6 +43,7 @@ export default async function DealPage({ params }: PageProps<"/app/crm/[dealId]"
   const linked = targets.find((project) => project.id === deal.projectId);
   return (
     <PageShell width="wide">
+      <BreadcrumbCurrent label={deal.title} />
       <div className="flex flex-col gap-1">
         <Link href="/app/crm" className="self-start text-sm text-muted-foreground hover:text-foreground">← Фуния</Link>
         <h1 className="flex flex-wrap items-center gap-3 text-2xl font-semibold tracking-tight">{deal.title} {stage ? <Badge variant={stage.kind === "won" ? "success-soft" : stage.kind === "lost" ? "danger-soft" : "secondary"}>{stage.name}</Badge> : null}</h1>

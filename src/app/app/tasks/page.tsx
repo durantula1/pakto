@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/workspace/stat-card";
 import { FormSheet } from "@/components/workspace/form-sheet";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { FilterNav } from "@/components/workspace/filter-nav";
 import { Kanban, type KanbanCard, type KanbanColumn } from "@/components/workspace/kanban";
 import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
 import { PageHeader } from "@/components/workspace/page/page-header";
@@ -131,11 +132,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
           <Link href={link({ scope: "mine" })} aria-pressed={scope === "mine"} className={segmentClassName}>Моите</Link>
           <Link href={link({ scope: "all" })} aria-pressed={scope === "all"} className={segmentClassName}>Всички</Link>
         </div>
-        <form method="get" action="/app/tasks" className="flex items-center gap-2">
-          <input type="hidden" name="scope" value={scope} />
-          <NativeSelect name="project" aria-label="Проект" defaultValue={projectId ?? ""} className="h-10 w-56"><option value="">Всички проекти</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect>
-          <Button type="submit" variant="outline" className="h-10 rounded-xl px-4">Покажи</Button>
-        </form>
+        <FilterNav name="project" label="Проект" value={projectId ?? ""} keep={{ scope }} className="h-10 w-56" options={[{ value: "", label: "Всички проекти" }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} />
         {late ? <Badge variant="danger-soft">{late} просрочени</Badge> : null}
       </div>
       <Kanban columns={columns} cards={cards} moveAction={setTaskStatusAction} cardField="taskId" columnField="status" />
