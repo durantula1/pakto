@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AreaInput, F, Panel, TextInput } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -27,21 +30,20 @@ export default async function TemplatesPage() {
         <p className="text-muted-foreground">Готов списък със задачи за еднакъв тип проекти. Прилагаш го с един клик към нов проект.</p>
       </div>
       {templates.map((template) => (
-        <Panel key={template.id} title={template.name} actions={
-          <ActionForm action={archiveTemplateAction} success="Шаблонът е изтрит"><input type="hidden" name="templateId" value={template.id} /><ActionSubmit variant="destructive">Изтрий</ActionSubmit></ActionForm>
-        }>
+        <Card key={template.id}><CardHeader><CardTitle>{template.name}</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">
+          <ActionForm action={archiveTemplateAction} success="Шаблонът е изтрит" className="self-start"><input type="hidden" name="templateId" value={template.id} /><ActionSubmit variant="destructive">Изтрий шаблона</ActionSubmit></ActionForm>
           <ol className="list-decimal pl-5 text-sm">
             {template.tasks.map((item) => <li key={item.id}>{item.title}{item.offsetDays ? <span className="text-muted-foreground"> · +{item.offsetDays} дни</span> : null}</li>)}
           </ol>
-        </Panel>
+        </CardContent></Card>
       ))}
-      <Panel title="Нов шаблон" description="По една задача на ред. „Заснемане +3“ означава срок 3 дни след началната дата.">
+      <Card><CardHeader><CardTitle>Нов шаблон</CardTitle><CardDescription>По една задача на ред. „Заснемане +3“ означава срок 3 дни след началната дата.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         <ActionForm action={saveTemplateAction} success="Шаблонът е записан" className="flex flex-col gap-4">
-          <F label="Име"><TextInput name="name" required minLength={2} maxLength={120} placeholder="Например: Нов клиент" /></F>
-          <F label="Задачи"><AreaInput name="lines" required rows={8} placeholder={"Първа среща +0\nОферта +3\nДоговор +7"} /></F>
+          <Field autoId><FieldLabel>Име</FieldLabel><Input name="name" required minLength={2} maxLength={120} placeholder="Например: Нов клиент" /></Field>
+          <Field autoId><FieldLabel>Задачи</FieldLabel><Textarea name="lines" required rows={8} placeholder={"Първа среща +0\nОферта +3\nДоговор +7"} /></Field>
           <div><ActionSubmit>Запази шаблона</ActionSubmit></div>
         </ActionForm>
-      </Panel>
+      </CardContent></Card>
     </PageShell>
   );
 }

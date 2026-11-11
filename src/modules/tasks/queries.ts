@@ -7,7 +7,7 @@ import { profiles, projects, taskComments, tasks, projectTemplates, templateTask
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { visibleProjects } from "@/modules/platform/scope";
 
-export type TaskFilters = { scope: "mine" | "all"; projectId?: string; status: "open" | "done" };
+export type TaskFilters = { scope: "mine" | "all"; projectId?: string; status: "open" | "done" | "all" };
 
 export async function listTasks(context: TenantContext, filters: TaskFilters) {
   const db = getDatabase();
@@ -33,7 +33,7 @@ export async function listTasks(context: TenantContext, filters: TaskFilters) {
         inArray(tasks.projectId, visible),
         filters.scope === "mine" ? eq(tasks.assigneeId, context.userId) : undefined,
         filters.projectId ? eq(tasks.projectId, filters.projectId) : undefined,
-        filters.status === "done" ? eq(tasks.status, "done") : ne(tasks.status, "done"),
+        filters.status === "all" ? undefined : filters.status === "done" ? eq(tasks.status, "done") : ne(tasks.status, "done"),
       ),
     )
     // Overdue and soon-due first; tasks without a date last.

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { F, Panel, TextInput, formGrid } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -35,16 +37,16 @@ export default async function CompaniesPage() {
         ))}
         {!companies.length ? <li className="text-sm text-muted-foreground">Още няма фирми.</li> : null}
       </ul>
-      <Panel title="Нова фирма">
-        <ActionForm action={createCompanyAction} success="Фирмата е добавена" className={formGrid}>
-          <F label="Име"><TextInput name="name" required minLength={2} maxLength={160} /></F>
-          <F label="ЕИК / ИН по ЗДДС"><TextInput name="vatId" maxLength={30} /></F>
-          <F label="Телефон"><TextInput name="phone" type="tel" maxLength={40} /></F>
-          <F label="Имейл"><TextInput name="email" type="email" maxLength={160} /></F>
-          <F label="Адрес" className="sm:col-span-2"><TextInput name="address" maxLength={300} /></F>
+      <Card><CardHeader><CardTitle>Нова фирма</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">
+        <ActionForm action={createCompanyAction} success="Фирмата е добавена" className="grid gap-4 sm:grid-cols-2">
+          <Field autoId><FieldLabel>Име</FieldLabel><Input name="name" required minLength={2} maxLength={160} /></Field>
+          <Field autoId><FieldLabel>ЕИК / ИН по ЗДДС</FieldLabel><Input name="vatId" maxLength={30} /></Field>
+          <Field autoId><FieldLabel>Телефон</FieldLabel><Input name="phone" type="tel" maxLength={40} /></Field>
+          <Field autoId><FieldLabel>Имейл</FieldLabel><Input name="email" type="email" maxLength={160} /></Field>
+          <Field autoId className="sm:col-span-2"><FieldLabel>Адрес</FieldLabel><Input name="address" maxLength={300} /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Добави</ActionSubmit></div>
         </ActionForm>
-      </Panel>
+      </CardContent></Card>
     </PageShell>
   );
 }

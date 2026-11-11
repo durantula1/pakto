@@ -42,12 +42,12 @@ const taskFields = {
 
 export async function createTaskAction(formData: FormData) {
   return attempt(async () => {
-    const data = z.object({ projectId: z.uuid("Избери проект."), ...taskFields }).parse(Object.fromEntries(formData));
+    const data = z.object({ projectId: z.uuid("Избери проект."), status: z.enum(["todo", "doing", "done"]).default("todo"), ...taskFields }).parse(Object.fromEntries(formData));
     const context = await taskContext(data.projectId, { manage: true });
     await checkAssignee(context.organizationId, data.assigneeId || undefined);
     const [task] = await getDatabase()
       .insert(tasks)
-      .values({ organizationId: context.organizationId, projectId: data.projectId, title: data.title, description: data.description || null, assigneeId: data.assigneeId || null, dueOn: data.dueOn || null, priority: data.priority, createdBy: context.userId })
+      .values({ organizationId: context.organizationId, projectId: data.projectId, title: data.title, description: data.description || null, assigneeId: data.assigneeId || null, dueOn: data.dueOn || null, priority: data.priority, status: data.status, completedAt: data.status === "done" ? new Date() : null, createdBy: context.userId })
       .returning({ id: tasks.id });
     await emitEvent({ organizationId: context.organizationId, kind: "task.created", subjectType: "task", subjectId: task!.id, actorId: context.userId, payload: { projectId: data.projectId } });
     revalidatePath("/app/tasks");

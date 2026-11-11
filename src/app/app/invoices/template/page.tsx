@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AreaInput, F, Panel, TextInput, formGrid } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -25,17 +28,17 @@ export default async function InvoiceTemplatePage() {
         <h1 className="text-2xl font-semibold tracking-tight">Шаблон и лого</h1>
         <p className="text-muted-foreground">Логото е същото, като на офертите (качва се от Настройки → Фирма). Тук избираш цвят, заглавие и текстовете, които се появяват на всяка фактура.</p>
       </div>
-      <Panel>
-        <ActionForm action={saveTemplateAction} success="Шаблонът е запазен" className={formGrid}>
+      <Card><CardContent className="flex flex-col gap-4">
+        <ActionForm action={saveTemplateAction} success="Шаблонът е запазен" className="grid gap-4 sm:grid-cols-2">
           <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2"><input type="checkbox" name="showLogo" defaultChecked={template?.showLogo ?? true} className="size-4" /> Покажи логото във фактурата</label>
-          <F label="Заглавие"><TextInput name="title" required minLength={2} maxLength={40} defaultValue={template?.title ?? "Фактура"} /></F>
-          <F label="Цвят (#rrggbb)"><TextInput name="accent" type="color" defaultValue={template?.accent ?? "#102b38"} className="h-10 p-1" /></F>
-          <F label="Текст под логото" className="sm:col-span-2"><AreaInput name="headerNote" maxLength={500} defaultValue={template?.headerNote ?? ""} /></F>
-          <F label="Плащане (банкова сметка, срок)" className="sm:col-span-2"><AreaInput name="paymentNote" maxLength={500} defaultValue={template?.paymentNote ?? ""} placeholder="IBAN BG.. · Банка · Основание: номер на фактурата" /></F>
-          <F label="Долен колонтитул" className="sm:col-span-2"><AreaInput name="footerNote" maxLength={500} defaultValue={template?.footerNote ?? ""} /></F>
+          <Field autoId><FieldLabel>Заглавие</FieldLabel><Input name="title" required minLength={2} maxLength={40} defaultValue={template?.title ?? "Фактура"} /></Field>
+          <Field autoId><FieldLabel>Цвят (#rrggbb)</FieldLabel><Input name="accent" type="color" defaultValue={template?.accent ?? "#102b38"} className="h-10 p-1" /></Field>
+          <Field autoId className="sm:col-span-2"><FieldLabel>Текст под логото</FieldLabel><Textarea name="headerNote" maxLength={500} defaultValue={template?.headerNote ?? ""} /></Field>
+          <Field autoId className="sm:col-span-2"><FieldLabel>Плащане (банкова сметка, срок)</FieldLabel><Textarea name="paymentNote" maxLength={500} defaultValue={template?.paymentNote ?? ""} placeholder="IBAN BG.. · Банка · Основание: номер на фактурата" /></Field>
+          <Field autoId className="sm:col-span-2"><FieldLabel>Долен колонтитул</FieldLabel><Textarea name="footerNote" maxLength={500} defaultValue={template?.footerNote ?? ""} /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Запази</ActionSubmit></div>
         </ActionForm>
-      </Panel>
+      </CardContent></Card>
     </PageShell>
   );
 }

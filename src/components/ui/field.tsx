@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { createContext, useContext, useId, useMemo, useState } from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -69,6 +69,16 @@ const fieldVariants = cva(
   }
 )
 
+/**
+ * With `autoId` on a Field, its label and its one control are linked by a generated id, so a form can
+ * write `<Field autoId><FieldLabel>…</FieldLabel><Input /></Field>` without inventing ids, and the
+ * required mark lands right after the label text.
+ */
+const FieldIdContext = createContext<string | undefined>(undefined)
+export function useFieldId() {
+  return useContext(FieldIdContext)
+}
+
 type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 
 function isControl(target: EventTarget): target is Control {
@@ -100,10 +110,13 @@ function Field({
   children,
   onInvalidCapture,
   onInputCapture,
+  autoId = false,
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants> & { autoId?: boolean }) {
   const [error, setError] = useState<string | null>(null)
+  const generated = useId()
   return (
+    <FieldIdContext.Provider value={autoId ? generated : undefined}>
     <div
       role="group"
       data-slot="field"
@@ -127,6 +140,7 @@ function Field({
       {children}
       {error ? <FieldError>{error}</FieldError> : null}
     </div>
+    </FieldIdContext.Provider>
   )
 }
 
@@ -145,11 +159,14 @@ function FieldContent({ className, ...props }: React.ComponentProps<"div">) {
 
 function FieldLabel({
   className,
+  htmlFor,
   ...props
 }: React.ComponentProps<typeof Label>) {
+  const fieldId = useFieldId()
   return (
     <Label
       data-slot="field-label"
+      htmlFor={htmlFor ?? fieldId}
       className={cn(
         "group/field-label peer/field-label flex w-fit gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-data-checked:border-primary/30 has-data-checked:bg-primary/5 has-data-selected:border-primary/30 has-data-selected:bg-primary/5 has-[>[data-slot=field]]:rounded-lg has-[>[data-slot=field]]:border *:data-[slot=field]:p-2.5 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10 dark:has-data-selected:border-primary/20 dark:has-data-selected:bg-primary/10",
         "has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",

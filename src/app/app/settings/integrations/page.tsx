@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
-import { F, Panel, Pill, TextInput } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { SecretForm } from "@/components/settings/secret-form";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { getDatabase } from "@/db";
@@ -28,16 +31,16 @@ export default async function IntegrationsPage() {
   ]);
   return (
     <>
-      <Panel title="API ключове" description="Само за четене: GET /api/v1/projects, clients, tasks, deals с заглавие Authorization: Bearer <ключ>. Ключът се показва само при създаването.">
+      <Card><CardHeader><CardTitle>API ключове</CardTitle><CardDescription>Само за четене: GET /api/v1/projects, clients, tasks, deals с заглавие Authorization: Bearer &lt;ключ&gt;. Ключът се показва само при създаването.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         <SecretForm action={createApiKeyAction} submit="Създай ключ">
-          <F label="Име на ключа"><TextInput name="name" required maxLength={80} placeholder="Например: Отчети в Excel" /></F>
+          <Field autoId><FieldLabel>Име на ключа</FieldLabel><Input name="name" required maxLength={80} placeholder="Например: Отчети в Excel" /></Field>
         </SecretForm>
         {keys.length ? (
           <ul className="grid gap-2">
             {keys.map((key) => (
               <li key={key.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 text-sm">
                 <div className="min-w-0">
-                  <p className="font-medium">{key.name} {key.revokedAt ? <Pill>Оттеглен</Pill> : null}</p>
+                  <p className="font-medium">{key.name} {key.revokedAt ? <Badge variant="secondary">Оттеглен</Badge> : null}</p>
                   <p className="text-muted-foreground">{key.prefix}… · създаден {formatDay(key.createdAt.toISOString())}{key.lastUsedAt ? ` · последно ползван ${formatDay(key.lastUsedAt.toISOString())}` : ""}</p>
                 </div>
                 {key.revokedAt ? null : (
@@ -50,10 +53,10 @@ export default async function IntegrationsPage() {
             ))}
           </ul>
         ) : null}
-      </Panel>
-      <Panel title="Webhook адреси" description="При събития (нов проект, фактура, задача…) изпращаме подписана POST заявка към твой https адрес. Подписът е в X-Pakto-Signature (HMAC-SHA256).">
+      </CardContent></Card>
+      <Card><CardHeader><CardTitle>Webhook адреси</CardTitle><CardDescription>При събития (нов проект, фактура, задача…) изпращаме подписана POST заявка към твой https адрес. Подписът е в X-Pakto-Signature (HMAC-SHA256).</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         <SecretForm action={createWebhookAction} submit="Добави адрес">
-          <F label="Адрес (https)"><TextInput name="url" type="url" required placeholder="https://example.com/pakto" /></F>
+          <Field autoId><FieldLabel>Адрес (https)</FieldLabel><Input name="url" type="url" required placeholder="https://example.com/pakto" /></Field>
         </SecretForm>
         {hooks.length ? (
           <ul className="grid gap-2">
@@ -68,13 +71,13 @@ export default async function IntegrationsPage() {
             ))}
           </ul>
         ) : null}
-      </Panel>
-      <Panel title="Внасяне на клиенти" description="CSV файл с колони име, имейл, телефон, адрес (първият ред е заглавие). Клиенти с имейл, който вече съществува, се пропускат.">
+      </CardContent></Card>
+      <Card><CardHeader><CardTitle>Внасяне на клиенти</CardTitle><CardDescription>CSV файл с колони име, имейл, телефон, адрес (първият ред е заглавие). Клиенти с имейл, който вече съществува, се пропускат.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         <ActionForm action={importClientsAction} success="Клиентите са внесени" className="grid gap-3">
-          <F label="CSV файл"><TextInput name="file" type="file" accept=".csv,text/csv" required /></F>
+          <Field autoId><FieldLabel>CSV файл</FieldLabel><Input name="file" type="file" accept=".csv,text/csv" required /></Field>
           <div><ActionSubmit>Внеси</ActionSubmit></div>
         </ActionForm>
-      </Panel>
+      </CardContent></Card>
     </>
   );
 }

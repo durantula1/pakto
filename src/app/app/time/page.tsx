@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Disclosure, F, Panel, Pill, Stat, StatRow, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { StatCard } from "@/components/workspace/stat-card";
+import { FormSheet } from "@/components/workspace/form-sheet";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
@@ -39,39 +45,39 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
           ))}
         </div>
       ) : null}
-      <StatRow>
-        <Stat label="Общо, 30 дни" value={formatMinutes(total)} tone="blue" />
-        <Stat label="Фактурируемо" value={formatMinutes(billable)} tone="mint" />
-        <Stat label="Вътрешно" value={formatMinutes(total - billable)} />
-        <Stat label="Проекти" value={byProject.size} tone="sand" />
-      </StatRow>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="Общо, 30 дни" value={formatMinutes(total)} tone="blue" />
+        <StatCard label="Фактурируемо" value={formatMinutes(billable)} tone="mint" />
+        <StatCard label="Вътрешно" value={formatMinutes(total - billable)} />
+        <StatCard label="Проекти" value={byProject.size} tone="sand" />
+      </div>
       {can(context, "time.track") ? (
-        <Disclosure label="Отчети време" defaultOpen={!entries.length}>
-          <ActionForm action={logTimeAction} success="Времето е записано" className={formGrid}>
-            <F label="Проект"><SelectInput name="projectId" required defaultValue=""><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
-            <F label="Дата"><TextInput name="workDate" type="date" required defaultValue={today} max={today} /></F>
-            <F label="Часове"><TextInput name="hours" type="number" min={0} max={24} step={1} defaultValue={1} required /></F>
-            <F label="Минути"><TextInput name="minutes" type="number" min={0} max={59} step={5} defaultValue={0} /></F>
-            <F label="Бележка" className="sm:col-span-2"><TextInput name="note" maxLength={500} placeholder="Какво беше свършено" /></F>
+        <FormSheet label="Отчети време">
+          <ActionForm action={logTimeAction} success="Времето е записано" className="grid gap-4 sm:grid-cols-2">
+            <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" required defaultValue=""><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
+            <Field autoId><FieldLabel>Дата</FieldLabel><Input name="workDate" type="date" required defaultValue={today} max={today} /></Field>
+            <Field autoId><FieldLabel>Часове</FieldLabel><Input name="hours" type="number" min={0} max={24} step={1} defaultValue={1} required /></Field>
+            <Field autoId><FieldLabel>Минути</FieldLabel><Input name="minutes" type="number" min={0} max={59} step={5} defaultValue={0} /></Field>
+            <Field autoId className="sm:col-span-2"><FieldLabel>Бележка</FieldLabel><Input name="note" maxLength={500} placeholder="Какво беше свършено" /></Field>
             <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="billable" defaultChecked className="size-4" /> Фактурируемо</label>
             <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
           </ActionForm>
-        </Disclosure>
+        </FormSheet>
       ) : null}
 
       {byProject.size ? (
-        <Panel title="По проекти">
+        <Card><CardHeader><CardTitle>По проекти</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">
           <ul className="grid gap-1 text-sm">{[...byProject.entries()].map(([id, item]) => <li key={id} className="flex justify-between gap-3 border-b py-1.5 last:border-0"><span>{item.name}</span><span className="tabular-nums">{formatMinutes(item.minutes)}</span></li>)}</ul>
-        </Panel>
+        </CardContent></Card>
       ) : null}
 
-      <Panel title="Записи">
+      <Card><CardHeader><CardTitle>Записи</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">
         {entries.length ? (
           <ul className="flex flex-col gap-2">
             {entries.map((entry) => (
               <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 text-sm">
                 <div className="min-w-0">
-                  <p className="font-medium">{entry.projectName} · {formatMinutes(entry.minutes)} {entry.billable ? <Pill tone="good">Фактурируемо</Pill> : <Pill>Вътрешно</Pill>}</p>
+                  <p className="font-medium">{entry.projectName} · {formatMinutes(entry.minutes)} {entry.billable ? <Badge variant="success-soft">Фактурируемо</Badge> : <Badge variant="secondary">Вътрешно</Badge>}</p>
                   <p className="text-muted-foreground">{formatDay(entry.workDate)}{all ? ` · ${entry.userName ?? "Колега"}` : ""}{entry.note ? ` · ${entry.note}` : ""}</p>
                 </div>
                 {entry.userId === context.userId || context.role === "owner" ? (
@@ -81,10 +87,10 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
             ))}
           </ul>
         ) : <p className="text-sm text-muted-foreground">Още няма записи за последните 30 дни.</p>}
-      </Panel>
+      </CardContent></Card>
 
       {context.role === "owner" ? (
-        <Panel title="Почасови ставки" description="Само ти ги виждаш. Важат за часовете, отчетени оттук нататък; миналите записи пазят ставката си. „Себестойност“ е колко струва часът на фирмата, „цена“ е колко се фактурира.">
+        <Card><CardHeader><CardTitle>Почасови ставки</CardTitle><CardDescription>Само ти ги виждаш. Важат за часовете, отчетени оттук нататък; миналите записи пазят ставката си. „Себестойност“ е колко струва часът на фирмата, „цена“ е колко се фактурира.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
           <ul className="grid gap-2">
             {members.map((member) => {
               const rate = rates.find((item) => item.userId === member.userId);
@@ -93,15 +99,15 @@ export default async function TimePage({ searchParams }: PageProps<"/app/time">)
                   <ActionForm action={saveRateAction} success="Ставката е записана" className="flex flex-wrap items-end gap-3">
                     <input type="hidden" name="userId" value={member.userId} />
                     <span className="w-40 text-sm font-medium">{member.name}</span>
-                    <F label="Себестойност €/ч"><TextInput name="cost" type="number" min={0} step="0.01" defaultValue={rate?.costPerHour ?? "0"} className="w-28" /></F>
-                    <F label="Цена €/ч"><TextInput name="bill" type="number" min={0} step="0.01" defaultValue={rate?.billPerHour ?? "0"} className="w-28" /></F>
+                    <Field autoId><FieldLabel>Себестойност €/ч</FieldLabel><Input name="cost" type="number" min={0} step="0.01" defaultValue={rate?.costPerHour ?? "0"} className="w-28" /></Field>
+                    <Field autoId><FieldLabel>Цена €/ч</FieldLabel><Input name="bill" type="number" min={0} step="0.01" defaultValue={rate?.billPerHour ?? "0"} className="w-28" /></Field>
                     <ActionSubmit variant="outline">Запази</ActionSubmit>
                   </ActionForm>
                 </li>
               );
             })}
           </ul>
-        </Panel>
+        </CardContent></Card>
       ) : null}
     </PageShell>
   );

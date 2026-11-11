@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
+import { Badge } from "@/components/ui/badge";
 import { InvoiceEditor } from "@/components/invoices/invoice-editor";
-import { Pill } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { getDatabase } from "@/db";
@@ -39,7 +39,7 @@ export default async function InvoicePage({ params }: PageProps<"/app/invoices/[
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
           <Link href="/app/invoices" className="self-start text-sm text-muted-foreground hover:text-foreground">← Фактури</Link>
-          <h1 className="flex flex-wrap items-center gap-3 text-2xl font-semibold tracking-tight">{invoice.number ? `Фактура № ${invoice.number}` : "Нова фактура"} <Pill tone={invoice.status === "paid" ? "good" : invoice.status === "void" ? "bad" : "muted"}>{statusLabels[invoice.status]}</Pill></h1>
+          <h1 className="flex flex-wrap items-center gap-3 text-2xl font-semibold tracking-tight">{invoice.number ? `Фактура № ${invoice.number}` : "Нова фактура"} <Badge variant={invoice.status === "paid" ? "success-soft" : invoice.status === "void" ? "danger-soft" : "secondary"}>{statusLabels[invoice.status]}</Badge></h1>
           <p className="text-sm text-muted-foreground">{draft ? "Редактираш направо върху фактурата: промените се запазват сами." : "Издадената фактура е заключена: номерът, страните, редовете и сумите не се променят. При грешка я анулирай и направи нова."}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

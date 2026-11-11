@@ -53,9 +53,10 @@ const dealFields = {
 
 export async function createDealAction(formData: FormData) {
   return attempt(async () => {
-    const data = z.object(dealFields).parse(Object.fromEntries(formData));
+    const data = z.object({ ...dealFields, stageId: uuidOrEmpty }).parse(Object.fromEntries(formData));
     const context = await crmContext();
-    const [first] = await getDatabase().select().from(pipelineStages).where(and(eq(pipelineStages.organizationId, context.organizationId), eq(pipelineStages.kind, "open"))).orderBy(pipelineStages.position).limit(1);
+    // A quick add inside a column names its stage; otherwise the deal starts in the first open one.
+    const [first] = await getDatabase().select().from(pipelineStages).where(and(eq(pipelineStages.organizationId, context.organizationId), eq(pipelineStages.kind, "open"), data.stageId ? eq(pipelineStages.id, data.stageId) : undefined)).orderBy(pipelineStages.position).limit(1);
     if (!first) throw new Error("Фунията няма етапи. Отвори CRM отново, за да се създадат началните етапи.");
     const clientId = await ownClient(context, data.clientId || undefined);
     const companyId = await ownCompany(context, data.companyId || undefined);

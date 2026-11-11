@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Panel, Stat } from "@/components/modules/kit";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { StatCard } from "@/components/workspace/stat-card";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -26,11 +27,11 @@ export default async function ReportsPage() {
     <PageShell width="wide">
       <PageHeader page="reports" />
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Договорено по активните проекти" value={`${formatAmount(contract)} €`} />
-        <Stat label="Получено" value={`${formatAmount(paid)} €`} />
-        <Stat label="Печалба след разходи" value={costs ? `${formatAmount(margin)} €` : "—"} hint={costs ? undefined : "Включи „Разходи“ или „Време“, за да се смята."} />
+        <StatCard label="Договорено по активните проекти" value={`${formatAmount(contract)} €`} />
+        <StatCard label="Получено" value={`${formatAmount(paid)} €`} />
+        <StatCard label="Печалба след разходи" value={costs ? `${formatAmount(margin)} €` : "—"} hint={costs ? undefined : "Включи „Разходи“ или „Време“, за да се смята."} />
       </div>
-      <Panel title="Печалба по проект" description="Договорено (оферта в сила и одобрени промени) минус записаните разходи и труда по себестойност. Само суми в евро.">
+      <Card><CardHeader><CardTitle>Печалба по проект</CardTitle><CardDescription>Договорено (оферта в сила и одобрени промени) минус записаните разходи и труда по себестойност. Само суми в евро.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         {profit.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[40rem] text-sm">
@@ -51,8 +52,8 @@ export default async function ReportsPage() {
             </table>
           </div>
         ) : <p className="text-sm text-muted-foreground">Още няма активни проекти.</p>}
-      </Panel>
-      <Panel title="Екип" description="Отворени и просрочени задачи и отчетени часове за последните 30 дни.">
+      </CardContent></Card>
+      <Card><CardHeader><CardTitle>Екип</CardTitle><CardDescription>Отворени и просрочени задачи и отчетени часове за последните 30 дни.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
         {team.length ? (
           <ul className="grid gap-1 text-sm">
             {team.map((member) => (
@@ -63,13 +64,13 @@ export default async function ReportsPage() {
             ))}
           </ul>
         ) : <p className="text-sm text-muted-foreground">Още няма задачи или отчетено време.</p>}
-      </Panel>
+      </CardContent></Card>
       {deals ? (
-        <Panel title="Фуния" description={deals.conversion === null ? "Още няма затворени сделки." : `От затворените сделки са спечелени ${formatPercent(deals.conversion * 100)}.`}>
+        <Card><CardHeader><CardTitle>Фуния</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">
           <ul className="grid gap-1 text-sm">
             {deals.stages.map((stage) => <li key={stage.id} className="flex justify-between gap-3 border-b py-1.5 last:border-0"><span>{stage.name}</span><span className="tabular-nums text-muted-foreground">{stage.count} · {formatAmount(stage.value)} €</span></li>)}
           </ul>
-        </Panel>
+        </CardContent></Card>
       ) : null}
     </PageShell>
   );

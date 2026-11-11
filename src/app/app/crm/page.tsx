@@ -1,21 +1,33 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 
-import { Disclosure, F, Pill, Stat, StatRow, SelectInput, TextInput, formGrid, AreaInput } from "@/components/modules/kit";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { LinkButton } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
+import { FormSheet } from "@/components/workspace/form-sheet";
+import { Kanban, type KanbanCard, type KanbanColumn, type KanbanTone } from "@/components/workspace/kanban";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
+import { StatCard } from "@/components/workspace/stat-card";
 import { orForbidden } from "@/lib/authz/page-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { currencySymbol, formatAmount } from "@/lib/money";
-import { moveDealAction, createDealAction } from "@/modules/crm/actions";
-import { getBoard, listClientChoices, syncDealsWithOffers } from "@/modules/crm/queries";
-import { listCompanies } from "@/modules/crm/queries";
+import { createDealAction, moveDealAction } from "@/modules/crm/actions";
 import { ensureDefaultPipeline } from "@/modules/crm/pipeline";
+import { getBoard, listClientChoices, listCompanies, syncDealsWithOffers } from "@/modules/crm/queries";
 import { formatDay } from "@/modules/platform/format";
 import { requireModule } from "@/modules/platform/modules";
 
 export const metadata: Metadata = { title: "CRM" };
+
+const openTones: KanbanTone[] = ["blue", "sand", "teal", "stone"];
+const initials = (name: string | null) => (name ?? "?").split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
 export default async function CrmPage() {
   const context = await requireTenantContext();
@@ -24,54 +36,72 @@ export default async function CrmPage() {
   await syncDealsWithOffers(context.organizationId);
   const [board, clients, companies] = await Promise.all([getBoard(context.organizationId), listClientChoices(context.organizationId), listCompanies(context.organizationId)]);
   const open = board.filter((stage) => stage.kind === "open");
-  const forecast = open.reduce((sum, stage) => sum + stage.deals.reduce((inner, deal) => inner + Number(deal.value ?? 0) * (stage.probability / 100), 0), 0);
-  const pipelineValue = open.reduce((sum, stage) => sum + stage.deals.reduce((inner, deal) => inner + Number(deal.value ?? 0), 0), 0);
+  const dealValue = (deal: { value: string | null }) => Number(deal.value ?? 0);
+  const pipelineValue = open.reduce((sum, stage) => sum + stage.deals.reduce((inner, deal) => inner + dealValue(deal), 0), 0);
+  const forecast = open.reduce((sum, stage) => sum + stage.deals.reduce((inner, deal) => inner + dealValue(deal) * (stage.probability / 100), 0), 0);
+  const month = new Date().toISOString().slice(0, 7);
+  const wonThisMonth = board.filter((stage) => stage.kind === "won").flatMap((stage) => stage.deals).filter((deal) => deal.closedAt && deal.closedAt.toISOString().slice(0, 7) === month);
+  const columns: KanbanColumn[] = board.map((stage, index) => ({
+    id: stage.id,
+    title: stage.name,
+    tone: stage.kind === "won" ? "mint" : stage.kind === "lost" ? "coral" : openTones[index % openTones.length]!,
+    asksReason: stage.kind === "lost" ? "Напиши защо сделката е загубена, за да учим от нея." : undefined,
+    empty: stage.kind === "open" ? "Още няма сделки. Добави първата по-долу или премести тук от друг етап." : stage.kind === "won" ? "Тук идват одобрените сделки." : "Тук идват загубените сделки.",
+    footer: stage.kind === "open" ? (
+      <ActionForm action={createDealAction} success="Сделката е добавена" className="flex gap-2">
+        <input type="hidden" name="stageId" value={stage.id} />
+        <Input name="title" required minLength={2} maxLength={200} placeholder="+ Бърза сделка" aria-label={`Нова сделка в „${stage.name}“`} className="h-9 bg-background" />
+        <ActionSubmit variant="outline">Добави</ActionSubmit>
+      </ActionForm>
+    ) : undefined,
+  }));
+  const cards: KanbanCard[] = board.flatMap((stage) => stage.deals.map((deal) => ({
+    id: deal.id,
+    columnId: stage.id,
+    amount: dealValue(deal),
+    node: (
+      <article className="flex flex-col gap-2 p-3 text-sm">
+        <Link href={`/app/crm/${deal.id}`} draggable={false} className="font-medium leading-snug hover:underline">{deal.title}</Link>
+        <p className="text-muted-foreground">{[deal.clientName, deal.companyName].filter(Boolean).join(" · ") || "Без клиент"}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex flex-wrap items-center gap-2">
+            {deal.value ? <Badge variant="teal-soft">{formatAmount(deal.value)} {currencySymbol(deal.currency)}</Badge> : null}
+            {deal.expectedCloseOn ? <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="size-3.5" />{formatDay(deal.expectedCloseOn)}</span> : null}
+          </span>
+          {deal.ownerName ? <Avatar size="sm" title={deal.ownerName}><AvatarFallback>{initials(deal.ownerName)}</AvatarFallback></Avatar> : null}
+        </div>
+      </article>
+    ),
+  })));
   return (
     <PageShell>
-      <PageHeader page="crm" actions={<Link href="/app/crm/companies" className="inline-flex h-10 items-center rounded-lg border px-3 text-sm font-medium hover:bg-muted">Фирми</Link>} />
-      <StatRow>
-        <Stat label="Отворени сделки" value={open.reduce((sum, stage) => sum + stage.deals.length, 0)} tone="blue" />
-        <Stat label="Стойност във фунията" value={`${formatAmount(pipelineValue)} €`} tone="teal" />
-        <Stat label="Претеглено по вероятност" value={`${formatAmount(forecast)} €`} hint="Ориентировъчно, в евро" tone="mint" />
-        <Stat label="Спечелени" value={board.filter((stage) => stage.kind !== "open" && stage.probability === 100).reduce((sum, stage) => sum + stage.deals.length, 0)} tone="sand" />
-      </StatRow>
-      <Disclosure label="Нова сделка" description="Запитване, което може да стане оферта. Попада в първия етап на фунията.">
-        <ActionForm action={createDealAction} success="Сделката е добавена" className={formGrid}>
-          <F label="Име на сделката"><TextInput name="title" required minLength={2} maxLength={200} placeholder="Например: Баня, ет. 3" /></F>
-          <F label="Клиент"><SelectInput name="clientId" defaultValue=""><option value="">Още няма клиент</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</SelectInput></F>
-          <F label="Фирма"><SelectInput name="companyId" defaultValue=""><option value="">Без фирма</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</SelectInput></F>
-          <F label="Ориентировъчна сума (€)"><TextInput name="value" inputMode="decimal" placeholder="1500" /></F>
-          <F label="Очаквано решение"><TextInput name="expectedCloseOn" type="date" /></F>
-          <F label="Откъде дойде"><TextInput name="source" maxLength={80} placeholder="Препоръка, сайт, реклама…" /></F>
-          <F label="Бележки" className="sm:col-span-2"><AreaInput name="notes" maxLength={4000} /></F>
-          <div className="sm:col-span-2"><ActionSubmit>Добави сделката</ActionSubmit></div>
-        </ActionForm>
-      </Disclosure>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
-        {board.map((stage) => (
-          <section key={stage.id} className="flex w-72 shrink-0 flex-col gap-2 rounded-2xl border bg-muted/40 p-3">
-            <h2 className="flex items-center justify-between text-sm font-semibold">{stage.name}<span className="text-xs font-normal text-muted-foreground">{stage.deals.length}</span></h2>
-            {stage.deals.length ? stage.deals.map((deal) => (
-              <article key={deal.id} className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-sm">
-                <Link href={`/app/crm/${deal.id}`} className="font-medium hover:underline">{deal.title}</Link>
-                <p className="text-muted-foreground">{[deal.clientName, deal.companyName].filter(Boolean).join(" · ") || "Без клиент"}</p>
-                <p className="flex flex-wrap items-center gap-2">
-                  {deal.value ? <Pill>{formatAmount(deal.value)} {currencySymbol(deal.currency)}</Pill> : null}
-                  {deal.expectedCloseOn ? <span className="text-xs text-muted-foreground">до {formatDay(deal.expectedCloseOn)}</span> : null}
-                </p>
-                {stage.kind === "open" ? (
-                  <ActionForm action={moveDealAction} success="Сделката е преместена" className="flex gap-1.5">
-                    <input type="hidden" name="dealId" value={deal.id} />
-                    <SelectInput name="stageId" defaultValue={stage.id} aria-label="Премести в етап" className="h-9 text-sm">{board.map((target) => <option key={target.id} value={target.id}>{target.name}</option>)}</SelectInput>
-                    <input type="hidden" name="lostReason" value="Закрита от фунията" />
-                    <ActionSubmit variant="outline">Давай</ActionSubmit>
-                  </ActionForm>
-                ) : null}
-              </article>
-            )) : <p className="py-2 text-center text-xs text-muted-foreground">Празно</p>}
-          </section>
-        ))}
+      <PageHeader
+        page="crm"
+        actions={<>
+          <LinkButton href="/app/crm/companies" variant="outline" className="min-h-10 rounded-xl px-4">Фирми</LinkButton>
+          <FormSheet label="Нова сделка" description="Запитване, което може да стане оферта. Попада в първия етап на фунията.">
+            <ActionForm action={createDealAction} success="Сделката е добавена" className="grid gap-4">
+              <Field autoId><FieldLabel>Име на сделката</FieldLabel><Input name="title" required minLength={2} maxLength={200} placeholder="Например: Баня, ет. 3" /></Field>
+              <Field autoId><FieldLabel>Клиент</FieldLabel><NativeSelect name="clientId" defaultValue=""><option value="">Още няма клиент</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</NativeSelect></Field>
+              <Field autoId><FieldLabel>Фирма</FieldLabel><NativeSelect name="companyId" defaultValue=""><option value="">Без фирма</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}</NativeSelect></Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field autoId><FieldLabel>Ориентировъчна сума (€)</FieldLabel><Input name="value" inputMode="decimal" placeholder="1500" /></Field>
+                <Field autoId><FieldLabel>Очаквано решение</FieldLabel><Input name="expectedCloseOn" type="date" /></Field>
+              </div>
+              <Field autoId><FieldLabel>Откъде дойде</FieldLabel><Input name="source" maxLength={80} placeholder="Препоръка, сайт, реклама…" /></Field>
+              <Field autoId><FieldLabel>Бележки</FieldLabel><Textarea name="notes" maxLength={4000} /></Field>
+              <ActionSubmit>Добави сделката</ActionSubmit>
+            </ActionForm>
+          </FormSheet>
+        </>}
+      />
+      <p className="-mt-2 max-w-3xl text-sm text-muted-foreground">Тук следиш запитванията: от първия контакт, през огледа и изпратената оферта, до одобрението. Влачи сделките между етапите; одобрената оферта сама затваря сделката като спечелена.</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard tone="blue" label="В отворените етапи" value={`${formatAmount(pipelineValue)} €`} hint={`${open.reduce((sum, stage) => sum + stage.deals.length, 0)} отворени сделки`} />
+        <StatCard tone="teal" label="Претеглено по вероятност" value={`${formatAmount(forecast)} €`} hint="Ориентировъчно, в евро" />
+        <StatCard tone="mint" label="Спечелени този месец" value={`${formatAmount(wonThisMonth.reduce((sum, deal) => sum + dealValue(deal), 0))} €`} hint={`${wonThisMonth.length} сделки`} />
       </div>
+      <Kanban columns={columns} cards={cards} moveAction={moveDealAction} cardField="dealId" columnField="stageId" reasonField="lostReason" />
     </PageShell>
   );
 }

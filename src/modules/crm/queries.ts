@@ -40,6 +40,7 @@ export async function getBoard(organizationId: string) {
         companyName: companies.name,
         ownerName: profiles.displayName,
         offerId: deals.offerId,
+        closedAt: deals.closedAt,
       })
       .from(deals)
       .leftJoin(clients, eq(clients.id, deals.clientId))

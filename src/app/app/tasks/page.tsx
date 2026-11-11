@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CalendarDays } from "lucide-react";
 
-import { AreaInput, Disclosure, F, Pill, SectionTitle, SelectInput, Stat, StatRow, TextInput, formGrid } from "@/components/modules/kit";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button, LinkButton } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/workspace/stat-card";
+import { FormSheet } from "@/components/workspace/form-sheet";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
-import { EmptyResult } from "@/components/workspace/page/empty-result";
+import { Kanban, type KanbanCard, type KanbanColumn } from "@/components/workspace/kanban";
+import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
@@ -20,24 +30,16 @@ export const metadata: Metadata = { title: "Задачи" };
 
 const statusLabels = { todo: "За правене", doing: "В работа", done: "Готова" } as const;
 const priorityLabels = { low: "Ниска", normal: "Нормална", high: "Висока" } as const;
-
-function FilterLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
-  return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={cn("inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-medium", active ? "border-primary/30 bg-primary/10" : "text-muted-foreground hover:bg-muted")}>
-      {children}
-    </Link>
-  );
-}
+const initials = (name: string | null) => (name ?? "?").split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
 export default async function TasksPage({ searchParams }: PageProps<"/app/tasks">) {
   const [context, query] = await Promise.all([requireTenantContext(), searchParams]);
   await orForbidden(requireModule(context, "tasks"));
   const scope = query.scope === "all" ? "all" : "mine";
-  const status = query.status === "done" ? "done" : "open";
   const projectId = typeof query.project === "string" && /^[0-9a-f-]{36}$/i.test(query.project) ? query.project : undefined;
   const manage = can(context, "tasks.manage");
   const [items, projects, members, templates] = await Promise.all([
-    listTasks(context, { scope, status, projectId }),
+    listTasks(context, { scope, status: "all", projectId }),
     listProjectChoices(context),
     listMemberChoices(context.organizationId),
     manage ? listTemplates(context.organizationId) : [],
@@ -45,113 +47,97 @@ export default async function TasksPage({ searchParams }: PageProps<"/app/tasks"
   const today = todayInSofia();
   const link = (next: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
-    const merged = { scope, status, project: projectId, ...next };
+    const merged = { scope, project: projectId, ...next };
     for (const [key, value] of Object.entries(merged)) if (value) params.set(key, value);
     return `/app/tasks?${params.toString()}`;
   };
+  const overdue = (task: (typeof items)[number]) => task.status !== "done" && !!task.dueOn && task.dueOn < today;
+  const columns: KanbanColumn[] = ([
+    { id: "todo", title: statusLabels.todo, tone: "blue" as const, empty: "Няма задачи за правене." },
+    { id: "doing", title: statusLabels.doing, tone: "sand" as const, empty: "Нищо не е в работа. Влачи тук задача, когато я започнеш." },
+    { id: "done", title: statusLabels.done, tone: "mint" as const, empty: "Свършените задачи се събират тук." },
+  ] satisfies KanbanColumn[]).map((column) => ({
+    ...column,
+    footer: manage && projectId && column.id !== "done" ? (
+      <ActionForm action={createTaskAction} success="Задачата е добавена" className="flex gap-2">
+        <input type="hidden" name="projectId" value={projectId} /><input type="hidden" name="status" value={column.id} /><input type="hidden" name="assigneeId" value={context.userId} />
+        <Input name="title" required minLength={2} maxLength={200} placeholder="+ Бърза задача" aria-label={`Нова задача в „${column.title}“`} className="h-9 bg-background" />
+        <ActionSubmit variant="outline">Добави</ActionSubmit>
+      </ActionForm>
+    ) : undefined,
+  }));
+  const cards: KanbanCard[] = items.map((task) => ({
+    id: task.id,
+    columnId: task.status,
+    node: (
+      <article className={cn("flex flex-col gap-2 rounded-lg border-l-4 p-3 text-sm", task.status === "done" ? "border-l-emerald-400" : overdue(task) ? "border-l-destructive" : task.priority === "high" ? "border-l-amber-400" : "border-l-transparent")}>
+        <Link href={`/app/tasks/${task.id}`} draggable={false} className={cn("font-medium leading-snug hover:underline", task.status === "done" && "text-muted-foreground line-through")}>{task.title}</Link>
+        <Link href={`/app/projects/${task.projectId}`} draggable={false} className="text-muted-foreground hover:underline">{task.projectName}</Link>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="flex flex-wrap items-center gap-2">
+            {task.dueOn ? <span className={cn("inline-flex items-center gap-1 text-xs", overdue(task) ? "font-medium text-destructive" : "text-muted-foreground")}><CalendarDays className="size-3.5" />{formatDay(task.dueOn)}{overdue(task) ? " · просрочена" : ""}</span> : null}
+            {task.priority === "high" ? <Badge variant="warning-soft">{priorityLabels.high}</Badge> : null}
+          </span>
+          {task.assigneeName ? <Avatar size="sm" title={task.assigneeName}><AvatarFallback>{initials(task.assigneeName)}</AvatarFallback></Avatar> : null}
+        </div>
+      </article>
+    ),
+  }));
+  const late = items.filter(overdue).length;
 
   return (
     <PageShell>
-      <PageHeader page="tasks" />
-      <div className="flex flex-wrap items-center gap-2">
-        <FilterLink href={link({ scope: "mine" })} active={scope === "mine"}>Моите</FilterLink>
-        <FilterLink href={link({ scope: "all" })} active={scope === "all"}>Всички</FilterLink>
-        <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-        <FilterLink href={link({ status: "open" })} active={status === "open"}>Отворени</FilterLink>
-        <FilterLink href={link({ status: "done" })} active={status === "done"}>Готови</FilterLink>
-        {projectId ? <FilterLink href={link({ project: undefined })} active>Проект: {projects.find((project) => project.id === projectId)?.name ?? "избран"} ✕</FilterLink> : null}
-        {manage ? <Link href="/app/tasks/templates" className="ml-auto text-sm font-medium text-primary-ink hover:underline">Шаблони</Link> : null}
-      </div>
-
-      <StatRow>
-        <Stat label="Отворени" value={items.filter((task) => task.status !== "done").length} tone="blue" />
-        <Stat label="В работа" value={items.filter((task) => task.status === "doing").length} tone="sand" />
-        <Stat label="Просрочени" value={items.filter((task) => task.status !== "done" && task.dueOn && task.dueOn < today).length} tone={items.some((task) => task.status !== "done" && task.dueOn && task.dueOn < today) ? "coral" : "default"} />
-        <Stat label="Готови" value={items.filter((task) => task.status === "done").length} tone="mint" />
-      </StatRow>
-      {manage ? (
-        <>
-          <Disclosure label="Нова задача" title="Нова задача" defaultOpen={!items.length && status === "open"}>
-            <ActionForm action={createTaskAction} success="Задачата е добавена" className={formGrid}>
-              <F label="Проект">
-                <SelectInput name="projectId" required defaultValue={projectId ?? ""}>
+      <PageHeader
+        page="tasks"
+        actions={manage ? <>
+          {manage ? <LinkButton href="/app/tasks/templates" variant="outline" className="min-h-10 rounded-xl px-4">Шаблони</LinkButton> : null}
+          {templates.length ? (
+            <FormSheet variant="outline" label="Шаблон към проект" description="Създава задачите от шаблона със срокове, считано от началната дата.">
+              <ActionForm action={applyTemplateAction} success="Задачите са добавени" className="grid gap-4">
+                <Field autoId><FieldLabel>Шаблон</FieldLabel><NativeSelect name="templateId" required>{templates.map((template) => <option key={template.id} value={template.id}>{template.name} ({template.tasks.length})</option>)}</NativeSelect></Field>
+                <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" required defaultValue={projectId ?? ""}><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect></Field>
+                <Field autoId><FieldLabel>Начална дата</FieldLabel><Input name="startOn" type="date" defaultValue={today} /></Field>
+                <Field autoId><FieldLabel>Изпълнител на всички</FieldLabel><NativeSelect name="assigneeId" defaultValue=""><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</NativeSelect></Field>
+                <div><ActionSubmit>Приложи</ActionSubmit></div>
+              </ActionForm>
+            </FormSheet>
+          ) : null}
+          <FormSheet label="Нова задача" title="Нова задача">
+            <ActionForm action={createTaskAction} success="Задачата е добавена" className="grid gap-4">
+              <Field autoId><FieldLabel>Проект</FieldLabel><NativeSelect name="projectId" required defaultValue={projectId ?? ""}>
                   <option value="" disabled>Избери проект</option>
                   {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                </SelectInput>
-              </F>
-              <F label="Заглавие"><TextInput name="title" required minLength={2} maxLength={200} placeholder="Например: Поръчай плочки" /></F>
-              <F label="Изпълнител">
-                <SelectInput name="assigneeId" defaultValue={context.userId}>
+                </NativeSelect>
+              </Field>
+              <Field autoId><FieldLabel>Заглавие</FieldLabel><Input name="title" required minLength={2} maxLength={200} placeholder="Например: Поръчай плочки" /></Field>
+              <Field autoId><FieldLabel>Изпълнител</FieldLabel><NativeSelect name="assigneeId" defaultValue={context.userId}>
                   <option value="">Без изпълнител</option>
                   {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
-                </SelectInput>
-              </F>
-              <F label="Срок"><TextInput name="dueOn" type="date" /></F>
-              <F label="Приоритет">
-                <SelectInput name="priority" defaultValue="normal">{(["low", "normal", "high"] as const).map((key) => <option key={key} value={key}>{priorityLabels[key]}</option>)}</SelectInput>
-              </F>
-              <F label="Описание" className="sm:col-span-2"><AreaInput name="description" maxLength={4000} /></F>
-              <div className="sm:col-span-2"><ActionSubmit>Добави задачата</ActionSubmit></div>
+                </NativeSelect>
+              </Field>
+              <Field autoId><FieldLabel>Срок</FieldLabel><Input name="dueOn" type="date" /></Field>
+              <Field autoId><FieldLabel>В коя колона</FieldLabel><NativeSelect name="status" defaultValue="todo">{(["todo", "doing", "done"] as const).map((key) => <option key={key} value={key}>{statusLabels[key]}</option>)}</NativeSelect></Field>
+              <Field autoId><FieldLabel>Приоритет</FieldLabel><NativeSelect name="priority" defaultValue="normal">{(["low", "normal", "high"] as const).map((key) => <option key={key} value={key}>{priorityLabels[key]}</option>)}</NativeSelect>
+              </Field>
+              <Field autoId><FieldLabel>Описание</FieldLabel><Textarea name="description" maxLength={4000} /></Field>
+              <div><ActionSubmit>Добави задачата</ActionSubmit></div>
             </ActionForm>
-          </Disclosure>
-          {templates.length ? (
-            <Disclosure label="Приложи шаблон към проект" description="Създава задачите от шаблона със срокове, считано от началната дата.">
-              <ActionForm action={applyTemplateAction} success="Задачите са добавени" className={formGrid}>
-                <F label="Шаблон"><SelectInput name="templateId" required>{templates.map((template) => <option key={template.id} value={template.id}>{template.name} ({template.tasks.length})</option>)}</SelectInput></F>
-                <F label="Проект"><SelectInput name="projectId" required defaultValue={projectId ?? ""}><option value="" disabled>Избери проект</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</SelectInput></F>
-                <F label="Начална дата"><TextInput name="startOn" type="date" defaultValue={today} /></F>
-                <F label="Изпълнител на всички"><SelectInput name="assigneeId" defaultValue=""><option value="">Без изпълнител</option>{members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</SelectInput></F>
-                <div className="sm:col-span-2"><ActionSubmit>Приложи</ActionSubmit></div>
-              </ActionForm>
-            </Disclosure>
-          ) : null}
-        </>
-      ) : null}
-
-      <SectionTitle count={items.length}>Задачи</SectionTitle>
-      {items.length ? (
-        <ul className="flex flex-col gap-2">
-          {items.map((task) => {
-            const overdue = task.status !== "done" && task.dueOn && task.dueOn < today;
-            return (
-              <li key={task.id} className={cn("flex flex-wrap items-center gap-3 rounded-xl border border-l-4 bg-card p-3.5", task.status === "done" ? "border-l-emerald-400" : task.status === "doing" ? "border-l-amber-400" : overdue ? "border-l-destructive" : "border-l-border")}>
-                <div className="min-w-0 flex-1">
-                  <Link href={`/app/tasks/${task.id}`} className={cn("font-medium hover:underline", task.status === "done" && "text-muted-foreground line-through")}>{task.title}</Link>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                    <Link href={`/app/projects/${task.projectId}`} className="hover:underline">{task.projectName}</Link>
-                    {task.assigneeName ? <span>· {task.assigneeName}</span> : <span>· без изпълнител</span>}
-                    {task.dueOn ? <span className={cn(overdue && "font-medium text-destructive")}>· до {formatDay(task.dueOn)}{overdue ? " (просрочена)" : ""}</span> : null}
-                    {task.priority === "high" ? <Pill tone="warn">{priorityLabels.high}</Pill> : null}
-                  </p>
-                </div>
-                <Pill tone={task.status === "done" ? "good" : task.status === "doing" ? "warn" : "muted"}>{statusLabels[task.status]}</Pill>
-                <div className="flex gap-1.5">
-                  {task.status === "todo" ? (
-                    <ActionForm action={setTaskStatusAction} success="Започната">
-                      <input type="hidden" name="taskId" value={task.id} /><input type="hidden" name="status" value="doing" />
-                      <ActionSubmit variant="outline">Започни</ActionSubmit>
-                    </ActionForm>
-                  ) : null}
-                  {task.status !== "done" ? (
-                    <ActionForm action={setTaskStatusAction} success="Готова">
-                      <input type="hidden" name="taskId" value={task.id} /><input type="hidden" name="status" value="done" />
-                      <ActionSubmit>Готово</ActionSubmit>
-                    </ActionForm>
-                  ) : (
-                    <ActionForm action={setTaskStatusAction} success="Върната">
-                      <input type="hidden" name="taskId" value={task.id} /><input type="hidden" name="status" value="todo" />
-                      <ActionSubmit variant="outline">Върни</ActionSubmit>
-                    </ActionForm>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <EmptyResult className="rounded-2xl border border-dashed bg-card" title={status === "done" ? "Още няма готови задачи" : "Няма отворени задачи"} description={manage ? "Добави първата по-долу или приложи шаблон към проект." : "Когато ти възложат задача, ще я видиш тук."} />
-      )}
-
+          </FormSheet>
+        </> : undefined}
+      />
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Чии задачи" className={segmentGroupClassName}>
+          <Link href={link({ scope: "mine" })} aria-pressed={scope === "mine"} className={segmentClassName}>Моите</Link>
+          <Link href={link({ scope: "all" })} aria-pressed={scope === "all"} className={segmentClassName}>Всички</Link>
+        </div>
+        <form method="get" action="/app/tasks" className="flex items-center gap-2">
+          <input type="hidden" name="scope" value={scope} />
+          <NativeSelect name="project" aria-label="Проект" defaultValue={projectId ?? ""} className="h-10 w-56"><option value="">Всички проекти</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</NativeSelect>
+          <Button type="submit" variant="outline" className="h-10 rounded-xl px-4">Покажи</Button>
+        </form>
+        {late ? <Badge variant="danger-soft">{late} просрочени</Badge> : null}
+      </div>
+      <Kanban columns={columns} cards={cards} moveAction={setTaskStatusAction} cardField="taskId" columnField="status" />
     </PageShell>
   );
 }
