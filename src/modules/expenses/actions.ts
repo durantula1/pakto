@@ -70,12 +70,47 @@ export async function archiveExpenseAction(formData: FormData) {
 export async function createSupplierAction(formData: FormData) {
   return attempt(async () => {
     const data = z
-      .object({ name: z.string().trim().min(2, "Дай име на доставчика.").max(160), vatId: z.string().trim().max(30).optional(), phone: z.string().trim().max(40).optional(), email: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional() })
+      .object({ name: z.string().trim().min(2, "Дай име на доставчика.").max(160), vatId: z.string().trim().max(30).optional(), phone: z.string().trim().max(40).optional(), email: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(), notes: z.string().trim().max(1000).optional() })
       .parse(Object.fromEntries(formData));
     const context = await expenseContext();
-    await getDatabase().insert(suppliers).values({ organizationId: context.organizationId, name: data.name, vatId: data.vatId || null, phone: data.phone || null, email: data.email || null });
+    await getDatabase().insert(suppliers).values({ organizationId: context.organizationId, name: data.name, vatId: data.vatId || null, phone: data.phone || null, email: data.email || null, notes: data.notes || null });
     revalidatePath("/app/expenses");
+    revalidatePath("/app/suppliers");
   }, "Доставчикът не беше записан.");
+}
+
+const supplierFields = z.object({
+  name: z.string().trim().min(2, "Дай име на доставчика.").max(160),
+  vatId: z.string().trim().max(30).optional(),
+  phone: z.string().trim().max(40).optional(),
+  email: z.union([z.literal(""), z.email("Провери имейла, нещо в него не е наред.")]).optional(),
+  notes: z.string().trim().max(1000).optional(),
+});
+
+export async function updateSupplierAction(formData: FormData) {
+  return attempt(async () => {
+    const data = supplierFields.extend({ supplierId: z.uuid() }).parse(Object.fromEntries(formData));
+    const context = await expenseContext();
+    const [updated] = await getDatabase()
+      .update(suppliers)
+      .set({ name: data.name, vatId: data.vatId || null, phone: data.phone || null, email: data.email || null, notes: data.notes || null })
+      .where(and(eq(suppliers.id, data.supplierId), eq(suppliers.organizationId, context.organizationId)))
+      .returning({ id: suppliers.id });
+    if (!updated) throw new Error("Доставчикът не е намерен.");
+    revalidatePath("/app/suppliers");
+    revalidatePath("/app/expenses");
+  }, "Доставчикът не беше запазен.");
+}
+
+/** Hides the supplier from new expenses; costs already booked to it keep its name. */
+export async function archiveSupplierAction(formData: FormData) {
+  return attempt(async () => {
+    const data = z.object({ supplierId: z.uuid() }).parse(Object.fromEntries(formData));
+    const context = await expenseContext();
+    await getDatabase().update(suppliers).set({ archivedAt: new Date() }).where(and(eq(suppliers.id, data.supplierId), eq(suppliers.organizationId, context.organizationId)));
+    revalidatePath("/app/suppliers");
+    revalidatePath("/app/expenses");
+  }, "Доставчикът не беше премахнат.");
 }
 
 export async function saveBudgetLineAction(formData: FormData) {

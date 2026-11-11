@@ -14,7 +14,7 @@ import { PageShell } from "@/components/workspace/page/page-shell";
 import { orForbidden } from "@/lib/authz/page-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { currencySymbol, formatAmount } from "@/lib/money";
-import { archiveExpenseAction, createExpenseAction, createSupplierAction, deleteBudgetLineAction, saveBudgetLineAction } from "@/modules/expenses/actions";
+import { archiveExpenseAction, createExpenseAction, deleteBudgetLineAction, saveBudgetLineAction } from "@/modules/expenses/actions";
 import { EXPENSE_CATEGORIES, categoryLabel } from "@/modules/expenses/categories";
 import { budgetVersusActual, listExpenses, listSuppliers } from "@/modules/expenses/queries";
 import { formatDay } from "@/modules/platform/format";
@@ -41,7 +41,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Общо разходи" value={`${formatAmount(total)} €`} hint="Без ДДС, ако не е записано иначе" tone="coral" />
         <StatCard label="Записи" value={items.length} tone="blue" />
-        <StatCard label="Доставчици" value={suppliers.length} tone="sand" />
+        <StatCard label="Доставчици" value={suppliers.length} tone="sand" href="/app/suppliers" hint="Управление на доставчиците" />
       </div>
       <FormSheet label="Нов разход">
         <ActionForm action={createExpenseAction} success="Разходът е записан" className="grid gap-4 sm:grid-cols-2">
@@ -50,7 +50,7 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
           <Field autoId><FieldLabel>За какво</FieldLabel><Input name="description" required minLength={2} maxLength={300} placeholder="Плочки 60×60, 12 м²" /></Field>
           <Field autoId><FieldLabel>Сума (€)</FieldLabel><Input name="amount" required inputMode="decimal" placeholder="240,00" /></Field>
           <Field autoId><FieldLabel>Дата</FieldLabel><Input name="spentOn" type="date" required defaultValue={today} max={today} /></Field>
-          <Field autoId><FieldLabel>Доставчик</FieldLabel><NativeSelect name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</NativeSelect></Field>
+          <Field autoId><FieldLabel>Доставчик</FieldLabel><NativeSelect name="supplierId" defaultValue=""><option value="">Без доставчик</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</NativeSelect><FieldDescription>Няма го в списъка? <Link href="/app/suppliers" className="font-medium text-primary-ink hover:underline">Добави доставчик</Link>.</FieldDescription></Field>
           <Field autoId className="sm:col-span-2"><FieldLabel>Номер на документ</FieldLabel><Input name="documentRef" maxLength={80} placeholder="Фактура, бон…" /></Field>
           <div className="sm:col-span-2"><ActionSubmit>Запиши</ActionSubmit></div>
         </ActionForm>
@@ -102,16 +102,6 @@ export default async function ExpensesPage({ searchParams }: PageProps<"/app/exp
         ) : <p className="text-sm text-muted-foreground">Още няма разходи.</p>}
       </CardContent></Card>
 
-      <Card><CardHeader><CardTitle>Доставчици</CardTitle><CardDescription>Към тях можеш да вържеш разход.</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
-        <ul className="flex flex-wrap gap-2 text-sm">{suppliers.map((supplier) => <li key={supplier.id} className="rounded-full border px-3 py-1">{supplier.name}</li>)}{!suppliers.length ? <li className="text-muted-foreground">Още няма доставчици.</li> : null}</ul>
-        <ActionForm action={createSupplierAction} success="Доставчикът е добавен" className="grid gap-4 sm:grid-cols-2">
-          <Field autoId><FieldLabel>Име</FieldLabel><Input name="name" required minLength={2} maxLength={160} /></Field>
-          <Field autoId><FieldLabel>ЕИК / ИН по ЗДДС</FieldLabel><Input name="vatId" maxLength={30} /></Field>
-          <Field autoId><FieldLabel>Телефон</FieldLabel><Input name="phone" type="tel" maxLength={40} /></Field>
-          <Field autoId><FieldLabel>Имейл</FieldLabel><Input name="email" type="email" maxLength={160} /></Field>
-          <div className="sm:col-span-2"><ActionSubmit>Добави доставчик</ActionSubmit></div>
-        </ActionForm>
-      </CardContent></Card>
     </PageShell>
   );
 }

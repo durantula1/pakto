@@ -44,6 +44,22 @@ export async function listSuppliers(organizationId: string) {
   return getDatabase().select().from(suppliers).where(and(eq(suppliers.organizationId, organizationId), isNull(suppliers.archivedAt))).orderBy(asc(suppliers.name));
 }
 
+/** Active suppliers with what was spent with each (live expenses only), biggest spend first. */
+export async function listSuppliersWithSpend(organizationId: string) {
+  const db = getDatabase();
+  return db
+    .select({
+      id: suppliers.id, name: suppliers.name, vatId: suppliers.vatId, email: suppliers.email, phone: suppliers.phone, notes: suppliers.notes,
+      total: sql<string>`coalesce(sum(${expenses.amount}) filter (where ${expenses.archivedAt} is null), 0)::text`,
+      count: sql<number>`count(${expenses.id}) filter (where ${expenses.archivedAt} is null)::int`,
+    })
+    .from(suppliers)
+    .leftJoin(expenses, and(eq(expenses.supplierId, suppliers.id), eq(expenses.organizationId, organizationId)))
+    .where(and(eq(suppliers.organizationId, organizationId), isNull(suppliers.archivedAt)))
+    .groupBy(suppliers.id)
+    .orderBy(sql`2 desc`, asc(suppliers.name));
+}
+
 export async function budgetVersusActual(organizationId: string, projectId: string) {
   const db = getDatabase();
   const [planned, actual] = await Promise.all([

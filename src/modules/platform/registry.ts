@@ -5,7 +5,7 @@ import type { Permission } from "@/lib/authz/permissions";
  * offers, client portal, stages, payments). Modules depend on the core, never the other way round,
  * and talk to each other only through ids and domain events.
  */
-export const MODULE_KEYS = ["tasks", "crm", "time", "expenses", "invoices", "reports", "api"] as const;
+export const MODULE_KEYS = ["tasks", "crm", "time", "expenses", "suppliers", "invoices", "reports", "api"] as const;
 export type ModuleKey = (typeof MODULE_KEYS)[number];
 
 export type ModuleDefinition = {
@@ -41,6 +41,12 @@ export const MODULES: Record<ModuleKey, ModuleDefinition> = {
     label: "Разходи",
     description: "Разходи и доставчици по проекти, бюджет по категории и реална печалба на проект.",
     href: "/app/expenses",
+    permission: "expenses.manage",
+  },
+  suppliers: {
+    label: "Доставчици",
+    description: "Доставчиците, от които купуваш: контакти, ИН по ЗДДС и колко е похарчено при всеки.",
+    href: "/app/suppliers",
     permission: "expenses.manage",
   },
   invoices: {

@@ -1,10 +1,11 @@
-import { Banknote, Clock3, FileSpreadsheet, Handshake, ListChecks, ChartNoAxesCombined, Blocks, type LucideIcon } from "lucide-react";
+import { Banknote, Clock3, FileSpreadsheet, Handshake, ListChecks, ChartNoAxesCombined, Blocks, Truck, type LucideIcon } from "lucide-react";
 
 const byHref: Record<string, LucideIcon> = {
   "/app/tasks": ListChecks,
   "/app/crm": Handshake,
   "/app/time": Clock3,
   "/app/expenses": Banknote,
+  "/app/suppliers": Truck,
   "/app/invoices": FileSpreadsheet,
   "/app/reports": ChartNoAxesCombined,
 };
