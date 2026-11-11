@@ -1,8 +1,9 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+import { getEnabledModules } from "@/modules/platform/modules";
 import { getDatabase } from "@/db";
-import { apiKeys, clients, deals, organizationModules, projects, tasks } from "@/db/schema";
+import { apiKeys, clients, deals, projects, tasks } from "@/db/schema";
 import { hashApiKey } from "@/modules/integrations/keys";
 
 export const runtime = "nodejs";
@@ -20,8 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ reso
   const db = getDatabase();
   const [key] = await db.select().from(apiKeys).where(and(eq(apiKeys.keyHash, hashApiKey(token)), isNull(apiKeys.revokedAt))).limit(1);
   if (!key) return json({ error: "Невалиден API ключ." }, 401);
-  const [module] = await db.select({ key: organizationModules.moduleKey }).from(organizationModules).where(and(eq(organizationModules.organizationId, key.organizationId), eq(organizationModules.moduleKey, "api"))).limit(1);
-  if (!module) return json({ error: "API модулът не е включен." }, 403);
+  if (!(await getEnabledModules(key.organizationId)).has("api")) return json({ error: "API не е включен за плана." }, 403);
   const url = new URL(request.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 50, 1), 100);
   const offset = Math.max(Number(url.searchParams.get("offset")) || 0, 0);

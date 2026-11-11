@@ -56,7 +56,7 @@ export async function createDealAction(formData: FormData) {
     const data = z.object(dealFields).parse(Object.fromEntries(formData));
     const context = await crmContext();
     const [first] = await getDatabase().select().from(pipelineStages).where(and(eq(pipelineStages.organizationId, context.organizationId), eq(pipelineStages.kind, "open"))).orderBy(pipelineStages.position).limit(1);
-    if (!first) throw new Error("Фунията няма етапи. Изключи и включи CRM от Настройки → Модули.");
+    if (!first) throw new Error("Фунията няма етапи. Отвори CRM отново, за да се създадат началните етапи.");
     const clientId = await ownClient(context, data.clientId || undefined);
     const companyId = await ownCompany(context, data.companyId || undefined);
     const [deal] = await getDatabase()

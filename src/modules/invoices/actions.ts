@@ -215,7 +215,7 @@ export async function issueInvoiceAction(formData: FormData) {
     const invoice = await draftOf(context.organizationId, data.invoiceId);
     const [organization] = await db.select().from(organizations).where(eq(organizations.id, context.organizationId)).limit(1);
     if (!organization?.legalName || !(organization.companyIdNumber || organization.vatId) || !organization.legalAddress) {
-      throw new Error("Попълни юридическо име, ЕИК или ИН по ЗДДС и адрес на фирмата от Настройки → Модули, преди да издадеш фактура.");
+      throw new Error("Попълни юридическо име, ЕИК или ИН по ЗДДС и адрес на фирмата от Настройки → Данни за фактури, преди да издадеш фактура.");
     }
     if (!invoice.issueDate) throw new Error("Избери дата на издаване.");
     await db.transaction(async (tx) => {

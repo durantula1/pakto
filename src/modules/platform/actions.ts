@@ -10,23 +10,6 @@ import { organizations } from "@/db/schema";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
 import { attempt } from "@/lib/action-result";
-import { ensureDefaultPipeline } from "@/modules/crm/pipeline";
-import { emitEvent } from "@/modules/platform/events";
-import { setModule } from "@/modules/platform/modules";
-import { MODULE_KEYS } from "@/modules/platform/registry";
-
-export async function setModuleAction(formData: FormData) {
-  return attempt(async () => {
-    const data = z.object({ key: z.enum(MODULE_KEYS), on: z.enum(["1", "0"]) }).parse(Object.fromEntries(formData));
-    const context = await requireTenantContext();
-    await requireOwner(context);
-    const on = data.on === "1";
-    await setModule(context.organizationId, context.userId, data.key, on);
-    if (on && data.key === "crm") await ensureDefaultPipeline(context.organizationId);
-    await emitEvent({ organizationId: context.organizationId, kind: on ? "module.enabled" : "module.disabled", subjectType: "module", subjectId: null, actorId: context.userId, payload: { module: data.key } });
-    revalidatePath("/app", "layout");
-  }, "Модулът не беше променен.");
-}
 
 const optional = (max: number) => z.string().trim().max(max).optional();
 

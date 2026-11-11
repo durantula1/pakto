@@ -13,7 +13,7 @@ const personal = [
 ];
 const company = [
   { href: "/app/settings/organization", label: "Фирма", icon: Building2 },
-  { href: "/app/settings/modules", label: "Модули", icon: Blocks },
+  { href: "/app/settings/modules", label: "Данни за фактури", icon: Blocks },
   { href: "/app/settings/integrations", label: "Интеграции", icon: Plug },
 ];
 

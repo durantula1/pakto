@@ -11,6 +11,7 @@ import { currencySymbol, formatAmount } from "@/lib/money";
 import { moveDealAction, createDealAction } from "@/modules/crm/actions";
 import { getBoard, listClientChoices, syncDealsWithOffers } from "@/modules/crm/queries";
 import { listCompanies } from "@/modules/crm/queries";
+import { ensureDefaultPipeline } from "@/modules/crm/pipeline";
 import { formatDay } from "@/modules/platform/format";
 import { requireModule } from "@/modules/platform/modules";
 
@@ -19,6 +20,7 @@ export const metadata: Metadata = { title: "CRM" };
 export default async function CrmPage() {
   const context = await requireTenantContext();
   await orForbidden(requireModule(context, "crm"));
+  await ensureDefaultPipeline(context.organizationId);
   await syncDealsWithOffers(context.organizationId);
   const [board, clients, companies] = await Promise.all([getBoard(context.organizationId), listClientChoices(context.organizationId), listCompanies(context.organizationId)]);
   const open = board.filter((stage) => stage.kind === "open");

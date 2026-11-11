@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
 import { eq } from "drizzle-orm";
 
-import { F, Panel, Pill, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
+import { F, Panel, SelectInput, TextInput, formGrid } from "@/components/modules/kit";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { getDatabase } from "@/db";
 import { organizations } from "@/db/schema";
 import { orForbidden } from "@/lib/authz/page-access";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { saveCompanyProfileAction, setModuleAction } from "@/modules/platform/actions";
-import { getEnabledModules } from "@/modules/platform/modules";
-import { MODULES, MODULE_KEYS } from "@/modules/platform/registry";
+import { saveCompanyProfileAction } from "@/modules/platform/actions";
 
-export const metadata: Metadata = { title: "Модули · Настройки" };
+export const metadata: Metadata = { title: "Фирмени данни · Настройки" };
 
 const kinds = [
   ["", "Не е избрано"],
@@ -26,35 +24,10 @@ const kinds = [
 export default async function ModulesSettingsPage() {
   const context = await requireTenantContext();
   await orForbidden(requireOwner(context));
-  const [enabled, [organization]] = await Promise.all([
-    getEnabledModules(context.organizationId),
-    getDatabase().select().from(organizations).where(eq(organizations.id, context.organizationId)).limit(1),
-  ]);
+  const [organization] = await getDatabase().select().from(organizations).where(eq(organizations.id, context.organizationId)).limit(1);
   if (!organization) return null;
   return (
     <>
-      <Panel title="Модули" description="Включваш само това, което ти трябва. Изключването скрива модула, но не изтрива нищо: данните са на мястото си, когато го включиш пак. Офертите, клиентският портал и плащанията работят винаги.">
-        <ul className="grid gap-3">
-          {MODULE_KEYS.map((key) => {
-            const mod = MODULES[key];
-            const on = enabled.has(key);
-            return (
-              <li key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-medium">{mod.label} {on ? <Pill tone="good">Включен</Pill> : <Pill>Изключен</Pill>}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
-                  {key === "invoices" ? <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">Преди да издаваш истински фактури, провери със счетоводителя си задължителните реквизити, ДДС и номерацията.</p> : null}
-                </div>
-                <ActionForm action={setModuleAction} success={on ? "Модулът е изключен" : "Модулът е включен"}>
-                  <input type="hidden" name="key" value={key} />
-                  <input type="hidden" name="on" value={on ? "0" : "1"} />
-                  <ActionSubmit variant={on ? "outline" : "default"}>{on ? "Изключи" : "Включи"}</ActionSubmit>
-                </ActionForm>
-              </li>
-            );
-          })}
-        </ul>
-      </Panel>
       <Panel title="Данни на фирмата" description="Нужни са за фактури и за настройки по държава. Не се показват на клиентите, освен във фактурите, които издаваш.">
         <ActionForm action={saveCompanyProfileAction} success="Запазено" className={`${formGrid}`}>
           <F label="Вид дейност" hint="Само избира начални настройки; нищо не се заключва.">
