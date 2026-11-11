@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { flushSync } from "react-dom";
+import { DndContext, DragOverlay, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { ArrowRight, CalendarDays, LayoutGrid, List, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,11 +49,49 @@ export function TaskBoard({
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [target, setTarget] = useState<TaskSheetTarget | null>(null);
 
-  const shown = useMemo(() => tasks.filter((task) =>
-    (who === "all" || (who === UNASSIGNED ? task.assigneeId === null : task.assigneeId === who))
-    && (projectFilter === "all" || task.projectId === projectFilter)), [tasks, who, projectFilter]);
+  // A dropped card shows its new column at once; the real status arrives with the refreshed page.
+  const [moved, setMoved] = useState<Record<string, TaskStatus>>({});
+  const [dragging, setDragging] = useState<TaskItem | null>(null);
+  const [, startMoving] = useTransition();
+  const justDragged = useRef(false);
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // A short press picks a card up on a phone; a swipe still scrolls the page.
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+  );
+  const current = useMemo(() => tasks.map((task) => (moved[task.id] ? { ...task, status: moved[task.id]! } : task)), [tasks, moved]);
 
-  const open = tasks.filter((task) => task.status !== "done");
+  function onDragStart(event: DragStartEvent) {
+    setDragging(current.find((task) => task.id === event.active.id) ?? null);
+  }
+
+  function onDragEnd(event: DragEndEvent) {
+    setDragging(null);
+    justDragged.current = true;
+    setTimeout(() => { justDragged.current = false; }, 250);
+    const task = current.find((item) => item.id === event.active.id);
+    const status = event.over?.id as TaskStatus | undefined;
+    if (!task || !status || status === task.status || !taskStatuses.includes(status)) return;
+    const apply = () => flushSync(() => setMoved((state) => ({ ...state, [task.id]: status })));
+    // Cards glide to their new place where the browser can animate it; elsewhere they simply appear there.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce && "startViewTransition" in document) (document as Document & { startViewTransition: (run: () => void) => unknown }).startViewTransition(apply);
+    else apply();
+    const formData = new FormData();
+    formData.set("taskId", task.id);
+    formData.set("status", status);
+    startMoving(async () => {
+      const result = await setTaskStatusAction(formData);
+      if (result.error) toast.error(result.error);
+      setMoved((state) => { const next = { ...state }; delete next[task.id]; return next; });
+    });
+  }
+
+  const shown = useMemo(() => current.filter((task) =>
+    (who === "all" || (who === UNASSIGNED ? task.assigneeId === null : task.assigneeId === who))
+    && (projectFilter === "all" || task.projectId === projectFilter)), [current, who, projectFilter]);
+
+  const open = current.filter((task) => task.status !== "done");
   const counts = new Map<string, { open: number; late: number }>();
   for (const task of open) {
     const key = task.assigneeId ?? UNASSIGNED;
@@ -60,7 +100,7 @@ export function TaskBoard({
     if (isOverdue(task, today)) entry.late += 1;
     counts.set(key, entry);
   }
-  const projectsWithTasks = projects.filter((project) => tasks.some((task) => task.projectId === project.id));
+  const projectsWithTasks = projects.filter((project) => current.some((task) => task.projectId === project.id));
   // A task that was deleted or moved away from the caller closes its panel.
   const editing = target?.mode === "edit" ? tasks.find((task) => task.id === target.task.id) : null;
   const sheetTarget: TaskSheetTarget | null = target?.mode === "edit" ? (editing ? { mode: "edit", task: editing } : null) : target;
@@ -106,11 +146,17 @@ export function TaskBoard({
           Още няма задачи. Добави първата с „Нова задача“: какво, за кой проект, кой я прави и до кога.
         </p>
       ) : view === "board" ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {taskStatuses.map((status) => (
-            <Column key={status} status={status} tasks={shown.filter((task) => task.status === status)} today={today} fixedProject={fixedProject} onOpen={(task) => setTarget({ mode: "edit", task })} />
-          ))}
-        </div>
+        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {taskStatuses.map((status) => (
+              <Column key={status} status={status} tasks={shown.filter((task) => task.status === status)} today={today} fixedProject={fixedProject}
+                onOpen={(task) => { if (!justDragged.current) setTarget({ mode: "edit", task }); }} />
+            ))}
+          </div>
+          <DragOverlay dropAnimation={{ duration: 220, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }}>
+            {dragging ? <CardView task={dragging} today={today} fixedProject={fixedProject} overlay /> : null}
+          </DragOverlay>
+        </DndContext>
       ) : (
         <ListView tasks={shown} today={today} fixedProject={fixedProject} people={people} onOpen={(task) => setTarget({ mode: "edit", task })} groupByPerson={seesEveryone} />
       )}
@@ -149,8 +195,10 @@ function FilterChip({ active, onPress, children }: { active: boolean; onPress: (
 function Column({ status, tasks, today, fixedProject, onOpen }: {
   status: TaskStatus; tasks: TaskItem[]; today: string; fixedProject?: { id: string; name: string }; onOpen: (task: TaskItem) => void;
 }) {
+  const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
-    <section aria-label={taskStatusLabels[status]} className="flex min-w-0 flex-col gap-2 rounded-2xl bg-muted/60 p-2.5">
+    <section ref={setNodeRef} aria-label={taskStatusLabels[status]}
+      className={cn("flex min-w-0 flex-col gap-2 rounded-2xl bg-muted/60 p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-muted shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
       <h2 className="flex items-center gap-2 px-1 py-0.5 text-sm font-semibold">
         <span className={cn("size-2.5 rounded-full", taskStatusDots[status])} aria-hidden />
         {taskStatusLabels[status]}
@@ -163,6 +211,20 @@ function Column({ status, tasks, today, fixedProject, onOpen }: {
 }
 
 function TaskCard({ task, today, fixedProject, onOpen }: { task: TaskItem; today: string; fixedProject?: { id: string; name: string }; onOpen: (task: TaskItem) => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: task.id, disabled: !task.canEdit });
+  return (
+    <div ref={setNodeRef} {...attributes} {...listeners} tabIndex={-1} role="presentation"
+      style={{ viewTransitionName: `task-${task.id}`, touchAction: task.canEdit ? "manipulation" : undefined }}
+      className={cn("animate-in fade-in slide-in-from-bottom-1 duration-200 motion-reduce:animate-none", task.canEdit && "cursor-grab active:cursor-grabbing", isDragging && "opacity-30")}>
+      <CardView task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />
+    </div>
+  );
+}
+
+/** The card itself, also what follows the pointer while dragging. */
+function CardView({ task, today, fixedProject, onOpen, overlay = false }: {
+  task: TaskItem; today: string; fixedProject?: { id: string; name: string }; onOpen?: (task: TaskItem) => void; overlay?: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const late = isOverdue(task, today);
   const next = taskStatuses[taskStatuses.indexOf(task.status) + 1];
@@ -179,16 +241,17 @@ function TaskCard({ task, today, fixedProject, onOpen }: { task: TaskItem; today
   }
 
   return (
-    <article className={cn("group relative flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs transition-opacity", late && "border-destructive/40", pending && "opacity-60")}>
+    <article className={cn("group relative flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs transition-[opacity,box-shadow,transform] duration-200 motion-reduce:transition-none",
+      !overlay && "hover:shadow-md", late && "border-destructive/40", pending && "opacity-60", overlay && "rotate-2 scale-[1.03] cursor-grabbing shadow-xl")}>
       {fixedProject ? null : <span className={cn("self-start rounded-md px-2 py-0.5 text-xs font-semibold", projectTone(task.projectId))}>{task.projectName}</span>}
-      <button type="button" onClick={() => onOpen(task)} className="text-left font-medium leading-snug after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
+      <button type="button" onClick={() => onOpen?.(task)} className="text-left font-medium leading-snug after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
         {task.title}
       </button>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {task.dueOn ? <span className={cn("inline-flex items-center gap-1", late && "font-semibold text-destructive")}><CalendarDays className="size-3.5" />{formatDue(task.dueOn, today)}</span> : null}
         <span className="ml-auto flex items-center gap-1.5">
-          {task.canEdit && next ? (
-            <button type="button" onClick={advance} disabled={pending} aria-label={`Премести към „${taskStatusLabels[next]}“`} title={`Към „${taskStatusLabels[next]}“`}
+          {task.canEdit && next && !overlay ? (
+            <button type="button" onClick={advance} onPointerDown={(event) => event.stopPropagation()} disabled={pending} aria-label={`Премести към „${taskStatusLabels[next]}“`} title={`Към „${taskStatusLabels[next]}“`}
               className="relative z-10 grid size-6 place-items-center rounded-full border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100">
               <ArrowRight className="size-3.5" />
             </button>
