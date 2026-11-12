@@ -5,7 +5,7 @@ export type TaskStatus = (typeof taskStatuses)[number];
 
 export const taskStatusLabels: Record<TaskStatus, string> = {
   todo: "Предстоят",
-  doing: "В работа",
+  doing: "В изпълнение",
   review: "За проверка",
   done: "Готово",
 };

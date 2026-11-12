@@ -198,14 +198,14 @@ function Column({ status, tasks, today, fixedProject, onOpen }: {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <section ref={setNodeRef} aria-label={taskStatusLabels[status]}
-      className={cn("flex min-w-0 flex-col gap-2 rounded-2xl bg-muted/60 p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-muted shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
+      className={cn("flex min-w-0 flex-col gap-2 rounded-2xl border border-sidebar/10 bg-sidebar/[0.06] p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-sidebar/10 shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
       <h2 className="flex items-center gap-2 px-1 py-0.5 text-sm font-semibold">
         <span className={cn("size-2.5 rounded-full", taskStatusDots[status])} aria-hidden />
         {taskStatusLabels[status]}
         <span className="font-normal text-muted-foreground">{tasks.length}</span>
       </h2>
       {tasks.length ? tasks.map((task) => <TaskCard key={task.id} task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />)
-        : <p className="px-1 py-4 text-center text-xs text-muted-foreground">Няма задачи</p>}
+        : <p className="rounded-xl border border-dashed border-sidebar/30 px-3 py-6 text-center text-sm font-medium text-sidebar/70">Няма задачи</p>}
     </section>
   );
 }
