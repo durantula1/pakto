@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Activity, Building2, FileCheck2, FileText, Mail, MailWarning, MousePointerClick, Users } from "lucide-react";
 
 import { AdminChart } from "@/components/admin/admin-chart";
+import { ResendConfirmationButton } from "@/components/admin/resend-confirmation-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/workspace/data-table";
@@ -15,6 +16,7 @@ import {
   getOffers,
   getSystemHealth,
   listAdminOrganizations,
+  listUnconfirmedUsers,
   type AdminFilters,
 } from "@/modules/platform-admin/queries";
 
@@ -85,6 +87,12 @@ function ChartCard({ title, children }: { title: string; children: ReactNode }) 
   );
 }
 
+const unconfirmedColumns: DataTableColumn[] = [
+  { id: "email", header: "Имейл", skeleton: "text" },
+  { id: "created", header: "Регистриран" },
+  { id: "action", header: "", className: "text-right", skeleton: "action", mobile: "actions" },
+];
+
 const organizationColumns: DataTableColumn[] = [
   { id: "name", header: "Фирма", skeleton: "stack" },
   { id: "created", header: "Създадена" },
@@ -96,13 +104,14 @@ const organizationColumns: DataTableColumn[] = [
 ];
 
 export async function AdminContent({ filters }: { filters: AdminFilters }) {
-  const [growth, funnel, activity, offers, client, organizations, health] = await Promise.all([
+  const [growth, funnel, activity, offers, client, organizations, unconfirmed, health] = await Promise.all([
     getGrowth(filters),
     getFunnel(filters),
     getActivity(filters),
     getOffers(filters),
     getClientSide(filters),
     listAdminOrganizations(),
+    listUnconfirmedUsers(),
     getSystemHealth(filters),
   ]);
   const inPeriod = periodText[filters.period];
@@ -212,6 +221,18 @@ export async function AdminContent({ filters }: { filters: AdminFilters }) {
         }))}
       /> : <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Още няма фирми освен твоите.</CardContent></Card>}
     </Section>
+
+    {unconfirmed.length ? <Section title="Непотвърдени акаунти" description="Регистрирали са се, но не са потвърдили имейла си, затова не могат да влязат. Бутонът изпраща нов линк за потвърждение от info@pakto.net.">
+      <DataTable
+        label="Непотвърдени акаунти"
+        density="compact"
+        columns={unconfirmedColumns}
+        rows={unconfirmed.map((user) => ({
+          id: user.id,
+          cells: [user.email, dateWithTime.format(user.createdAt), <ResendConfirmationButton key="resend" email={user.email} />],
+        }))}
+      />
+    </Section> : null}
 
     <Section title="Техническо здраве" description={`Имейли ${inPeriod} и заето място. Размерът на базата е общ.`}>
       <div className={statsClassName}>

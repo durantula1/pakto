@@ -282,6 +282,17 @@ export async function getClientSide(filters: AdminFilters) {
   };
 }
 
+export type UnconfirmedUser = { id: string; email: string; createdAt: Date };
+
+/** Real accounts that have not confirmed their email, newest first. They cannot sign in, so they have no company. */
+export async function listUnconfirmedUsers(): Promise<UnconfirmedUser[]> {
+  const result = await rows<Record<string, unknown>>(sql`
+    select u.id, u.email, u.created_at from app.auth_users u
+    where not u.email_verified and ${realUser(sql`u.email`)}
+    order by u.created_at desc limit 100`);
+  return result.map((row) => ({ id: String(row.id), email: String(row.email), createdAt: new Date(row.created_at as string) }));
+}
+
 export type AdminOrganizationRow = {
   id: string;
   name: string;
