@@ -150,6 +150,7 @@ export function TaskBoard({
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {taskStatuses.map((status) => (
               <Column key={status} status={status} tasks={shown.filter((task) => task.status === status)} today={today} fixedProject={fixedProject}
+                onAdd={canCreate ? () => setTarget({ mode: "create", status, projectId: fixedProject?.id, assigneeId: who !== "all" && who !== UNASSIGNED && canAssign ? who : undefined }) : undefined}
                 onOpen={(task) => { if (!justDragged.current) setTarget({ mode: "edit", task }); }} />
             ))}
           </div>
@@ -192,8 +193,8 @@ function FilterChip({ active, onPress, children }: { active: boolean; onPress: (
   );
 }
 
-function Column({ status, tasks, today, fixedProject, onOpen }: {
-  status: TaskStatus; tasks: TaskItem[]; today: string; fixedProject?: { id: string; name: string }; onOpen: (task: TaskItem) => void;
+function Column({ status, tasks, today, fixedProject, onOpen, onAdd }: {
+  status: TaskStatus; tasks: TaskItem[]; today: string; fixedProject?: { id: string; name: string }; onOpen: (task: TaskItem) => void; onAdd?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
@@ -206,6 +207,12 @@ function Column({ status, tasks, today, fixedProject, onOpen }: {
       </h2>
       {tasks.length ? tasks.map((task) => <TaskCard key={task.id} task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />)
         : <p className="rounded-xl border border-dashed border-sidebar/30 px-3 py-6 text-center text-sm font-medium text-sidebar/70">Няма задачи</p>}
+      {onAdd ? (
+        <button type="button" onClick={onAdd}
+          className="flex min-h-10 items-center gap-2 rounded-xl px-2 text-sm font-medium text-sidebar/80 transition-colors hover:bg-sidebar/10 hover:text-sidebar focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          <Plus className="size-4" /> Добави задача
+        </button>
+      ) : null}
     </section>
   );
 }

@@ -24,7 +24,7 @@ const taskFields = {
   dueOn: optionalDate,
 };
 
-const createSchema = z.object({ projectId: z.uuid("Избери проект."), ...taskFields });
+const createSchema = z.object({ projectId: z.uuid("Избери проект."), status: z.enum(taskStatuses).optional(), ...taskFields });
 const updateSchema = z.object({ taskId: z.uuid(), ...taskFields });
 
 function revalidateTasks(projectId: string) {
@@ -82,6 +82,8 @@ export async function createTaskAction(formData: FormData): Promise<ActionResult
       description: data.description || null,
       assigneeId,
       dueOn: data.dueOn || null,
+      status: data.status ?? "todo",
+      completedAt: data.status === "done" ? new Date() : null,
       createdBy: context.userId,
     });
     await notifyAssignee(context, { assigneeId, projectId: data.projectId, title: data.title });

@@ -18,7 +18,7 @@ import { taskStatusLabels, taskStatuses, type TaskItem, type TaskPerson, type Ta
 
 const NONE = "none";
 
-export type TaskSheetTarget = { mode: "create"; projectId?: string; assigneeId?: string } | { mode: "edit"; task: TaskItem };
+export type TaskSheetTarget = { mode: "create"; projectId?: string; assigneeId?: string; status?: TaskStatus } | { mode: "edit"; task: TaskItem };
 
 /** One panel for creating and editing a task, so both read the same. */
 export function TaskSheet({ target, onClose, projects, people, canAssign, currentUserId }: {
@@ -45,6 +45,7 @@ function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId
   currentUserId: string;
 }) {
   const task = target.mode === "edit" ? target.task : null;
+  const newStatus = target.mode === "create" ? target.status : undefined;
   const [projectId, setProjectId] = useState(task?.projectId ?? (target.mode === "create" ? target.projectId : undefined) ?? "");
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? (target.mode === "create" ? target.assigneeId : undefined) ?? (canAssign ? NONE : currentUserId));
   const [pending, startTransition] = useTransition();
@@ -65,7 +66,7 @@ function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId
   return (
     <>
       <SheetHeader className="px-6 pt-6">
-        <SheetTitle className="text-lg font-semibold">{task ? "Задача" : "Нова задача"}</SheetTitle>
+        <SheetTitle className="text-lg font-semibold">{task ? "Задача" : newStatus && newStatus !== "todo" ? `Нова задача · ${taskStatusLabels[newStatus]}` : "Нова задача"}</SheetTitle>
         <SheetDescription>{task ? task.projectName : "Към кой проект е и кой я прави."}</SheetDescription>
       </SheetHeader>
       <div className="grid gap-5 px-6 pb-8">
@@ -81,7 +82,7 @@ function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId
           </div>
         ) : null}
         <ActionForm action={task ? updateTaskAction : createTaskAction} success={task ? "Задачата е записана" : "Задачата е създадена"} onSuccess={onClose} className="grid gap-5">
-          {task ? <input type="hidden" name="taskId" value={task.id} /> : null}
+          {task ? <input type="hidden" name="taskId" value={task.id} /> : newStatus ? <input type="hidden" name="status" value={newStatus} /> : null}
           <Field>
             <FieldLabel htmlFor="task-title">Какво трябва да се свърши</FieldLabel>
             <Input id="task-title" name="title" required autoFocus={!task} defaultValue={task?.title} readOnly={!editable} maxLength={160} className="h-11" placeholder="Поръчай плочки за банята" />
