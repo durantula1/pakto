@@ -55,3 +55,9 @@ The typeface is Sofia Sans (`src/app/fonts/sofia-sans-standard.woff2`, loaded wi
 The Drizzle schema is one file, `src/db/schema/index.ts`. New migrations go in `db/migrations/` as timestamped dbmate SQL (`-- migrate:up` / `-- migrate:down`; `pnpm db:new name` creates one), alongside any triggers and grants. `db/migrations/20261005160000_baseline.sql` is the whole `app` schema as of 05.10.2026; the older history (Supabase migrations, drizzle-kit) is only in git. Keep the Drizzle schema in sync with every SQL migration you add. Postgres runs from `docker-compose.dev.yml` locally (`pnpm db:up`, `pnpm db:migrate`, `pnpm db:pull` for an anonymized copy of production) and from `deploy/compose.yml` on the server (GitHub Actions deploys every push to `main`, see `docs/deployment-notes.md`); the app role `pakto_app` cannot change the schema, `pakto_owner` runs migrations.
 
 The "passport" model of the earlier MadeFlow product was dropped on 06.10.2026 (`20261006120000_drop_legacy_madeflow.sql`). Do not rename applied migrations.
+
+## Conventions
+
+- **Copy:** Pakto is not only for construction firms. Say "проект", never "обект". Marketing email subjects mention "Pakto" plus offers and client confirmation.
+- **Brand:** palette navy, coral, cream, green (`src/app/globals.css`). Coral is never text on a light background; "approved" statuses stay green. Logo and icon files are in `docs/brand/`.
+- **Checks before a commit:** `pnpm typecheck && pnpm lint`, then `pnpm format` on touched files. No tests (see AGENTS.md).
