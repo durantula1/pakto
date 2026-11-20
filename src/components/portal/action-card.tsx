@@ -72,11 +72,6 @@ function ActionCard({ step }: { step: PortalStep }) {
   const urgent = step.due ? daysLeft(step.due) <= 2 : false;
   return (
     <Link href={step.href} className="group relative isolate flex flex-col gap-5 overflow-hidden rounded-3xl bg-ink p-5 text-paper sm:p-6">
-      {/* Two quiet rings in the corner: the card's only ornament. */}
-      <svg aria-hidden="true" viewBox="0 0 200 200" className="pointer-events-none absolute -top-16 -right-16 -z-10 size-56 text-white/[0.06]">
-        <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="18" />
-        <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" strokeWidth="2" />
-      </svg>
       <span className="flex items-center justify-between gap-3">
         <span aria-hidden="true" className={cn("grid size-10 shrink-0 place-items-center text-ink", accept ? "bg-ok-tint" : "bg-primary")}>
           <Icon className="size-4.5" strokeWidth={2.25} />

@@ -72,14 +72,14 @@ export const eventLabels: Record<string, string> = {
 
 /** Events worth a colored dot: the client's decisions and disputes. */
 const eventTones: Record<string, string> = {
-  decision_approved: "bg-ok-tint",
+  decision_approved: "bg-ok",
   decision_declined: "bg-late",
-  decision_changes_requested: "bg-late",
-  changes_requested: "bg-late",
+  decision_changes_requested: "bg-warn",
+  changes_requested: "bg-warn",
   decision_disputed: "bg-late",
-  decision_dispute_resolved: "bg-ok-tint",
+  decision_dispute_resolved: "bg-ok",
   revision_expired: "bg-late",
-  acceptance_accepted: "bg-ok-tint",
+  acceptance_accepted: "bg-ok",
   acceptance_issues: "bg-late",
   document_canceled: "bg-late",
 };

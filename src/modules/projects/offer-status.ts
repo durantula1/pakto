@@ -50,16 +50,16 @@ export const offerStatusLabels: Record<OfferDisplayStatus, string> = {
   accepted: "Завършена",
 };
 
-/** Same scheme as `documentStatusTones`: blue waits on the client, lilac on the team, mint and teal are agreed work. */
+/** Same scheme as `documentStatusTones`: blue waits on the client, warn on the team, green and grey are agreed work. */
 export const offerStatusTones: Record<OfferDisplayStatus, BadgeVariant> = {
   draft: "draft",
-  pending: "info-soft",
-  changes_requested: "lilac-soft",
+  pending: "sent",
+  changes_requested: "warning-soft",
   declined: "danger-soft",
   expired: "stone-soft",
   canceled: "stone-struck",
-  in_force: "success-soft",
-  in_progress: "teal-soft",
+  in_force: "approved",
+  in_progress: "neutral-soft",
   awaiting_acceptance: "warning-soft",
   issues: "danger-soft",
   accepted: "approved",
