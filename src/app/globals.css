@@ -20,21 +20,12 @@
     var(--font-plex-mono), "SFMono-Regular", Consolas, "Liberation Mono",
     monospace;
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
-  --color-primary-ink: var(--primary-ink);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -63,22 +54,6 @@
   --color-late-tint: var(--late-tint);
   --color-line: var(--line);
   --color-hairline: var(--hairline);
-  --color-brand-green: var(--brand-green);
-  --color-brand-blue: var(--brand-blue);
-  --color-tile-mint: var(--tile-mint);
-  --color-tile-mint-foreground: var(--tile-mint-foreground);
-  --color-tile-teal: var(--tile-teal);
-  --color-tile-teal-foreground: var(--tile-teal-foreground);
-  --color-tile-blue: var(--tile-blue);
-  --color-tile-blue-foreground: var(--tile-blue-foreground);
-  --color-tile-sand: var(--tile-sand);
-  --color-tile-sand-foreground: var(--tile-sand-foreground);
-  --color-tile-coral: var(--tile-coral);
-  --color-tile-coral-foreground: var(--tile-coral-foreground);
-  --color-tile-lilac: var(--tile-lilac);
-  --color-tile-lilac-foreground: var(--tile-lilac-foreground);
-  --color-tile-stone: var(--tile-stone);
-  --color-tile-stone-foreground: var(--tile-stone-foreground);
   --radius-xs: calc(var(--radius) * 0.3);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -133,8 +108,6 @@
   --popover-foreground: var(--ink);
   --primary: var(--blue);
   --primary-foreground: #ffffff;
-  /* Accent text and icons on light surfaces: the blue is 7:1 on the paper. */
-  --primary-ink: var(--blue);
   --secondary: #e8e7e1;
   --secondary-foreground: var(--ink);
   --muted: #e8e7e1;
@@ -151,34 +124,6 @@
   --chart-4: var(--ok);
   --chart-5: var(--warn);
   --radius: 0rem;
-  /* Older names still used by components that move to the new tokens in later steps. */
-  --brand-green: var(--ok-tint);
-  --brand-blue: var(--blue-tint);
-  /* KPI tiles and status chips; each tone means something (see StatCard), never decoration. */
-  --tile-mint: var(--ok-tint);
-  --tile-mint-foreground: #0b5e33;
-  --tile-teal: #e8e7e1;
-  --tile-teal-foreground: var(--ink);
-  --tile-blue: var(--blue-tint);
-  --tile-blue-foreground: var(--blue);
-  --tile-sand: #f3efdc;
-  --tile-sand-foreground: #5f4f0e;
-  --tile-coral: var(--late-tint);
-  --tile-coral-foreground: #a12a15;
-  /* Status-only tones: lilac = the client asked for a change, stone = no longer active. */
-  --tile-lilac: var(--warn-tint);
-  --tile-lilac-foreground: #7a4300;
-  --tile-stone: #ecebe5;
-  --tile-stone-foreground: #5b5a55;
-  /* The dark surface: active tabs and filters, headers on ink. */
-  --sidebar: var(--ink);
-  --sidebar-foreground: var(--paper);
-  --sidebar-primary: var(--blue);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #262624;
-  --sidebar-accent-foreground: var(--paper);
-  --sidebar-border: color-mix(in srgb, white 14%, transparent);
-  --sidebar-ring: var(--blue);
 }
 
 @layer base {
