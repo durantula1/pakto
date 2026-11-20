@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { IBM_Plex_Mono, Inter_Tight } from "next/font/google";
 import { Suspense } from "react";
 import { LocaleProvider } from "@/components/locale-provider";
 import { AttributionCapture } from "@/components/marketing/attribution-capture";
@@ -12,14 +12,19 @@ import { productDefinition } from "@/lib/seo/site";
 import "./globals.css";
 
 /**
- * Sofia Sans (Lettersoup, a Bulgarian foundry), one variable Latin + Cyrillic file in the repo. Its default Cyrillic is
- * the Bulgarian letterforms; this copy has the standard ones as default (scripts/fonts/sofia-sans-standard.py), since
- * browsers ignore `font-feature-settings: "locl" 0` and the page stays lang="bg". Feeds --font-sans.
+ * Inter Tight for text and IBM Plex Mono for labels, numbers and amounts (the "Ясно" design, 20.11.2026). Both draw
+ * the standard Cyrillic letterforms under lang="bg". next/font downloads them at build time and serves them from
+ * this site. Feed --font-sans and --font-mono.
  */
-const sofiaSans = localFont({
-  src: "./fonts/sofia-sans-standard.woff2",
-  weight: "1 1000",
-  variable: "--font-sofia-sans",
+const interTight = Inter_Tight({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-inter-tight",
+  display: "swap",
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
@@ -48,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="bg"
-      className={`${sofiaSans.variable} h-full antialiased`}
+      className={`${interTight.variable} ${plexMono.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

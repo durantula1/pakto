@@ -79,7 +79,7 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
         <Input
           id={id}
           placeholder="Име, имейл или телефон"
-          className={cn("flex h-11 w-full rounded-lg border border-input bg-transparent pr-9 pl-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm dark:bg-input/30", inputClassName)}
+          className={cn("flex h-11 w-full rounded-lg border border-input bg-transparent pr-9 pl-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm", inputClassName)}
         />
         <Button className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground">
           {loading ? <Loader2 className="size-4 animate-spin" /> : <ChevronDownIcon className="size-4" />}

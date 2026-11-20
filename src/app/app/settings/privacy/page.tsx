@@ -57,7 +57,7 @@ export default async function PrivacySettingsPage() {
           {document.accepted ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><CircleCheck className="size-4 rounded-full bg-brand-green text-[#102b38]" />Версия {document.version} · приета {dateFormat.format(document.accepted.acceptedAt)}</span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400"><CircleAlert className="size-4" />Новата версия {document.version} не е приета</span>
+            <span className="inline-flex items-center gap-1.5 text-xs text-amber-700"><CircleAlert className="size-4" />Новата версия {document.version} не е приета</span>
           )}
         </SettingsRow>
       ))}

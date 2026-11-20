@@ -361,7 +361,7 @@ function CategoryField({ defaultValue, categories }: { defaultValue: string; cat
         maxLength={80}
         placeholder={categories.length ? "Избери или напиши нова" : "напр. Баня, Електро, Материали"}
         onBlur={() => { if (existing) setValue(existing); }}
-        className="mt-1.5 flex h-11 w-full rounded-lg border border-input bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm dark:bg-input/30"
+        className="mt-1.5 flex h-11 w-full rounded-lg border border-input bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
       />
       {needle && !existing ? <p className="mt-1.5 text-xs text-muted-foreground">Нова категория „{value.trim()}“.</p> : null}
       <Popover offset={4} className="z-50 w-(--trigger-width) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">

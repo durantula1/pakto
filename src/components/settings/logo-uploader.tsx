@@ -164,7 +164,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
           disabled={busy || preparing}
           aria-label={shown ? "Виж цялата примерна оферта" : "Добави лого"}
           className={cn(
-            "group relative overflow-hidden rounded-xl bg-neutral-100 p-3 pb-0 text-left ring-1 ring-foreground/10 transition outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-neutral-800",
+            "group relative overflow-hidden rounded-xl bg-neutral-100 p-3 pb-0 text-left ring-1 ring-foreground/10 transition outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
             dragging && "ring-2 ring-primary",
           )}
         >
@@ -204,7 +204,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
         </button>
 
         {warnings.map((warning) => (
-          <p key={warning} className="flex gap-1.5 text-xs leading-5 text-amber-700 dark:text-amber-400"><TriangleAlert className="mt-0.5 size-3.5 shrink-0" />{warning}</p>
+          <p key={warning} className="flex gap-1.5 text-xs leading-5 text-amber-700"><TriangleAlert className="mt-0.5 size-3.5 shrink-0" />{warning}</p>
         ))}
 
         {shown ? (
@@ -274,7 +274,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
         canOpenPdf={!pending && !!current}
         footer={pending ? (
           <>
-            {warnings.length ? <p className="mr-auto flex max-w-xl gap-1.5 text-xs text-amber-700 dark:text-amber-400"><TriangleAlert className="size-3.5 shrink-0" />{warnings[0]}</p> : null}
+            {warnings.length ? <p className="mr-auto flex max-w-xl gap-1.5 text-xs text-amber-700"><TriangleAlert className="size-3.5 shrink-0" />{warnings[0]}</p> : null}
             <Button variant="ghost" onPress={pick} isDisabled={busy || preparing} className="h-9 px-3">Избери друг файл</Button>
             <Button onPress={save} isDisabled={busy} className="h-9 px-4">
               {busy ? <LoaderCircle className="animate-spin" /> : null} Запази логото

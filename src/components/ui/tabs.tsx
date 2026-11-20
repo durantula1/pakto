@@ -60,7 +60,7 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-sidebar shadow-sm",
+        default: "gap-0 bg-card p-0 ring-1 ring-line",
         line: "gap-1 bg-transparent",
       },
     },
@@ -101,10 +101,10 @@ function TabsTrigger({
     <TabPrimitive
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex h-8 flex-1 cursor-default items-center justify-center gap-1.5 rounded-md border border-transparent px-3 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:text-muted-foreground dark:hover:text-foreground group-data-[variant=line]/tabs-list:data-selected:shadow-none group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-selected:bg-transparent dark:group-data-[variant=line]/tabs-list:data-selected:border-transparent dark:group-data-[variant=line]/tabs-list:data-selected:bg-transparent",
-        "group-data-[variant=default]/tabs-list:h-8 group-data-[variant=default]/tabs-list:flex-none group-data-[variant=default]/tabs-list:rounded-lg group-data-[variant=default]/tabs-list:text-sidebar-foreground/70 group-data-[variant=default]/tabs-list:hover:bg-sidebar-accent group-data-[variant=default]/tabs-list:hover:text-sidebar-foreground",
-        "group-data-[variant=default]/tabs-list:data-selected:bg-primary group-data-[variant=default]/tabs-list:data-selected:font-semibold group-data-[variant=default]/tabs-list:data-selected:text-primary-foreground group-data-[variant=default]/tabs-list:data-selected:shadow-sm group-data-[variant=default]/tabs-list:data-selected:hover:bg-primary group-data-[variant=default]/tabs-list:data-selected:hover:text-primary-foreground",
+        "relative inline-flex h-8 flex-1 cursor-default items-center justify-center gap-1.5 rounded-md border border-transparent px-3 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50 group-data-[variant=line]/tabs-list:data-selected:shadow-none group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-selected:bg-transparent",
+        "group-data-[variant=default]/tabs-list:h-full group-data-[variant=default]/tabs-list:flex-none group-data-[variant=default]/tabs-list:px-4 group-data-[variant=default]/tabs-list:border-r-line group-data-[variant=default]/tabs-list:last:border-r-transparent group-data-[variant=default]/tabs-list:text-foreground/75 group-data-[variant=default]/tabs-list:hover:bg-muted group-data-[variant=default]/tabs-list:hover:text-foreground",
+        "group-data-[variant=default]/tabs-list:data-selected:bg-ink group-data-[variant=default]/tabs-list:data-selected:font-semibold group-data-[variant=default]/tabs-list:data-selected:text-paper group-data-[variant=default]/tabs-list:data-selected:hover:bg-ink group-data-[variant=default]/tabs-list:data-selected:hover:text-paper",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-selected:after:opacity-100",
         className
       )}

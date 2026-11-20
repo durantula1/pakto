@@ -60,7 +60,7 @@ export function DemoOfferDialog({ isOpen, onOpenChange, organizationName, logo, 
         </DialogClose>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-200/70 p-3 sm:p-6 dark:bg-neutral-900">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-200/70 p-3 sm:p-6">
         {view === "pdf" ? <PdfSheet organizationName={organizationName} logo={logo} /> : <PortalPage organizationName={organizationName} logo={logo} />}
       </div>
 

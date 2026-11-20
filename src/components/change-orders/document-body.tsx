@@ -197,7 +197,7 @@ function DocumentBrand({ name, logo }: { name: string; logo: DocumentLogo | null
           src={logo.url}
           alt={name}
           style={box ? { width: ptToRem(box.width), height: ptToRem(box.height) } : undefined}
-          className={cn("max-w-[65%] shrink-0 object-contain object-left dark:rounded-md dark:bg-white dark:p-1", !box && "h-10 sm:h-12")}
+          className={cn("max-w-[65%] shrink-0 object-contain object-left", !box && "h-10 sm:h-12")}
         />
       ) : (
         <p className="text-base font-semibold">{name}</p>
