@@ -103,7 +103,7 @@ export function AutoSaveStatus({ className }: { className?: string }) {
   return (
     <span role="status" aria-live="polite" className={cn("inline-flex min-h-5 items-center gap-1 text-xs", status.state === "error" ? "text-destructive" : "text-muted-foreground", className)}>
       {status.state === "saving" ? <><LoaderCircle className="size-3.5 animate-spin" /> Запазва…</> : null}
-      {status.state === "saved" ? <><Check className="size-4 rounded-full bg-brand-green p-0.5 text-[#102b38]" /> Запазено</> : null}
+      {status.state === "saved" ? <><Check className="size-4 bg-ok-tint p-0.5 text-ink" /> Запазено</> : null}
       {status.state === "error" ? status.message : null}
     </span>
   );
@@ -116,8 +116,8 @@ export function SettingsSwitch({ className, ...props }: Omit<React.ComponentProp
       type="checkbox"
       role="switch"
       className={cn(
-        "relative h-6 w-10 shrink-0 cursor-pointer appearance-none rounded-full bg-input transition-colors outline-none",
-        "before:absolute before:top-0.5 before:left-0.5 before:size-5 before:rounded-full before:bg-white before:shadow-sm before:transition-transform",
+        "relative h-6 w-10 shrink-0 cursor-pointer appearance-none bg-input transition-colors outline-none",
+        "before:absolute before:top-0.5 before:left-0.5 before:size-5 before:bg-white before:transition-transform",
         "checked:bg-primary checked:before:translate-x-4 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}

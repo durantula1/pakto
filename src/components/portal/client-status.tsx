@@ -21,7 +21,7 @@ const tones: Record<string, "success-soft" | "info-soft" | "danger-soft" | "seco
   superseded: "info-soft",
 };
 
-const dots = { "success-soft": "bg-tile-mint-foreground", "info-soft": "bg-tile-blue-foreground", "danger-soft": "bg-tile-coral-foreground", secondary: "bg-muted-foreground/60" } as const;
+const dots = { "success-soft": "bg-ok", "info-soft": "bg-blue", "danger-soft": "bg-late", secondary: "bg-muted-foreground/60" } as const;
 
 /** A dot in the same colour as the status badge, for a row that already shows the badge. */
 export function clientStatusDotClassName(status: string) {

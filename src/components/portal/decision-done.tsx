@@ -16,8 +16,8 @@ export function DecisionDone({ decision }: { decision: unknown }) {
   const text = typeof decision === "string" ? copy[decision] : undefined;
   if (!text) return null;
   return (
-    <div role="status" className="flex items-start gap-3 rounded-2xl bg-tile-mint p-4 text-tile-mint-foreground">
-      <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-5" strokeWidth={3} /></span>
+    <div role="status" className="flex items-start gap-3 rounded-2xl bg-ok-tint p-4 text-ok">
+      <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center bg-ok-tint"><Check className="size-5" strokeWidth={3} /></span>
       <div className="flex flex-col gap-1">
         <p className="text-lg font-semibold">{text.title}</p>
         <p className="text-sm leading-6">{text.next} Разписката е в имейла ви.</p>

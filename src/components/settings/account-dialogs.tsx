@@ -21,7 +21,7 @@ import { stop } from "@/lib/dates";
 function BlockerNote({ blocker }: { blocker: Blocker }) {
   return (
     <div className="mt-3 flex items-start gap-2 rounded-xl bg-muted px-3 py-2.5 text-sm text-muted-foreground">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn" />
       <p>
         {blocker.message}
         {blocker.href ? <> <Link href={blocker.href} className="font-medium text-foreground underline underline-offset-4">{blocker.cta ?? "Отвори"}</Link></> : null}
@@ -152,7 +152,7 @@ export function DeletionPendingBanner({ deleteOn, companyName }: { deleteOn: str
 /** Shown on every workspace page until the current terms and privacy policy are accepted (accounts made without the sign-up form, or after a new version). */
 export function ConsentBanner() {
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div role="status" className="flex flex-col gap-3 rounded-xl border border-warn bg-warn-tint p-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm">
         <span className="font-semibold">Потвърди текущите условия.</span>{" "}
         <span className="text-muted-foreground">Прочети <a href="/terms" target="_blank" className="underline underline-offset-4">Условията за ползване</a> и <a href="/privacy" target="_blank" className="underline underline-offset-4">Политиката за поверителност</a> и ги приеми, за да продължиш.</span>

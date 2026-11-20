@@ -78,27 +78,27 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                     <p className="text-xl leading-tight font-semibold tracking-tight">{project.name}</p>
                     <p className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="size-3.5 shrink-0" /> <span className="truncate">{project.siteAddress}</span></p>
                   </div>
-                  {pending ? <Badge variant="danger-soft" className="h-6 gap-1.5 px-2.5"><span className="size-1.5 rounded-full bg-destructive" />Чака решение</Badge>
+                  {pending ? <Badge variant="danger-soft" className="h-6 gap-1.5 px-2.5"><span className="size-1.5 bg-destructive" />Чака решение</Badge>
                     : handover ? <Badge variant="success-soft" className="h-6 px-2.5">Работата е готова</Badge>
                     : done ? <Badge variant="success-soft" className="h-6 px-2.5">Завършен</Badge> : null}
                 </div>
                 {card.stagesTotal > 0 && !done ? (
                   <div className="flex flex-col gap-1.5">
                     <div className="flex justify-between text-sm"><span className="text-muted-foreground">Работа</span><span className="font-semibold">{completed} от {card.stagesTotal} {card.stagesTotal === 1 ? "етап" : "етапа"}</span></div>
-                    <div className="h-2 overflow-hidden rounded-full bg-foreground/10" aria-hidden="true">
-                      <div className="h-full rounded-full bg-foreground" style={{ width: `${Math.round((completed / card.stagesTotal) * 100)}%` }} />
+                    <div className="h-2 overflow-hidden bg-foreground/10" aria-hidden="true">
+                      <div className="h-full bg-foreground" style={{ width: `${Math.round((completed / card.stagesTotal) * 100)}%` }} />
                     </div>
                   </div>
                 ) : null}
-                {done ? <p className="rounded-2xl bg-tile-stone px-3.5 py-3 text-sm text-tile-stone-foreground">Проектът е приключен. Всичко остава тук за справка.</p> : (
+                {done ? <p className="rounded-2xl bg-muted px-3.5 py-3 text-sm text-muted-foreground">Проектът е приключен. Всичко остава тук за справка.</p> : (
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-mint px-3.5 py-3 text-tile-mint-foreground">
+                    <div className="flex flex-col gap-0.5 rounded-2xl bg-ok-tint px-3.5 py-3 text-ok">
                       {/* "Следва" only above a stage; with none left or none yet it is just the work. */}
                       <span className="text-xs">{next ? "Следва" : "Работа"}</span>
                       {next ? <><span className="truncate text-sm font-semibold">{next.title}</span><span className="text-xs">до {formatShortDay(next.dueOn)}</span></>
                         : <span className="text-sm">{card.stagesTotal ? "Всички етапи са готови" : "Фирмата още не е добавила график"}</span>}
                     </div>
-                    <div className="flex flex-col gap-0.5 rounded-2xl bg-tile-sand px-3.5 py-3 text-tile-sand-foreground">
+                    <div className="flex flex-col gap-0.5 rounded-2xl bg-warn-tint px-3.5 py-3 text-warn">
                       <span className="text-xs">{card.contractMinor > 0n && card.remainingMinor <= 0n ? "Плащания" : "Остава за плащане"}</span>
                       {card.contractMinor > 0n && card.remainingMinor <= 0n ? <><span className="text-sm font-semibold">Изплатено</span><span className="text-xs tabular-nums">{formatCents(card.contractMinor, card.currency)}</span></>
                         : card.contractMinor > 0n ? <><span className="text-sm font-semibold tabular-nums">{formatCents(card.remainingMinor > 0n ? card.remainingMinor : 0n, card.currency)}</span><span className="text-xs tabular-nums">от {formatCents(card.contractMinor, card.currency)}</span></>
@@ -107,8 +107,8 @@ export default async function ClientPortalHome({ searchParams }: PageProps<"/por
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-primary-ink" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете проекта</span>}
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"><ArrowUpRight className="size-4" /></span>
+                  {card.unread ? <p className="inline-flex items-center gap-1.5 text-sm font-medium"><MessageCircle className="size-4 text-blue" /> {card.unread === 1 ? "1 нов отговор от фирмата" : `${card.unread} нови отговора от фирмата`}</p> : <span className="text-sm text-muted-foreground">Отворете проекта</span>}
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center bg-muted transition-colors group-hover:bg-foreground group-hover:text-background"><ArrowUpRight className="size-4" /></span>
                 </div>
               </Link>
             );

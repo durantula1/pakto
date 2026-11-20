@@ -44,7 +44,7 @@ export default async function DisputePage({ params, searchParams }: PageProps<"/
               Достъпът ви до този проект е спрян, затова решението не може да се оспори оттук. Свържете се с {target.organizationName}.
             </p>
           ) : target.disputed || query.done ? (
-            <p className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary-ink">
+            <p className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-blue">
               Оспорването е записано. Фирмата е уведомена, а записът не може да бъде изтрит от нея. Запазете имейла с разписката като доказателство.
             </p>
           ) : (

@@ -131,7 +131,7 @@ export function MemberAccess({ userId, initialPermissions, initialAllProjects, i
             <span className="block text-sm font-semibold">Права · {permissions.length} от {PERMISSION_KEYS.length}</span>
             <span className="block text-xs text-muted-foreground">Какво може да прави в проектите, до които има достъп.</span>
           </span>
-          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary-ink">
+          <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-blue">
             {open ? "Скрий" : "Промени права"}
             <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
           </span>
@@ -229,6 +229,6 @@ function PermissionNames({ label, icon, items, empty, muted = false }: { label: 
 
 function DirtyNote({ dirty }: { dirty: boolean }) {
   return dirty
-    ? <p className="flex items-center gap-2 text-xs font-medium text-foreground"><span className="size-2 rounded-full bg-primary" aria-hidden="true" />Незапазени промени</p>
+    ? <p className="flex items-center gap-2 text-xs font-medium text-foreground"><span className="size-2 bg-primary" aria-hidden="true" />Незапазени промени</p>
     : <p className="text-xs text-muted-foreground">Всички промени са запазени.</p>;
 }

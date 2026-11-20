@@ -107,7 +107,7 @@ export function ProjectCombobox({
       </div>
       <Popover
         offset={4}
-        className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+        className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10"
       >
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"

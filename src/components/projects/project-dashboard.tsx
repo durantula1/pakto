@@ -24,7 +24,7 @@ const overviewCardTitles = { stages: "Етапи", payments: "Плащания",
 const pendingLabels = { offer: "Оферта", change: "Промяна" } as const;
 const overviewGridClassName = "grid gap-4 lg:grid-cols-2";
 
-const linkClassName = "text-sm font-medium text-primary-ink underline-offset-4 hover:underline";
+const linkClassName = "text-sm font-medium text-blue underline-offset-4 hover:underline";
 const rowClassName = "flex min-h-8 items-center justify-between gap-3 border-t pt-2 first:border-t-0 first:pt-0";
 
 function OverviewCard({ title, tab, className, children }: { title: string; tab?: string; className?: string; children: ReactNode }) {
@@ -115,7 +115,7 @@ export function ProjectDashboard({ state, today, showPayments, showDrafts, openD
       <OverviewCard title={overviewCardTitles.documents} tab="documents" className={showPayments ? "lg:col-span-2" : undefined}>
         {offers.length || pendingChanges.length ? <>
           {offers.map((offer) => (
-            <Link key={offer.id} href={`/app/offers/${offer.id}`} className={cn(rowClassName, "flex-col items-stretch gap-1.5 hover:text-primary-ink")}>
+            <Link key={offer.id} href={`/app/offers/${offer.id}`} className={cn(rowClassName, "flex-col items-stretch gap-1.5 hover:text-blue")}>
               <span className="flex items-center justify-between gap-3">
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{offer.title}</span>
@@ -127,7 +127,7 @@ export function ProjectDashboard({ state, today, showPayments, showDrafts, openD
             </Link>
           ))}
           {pendingChanges.map((item) => (
-            <Link key={item.id} href={`/app/offers/${item.id}`} className={cn(rowClassName, "hover:text-primary-ink")}>
+            <Link key={item.id} href={`/app/offers/${item.id}`} className={cn(rowClassName, "hover:text-blue")}>
               <span className="min-w-0"><span className="block truncate font-medium">{item.title}</span><span className="block text-xs text-muted-foreground">{pendingLabels[item.kind]} · {formatCents(cents(item.total), state.currency)}</span></span>
               <Badge variant="warning-soft">Чака клиента</Badge>
             </Link>
@@ -147,7 +147,7 @@ function RowsSkeleton({ rows, badge = true }: { rows: number; badge?: boolean })
   return Array.from({ length: rows }, (_, index) => (
     <div key={index} className={rowClassName}>
       <Skeleton className="h-3.5 w-40" />
-      {badge ? <Skeleton className="h-5 w-20 rounded-full" /> : <Skeleton className="h-3.5 w-16" />}
+      {badge ? <Skeleton className="h-5 w-20" /> : <Skeleton className="h-3.5 w-16" />}
     </div>
   ));
 }
@@ -158,7 +158,7 @@ export function ProjectDashboardSkeleton() {
     <div className={overviewGridClassName}>
       <OverviewCard title={overviewCardTitles.stages}>
         <div className="flex h-5 items-center justify-between"><Skeleton className="h-3.5 w-32" /><Skeleton className="h-3.5 w-36" /></div>
-        <Skeleton className="mb-2 h-1.5 rounded-full" />
+        <Skeleton className="mb-2 h-1.5" />
         <RowsSkeleton rows={4} />
       </OverviewCard>
       <OverviewCard title={overviewCardTitles.payments}><RowsSkeleton rows={4} badge={false} /></OverviewCard>

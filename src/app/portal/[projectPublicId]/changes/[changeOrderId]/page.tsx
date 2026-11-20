@@ -67,10 +67,10 @@ const eventLabels: Record<string, string> = {
 
 type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode; note?: string | null };
 const statusStyles: Record<Status["tone"], { className: string; icon: typeof Info }> = {
-  success: { className: "bg-tile-mint text-tile-mint-foreground", icon: CheckCircle2 },
-  info: { className: "bg-tile-blue text-tile-blue-foreground", icon: Info },
-  warn: { className: "bg-tile-sand text-tile-sand-foreground", icon: TriangleAlert },
-  muted: { className: "bg-tile-stone text-tile-stone-foreground", icon: Ban },
+  success: { className: "bg-ok-tint text-ok", icon: CheckCircle2 },
+  info: { className: "bg-blue-tint text-blue", icon: Info },
+  warn: { className: "bg-warn-tint text-warn", icon: TriangleAlert },
+  muted: { className: "bg-muted text-muted-foreground", icon: Ban },
 };
 
 /** Where the document stands, in one sentence under its title: replaces a badge, a notice and a "decision recorded" card. */
@@ -78,7 +78,7 @@ function StatusLine({ status }: { status: Status }) {
   const { className, icon: Icon } = statusStyles[status.tone];
   return (
     <p role="status" className={cn("mt-4 flex items-start gap-3 rounded-3xl p-2 pr-4 text-sm leading-6", className)}>
-      <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-card/80"><Icon className="size-4" /></span>
+      <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center bg-card/80"><Icon className="size-4" /></span>
       <span className="flex flex-col self-center">
         <span>{status.text}</span>
         {status.note ? <span className="opacity-80">{status.note}</span> : null}
@@ -136,9 +136,9 @@ export default async function PortalChangePage({
         <AttachmentsPanel changeOrderId={change.id} initial={attachments} editable={false} description="Снимки и файлове към тази версия. Отворете ги, за да ги видите в пълен размер." />
       ) : null}
       {change.frozenAt ? (
-        <DownloadLink href={pdfHref} label={`${name} · PDF`} className="flex min-h-13 items-center justify-between gap-3 rounded-full bg-card py-2 pr-2 pl-4 text-sm font-medium sm:hidden">
+        <DownloadLink href={pdfHref} label={`${name} · PDF`} className="flex min-h-13 items-center justify-between gap-3 bg-card py-2 pr-2 pl-4 text-sm font-medium sm:hidden">
           <span className="inline-flex items-center gap-2.5"><Download className="size-4" /> Изтеглете {isOffer ? "офертата" : "промяната"} като PDF</span>
-          <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-muted-foreground">версия {change.revisionNumber}</span>
+          <span className="bg-muted px-3 py-1.5 text-xs text-muted-foreground">версия {change.revisionNumber}</span>
         </DownloadLink>
       ) : null}
     </>
@@ -201,17 +201,17 @@ export default async function PortalChangePage({
     <MotionDetails className="group rounded-3xl bg-card [&>summary::-webkit-details-marker]:hidden">
       <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 py-2 pr-2 pl-3 text-sm font-medium">
         <span className="inline-flex items-center gap-2.5">
-          <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground"><History className="size-4" /></span>
+          <span aria-hidden="true" className="grid size-9 place-items-center bg-muted text-muted-foreground"><History className="size-4" /></span>
           Версии и история
-          {versions.length > 1 ? <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">{versions.length} версии</span> : null}
+          {versions.length > 1 ? <span className="bg-muted px-2 py-0.5 text-xs tabular-nums">{versions.length} версии</span> : null}
         </span>
-        <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
+        <span aria-hidden="true" className="grid size-10 place-items-center bg-muted"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
       </summary>
       <div className="space-y-4 border-t border-dashed p-4">
         {versions.length ? (
           <div className="flex flex-wrap gap-2 border-b pb-4">
             {versions.map((revision) => (
-              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-primary-ink transition hover:bg-primary/5">
+              <DownloadLink key={revision.id} href={`/api/changes/${change.id}/pdf?revision=${revision.id}`} label={`${name} · версия ${revision.revisionNumber} · PDF`} className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-blue transition hover:bg-primary/5">
                 <Download className="size-3.5" /> Версия {revision.revisionNumber} · {money(revision.total)} {currencySymbol(revision.currency)}{revision.id === change.approvedRevisionId ? " · в сила" : ""}
               </DownloadLink>
             ))}
@@ -220,7 +220,7 @@ export default async function PortalChangePage({
         <ol className="space-y-3">
           {data.events.map((event) => (
             <li key={event.id} className="flex gap-3">
-              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary-ink">
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center bg-primary/10 text-blue">
                 <Clock3 className="size-4" />
               </span>
               <div>
@@ -264,43 +264,43 @@ export default async function PortalChangePage({
   const changeMinor = cents(change.total);
   const priceBefore = !isOffer && waiting && parentContract !== null && changeMinor !== 0n ? parentContract : null;
   const summary = (
-    <section className="relative isolate overflow-hidden rounded-3xl bg-sidebar p-2 text-sidebar-foreground">
+    <section className="relative isolate overflow-hidden rounded-3xl bg-ink p-2 text-paper">
       <svg aria-hidden="true" viewBox="0 0 200 200" className="pointer-events-none absolute -top-16 -right-16 -z-10 size-56 text-white/[0.06]">
         <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="18" />
         <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" strokeWidth="2" />
       </svg>
       <div className="flex flex-col gap-1.5 p-4">
         {change.responseDueAt ? (
-          <p className="mb-3 inline-flex items-center gap-1.5 self-start rounded-full bg-primary px-3 py-1 text-xs font-semibold text-sidebar">
+          <p className="mb-3 inline-flex items-center gap-1.5 self-start bg-primary px-3 py-1 text-xs font-semibold text-ink">
             <Clock3 className="size-3.5 shrink-0" aria-hidden="true" /> {dueText(change.responseDueAt)}
           </p>
         ) : null}
         {priceBefore !== null ? (
           <>
-            <p className="text-sm text-sidebar-foreground/75">Цената на {parentOffer ? documentName("offer", parentOffer.sequenceNumber).toLowerCase() : "офертата"} става</p>
+            <p className="text-sm text-paper/75">Цената на {parentOffer ? documentName("offer", parentOffer.sequenceNumber).toLowerCase() : "офертата"} става</p>
             <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <span className="text-sidebar-foreground/60 tabular-nums line-through">{formatCents(priceBefore, change.currency)}</span>
+              <span className="text-paper/60 tabular-nums line-through">{formatCents(priceBefore, change.currency)}</span>
               <span className="text-4xl font-semibold tracking-tight text-white tabular-nums">{formatCents(priceBefore + changeMinor, change.currency)}</span>
               <Badge variant={changeMinor > 0n ? "danger-soft" : "success-soft"} className="h-6 px-2.5 text-sm">{changeMinor < 0n ? "−" : "+"}{formatCents(changeMinor < 0n ? -changeMinor : changeMinor, change.currency)}</Badge>
             </p>
           </>
         ) : (
           <>
-            <p className="text-sm text-sidebar-foreground/75">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
+            <p className="text-sm text-paper/75">{isOffer ? "Цена на офертата" : "Стойност на промяната"}</p>
             <p className="text-4xl font-semibold tracking-tight text-white tabular-nums">{formatCents(changeMinor, change.currency)}</p>
-            {!isOffer && changeMinor === 0n ? <p className="text-sm text-sidebar-foreground/75">Цената на проекта не се променя.</p> : null}
+            {!isOffer && changeMinor === 0n ? <p className="text-sm text-paper/75">Цената на проекта не се променя.</p> : null}
           </>
         )}
-        <p className="text-xs text-sidebar-foreground/65">
+        <p className="text-xs text-paper/65">
           {Number(change.discountAmount) ? `${discountLabel(change.discountType, change.discountValue)} −${formatCents(cents(change.discountAmount), change.currency)} · ` : ""}{Number(change.taxRate) ? `С ${vatLabel(change.taxRate)} · без ДДС ${formatCents(cents(change.subtotal), change.currency)}` : "Не се начислява ДДС"}
         </p>
       </div>
       <p className="flex items-center justify-between gap-3 rounded-2xl bg-white/[0.07] px-4 py-3 text-sm">
-        <span className="inline-flex items-center gap-2 text-sidebar-foreground/75"><CalendarDays className="size-4" aria-hidden="true" />{isOffer ? "Срок" : "Срок на работата"}</span>
+        <span className="inline-flex items-center gap-2 text-paper/75"><CalendarDays className="size-4" aria-hidden="true" />{isOffer ? "Срок" : "Срок на работата"}</span>
         <span className="text-right font-semibold text-white">{scheduleLabel(change.documentKind, change.scheduleImpactType, change.scheduleImpactDays, change.agreedDeadline)}</span>
       </p>
       {inForce ? (
-        <p className="px-4 pt-3 pb-2 text-xs leading-5 text-sidebar-foreground/70">
+        <p className="px-4 pt-3 pb-2 text-xs leading-5 text-paper/70">
           Сега е в сила {inForceLabel}. Ако одобрите версия {change.revisionNumber}, договореното става {formatCents(agreedAfterMinor, change.currency)}{keptChanges.length ? " заедно с одобрените промени, които не са включени в нея" : ""}. Ако я откажете, остава както е сега.
         </p>
       ) : null}
@@ -308,16 +308,16 @@ export default async function PortalChangePage({
   );
 
   const diff = data.diff ? (
-    <MotionDetails defaultOpen={awaitingDecision} className="group rounded-3xl bg-tile-coral/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
+    <MotionDetails defaultOpen={awaitingDecision} className="group rounded-3xl bg-late-tint/70 p-1 text-sm [&>summary::-webkit-details-marker]:hidden">
       <summary className="flex min-h-14 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center justify-between gap-3 px-3 py-2">
-        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sidebar"><FileDiff className="size-4" /></span>
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center bg-primary text-ink"><FileDiff className="size-4" /></span>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="font-semibold">Какво е новото спрямо версия {data.diff.fromRevision}</span>
           {withChanges
             ? agreedNowMinor !== agreedAfterMinor ? <span className="text-muted-foreground tabular-nums">Договорено {formatCents(agreedNowMinor, change.currency)} → <span className="font-medium text-foreground">{formatCents(agreedAfterMinor, change.currency)}</span></span> : null
             : data.diff.totalBefore !== data.diff.totalAfter ? <span className="text-muted-foreground tabular-nums">Сума {formatCents(cents(data.diff.totalBefore.toFixed(2)), data.diff.currency)} → <span className="font-medium text-foreground">{formatCents(cents(data.diff.totalAfter.toFixed(2)), data.diff.currency)}</span></span> : null}
         </span>
-        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-card/80"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
+        <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center bg-card/80"><ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" /></span>
       </summary>
       <ul className="m-1 mt-0 list-disc space-y-1 rounded-2xl bg-card py-3 pr-4 pl-8 text-muted-foreground">
         {data.diff.changes.map((line) => <li key={line} className="break-words">{line}</li>)}
@@ -349,7 +349,7 @@ export default async function PortalChangePage({
         <div className="flex shrink-0 items-center gap-2">
           {/* On phones the PDF sits under the document, where it is read; here it only fits beside the back link. */}
           {change.frozenAt ? (
-            <DownloadLink href={pdfHref} label={`${name} · PDF`} className="hidden h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-medium hover:bg-muted sm:inline-flex">
+            <DownloadLink href={pdfHref} label={`${name} · PDF`} className="hidden h-10 items-center gap-2 bg-card px-4 text-sm font-medium hover:bg-muted sm:inline-flex">
               <Download className="size-4" /> PDF
             </DownloadLink>
           ) : null}
@@ -357,13 +357,13 @@ export default async function PortalChangePage({
       </div>
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span className={cn("inline-flex items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 font-medium", isOffer ? "bg-tile-blue text-tile-blue-foreground" : "bg-tile-lilac text-tile-lilac-foreground")}>
-            <span aria-hidden="true" className="grid size-6 place-items-center rounded-full bg-card/80">{isOffer ? <FileText className="size-3.5" /> : <FilePlus2 className="size-3.5" />}</span>
+          <span className={cn("inline-flex items-center gap-1.5 py-1 pr-3 pl-1.5 font-medium", isOffer ? "bg-blue-tint text-blue" : "bg-warn-tint text-warn")}>
+            <span aria-hidden="true" className="grid size-6 place-items-center bg-card/80">{isOffer ? <FileText className="size-3.5" /> : <FilePlus2 className="size-3.5" />}</span>
             {name}
           </span>
-          {change.revisionNumber > 1 ? <span className="rounded-full bg-card px-3 py-1 text-muted-foreground">версия {change.revisionNumber}</span> : null}
-          {parentOffer ? <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="rounded-full bg-card px-3 py-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">към {documentName("offer", parentOffer.sequenceNumber)}</Link> : null}
-          {!awaitingDecision ? <span className="rounded-full bg-card px-3 py-1 font-semibold tabular-nums">{!isOffer && changeMinor === 0n ? "без промяна в цената" : formatCents(changeMinor, change.currency)}</span> : null}
+          {change.revisionNumber > 1 ? <span className="bg-card px-3 py-1 text-muted-foreground">версия {change.revisionNumber}</span> : null}
+          {parentOffer ? <Link href={`/portal/${projectPublicId}/changes/${parentOffer.id}`} className="bg-card px-3 py-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">към {documentName("offer", parentOffer.sequenceNumber)}</Link> : null}
+          {!awaitingDecision ? <span className="bg-card px-3 py-1 font-semibold tabular-nums">{!isOffer && changeMinor === 0n ? "без промяна в цената" : formatCents(changeMinor, change.currency)}</span> : null}
           {/* The same word as on the project page, so the client recognises the offer. */}
           {offerState?.inForce && !(offerState.status === "in_force" && data.decision?.decision === "approved") ? <Badge variant={offerStatusTones[offerState.status]}>{offerStatusLabels[offerState.status]}</Badge> : null}
         </p>

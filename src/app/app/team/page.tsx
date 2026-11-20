@@ -85,7 +85,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                 <Badge key="role" variant={owner ? "default" : "secondary"}>{roleLabel(member)}</Badge>,
                 <span key="projects" className="whitespace-nowrap">{owner || member.allProjects ? "Всички" : member.projectIds.length ? `${member.projectIds.length} ${member.projectIds.length === 1 ? "проект" : "проекта"}` : <span className="text-muted-foreground">Няма</span>}</span>,
                 <div key="access" className="flex min-w-28 items-center gap-2" title={`${granted} от ${PERMISSION_KEYS.length} права`}>
-                  <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${(granted / PERMISSION_KEYS.length) * 100}%` }} /></div>
+                  <div className="h-1.5 w-16 overflow-hidden bg-muted"><div className="h-full bg-primary" style={{ width: `${(granted / PERMISSION_KEYS.length) * 100}%` }} /></div>
                   <span className="text-xs tabular-nums text-muted-foreground">{granted}/{PERMISSION_KEYS.length}</span>
                 </div>,
                 <Badge key="status" variant={member.status === "active" ? "approved" : "outline"}>{member.status === "active" ? "Активен" : "Без достъп"}</Badge>,

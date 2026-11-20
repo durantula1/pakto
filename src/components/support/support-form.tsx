@@ -118,7 +118,7 @@ export function SupportForm({ knownEmail, page }: { knownEmail: string | null; p
                     URL.revokeObjectURL(entry.url);
                     setPicked(picked.filter((other) => other !== entry));
                   }}
-                  className="absolute top-1 right-1 grid size-6 place-items-center rounded-full bg-background/90"
+                  className="absolute top-1 right-1 grid size-6 place-items-center bg-background/90"
                 >
                   <X className="size-3.5" />
                 </button>

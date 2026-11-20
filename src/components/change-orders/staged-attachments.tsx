@@ -58,7 +58,7 @@ export function StagedAttachments({ files, onChange, className }: {
                 variant="secondary"
                 aria-label={`Махни ${file.name}`}
                 onPress={() => onChange(files.filter((_, position) => position !== index))}
-                className="absolute top-1.5 right-1.5 shadow-sm"
+                className="absolute top-1.5 right-1.5"
               >
                 <X />
               </Button>

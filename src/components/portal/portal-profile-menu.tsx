@@ -13,7 +13,7 @@ export function PortalProfileMenu() {
   const pathname = usePathname();
   return (
     <DropdownMenuTrigger>
-      <Button type="button" variant="ghost" aria-label="Профил" className="size-10 rounded-full border bg-secondary p-0 text-secondary-foreground hover:bg-secondary/80">
+      <Button type="button" variant="ghost" aria-label="Профил" className="size-10 border bg-secondary p-0 text-secondary-foreground hover:bg-secondary/80">
         <UserRound className="size-5" />
       </Button>
       <DropdownMenu placement="bottom end" className="min-w-48" onAction={(key) => {

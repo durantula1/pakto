@@ -302,7 +302,7 @@ export function OfferForm({
                 <dt className="text-muted-foreground">Сума без отстъпка</dt>
                 <dd className="tabular-nums">{formatMoney(totals.gross)}</dd>
               </div>
-              <div className="flex justify-between gap-3 text-primary-ink">
+              <div className="flex justify-between gap-3 text-blue">
                 <dt>{discountLabel(discountType || null, discountValue)}</dt>
                 <dd className="tabular-nums">−{formatMoney(totals.discount)}</dd>
               </div>
@@ -351,7 +351,7 @@ export function OfferForm({
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5">
           <div className="flex flex-col gap-3">
             <div className="rounded-2xl border border-dashed border-primary/40 px-4 py-3">
-              <p className="font-mono text-xs tracking-wide text-primary-ink uppercase">Преглед · {projectName}</p>
+              <p className="font-mono text-xs tracking-wide text-blue uppercase">Преглед · {projectName}</p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight">{title}</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">Клиентът я вижда, едва след като я изпратиш.</p>
             </div>
@@ -372,18 +372,18 @@ export function OfferForm({
               paymentTerms: paymentTerms.map((term) => ({ ...term, dueOn: term.dueOn ?? null, stageTitle: term.stage ? schedule[term.stage - 1]?.title ?? null : null })),
             }} />
           </div>
-          <aside className="mt-3 space-y-3 rounded-2xl bg-sidebar p-5 text-sidebar-foreground lg:sticky lg:top-4 lg:mt-0">
+          <aside className="mt-3 space-y-3 rounded-2xl bg-ink p-5 text-paper lg:sticky lg:top-4 lg:mt-0">
             <div>
-              <p className="text-xs text-sidebar-foreground/70">{taxRate ? `Общо с ${vatLabel(taxRate)}` : "Общо, без ДДС"}</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(totals.total)} <span className="text-base text-sidebar-foreground/70">€</span></p>
+              <p className="text-xs text-paper/70">{taxRate ? `Общо с ${vatLabel(taxRate)}` : "Общо, без ДДС"}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(totals.total)} <span className="text-base text-paper/70">€</span></p>
             </div>
-            <p className="border-t border-sidebar-border pt-3 text-sm">Срок <strong>до {formatDay(deadline)}</strong></p>
-            {paymentTerms.length ? <p className="text-sm text-sidebar-foreground/80">{paymentTerms.length === 1 ? "1 плащане" : `${paymentTerms.length} плащания`}{schedule.length ? ` · ${schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}` : ""}</p> : schedule.length ? <p className="text-sm text-sidebar-foreground/80">{schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}</p> : null}
-            {files.length ? <p className="text-sm text-sidebar-foreground/80">{files.length === 1 ? "1 прикачен файл" : `${files.length} прикачени файла`}</p> : null}
-            <div className="hidden flex-col gap-2 border-t border-sidebar-border pt-4 lg:flex">
+            <p className="border-t border-paper/15 pt-3 text-sm">Срок <strong>до {formatDay(deadline)}</strong></p>
+            {paymentTerms.length ? <p className="text-sm text-paper/80">{paymentTerms.length === 1 ? "1 плащане" : `${paymentTerms.length} плащания`}{schedule.length ? ` · ${schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}` : ""}</p> : schedule.length ? <p className="text-sm text-paper/80">{schedule.length === 1 ? "1 етап" : `${schedule.length} етапа`}</p> : null}
+            {files.length ? <p className="text-sm text-paper/80">{files.length === 1 ? "1 прикачен файл" : `${files.length} прикачени файла`}</p> : null}
+            <div className="hidden flex-col gap-2 border-t border-paper/15 pt-4 lg:flex">
               {error ? <FormProblem className="rounded-lg bg-card p-2">{error}</FormProblem> : null}
               <Button type="submit" isDisabled={busy} className="h-11 w-full font-semibold">{submitLabel}</Button>
-              <Button type="button" variant="ghost" className="h-10 w-full gap-2 text-sidebar-foreground hover:bg-white/10 hover:text-white" onPress={() => setStep("edit")}>
+              <Button type="button" variant="ghost" className="h-10 w-full gap-2 text-paper hover:bg-white/10 hover:text-white" onPress={() => setStep("edit")}>
                 <Pencil className="size-4" /> Редакция
               </Button>
             </div>

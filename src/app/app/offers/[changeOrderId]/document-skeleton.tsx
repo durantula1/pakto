@@ -29,7 +29,7 @@ export function DocumentPageSkeleton() {
               <div className="flex flex-1 flex-col gap-4 lg:flex-row">
                 {documentStatusStepLabels.map((label, index) => (
                   <div key={label} className="flex gap-3 lg:flex-1 lg:flex-col lg:gap-1.5">
-                    <Skeleton className="mt-1 size-3.5 rounded-full" />
+                    <Skeleton className="mt-1 size-3.5" />
                     <div className="flex min-w-0 flex-col gap-1">
                       <p className={`text-sm ${index === documentStatusStepLabels.length - 1 ? "text-muted-foreground" : "font-medium"}`}>{label}</p>
                       <Skeleton className="h-3 w-16" />

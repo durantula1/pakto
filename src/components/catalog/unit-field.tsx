@@ -31,7 +31,7 @@ export function UnitField({ name = "unit", defaultValue = "" }: { name?: string;
             aria-pressed={unit === option}
             onClick={() => setUnit(unit === option ? "" : option)}
             className={cn(
-              "inline-flex h-9 min-w-11 items-center justify-center rounded-full border px-3 text-sm font-medium transition-colors",
+              "inline-flex h-9 min-w-11 items-center justify-center border px-3 text-sm font-medium transition-colors",
               unit === option ? "border-primary bg-primary text-primary-foreground" : "bg-card text-foreground/80 hover:border-foreground/40",
             )}
           >
@@ -45,7 +45,7 @@ export function UnitField({ name = "unit", defaultValue = "" }: { name?: string;
           onChange={(event) => setUnit(event.target.value)}
           onBlur={() => setUnit((current) => normalizeUnit(current))}
           placeholder="друга…"
-          className={cn("h-9 w-28 rounded-full px-3 text-base sm:text-sm", !isPreset && unit ? "border-primary" : "")}
+          className={cn("h-9 w-28 px-3 text-base sm:text-sm", !isPreset && unit ? "border-primary" : "")}
         />
       </div>
     </fieldset>

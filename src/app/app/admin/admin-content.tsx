@@ -142,8 +142,8 @@ export async function AdminContent({ filters }: { filters: AdminFilters }) {
               return (
                 <li key={step.key} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3 text-sm sm:grid-cols-[12rem_1fr_6rem]">
                   <span className="truncate">{step.label}</span>
-                  <span className="h-3 overflow-hidden rounded-full bg-muted">
-                    <span className="block h-full rounded-full bg-primary" style={{ width: `${(step.value / funnelTop) * 100}%` }} />
+                  <span className="h-3 overflow-hidden bg-muted">
+                    <span className="block h-full bg-primary" style={{ width: `${(step.value / funnelTop) * 100}%` }} />
                   </span>
                   <span className="text-right tabular-nums">
                     <span className="font-semibold">{number.format(step.value)}</span>

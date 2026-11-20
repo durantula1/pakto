@@ -46,7 +46,7 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
             <EmptyResult
               className="rounded-xl border border-dashed"
               title="Каталогът е празен"
-              description={<><Link href="/app/catalog" className="font-medium text-primary-ink underline">Добави услуги и материали</Link> или ги запазвай от офертата с иконата до тях.</>}
+              description={<><Link href="/app/catalog" className="font-medium text-blue underline">Добави услуги и материали</Link> или ги запазвай от офертата с иконата до тях.</>}
             />
           ) : !groups.length ? (
             <EmptyResult title={`Нищо не съвпада с „${query}“.`} />
@@ -65,7 +65,7 @@ export function CatalogPicker({ items, onPick, currency = "EUR" }: { items: Cata
                         <span className="block font-medium">{item.name}</span>
                         <span className="text-xs text-muted-foreground">{price.format(Number(item.unitPrice))} {currencySymbol(currency)}{item.unit ? ` / ${item.unit}` : ""}</span>
                       </span>
-                      <span className={`grid size-8 shrink-0 place-items-center rounded-full ${added.includes(item.id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                      <span className={`grid size-8 shrink-0 place-items-center ${added.includes(item.id) ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                         {added.includes(item.id) ? <span className="text-xs font-semibold">{added.filter((id) => id === item.id).length}</span> : <Plus className="size-4" />}
                       </span>
                     </button>

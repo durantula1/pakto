@@ -29,9 +29,9 @@ export function NavLink({
         prefetch={true}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "relative mx-auto flex h-14 w-full max-w-20 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition",
+          "relative mx-auto flex h-14 w-full max-w-20 flex-col items-center justify-center gap-0.5 px-1 transition",
           active
-            ? "bg-primary/20 font-semibold text-foreground"
+            ? "bg-ink font-semibold text-paper"
             : "text-muted-foreground hover:bg-muted hover:text-foreground",
         )}
       >
@@ -48,13 +48,14 @@ export function NavLink({
       title={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
+        "relative flex h-10 items-center gap-2.5 px-5 text-[0.95rem] transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
         active
-          ? "bg-sidebar font-semibold text-sidebar-foreground"
+          ? "bg-ink font-semibold text-paper"
           : "font-medium text-foreground/80 hover:bg-muted hover:text-foreground",
       )}
     >
-      {iconWithBadge}
+      {/* Words only, as in the approved design; the icons stay for the collapsed rail. */}
+      <span className="hidden lg:group-data-[sidebar=collapsed]/shell:inline-flex">{iconWithBadge}</span>
       <span className="min-w-0 flex-1 truncate lg:group-data-[sidebar=collapsed]/shell:sr-only">{label}</span>
       <NavPending />
     </Link>
@@ -67,7 +68,7 @@ function NavPending() {
   return (
     <span
       aria-hidden
-      className="absolute top-1/2 right-1.5 size-1.5 -translate-y-1/2 rounded-full bg-primary"
+      className="absolute top-1/2 right-1.5 size-1.5 -translate-y-1/2 bg-primary"
     />
   );
 }

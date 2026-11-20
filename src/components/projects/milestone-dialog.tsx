@@ -74,7 +74,7 @@ function MilestoneForm({ projectId, deadline, workOptions, initial }: { projectI
         <DatePicker id={`milestone-date-${key}`} name="dueOn" required aria-label="Срок" defaultValue={initial?.dueOn} onChange={setDueOn} />
       </Field>
       {afterDeadline ? (
-        <p role="status" className="flex items-start gap-2 rounded-lg bg-tile-sand p-3 text-sm text-tile-sand-foreground sm:col-span-2">
+        <p role="status" className="flex items-start gap-2 rounded-lg bg-warn-tint p-3 text-sm text-warn sm:col-span-2">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>Срокът е след договорения краен срок ({formatDay(deadline)}). Можеш да го запазиш, но клиентът ще види етап след срока.</span>
         </p>

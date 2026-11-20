@@ -101,7 +101,7 @@ export function CatalogManager({ items, canEdit, currency = "EUR" }: { items: Ca
                       {group.items.map((item) => <li key={item.id}><CatalogRow item={item} currency={currency} onEdit={canEdit ? () => setEditing({ item }) : undefined} /></li>)}
                     </ul>
                     {canEdit && group.key ? (
-                      <button type="button" onClick={() => setEditing({ item: null, category: group.name })} className="flex min-h-11 w-full items-center gap-2 border-t px-4 text-sm font-medium text-primary-ink transition-colors hover:bg-muted/50">
+                      <button type="button" onClick={() => setEditing({ item: null, category: group.name })} className="flex min-h-11 w-full items-center gap-2 border-t px-4 text-sm font-medium text-blue transition-colors hover:bg-muted/50">
                         <Plus className="size-4" /> Добави в „{group.name}“
                       </button>
                     ) : null}
@@ -135,7 +135,7 @@ function CategoryFilter({ categories, total, active, onChange }: { categories: C
       <FilterChip checked={active === null} label="Всички" count={total} onPress={() => onChange(null)} />
       {chips.map((item) => <FilterChip key={item.key} checked={active === item.key} label={item.name} count={item.count} onPress={() => onChange(item.key)} />)}
       {rest > 0 ? (
-        <button type="button" onClick={() => setOpen(true)} className="flex h-9 items-center gap-1 rounded-full border border-dashed bg-card px-3 text-sm font-medium hover:bg-muted">
+        <button type="button" onClick={() => setOpen(true)} className="flex h-9 items-center gap-1 border border-dashed bg-card px-3 text-sm font-medium hover:bg-muted">
           Още {rest} <ChevronDown className="size-4" />
         </button>
       ) : null}
@@ -155,7 +155,7 @@ function FilterChip({ checked, label, count, onPress }: { checked: boolean; labe
       role="radio"
       aria-checked={checked}
       onClick={onPress}
-      className={cn("flex h-9 max-w-60 items-center gap-1.5 rounded-full border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted", checked && "border-primary bg-primary text-primary-foreground hover:bg-primary")}
+      className={cn("flex h-9 max-w-60 items-center gap-1.5 border bg-card px-3 text-sm font-medium transition-colors hover:bg-muted", checked && "border-primary bg-primary text-primary-foreground hover:bg-primary")}
     >
       <span className="truncate">{label}</span><span className="tabular-nums opacity-70">{count}</span>
     </button>
@@ -183,7 +183,7 @@ function CategorySheet({ categories, total, active, onChange, onClose }: { categ
         {options.map((item) => (
           <li key={item.key ?? "all"}>
             <button type="button" role="radio" aria-checked={active === item.key} onClick={() => onChange(item.key)} className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left hover:bg-muted">
-              <Check className={cn("size-4 shrink-0 text-primary-ink", active !== item.key && "invisible")} aria-hidden="true" />
+              <Check className={cn("size-4 shrink-0 text-blue", active !== item.key && "invisible")} aria-hidden="true" />
               <span className={cn("min-w-0 flex-1 truncate", active === item.key && "font-semibold")}>{item.name}</span>
               <span className="text-sm text-muted-foreground tabular-nums">{item.count}</span>
             </button>
@@ -364,7 +364,7 @@ function CategoryField({ defaultValue, categories }: { defaultValue: string; cat
         className="mt-1.5 flex h-11 w-full rounded-lg border border-input bg-transparent px-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm"
       />
       {needle && !existing ? <p className="mt-1.5 text-xs text-muted-foreground">Нова категория „{value.trim()}“.</p> : null}
-      <Popover offset={4} className="z-50 w-(--trigger-width) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">
+      <Popover offset={4} className="z-50 w-(--trigger-width) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10">
         <ListBox className="max-h-60 overflow-y-auto p-1 outline-hidden" renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{categories.length ? "Няма такава категория. Ще се създаде нова." : "Още няма категории. Напиши първата."}</p>}>
           {(option: { id: string; name: string }) => (
             <ListBoxItem id={option.id} textValue={option.name} className="flex min-h-10 cursor-default items-center rounded-md px-2 text-sm outline-hidden data-focused:bg-foreground/10 data-selected:font-semibold">

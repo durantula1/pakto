@@ -137,7 +137,7 @@ const statusText: Record<Download["state"], string> = {
 };
 
 /**
- * The navy pill with a light-blue bar (--brand-blue) at the bottom of the screen. Mounted once per layout;
+ * The navy pill with a light-blue bar (--blue-tint) at the bottom of the screen. Mounted once per layout;
  * `aboveMobileNav` lifts it over the workspace's bottom tab bar on phones.
  */
 export function DownloadTray({ aboveMobileNav = false }: { aboveMobileNav?: boolean }) {
@@ -161,29 +161,29 @@ export function DownloadTray({ aboveMobileNav = false }: { aboveMobileNav?: bool
             key={item.id}
             role="status"
             aria-live="polite"
-            className="pointer-events-auto relative w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-sidebar text-sidebar-foreground shadow-xl ring-1 ring-white/10 animate-in fade-in-0 slide-in-from-bottom-2"
+            className="pointer-events-auto relative w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl bg-ink text-paper shadow-[6px_6px_0_var(--ink)] ring-1 ring-white/10 animate-in fade-in-0 slide-in-from-bottom-2"
           >
             <div className="flex items-center gap-3 py-3 pr-2 pl-3.5">
-              <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", item.state === "error" ? "bg-red-500/15 text-red-300" : "bg-brand-blue/15 text-brand-blue")}>
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", item.state === "error" ? "bg-late/25 text-[#ff9b8a]" : "bg-blue-tint/15 text-blue-tint")}>
                 {item.state === "done" ? <Check className="size-5" /> : item.state === "error" ? <TriangleAlert className="size-5" /> : <FileDown className="size-5" />}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{item.label}</p>
-                <p className="text-xs text-sidebar-foreground/65">
+                <p className="text-xs text-paper/65">
                   {statusText[item.state]}
                   {item.state === "downloading" && percent !== null ? ` · ${percent}%` : ""}
                 </p>
               </div>
               {item.state === "done" && item.objectUrl ? (
-                <a href={item.objectUrl} target="_blank" rel="noreferrer" className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:bg-white/5">Отвори</a>
+                <a href={item.objectUrl} target="_blank" rel="noreferrer" className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-blue-tint transition hover:bg-white/5">Отвори</a>
               ) : null}
               {item.state === "error" ? (
-                <button type="button" onClick={() => void run(item.id)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-brand-blue transition hover:bg-white/5">
+                <button type="button" onClick={() => void run(item.id)} className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-blue-tint transition hover:bg-white/5">
                   <RotateCcw className="size-3.5" /> Опитай пак
                 </button>
               ) : null}
               {item.state === "done" || item.state === "error" ? (
-                <button type="button" onClick={() => dismiss(item.id)} aria-label="Скрий" className="grid size-8 place-items-center rounded-lg text-sidebar-foreground/60 transition hover:bg-white/5 hover:text-sidebar-foreground">
+                <button type="button" onClick={() => dismiss(item.id)} aria-label="Скрий" className="grid size-8 place-items-center rounded-lg text-paper/60 transition hover:bg-white/5 hover:text-paper">
                   <X className="size-4" />
                 </button>
               ) : null}
@@ -191,11 +191,11 @@ export function DownloadTray({ aboveMobileNav = false }: { aboveMobileNav?: bool
             {/* Light-blue bar: a running stripe while the server prepares the file, real progress when the size is known. */}
             <div className="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-white/10" aria-hidden>
               {item.state === "done" ? (
-                <div className="h-full w-full bg-brand-blue" />
+                <div className="h-full w-full bg-blue-tint" />
               ) : item.state === "error" ? null : percent !== null ? (
-                <div className="h-full bg-brand-blue transition-[width] duration-150" style={{ width: `${percent}%` }} />
+                <div className="h-full bg-blue-tint transition-[width] duration-150" style={{ width: `${percent}%` }} />
               ) : (
-                <div className="download-indeterminate h-full w-2/5 rounded-full bg-brand-blue" />
+                <div className="download-indeterminate h-full w-2/5 bg-blue-tint" />
               )}
             </div>
           </div>

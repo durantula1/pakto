@@ -16,7 +16,7 @@ export function Segmented<T extends string | boolean>({ label, value, options, o
   onChange: (value: T) => void;
   disabled?: boolean;
 }) {
-  return <div role="radiogroup" aria-label={label} className="grid auto-cols-fr grid-flow-col gap-1 rounded-xl bg-sidebar p-1">
+  return <div role="radiogroup" aria-label={label} className="grid auto-cols-fr grid-flow-col gap-1 rounded-xl bg-ink p-1">
     {options.map((option) => (
       <button
         key={String(option.value)}
@@ -26,8 +26,8 @@ export function Segmented<T extends string | boolean>({ label, value, options, o
         disabled={disabled}
         onClick={() => onChange(option.value)}
         className={cn(
-          "h-9 min-w-0 truncate rounded-lg px-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent disabled:cursor-not-allowed disabled:opacity-50",
-          value === option.value && "bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary",
+          "h-9 min-w-0 truncate rounded-lg px-2 text-sm font-medium text-paper/70 transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-50",
+          value === option.value && "bg-primary font-semibold text-primary-foreground hover:bg-primary",
         )}
       >
         {option.label}
@@ -73,7 +73,7 @@ export function ProjectScope({ allProjects, selected, onAllProjectsChange, onSel
             </li>
           ))}
           {hidden > 0 || showAll && selected.length > CHIP_LIMIT ? <li>
-            <button type="button" onClick={() => setShowAll(!showAll)} className="h-8 rounded-lg px-2.5 text-sm font-medium text-primary-ink hover:bg-muted">
+            <button type="button" onClick={() => setShowAll(!showAll)} className="h-8 rounded-lg px-2.5 text-sm font-medium text-blue hover:bg-muted">
               {showAll ? "Покажи по-малко" : `+${hidden} още`}
             </button>
           </li> : null}
@@ -130,7 +130,7 @@ function ProjectSearch({ selected, onAdd, disabled }: { selected: ProjectOption[
     </div>
     <Popover
       offset={4}
-      className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+      className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10"
     >
       <ListBox
         className="max-h-72 overflow-y-auto p-1 outline-hidden"

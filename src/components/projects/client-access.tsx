@@ -59,7 +59,7 @@ export function ClientAccess({ projectId, contacts, canEdit, isOwner, defaultOpe
       <Button type="button" variant="outline" className="h-8 max-w-56 gap-1.5 bg-card px-2.5">
         {contacts.length > 1 ? <Users className="size-4" /> : <UserRound className="size-4" />}
         <span className="truncate">{approver?.name ?? "Клиент"}</span>
-        {approver && !approver.emailVerifiedAt ? <span className="size-2 shrink-0 rounded-full bg-tile-sand-foreground" aria-label="имейлът не е потвърден" /> : null}
+        {approver && !approver.emailVerifiedAt ? <span className="size-2 shrink-0 bg-warn" aria-label="имейлът не е потвърден" /> : null}
       </Button>
       <Dialog className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
@@ -120,7 +120,7 @@ function ContactCard({ projectId, contact, canEdit, isOwner }: { projectId: stri
     <li className="rounded-xl border bg-card p-4">
       <div className="flex items-start gap-3">
         <Avatar className="size-10 shrink-0">
-          <AvatarFallback className="bg-primary/15 text-sm font-semibold text-primary-ink">{initials(contact.name)}</AvatarFallback>
+          <AvatarFallback className="bg-primary/15 text-sm font-semibold text-blue">{initials(contact.name)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

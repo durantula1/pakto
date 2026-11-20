@@ -26,7 +26,7 @@ export function PaymentAmountField({ remaining }: {
     <FieldLabel htmlFor="receipt-amount">Получена сума</FieldLabel>
     <Input id="receipt-amount" type="number" name="amount" min="0.01" step="0.01" required value={value} onChange={(event) => setValue(event.target.value)} aria-describedby="receipt-amount-hint" />
     {remaining ? (
-      <p id="receipt-amount-hint" role={over > 0 ? "alert" : undefined} className={over > 0 ? "text-xs font-medium text-tile-coral-foreground" : "text-xs text-muted-foreground"}>
+      <p id="receipt-amount-hint" role={over > 0 ? "alert" : undefined} className={over > 0 ? "text-xs font-medium text-late" : "text-xs text-muted-foreground"}>
         {over > 0
           ? remaining.cents <= 0
             ? "Проектът вече е изплатен. Цялата сума ще се отчете като надплатена."

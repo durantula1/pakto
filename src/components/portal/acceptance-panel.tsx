@@ -50,7 +50,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
   if (acceptance.kind === "accepted") return (
     // Two lines, not a "·" run-on: on a phone the separator wrapped to the start of the second line.
     <p id="acceptance" className="flex items-start gap-2.5 rounded-xl border bg-card px-4 py-3 text-sm">
-      <Check className="mt-0.5 size-4 shrink-0 text-tile-mint-foreground" />
+      <Check className="mt-0.5 size-4 shrink-0 text-ok" />
       <span className="flex flex-col">
         <span className="font-semibold">Работата е приета</span>
         <span className="text-muted-foreground">от {acceptance.typedName} на {dateTime.format(acceptance.createdAt)}</span>
@@ -60,7 +60,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
 
   if (acceptance.kind === "issues") return (
     <section id="acceptance" className="rounded-xl border bg-card px-4 py-3 text-sm">
-      <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-tile-sand-foreground" /> Забележките ви са изпратени на {organizationName}</p>
+      <p className="flex items-center gap-2 font-semibold"><TriangleAlert className="size-4 shrink-0 text-warn" /> Забележките ви са изпратени на {organizationName}</p>
       <Quote tone="warning" className="mt-1 text-muted-foreground">{acceptance.note}</Quote>
       <p className="mt-2 text-xs text-muted-foreground">Фирмата ще ги прегледа. Ако искате да ги обсъдите, задайте въпрос в „Въпроси по тази оферта“ (раздел „Офертата“). След това тя ще поиска приемане отново.</p>
     </section>
@@ -111,7 +111,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
             </div>
             <p className="text-xs text-muted-foreground">
               Не е дошъл?{" "}
-              <button type="button" onClick={() => setPendingCode(null)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary-ink">Поискайте нов код</button>
+              <button type="button" onClick={() => setPendingCode(null)} className="font-medium text-foreground underline underline-offset-2 hover:text-blue">Поискайте нов код</button>
             </p>
           </ActionForm>
         ) : (
@@ -135,7 +135,7 @@ export function AcceptancePanel({ projectPublicId, offerId, code, acceptance, ca
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               Нещо не е наред?{" "}
-              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-primary-ink">Напишете забележки</button>
+              <button type="button" onClick={() => setIssues(true)} className="font-medium text-foreground underline underline-offset-2 hover:text-blue">Напишете забележки</button>
               {" "}вместо да приемате.
             </p>
           </form>

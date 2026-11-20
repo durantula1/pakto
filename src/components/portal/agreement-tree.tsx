@@ -26,7 +26,7 @@ export function AgreementTree({ state, portalPublicId }: { state: ProjectState; 
         {offers.map((offer) => (
           <li key={offer.id} className="rounded-3xl bg-card p-2">
             <Link href={href(offer.id)} className="group flex items-center gap-3 rounded-2xl p-2">
-              <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-tile-blue text-tile-blue-foreground">
+              <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center bg-blue-tint text-blue">
                 <FileText className="size-5" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -46,7 +46,7 @@ export function AgreementTree({ state, portalPublicId }: { state: ProjectState; 
                   return (
                     <li key={change.id}>
                       <Link href={href(change.id)} className="group flex items-center gap-3 rounded-2xl p-2">
-                        <span aria-hidden="true" className={cn("grid size-7 shrink-0 place-items-center rounded-full", minor < 0n ? "bg-tile-mint text-tile-mint-foreground" : "bg-tile-lilac text-tile-lilac-foreground")}>
+                        <span aria-hidden="true" className={cn("grid size-7 shrink-0 place-items-center", minor < 0n ? "bg-ok-tint text-ok" : "bg-warn-tint text-warn")}>
                           {minor < 0n ? <Minus className="size-3.5" /> : <Plus className="size-3.5" />}
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
@@ -68,7 +68,7 @@ export function AgreementTree({ state, portalPublicId }: { state: ProjectState; 
         ))}
       </ul>
       {rows > 1 ? (
-        <p className="flex items-baseline justify-between gap-3 rounded-full bg-tile-blue px-5 py-3.5 text-tile-blue-foreground">
+        <p className="flex items-baseline justify-between gap-3 bg-blue-tint px-5 py-3.5 text-blue">
           <span className="text-sm font-medium">Общо договорено</span>
           <span className="text-lg font-semibold tracking-tight tabular-nums">{formatCents(state.contractMinor, state.currency)}</span>
         </p>
@@ -79,7 +79,7 @@ export function AgreementTree({ state, portalPublicId }: { state: ProjectState; 
 
 function Arrow({ small = false }: { small?: boolean }) {
   return (
-    <span aria-hidden="true" className={cn("grid shrink-0 place-items-center rounded-full bg-muted transition-colors group-hover:bg-foreground group-hover:text-background", small ? "size-7" : "size-8")}>
+    <span aria-hidden="true" className={cn("grid shrink-0 place-items-center bg-muted transition-colors group-hover:bg-foreground group-hover:text-background", small ? "size-7" : "size-8")}>
       <ArrowUpRight className={small ? "size-3.5" : "size-4"} />
     </span>
   );

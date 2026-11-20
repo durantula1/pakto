@@ -122,7 +122,7 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
         rows={offer.changes.map((change) => ({
           id: change.id,
           cells: [
-            <Link key="title" href={`/app/offers/${change.id}`} className="font-medium text-primary-ink hover:underline">{documentCode("change", change.sequenceNumber)} · {change.title}</Link>,
+            <Link key="title" href={`/app/offers/${change.id}`} className="font-medium text-blue hover:underline">{documentCode("change", change.sequenceNumber)} · {change.title}</Link>,
             canManage
               ? <StatusSelect key="status" label={`Статус на ${change.title}`} name="workStatus" value={change.workStatus} options={changeWorkOptions} action={updateChangeWorkAction} fields={{ projectId, changeOrderId: change.id }} success="Статусът на работата е обновен" />
               : <Badge key="status" variant="secondary">{workLabels[change.workStatus] ?? change.workStatus}</Badge>,
@@ -179,7 +179,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
     <p className="text-sm text-muted-foreground">
       Договорено <strong className="text-foreground tabular-nums">{formatCents(view.contractMinor, view.currency)}</strong>{offer.changes.length ? " с промените" : ""} · платено <strong className="text-foreground tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> · {view.remainingMinor < 0n ? "надплатено" : "остава"} <strong className="text-foreground tabular-nums">{formatCents(view.remainingMinor < 0n ? -view.remainingMinor : view.remainingMinor, view.currency)}</strong>
     </p>
-    {planGap ? <div role="status" className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+    {planGap ? <div role="status" className="rounded-xl border border-warn bg-warn-tint px-4 py-3 text-sm">
       <p className="font-medium">Платежният план не съвпада с договореното.</p>
       <p className="mt-1 text-muted-foreground">Вноските са общо {formatCents(offer.plannedMinor, offer.currency)}, а договореното е {formatCents(offer.contractMinor, offer.currency)} ({offer.contractMinor > offer.plannedMinor ? "липсват" : "над договореното са"} {formatCents(offer.contractMinor > offer.plannedMinor ? offer.contractMinor - offer.plannedMinor : offer.plannedMinor - offer.contractMinor, offer.currency)}). Коригирай вноските.</p>
     </div> : null}
@@ -205,7 +205,7 @@ export function OfferPayments({ state, offer, projectId, canRecord, today, inbox
     />
     <ReceiptsTable projectId={projectId} state={state} receipts={view.receipts} disputes={inbox.disputes} canRecord={canRecord} footer={capped && allReceiptsHref ? <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
       <p className="text-muted-foreground">Показани са последните плащания по проекта</p>
-      <Link href={allReceiptsHref} className="font-medium text-primary-ink underline">Всички плащания</Link>
+      <Link href={allReceiptsHref} className="font-medium text-blue underline">Всички плащания</Link>
     </div> : undefined} />
   </div>;
 }
@@ -235,7 +235,7 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
     ]}
     rows={receipts.map((item) => ({
       id: item.id,
-      className: item.disputed ? "bg-tile-coral/25" : undefined,
+      className: item.disputed ? "bg-late-tint/25" : undefined,
       cells: [
         formatDay(item.receivedOn),
         <span key="kind" className="inline-flex flex-col"><span>{item.correctionOfId ? (Number(item.amount) < 0 ? "Отменено плащане" : "Корекция") : paymentLabels[item.kind] ?? item.kind}</span>{showOffer ? <span className="text-xs text-muted-foreground">{codeOf(item.offerId) ?? "Без оферта"}</span> : null}</span>,

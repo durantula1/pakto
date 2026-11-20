@@ -52,6 +52,7 @@
   --color-card: var(--card);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
   --color-blue: var(--blue);
   --color-blue-tint: var(--blue-tint);
   --color-ok: var(--ok);
@@ -109,6 +110,8 @@
    */
   --paper: #f1f0eb;
   --ink: #0b0b0b;
+  /* A step up from ink: hover and secondary fills on the dark surface. */
+  --ink-soft: #262624;
   --blue: #1d36ff;
   --blue-tint: #eef0ff;
   /* Status: approved (green), change requested (amber-brown), late or declined (red). */

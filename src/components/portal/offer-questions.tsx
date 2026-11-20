@@ -48,11 +48,11 @@ export function OfferQuestions({ messages, contactId, projectPublicId, changeOrd
   return (
     <section id="questions" aria-labelledby="questions-title" className="scroll-mt-24 rounded-3xl bg-card p-2">
       <div className="flex items-start gap-3 p-2">
-        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-tile-blue text-tile-blue-foreground"><MessageCircleQuestion className="size-5" /></span>
+        <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center bg-blue-tint text-blue"><MessageCircleQuestion className="size-5" /></span>
         <div className="min-w-0 flex-1">
           <h2 id="questions-title" className="flex flex-wrap items-center gap-2 font-semibold">
             {isChange ? "Въпроси по тази промяна" : "Въпроси по тази оферта"}
-            {fresh ? <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">{fresh === 1 ? "1 нов отговор" : `${fresh} нови отговора`}</span> : null}
+            {fresh ? <span className="bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">{fresh === 1 ? "1 нов отговор" : `${fresh} нови отговора`}</span> : null}
           </h2>
           <p className="text-sm text-muted-foreground">
             {waiting
@@ -68,12 +68,12 @@ export function OfferQuestions({ messages, contactId, projectPublicId, changeOrd
             const company = message.authorType === "staff";
             const own = !company && message.authorId === contactId;
             return (
-              <li key={message.id} className={cn("rounded-2xl px-4 py-3", company ? "bg-tile-blue/60" : "bg-muted/70")}>
+              <li key={message.id} className={cn("rounded-2xl px-4 py-3", company ? "bg-blue-tint/60" : "bg-muted/70")}>
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">{company ? organizationName : own ? "Вие" : message.authorName}</span>
                   <span>{company ? "отговори" : own ? "попитахте" : "попита"} · {dateTime.format(message.createdAt)}</span>
-                  {markVersions && message.revisionNumber ? <span className="rounded-full bg-card px-2 py-0.5">към версия {message.revisionNumber}</span> : null}
-                  {company && !message.readByClient ? <span className="rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground">Нов</span> : null}
+                  {markVersions && message.revisionNumber ? <span className="bg-card px-2 py-0.5">към версия {message.revisionNumber}</span> : null}
+                  {company && !message.readByClient ? <span className="bg-primary px-2 py-0.5 font-semibold text-primary-foreground">Нов</span> : null}
                 </p>
                 <p className="mt-1 text-sm leading-6 break-words whitespace-pre-line">{message.body}</p>
               </li>
@@ -97,7 +97,7 @@ export function OfferQuestions({ messages, contactId, projectPublicId, changeOrd
           />
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <p className="text-xs text-muted-foreground">Отговорът идва тук и на имейла ви.</p>
-            <Button type="submit" isDisabled={sending} className="h-11 gap-2 rounded-full px-5">
+            <Button type="submit" isDisabled={sending} className="h-11 gap-2 px-5">
               <SendHorizontal className="size-4" /> Изпратете въпроса
             </Button>
           </div>

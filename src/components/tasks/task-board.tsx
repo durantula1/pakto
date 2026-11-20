@@ -171,13 +171,13 @@ function PersonChip({ active, onPress, label, avatar, counts, dashed }: {
 }) {
   return (
     <button type="button" aria-pressed={active} onClick={onPress}
-      className={cn("inline-flex min-h-9 items-center gap-2 rounded-full border bg-card py-1 pr-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+      className={cn("inline-flex min-h-9 items-center gap-2 border bg-card py-1 pr-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
         avatar ? "pl-1" : "pl-3", dashed && "border-dashed text-muted-foreground",
-        active && "border-sidebar bg-sidebar text-sidebar-foreground hover:bg-sidebar")}>
-      {avatar ? <span className={cn("grid size-6 place-items-center rounded-full text-3xs font-bold", active ? "bg-primary text-primary-foreground" : "bg-sidebar text-sidebar-foreground")}>{avatar}</span> : null}
+        active && "border-ink bg-ink text-paper hover:bg-ink")}>
+      {avatar ? <span className={cn("grid size-6 place-items-center text-3xs font-bold", active ? "bg-primary text-primary-foreground" : "bg-ink text-paper")}>{avatar}</span> : null}
       {label}
-      {counts ? <span className={cn("rounded-full px-1.5 text-2xs tabular-nums", active ? "bg-sidebar-accent" : "bg-muted")}>{counts.open}</span> : null}
-      {counts?.late ? <span className="rounded-full bg-destructive px-1.5 text-2xs tabular-nums text-white" title="Просрочени">{counts.late}</span> : null}
+      {counts ? <span className={cn(" px-1.5 text-2xs tabular-nums", active ? "bg-ink-soft" : "bg-muted")}>{counts.open}</span> : null}
+      {counts?.late ? <span className="bg-destructive px-1.5 text-2xs tabular-nums text-white" title="Просрочени">{counts.late}</span> : null}
     </button>
   );
 }
@@ -185,8 +185,8 @@ function PersonChip({ active, onPress, label, avatar, counts, dashed }: {
 function FilterChip({ active, onPress, children }: { active: boolean; onPress: () => void; children: React.ReactNode }) {
   return (
     <button type="button" aria-pressed={active} onClick={onPress}
-      className={cn("inline-flex min-h-8 items-center rounded-full border bg-card px-3 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        active && "border-sidebar bg-sidebar text-sidebar-foreground hover:bg-sidebar")}>
+      className={cn("inline-flex min-h-8 items-center border bg-card px-3 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        active && "border-ink bg-ink text-paper hover:bg-ink")}>
       {children}
     </button>
   );
@@ -198,14 +198,14 @@ function Column({ status, tasks, today, fixedProject, onOpen }: {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <section ref={setNodeRef} aria-label={taskStatusLabels[status]}
-      className={cn("flex min-w-0 flex-col gap-2 rounded-2xl border border-sidebar/10 bg-sidebar/[0.06] p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-sidebar/10 shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
+      className={cn("flex min-w-0 flex-col gap-2 rounded-2xl border border-ink/10 bg-ink/[0.06] p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-ink/10 shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
       <h2 className="flex items-center gap-2 px-1 py-0.5 text-sm font-semibold">
-        <span className={cn("size-2.5 rounded-full", taskStatusDots[status])} aria-hidden />
+        <span className={cn("size-2.5", taskStatusDots[status])} aria-hidden />
         {taskStatusLabels[status]}
         <span className="font-normal text-muted-foreground">{tasks.length}</span>
       </h2>
       {tasks.length ? tasks.map((task) => <TaskCard key={task.id} task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />)
-        : <p className="rounded-xl border border-dashed border-sidebar/30 px-3 py-6 text-center text-sm font-medium text-sidebar/70">Няма задачи</p>}
+        : <p className="rounded-xl border border-dashed border-ink/30 px-3 py-6 text-center text-sm font-medium text-ink/70">Няма задачи</p>}
     </section>
   );
 }
@@ -241,8 +241,8 @@ function CardView({ task, today, fixedProject, onOpen, overlay = false }: {
   }
 
   return (
-    <article className={cn("group relative flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs transition-[opacity,box-shadow,transform] duration-200 motion-reduce:transition-none",
-      !overlay && "hover:shadow-md", late && "border-destructive/40", pending && "opacity-60", overlay && "rotate-2 scale-[1.03] cursor-grabbing shadow-xl")}>
+    <article className={cn("group relative flex flex-col gap-2 rounded-xl border bg-card p-3 transition-[opacity,box-shadow,transform] duration-200 motion-reduce:transition-none",
+      !overlay && "", late && "border-destructive/40", pending && "opacity-60", overlay && "rotate-2 scale-[1.03] cursor-grabbing shadow-[6px_6px_0_var(--ink)]")}>
       {fixedProject ? null : <span className={cn("self-start rounded-md px-2 py-0.5 text-xs font-semibold", projectTone(task.projectId))}>{task.projectName}</span>}
       <button type="button" onClick={() => onOpen?.(task)} className="text-left font-medium leading-snug after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
         {task.title}
@@ -252,12 +252,12 @@ function CardView({ task, today, fixedProject, onOpen, overlay = false }: {
         <span className="ml-auto flex items-center gap-1.5">
           {task.canEdit && next && !overlay ? (
             <button type="button" onClick={advance} onPointerDown={(event) => event.stopPropagation()} disabled={pending} aria-label={`Премести към „${taskStatusLabels[next]}“`} title={`Към „${taskStatusLabels[next]}“`}
-              className="relative z-10 grid size-6 place-items-center rounded-full border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+              className="relative z-10 grid size-6 place-items-center border bg-background text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100">
               <ArrowRight className="size-3.5" />
             </button>
           ) : null}
           {task.assigneeName
-            ? <span className="grid size-6 place-items-center rounded-full bg-sidebar text-3xs font-bold text-sidebar-foreground" title={task.assigneeName}>{initials(task.assigneeName)}</span>
+            ? <span className="grid size-6 place-items-center bg-ink text-3xs font-bold text-paper" title={task.assigneeName}>{initials(task.assigneeName)}</span>
             : <span className="rounded-md bg-muted px-1.5 py-0.5">без отговорник</span>}
         </span>
       </div>
@@ -288,7 +288,7 @@ function ListGroup({ name, tasks, today, fixedProject, onOpen }: { name: string;
     <div>
       {name ? (
         <button type="button" aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-          <span className="grid size-7 place-items-center rounded-full bg-sidebar text-3xs font-bold text-sidebar-foreground">{name === "Без отговорник" ? "○" : initials(name)}</span>
+          <span className="grid size-7 place-items-center bg-ink text-3xs font-bold text-paper">{name === "Без отговорник" ? "○" : initials(name)}</span>
           <span className="font-semibold">{name}</span>
           <span className="text-sm text-muted-foreground">{openCount} отворени</span>
           {late ? <span className="text-sm font-semibold text-destructive">{late} просрочена</span> : null}
@@ -304,7 +304,7 @@ function ListGroup({ name, tasks, today, fixedProject, onOpen }: { name: string;
                 <span className={cn("font-medium", task.status === "done" && "text-muted-foreground line-through")}>{task.title}</span>
                 {fixedProject ? <span className="hidden sm:block" /> : <span className={cn("hidden w-fit rounded-md px-2 py-0.5 text-xs font-semibold sm:block", projectTone(task.projectId))}>{task.projectName}</span>}
                 <span className={cn("text-sm text-muted-foreground", overdue && "font-semibold text-destructive")}>{task.dueOn ? formatDue(task.dueOn, today) : "—"}</span>
-                <span className="w-fit rounded-full bg-muted px-2.5 py-0.5 text-xs">{taskStatusLabels[task.status]}</span>
+                <span className="w-fit bg-muted px-2.5 py-0.5 text-xs">{taskStatusLabels[task.status]}</span>
               </button>
             </li>
           );

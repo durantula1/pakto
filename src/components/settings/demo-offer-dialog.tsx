@@ -48,7 +48,7 @@ export function DemoOfferDialog({ isOpen, onOpenChange, organizationName, logo, 
               role="tab"
               aria-selected={view === key}
               onClick={() => setView(key)}
-              className={cn("flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground transition", view === key && "bg-background text-foreground shadow-sm")}
+              className={cn("flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium text-muted-foreground transition", view === key && "bg-background text-foreground")}
             >
               <Icon className="size-4" /> {label}
             </button>
@@ -60,7 +60,7 @@ export function DemoOfferDialog({ isOpen, onOpenChange, organizationName, logo, 
         </DialogClose>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-200/70 p-3 sm:p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-muted/70 p-3 sm:p-6">
         {view === "pdf" ? <PdfSheet organizationName={organizationName} logo={logo} /> : <PortalPage organizationName={organizationName} logo={logo} />}
       </div>
 
@@ -80,10 +80,10 @@ export function DemoOfferDialog({ isOpen, onOpenChange, organizationName, logo, 
 function PortalPage({ organizationName, logo }: { organizationName: string; logo: DocumentLogo | null }) {
   return (
     <div className="mx-auto grid max-w-3xl gap-3">
-      <div className="rounded-2xl bg-sidebar p-5 text-sidebar-foreground">
-        <p className="text-sm text-sidebar-foreground/70">Оферта · <span className="font-mono">{demoOffer.code}</span> · версия 1</p>
+      <div className="rounded-2xl bg-ink p-5 text-paper">
+        <p className="text-sm text-paper/70">Оферта · <span className="font-mono">{demoOffer.code}</span> · версия 1</p>
         <p className="mt-1 text-2xl font-semibold">{demoOffer.title}</p>
-        <p className="mt-1 text-sm text-sidebar-foreground/70">{organizationName} · {demoOffer.project}</p>
+        <p className="mt-1 text-sm text-paper/70">{organizationName} · {demoOffer.project}</p>
       </div>
       <DocumentBody document={demoOffer.document} brand={{ name: organizationName, logo }} />
     </div>
@@ -140,7 +140,7 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
   return (
     <div ref={frame} className="mx-auto w-full" style={{ maxWidth: SHEET_WIDTH, height: SHEET_HEIGHT * scale }}>
       <div
-        className="relative origin-top-left bg-white shadow-lg"
+        className="relative origin-top-left bg-white shadow-[6px_6px_0_var(--ink)]"
         style={{
           width: SHEET_WIDTH, height: SHEET_HEIGHT, transform: `scale(${scale})`,
           padding: "40pt 44pt 56pt", color: ink, fontFamily: "'Noto Sans', sans-serif", fontSize: "10pt", lineHeight: 1.4,

@@ -85,7 +85,7 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
           {loading ? <Loader2 className="size-4 animate-spin" /> : <ChevronDownIcon className="size-4" />}
         </Button>
       </div>
-      <Popover offset={4} className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">
+      <Popover offset={4} className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10">
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"
           renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !activated ? "Търсене…" : "Няма намерени клиенти."}</p>}

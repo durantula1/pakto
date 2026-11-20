@@ -29,7 +29,7 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   if (navigation.unlocked || confirmState.done || requestState.done) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-sidebar px-3.5 font-semibold text-white hover:bg-sidebar/90"><ArrowLeft className="size-4" /> Вашите проекти</Link>
+        <Link href="/portal" className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-ink px-3.5 font-semibold text-white hover:bg-ink/90"><ArrowLeft className="size-4" /> Вашите проекти</Link>
         {navigation.unlocked && navigation.projects.length > 1 ? (
           <DropdownMenuTrigger>
             <Button type="button" variant="outline" className="h-11 gap-1.5 rounded-xl bg-card px-3.5 text-sm"><ArrowLeftRight className="size-4" /> Изберете проект</Button>
@@ -64,13 +64,13 @@ export function ClientProjectsBar({ projectPublicId, organizationName, navigatio
   }
 
   return (
-    <div className="flex items-start gap-2 rounded-xl bg-sidebar px-4 py-3 text-sm text-sidebar-foreground">
+    <div className="flex items-start gap-2 rounded-xl bg-ink px-4 py-3 text-sm text-paper">
       <FolderKanban className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p>Ще изпратим код на имейла ви. След него тук виждате всичките си проекти при {organizationName}.</p>
         <UnlockCodeForms projectPublicId={projectPublicId} maskedEmail={navigation.maskedEmail} request={request} requestState={requestState} requesting={requesting} confirm={confirm} confirmState={confirmState} confirming={confirming} />
       </div>
-      <button type="button" onClick={() => setOpen(false)} aria-label="Затворете" className="-m-2 grid size-11 place-items-center rounded text-sidebar-foreground/50 hover:text-white"><X className="size-4" /></button>
+      <button type="button" onClick={() => setOpen(false)} aria-label="Затворете" className="-m-2 grid size-11 place-items-center rounded text-paper/50 hover:text-white"><X className="size-4" /></button>
     </div>
   );
 }
@@ -93,7 +93,7 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
         <form action={confirm} className="mt-3 flex flex-col gap-3">
           <input type="hidden" name="projectPublicId" value={projectPublicId} />
           <input type="hidden" name="otpId" value={otpId} />
-          <span className="text-sidebar-foreground/70">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
+          <span className="text-paper/70">Изпратихме код на {requestState.sentTo ?? maskedEmail}</span>
           <OtpInput label="Код от имейла" autoFocus disabled={confirming} className="text-foreground" />
           <Button type="submit" isDisabled={confirming} className="h-11 self-start px-5 text-sm">{confirming ? "Проверка…" : "Потвърдете"}</Button>
         </form>
@@ -101,7 +101,7 @@ function UnlockCodeForms({ projectPublicId, maskedEmail, request, requestState, 
         <form action={request} className="mt-2 flex flex-wrap items-center gap-2">
           <input type="hidden" name="projectPublicId" value={projectPublicId} />
           <Button type="submit" isDisabled={requesting} className="h-11 px-5 text-sm">{requesting ? "Изпращане…" : "Изпратете код"}</Button>
-          <span className="text-sidebar-foreground/60">{maskedEmail}</span>
+          <span className="text-paper/60">{maskedEmail}</span>
         </form>
       )}
       {error ? <p role="alert" className="mt-2 text-primary">{error}</p> : null}
@@ -122,7 +122,7 @@ export function UnlockProjectsCard({ projectPublicId, hidden, maskedEmail }: { p
   }, [confirmState.done, requestState.done, router]);
 
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-sidebar px-4 py-4 text-sm text-sidebar-foreground">
+    <div className="flex items-start gap-3 rounded-2xl bg-ink px-4 py-4 text-sm text-paper">
       <FolderKanban className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-white">{hidden === 1 ? "Имате още 1 проект" : `Имате още ${hidden} проекта`}</p>

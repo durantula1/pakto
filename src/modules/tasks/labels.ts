@@ -12,21 +12,21 @@ export const taskStatusLabels: Record<TaskStatus, string> = {
 
 /** Dot colour in a column header (brand palette; coral only as a fill, never as text). */
 export const taskStatusDots: Record<TaskStatus, string> = {
-  todo: "bg-brand-blue",
+  todo: "bg-blue-tint",
   doing: "bg-primary",
-  review: "bg-tile-sand-foreground/40",
-  done: "bg-brand-green",
+  review: "bg-warn/40",
+  done: "bg-ok-tint",
 };
 
 export const taskStatusOptions = taskStatuses.map((value) => ({ value, label: taskStatusLabels[value] }));
 
 /** Project tag colours, picked by a stable hash of the project id so a project keeps its colour everywhere. */
 const projectTones = [
-  "bg-tile-mint text-tile-mint-foreground",
-  "bg-tile-blue text-tile-blue-foreground",
-  "bg-tile-sand text-tile-sand-foreground",
-  "bg-tile-lilac text-tile-lilac-foreground",
-  "bg-tile-teal text-tile-teal-foreground",
+  "bg-ok-tint text-ok",
+  "bg-blue-tint text-blue",
+  "bg-warn-tint text-warn",
+  "bg-warn-tint text-warn",
+  "bg-muted text-foreground",
 ] as const;
 
 export function projectTone(projectId: string) {

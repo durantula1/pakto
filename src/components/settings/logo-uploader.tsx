@@ -164,18 +164,18 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
           disabled={busy || preparing}
           aria-label={shown ? "Виж цялата примерна оферта" : "Добави лого"}
           className={cn(
-            "group relative overflow-hidden rounded-xl bg-neutral-100 p-3 pb-0 text-left ring-1 ring-foreground/10 transition outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+            "group relative overflow-hidden rounded-xl bg-muted p-3 pb-0 text-left ring-1 ring-foreground/10 transition outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
             dragging && "ring-2 ring-primary",
           )}
         >
-          <div className="rounded-t-md bg-white px-5 pt-4 pb-3 text-neutral-900 shadow-sm">
-            <div className="flex items-start justify-between gap-4 border-b-2 border-neutral-900 pb-3">
+          <div className="rounded-t-md bg-white px-5 pt-4 pb-3 text-ink">
+            <div className="flex items-start justify-between gap-4 border-b-2 border-ink pb-3">
               <div className="min-w-0">
                 <div
                   style={miniBox ? { width: ptToRem(miniBox.width * MINI_SCALE), height: ptToRem(miniBox.height * MINI_SCALE) } : undefined}
-                  className={cn("mb-1.5 flex items-center transition-[width,height]", !miniBox && "h-10 w-36", !shown && "justify-center rounded-md border-2 border-dashed border-primary/40 bg-primary/5 text-primary-ink transition group-hover:border-primary group-hover:bg-primary/10", dragging && "border-primary bg-primary/10")}>
+                  className={cn("mb-1.5 flex items-center transition-[width,height]", !miniBox && "h-10 w-36", !shown && "justify-center rounded-md border-2 border-dashed border-primary/40 bg-primary/5 text-blue transition group-hover:border-primary group-hover:bg-primary/10", dragging && "border-primary bg-primary/10")}>
                   {preparing ? (
-                    <LoaderCircle className="size-4 animate-spin text-neutral-400" aria-hidden />
+                    <LoaderCircle className="size-4 animate-spin text-muted-foreground" aria-hidden />
                   ) : shown ? (
                     // eslint-disable-next-line @next/next/no-img-element -- local object URL or the stored PNG
                     <img src={shown} alt="" className="size-full object-contain object-left" />
@@ -184,27 +184,27 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
                   )}
                 </div>
                 <p className="truncate text-sm font-semibold">{organizationName}</p>
-                <p className="text-[0.625rem] text-neutral-500">Създадено с Pakto</p>
+                <p className="text-[0.625rem] text-muted-foreground">Създадено с Pakto</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[0.625rem] tracking-wide text-neutral-500 uppercase">Оферта · версия 1</p>
+                <p className="text-[0.625rem] tracking-wide text-muted-foreground uppercase">Оферта · версия 1</p>
                 <p className="text-sm font-semibold">ОФ-0001</p>
               </div>
             </div>
             <div className="mt-3 grid gap-1.5" aria-hidden>
-              <span className="h-2 w-2/5 rounded-full bg-neutral-200" />
-              <span className="h-1.5 w-4/5 rounded-full bg-neutral-100" />
+              <span className="h-2 w-2/5 bg-muted" />
+              <span className="h-1.5 w-4/5 bg-muted" />
             </div>
           </div>
           {shown ? (
-            <span className="absolute inset-0 flex items-center justify-center bg-neutral-950/0 opacity-0 transition group-hover:bg-neutral-950/45 group-hover:opacity-100 group-focus-visible:bg-neutral-950/45 group-focus-visible:opacity-100">
-              <span className="flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-medium text-neutral-900 shadow"><Maximize2 className="size-4" /> Виж цялата оферта</span>
+            <span className="absolute inset-0 flex items-center justify-center bg-ink/0 opacity-0 transition group-hover:bg-ink/45 group-hover:opacity-100 group-focus-visible:bg-ink/45 group-focus-visible:opacity-100">
+              <span className="flex items-center gap-2 bg-white px-3.5 py-1.5 text-sm font-medium text-ink shadow"><Maximize2 className="size-4" /> Виж цялата оферта</span>
             </span>
           ) : null}
         </button>
 
         {warnings.map((warning) => (
-          <p key={warning} className="flex gap-1.5 text-xs leading-5 text-amber-700"><TriangleAlert className="mt-0.5 size-3.5 shrink-0" />{warning}</p>
+          <p key={warning} className="flex gap-1.5 text-xs leading-5 text-warn"><TriangleAlert className="mt-0.5 size-3.5 shrink-0" />{warning}</p>
         ))}
 
         {shown ? (
@@ -213,7 +213,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
             <span aria-hidden className="text-xs text-muted-foreground">Размер в офертите</span>
             <div className="grid grid-cols-3 gap-0.5 rounded-lg bg-muted p-0.5">
               {LOGO_SIZES.map((option) => (
-                <label key={option} className="flex h-7 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium text-muted-foreground transition has-checked:bg-background has-checked:text-foreground has-checked:shadow-sm has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
+                <label key={option} className="flex h-7 cursor-pointer items-center justify-center rounded-md px-2.5 text-xs font-medium text-muted-foreground transition has-checked:bg-background has-checked:text-foreground has-focus-visible:ring-3 has-focus-visible:ring-ring/50">
                   <input type="radio" name="logoSize" value={option} aria-label={logoSizeLabels[option]} checked={size === option} onChange={() => changeSize(option)} className="sr-only" />
                   {logoSizeLabels[option]}
                 </label>
@@ -226,7 +226,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
           {pending ? (
             <>
               <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="size-2 shrink-0 rounded-full bg-amber-500" aria-hidden />
+                <span className="size-2 shrink-0 bg-warn" aria-hidden />
                 <span className="truncate">Не е запазено · {pending.file.name}</span>
               </p>
               <div className="flex gap-1.5">
@@ -239,7 +239,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
           ) : current ? (
             <>
               <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="size-4 shrink-0 rounded-full bg-brand-green p-0.5 text-[#102b38]" aria-hidden />
+                <Check className="size-4 shrink-0 bg-ok-tint p-0.5 text-ink" aria-hidden />
                 <span className="truncate">{details}</span>
               </p>
               <div className="flex gap-1.5">
@@ -274,7 +274,7 @@ export function LogoUploader({ organizationName, initialUrl, initialDimensions, 
         canOpenPdf={!pending && !!current}
         footer={pending ? (
           <>
-            {warnings.length ? <p className="mr-auto flex max-w-xl gap-1.5 text-xs text-amber-700"><TriangleAlert className="size-3.5 shrink-0" />{warnings[0]}</p> : null}
+            {warnings.length ? <p className="mr-auto flex max-w-xl gap-1.5 text-xs text-warn"><TriangleAlert className="size-3.5 shrink-0" />{warnings[0]}</p> : null}
             <Button variant="ghost" onPress={pick} isDisabled={busy || preparing} className="h-9 px-3">Избери друг файл</Button>
             <Button onPress={save} isDisabled={busy} className="h-9 px-4">
               {busy ? <LoaderCircle className="animate-spin" /> : null} Запази логото

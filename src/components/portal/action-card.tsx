@@ -51,8 +51,8 @@ export function PortalSteps({ steps, calm, calmTitle = "Не е нужно да 
 }) {
   if (!steps.length) return calm ? (
     // Compact on purpose: with nothing to do it is reassurance, not the page's lead.
-    <div className={cn("flex items-start gap-3 rounded-3xl bg-tile-mint px-4 py-3.5 text-tile-mint-foreground", className)}>
-      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-4" strokeWidth={2.5} /></span>
+    <div className={cn("flex items-start gap-3 rounded-3xl bg-ok-tint px-4 py-3.5 text-ok", className)}>
+      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center bg-ok-tint"><Check className="size-4" strokeWidth={2.5} /></span>
       <span className="flex flex-col text-sm leading-5">
         <b className="text-base leading-6 font-semibold">{calmTitle}</b>
         {calm === true ? <span>Когато фирмата изпрати нова оферта или промяна, ще получите имейл.</span> : calm}
@@ -71,32 +71,32 @@ function ActionCard({ step }: { step: PortalStep }) {
   const Icon = accept ? Hammer : FileText;
   const urgent = step.due ? daysLeft(step.due) <= 2 : false;
   return (
-    <Link href={step.href} className="group relative isolate flex flex-col gap-5 overflow-hidden rounded-3xl bg-sidebar p-5 text-sidebar-foreground sm:p-6">
+    <Link href={step.href} className="group relative isolate flex flex-col gap-5 overflow-hidden rounded-3xl bg-ink p-5 text-paper sm:p-6">
       {/* Two quiet rings in the corner: the card's only ornament. */}
       <svg aria-hidden="true" viewBox="0 0 200 200" className="pointer-events-none absolute -top-16 -right-16 -z-10 size-56 text-white/[0.06]">
         <circle cx="100" cy="100" r="60" fill="none" stroke="currentColor" strokeWidth="18" />
         <circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" strokeWidth="2" />
       </svg>
       <span className="flex items-center justify-between gap-3">
-        <span aria-hidden="true" className={cn("grid size-10 shrink-0 place-items-center rounded-full text-sidebar", accept ? "bg-brand-green" : "bg-primary")}>
+        <span aria-hidden="true" className={cn("grid size-10 shrink-0 place-items-center text-ink", accept ? "bg-ok-tint" : "bg-primary")}>
           <Icon className="size-4.5" strokeWidth={2.25} />
         </span>
         {step.due ? (
-          <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold", urgent ? "bg-primary text-sidebar" : "bg-white/10")}>
+          <span className={cn("inline-flex shrink-0 items-center gap-1.5 px-3 py-1 text-xs font-semibold", urgent ? "bg-primary text-ink" : "bg-white/10")}>
             <Clock3 className="size-3.5" aria-hidden="true" /> {daysLeftText(step.due)}
           </span>
         ) : null}
       </span>
       <span className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-sidebar-foreground/75">{step.kind}</span>
+        <span className="text-sm font-medium text-paper/75">{step.kind}</span>
         <span className="text-2xl leading-tight font-semibold tracking-tight text-balance text-white">{step.title}</span>
-        {step.detail ? <span className="text-sm text-sidebar-foreground/75">{step.detail}</span> : null}
+        {step.detail ? <span className="text-sm text-paper/75">{step.detail}</span> : null}
       </span>
       <span className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm text-sidebar-foreground/75">{step.due ? `Отговорете до ${formatShortDay(step.due)}` : null}</span>
-        <span className={cn("inline-flex h-12 items-center gap-2 rounded-full pr-2 pl-5 text-sm font-semibold text-sidebar transition-transform group-hover:translate-x-0.5", accept ? "bg-brand-green" : "bg-primary")}>
+        <span className="text-sm text-paper/75">{step.due ? `Отговорете до ${formatShortDay(step.due)}` : null}</span>
+        <span className={cn("inline-flex h-12 items-center gap-2 pr-2 pl-5 text-sm font-semibold text-ink transition-transform group-hover:translate-x-0.5", accept ? "bg-ok-tint" : "bg-primary")}>
           {step.action}
-          <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-sidebar/10"><ArrowRight className="size-4" /></span>
+          <span aria-hidden="true" className="grid size-8 place-items-center bg-ink/10"><ArrowRight className="size-4" /></span>
         </span>
       </span>
     </Link>

@@ -249,7 +249,7 @@ export function QuickChangeForm({
         </div>
       </div>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
+      <section className="rounded-2xl border bg-card p-4 sm:p-6">
         <p className="font-semibold">Какво се променя</p>
         <p className="text-sm text-muted-foreground">
           Опиши разликата спрямо одобрената оферта.
@@ -268,7 +268,7 @@ export function QuickChangeForm({
         />
       </section>
 
-      <section className="grid gap-5 rounded-2xl border bg-card p-4 shadow-sm sm:grid-cols-2 sm:p-6">
+      <section className="grid gap-5 rounded-2xl border bg-card p-4 sm:grid-cols-2 sm:p-6">
         <div>
           <label htmlFor="subtotal" className="mb-2 block text-sm font-medium">
             Цена без ДДС
@@ -318,7 +318,7 @@ export function QuickChangeForm({
               aria-pressed={scheduleType === value}
               onPress={() => setScheduleType(value)}
               variant={scheduleType === value ? "default" : "outline"}
-              className={`min-h-11 rounded-full border px-4 text-sm font-medium ${scheduleType === value ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
+              className={`min-h-11 border px-4 text-sm font-medium ${scheduleType === value ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-muted"}`}
             >
               {label}
             </Button>
@@ -362,7 +362,7 @@ export function QuickChangeForm({
           </div>
         </section>
       )}
-      <section className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
+      <section className="rounded-2xl border bg-card p-4 sm:p-6">
         <VatRateField value={vat ?? String(Number(visibleOffers.find((offer) => offer.id === defaultOfferId)?.taxRate ?? (visibleOffers.length === 1 ? visibleOffers[0]!.taxRate : defaultTaxRate)))} onChange={setVat} />
       </section>
       <StagedAttachments files={files} onChange={setFiles} />

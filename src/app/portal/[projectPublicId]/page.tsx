@@ -149,8 +149,8 @@ export default async function PortalProjectPage({
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <div className="flex flex-col gap-4">
-        <p className="inline-flex max-w-full min-w-0 items-center gap-1.5 self-start rounded-full bg-card px-3 py-2 text-sm text-muted-foreground">
-          <MapPin className="size-4 shrink-0 text-primary-ink" />
+        <p className="inline-flex max-w-full min-w-0 items-center gap-1.5 self-start bg-card px-3 py-2 text-sm text-muted-foreground">
+          <MapPin className="size-4 shrink-0 text-blue" />
           <span className="truncate">{data.project.siteAddress}</span>
         </p>
         <h1 className="max-w-[18ch] text-[2rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
@@ -174,7 +174,7 @@ export default async function PortalProjectPage({
       {!active ? (
         <p
           role="status"
-          className="flex items-center gap-3 rounded-3xl bg-tile-stone px-5 py-4 text-sm text-tile-stone-foreground"
+          className="flex items-center gap-3 rounded-3xl bg-muted px-5 py-4 text-sm text-muted-foreground"
         >
           <Lock className="size-4 shrink-0 text-muted-foreground" />
           <span>
@@ -268,19 +268,19 @@ export default async function PortalProjectPage({
           <MotionDetails
             defaultOpen={!all.hasAgreement}
             // Open, the row and its list sit in one framed well, so it is clear what the row unfolded.
-            className="group rounded-[2rem] transition-[background-color,padding,box-shadow] duration-300 data-[state=open]:bg-foreground/[0.04] data-[state=open]:p-1.5 data-[state=open]:shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--foreground)_12%,transparent)] [&>summary::-webkit-details-marker]:hidden"
+            className="group transition-[background-color,padding,box-shadow] duration-300 data-[state=open]:bg-foreground/[0.04] data-[state=open]:p-1.5 data-[state=open]:shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--foreground)_12%,transparent)] [&>summary::-webkit-details-marker]:hidden"
           >
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-full bg-card py-2 pr-2 pl-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 bg-card py-2 pr-2 pl-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50">
               <span className="inline-flex items-center gap-2.5">
-                <span aria-hidden="true" className="grid size-9 place-items-center rounded-full bg-tile-stone text-tile-stone-foreground">
+                <span aria-hidden="true" className="grid size-9 place-items-center bg-muted text-muted-foreground">
                   <History className="size-4" />
                 </span>
                 {agreed.size ? "Други оферти и промени" : "Всички оферти и промени"}
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums">
+                <span className="bg-muted px-2 py-0.5 text-xs tabular-nums">
                   {documents.length}
                 </span>
               </span>
-              <span aria-hidden="true" className="grid size-10 place-items-center rounded-full bg-muted">
+              <span aria-hidden="true" className="grid size-10 place-items-center bg-muted">
                 <ChevronDown className="size-4 transition-transform duration-300 group-data-[state=open]:rotate-180" />
               </span>
             </summary>
