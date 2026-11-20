@@ -11,36 +11,40 @@ import { formatPercent } from "@/lib/money";
 import { dateOnly, dateWithTime } from "@/lib/dates";
 import { daysLabel } from "@/modules/change-orders/schedule";
 
-// Full Noto Sans (Latin + Cyrillic + €). The @fontsource woff files are unicode-range subsets,
-// and react-pdf cannot merge subsets into one family, so every missing glyph rendered blank.
+// The product's text face, Inter Tight, as full static TTFs (Latin + Cyrillic + €). IBM Plex Mono is
+// left out: fontkit cannot read the Google Fonts TTF. The @fontsource woff files are unicode-range subsets, and react-pdf
+// cannot merge subsets into one family, so every missing glyph rendered blank.
 const fontDirectory = path.join(process.cwd(), "src/modules/pdf/fonts");
-Font.register({ family: "NotoSans", fonts: [
-  { src: path.join(fontDirectory, "NotoSans-Regular.ttf"), fontWeight: 400 },
-  { src: path.join(fontDirectory, "NotoSans-SemiBold.ttf"), fontWeight: 600 },
+Font.register({ family: "InterTight", fonts: [
+  { src: path.join(fontDirectory, "InterTight-Regular.ttf"), fontWeight: 400 },
+  { src: path.join(fontDirectory, "InterTight-SemiBold.ttf"), fontWeight: 600 },
+  { src: path.join(fontDirectory, "InterTight-ExtraBold.ttf"), fontWeight: 800 },
 ] });
 // Words are wrapped as a whole; the default hyphenation splits Bulgarian words at random places.
 Font.registerHyphenationCallback((word) => [word]);
 
-const ink = "#1c2420";
-const muted = "#66706b";
-const rule = "#dfe3df";
+// The "Ясно" palette: ink, grey text, the hairline inside blocks, and the approved green.
+const ink = "#0b0b0b";
+const muted = "#6d6d68";
+const rule = "#e3e2dc";
+const okTint = "#e3f1e8";
 
 const styles = StyleSheet.create({
-  page: { fontFamily: "NotoSans", paddingTop: 40, paddingBottom: 56, paddingHorizontal: 44, color: ink, fontSize: 10, lineHeight: 1.4 },
+  page: { fontFamily: "InterTight", paddingTop: 40, paddingBottom: 56, paddingHorizontal: 44, color: ink, fontSize: 10, lineHeight: 1.4 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 16, borderBottom: `1.5 solid ${ink}` },
   organization: { fontSize: 11, fontWeight: 600 },
   logo: { objectFit: "contain", marginBottom: 8 },
-  kind: { fontSize: 9, color: muted, textTransform: "uppercase", letterSpacing: 0.6 },
-  code: { fontSize: 16, fontWeight: 600, textAlign: "right" },
-  title: { fontSize: 18, fontWeight: 600, marginTop: 18, lineHeight: 1.25 },
+  kind: { fontSize: 8, color: muted, textTransform: "uppercase", letterSpacing: 0.6 },
+  code: { fontSize: 15, fontWeight: 600, textAlign: "right" },
+  title: { fontSize: 22, fontWeight: 800, marginTop: 18, lineHeight: 1.1, letterSpacing: -0.6 },
   facts: { flexDirection: "row", flexWrap: "wrap", marginTop: 12, gap: 0 },
   fact: { width: "50%", paddingVertical: 3, paddingRight: 12 },
-  factLabel: { fontSize: 8, color: muted, textTransform: "uppercase", letterSpacing: 0.4 },
+  factLabel: { fontSize: 7, color: muted, textTransform: "uppercase", letterSpacing: 0.4 },
   section: { marginTop: 22 },
   heading: { fontSize: 11, fontWeight: 600, marginBottom: 6 },
   paragraph: { color: ink },
   note: { marginTop: 6, color: muted },
-  tableHead: { flexDirection: "row", paddingVertical: 6, borderBottom: `1 solid ${ink}`, fontSize: 8, color: muted, textTransform: "uppercase", letterSpacing: 0.4 },
+  tableHead: { flexDirection: "row", paddingVertical: 6, borderBottom: `1 solid ${ink}`, fontSize: 7, color: muted, textTransform: "uppercase", letterSpacing: 0.4 },
   tableRow: { flexDirection: "row", paddingVertical: 7, borderBottom: `0.75 solid ${rule}` },
   colDescription: { width: "52%", paddingRight: 10 },
   colQuantity: { width: "14%", textAlign: "right", paddingRight: 8 },
@@ -48,16 +52,16 @@ const styles = StyleSheet.create({
   colTotal: { width: "18%", textAlign: "right" },
   summary: { marginTop: 10, marginLeft: "auto", width: "48%" },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 },
-  summaryTotal: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 8, borderTop: `1.5 solid ${ink}`, fontSize: 12, fontWeight: 600 },
-  decision: { marginTop: 22, padding: 12, borderRadius: 6, backgroundColor: "#f1f4f1" },
+  summaryTotal: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, paddingTop: 8, borderTop: `1.5 solid ${ink}`, fontSize: 13, fontWeight: 800 },
+  decision: { marginTop: 22, padding: 12, border: `1 solid ${ink}`, backgroundColor: okTint },
   signature: { marginTop: 10, width: 200 },
   signatureImage: { height: 70, objectFit: "contain", objectPosition: "left" },
   signatureCaption: { fontSize: 8, color: muted, marginTop: 3, paddingTop: 3, borderTop: `0.75 solid ${muted}` },
   photos: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
   photo: { width: "49%", marginBottom: 10 },
-  photoImage: { width: "100%", height: 170, objectFit: "cover", borderRadius: 4 },
+  photoImage: { width: "100%", height: 170, objectFit: "cover" },
   photoCaption: { fontSize: 8, color: muted, marginTop: 3 },
-  footer: { position: "absolute", bottom: 24, left: 44, right: 44, flexDirection: "row", justifyContent: "space-between", fontSize: 7, color: muted, borderTop: `0.75 solid ${rule}`, paddingTop: 6 },
+  footer: { position: "absolute", bottom: 24, left: 44, right: 44, flexDirection: "row", justifyContent: "space-between", fontSize: 6.5, color: muted, borderTop: `0.75 solid ${rule}`, paddingTop: 6 },
 });
 
 type Line = { description: string; quantity: string; unit: string | null; unitPrice: string; lineTotal: string };

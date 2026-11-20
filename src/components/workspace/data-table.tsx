@@ -158,7 +158,7 @@ function SkeletonCell({ column }: { column: DataTableColumn }) {
     case "stack":
       return <><SkeletonLine className="h-3.5 w-40 max-w-full" align={right} /><SkeletonLine className="h-3 w-28 max-w-full" align={right} /></>;
     case "badge":
-      return <Skeleton className={cn("h-5 w-20 rounded-full", right && "ml-auto")} />;
+      return <Skeleton className={cn("h-5 w-20", right && "ml-auto")} />;
     case "action":
       return <Skeleton className={cn("h-8 w-28 rounded-lg", right && "ml-auto")} />;
     case "none":

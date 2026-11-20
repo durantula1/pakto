@@ -32,17 +32,19 @@ Pakto (formerly MadeFlow) is a mobile-first pilot for agreed offers, change orde
 ## Architecture
 
 **Two separate identities.**
-- *Staff* sign in with Better Auth (`src/lib/auth/server.ts`, tables `app.auth_*`, bcrypt passwords, emails through `sendEmail`); `getSessionUser()` reads the session. `src/proxy.ts` (Next 16's replacement for middleware; it must sit next to `src/app`, a root `proxy.ts` is ignored) only checks that the session cookie exists for `/app`, `/onboarding` and `/welcome`; pages verify the session itself. Server code gets the caller through `requireTenantContext()` in `src/lib/authz/tenant-context.ts` (organization, role, permissions), then `requireProjectCapability()` (`project-access.ts`) and `can(member, "<permission>")` (`permissions.ts`).
-- *Clients* never have an auth account. `/access/[token]` exchanges a bootstrap secret for an HttpOnly device session cookie scoped to one project (`src/modules/change-portal/session.ts`). Portal pages live under `/portal/[projectPublicId]`. Only SHA-256 hashes of tokens are stored (`src/lib/crypto/portal-token.ts`), and changing `PORTAL_LINK_SECRET` invalidates every client link.
+
+- _Staff_ sign in with Better Auth (`src/lib/auth/server.ts`, tables `app.auth_*`, bcrypt passwords, emails through `sendEmail`); `getSessionUser()` reads the session. `src/proxy.ts` (Next 16's replacement for middleware; it must sit next to `src/app`, a root `proxy.ts` is ignored) only checks that the session cookie exists for `/app`, `/onboarding` and `/welcome`; pages verify the session itself. Server code gets the caller through `requireTenantContext()` in `src/lib/authz/tenant-context.ts` (organization, role, permissions), then `requireProjectCapability()` (`project-access.ts`) and `can(member, "<permission>")` (`permissions.ts`).
+- _Clients_ never have an auth account. `/access/[token]` exchanges a bootstrap secret for an HttpOnly device session cookie scoped to one project (`src/modules/change-portal/session.ts`). Portal pages live under `/portal/[projectPublicId]`. Only SHA-256 hashes of tokens are stored (`src/lib/crypto/portal-token.ts`), and changing `PORTAL_LINK_SECRET` invalidates every client link.
 
 **Data access is server-only.** The browser never reads business tables directly. All reads and writes go through Drizzle (`getDatabase()` in `src/db/index.ts`, `postgres.js`, `server-only`). Every query must filter by `organizationId` from the tenant context. Files (attachments, signatures, logos) live on the server disk under `FILES_DIR` via `src/lib/storage/`: uploads go through a signed ticket to `PUT /api/uploads`, private files are served by routes that check access, logos by `/api/logos`.
 
 **Domain modules** in `src/modules/<domain>/` are split by role:
+
 - `queries.ts`: reads used by Server Components; return allow-listed DTOs, not raw rows.
 - `actions.ts` (and `*-actions.ts`): `"use server"` Server Actions. They parse `FormData` with zod, check access as above, write via Drizzle, call `revalidatePath`, and return a `{ error?, ok? }` state for `useActionState`.
 - Other files hold domain logic (`pricing.ts`, `revision-diff.ts`, `state.ts`, and so on).
 
-The typeface is Sofia Sans (`src/app/fonts/sofia-sans-standard.woff2`, loaded with `next/font/local` in the root layout as `--font-sans`). Its default Cyrillic is the Bulgarian letterforms and browsers ignore `font-feature-settings: "locl" 0`, so the file is regenerated with the standard forms as default by `scripts/fonts/sofia-sans-standard.py`; do not swap it for the Google Fonts copy.
+The typefaces are Inter Tight (text, `--font-sans`) and IBM Plex Mono (labels, numbers, amounts, `--font-mono`), loaded with `next/font/google` in the root layout. Both render the standard Cyrillic letterforms under `lang="bg"`; do not switch to fonts that draw the Bulgarian forms (Manrope, Unbounded, Cormorant, Lora, Sofia Sans).
 
 `src/app` stays thin: routes compose module queries with components from `src/components/<domain>/`, the shared workspace chrome in `src/components/workspace/` (page shell, header, data table, filters), and the shadcn/React Aria primitives in `src/components/ui/`.
 
@@ -59,5 +61,5 @@ The "passport" model of the earlier MadeFlow product was dropped on 06.10.2026 (
 ## Conventions
 
 - **Copy:** Pakto is not only for construction firms. Say "проект", never "обект". Marketing email subjects mention "Pakto" plus offers and client confirmation.
-- **Brand:** palette navy, coral, cream, green (`src/app/globals.css`). Coral is never text on a light background; "approved" statuses stay green. Logo and icon files are in `docs/brand/`.
+- **Brand:** the "Ясно" design (20.11.2026): paper `--paper`, ink `--ink`, one blue `--blue`, and status colours that each mean one thing: `--ok` approved, `--warn` change requested, `--late` late or declined (`src/app/globals.css`). Square corners and 1px ink lines instead of shadows and rounded cards. "Approved" statuses stay green. Logo and icon files are in `docs/brand/`.
 - **Checks before a commit:** `pnpm typecheck && pnpm lint`, then `pnpm format` on touched files. No tests (see AGENTS.md).

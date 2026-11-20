@@ -19,7 +19,7 @@ export function AuthForm({ mode, next, defaultEmail, google }: { mode: "sign-in"
   const withNext = (path: string) => `${path}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
   // After sign-up the form has done its job: one panel with the next steps, so nothing can be sent twice.
   if (state.signedUp) return <div className="space-y-4">
-    <div role="status" className="rounded-xl bg-tile-mint px-4 py-3.5 text-sm text-tile-mint-foreground">
+    <div role="status" className="rounded-xl bg-ok-tint px-4 py-3.5 text-sm text-ok">
       <p className="font-semibold">Провери имейла си</p>
       <p className="mt-1">{state.message}</p>
       {state.unconfirmedEmail ? <p className="mt-1 break-all font-medium">{state.unconfirmedEmail}</p> : null}
@@ -80,7 +80,7 @@ function ResendConfirmation({ email, next }: { email: string; next?: string }) {
     <input type="hidden" name="email" value={email} />
     {next ? <input type="hidden" name="next" value={next} /> : null}
     {state.message
-      ? <p role="status" className="rounded-xl bg-tile-mint px-3 py-2.5 text-sm text-tile-mint-foreground">{state.message}</p>
+      ? <p role="status" className="rounded-xl bg-ok-tint px-3 py-2.5 text-sm text-ok">{state.message}</p>
       : <button disabled={pending} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border bg-background px-4 text-sm font-semibold disabled:opacity-60">{pending && <LoaderCircle className="size-4 animate-spin" />}Изпрати линка пак</button>}
     {state.error && <p role="alert" className="text-sm text-destructive">{state.error}</p>}
   </form>;

@@ -97,7 +97,7 @@ export default async function ClientPage({ params }: PageProps<"/app/clients/[cl
         </div>
       ) : null}
       {waiting ? (
-        <p role="status" className="rounded-xl bg-tile-sand px-4 py-3 text-sm text-tile-sand-foreground">
+        <p role="status" className="rounded-xl bg-warn-tint px-4 py-3 text-sm text-warn">
           {waiting === 1 ? "1 оферта или промяна чака решение от клиента." : `${waiting} оферти и промени чакат решение от клиента.`}
         </p>
       ) : null}

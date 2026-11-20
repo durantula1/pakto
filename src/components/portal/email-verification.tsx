@@ -32,19 +32,19 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
   const pending = finished ? null : confirmState.otpId ? confirmState : changeState.otpId ? changeState : claimState.otpId ? claimState : null;
 
   if (finished || (verified && !changing && !pending)) {
-    const changeButton = finished ? null : <button type="button" onClick={() => setChanging(true)} className={compact ? "text-sidebar-foreground/60 underline hover:text-sidebar-foreground" : "text-muted-foreground underline"}>Сменете имейла</button>;
+    const changeButton = finished ? null : <button type="button" onClick={() => setChanging(true)} className={compact ? "text-paper/60 underline hover:text-paper" : "text-muted-foreground underline"}>Сменете имейла</button>;
     if (compact) {
       return (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 font-semibold text-sidebar-foreground"><ShieldCheck className="size-3.5 text-primary" /> Имейлът е потвърден</span>
-          <span className="text-sidebar-foreground/60">Кодовете за решения идват на {maskedEmail}</span>
+          <span className="inline-flex items-center gap-1.5 bg-white/10 px-2.5 py-1 font-semibold text-paper"><ShieldCheck className="size-3.5 text-primary" /> Имейлът е потвърден</span>
+          <span className="text-paper/60">Кодовете за решения идват на {maskedEmail}</span>
           {changeButton}
         </div>
       );
     }
     return (
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
-        <p className="flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-primary-ink" /> Имейлът е потвърден · кодовете идват на {maskedEmail}</p>
+        <p className="flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-blue" /> Имейлът е потвърден · кодовете идват на {maskedEmail}</p>
         {changeButton}
       </div>
     );
@@ -57,7 +57,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
         <input type="hidden" name="otpId" value={pending.otpId} />
         <input type="hidden" name="step" value={pending.step} />
         <input type="hidden" name="sentTo" value={pending.sentTo} />
-        <p className="flex items-center gap-2 text-sm font-medium"><MailCheck className="size-4 text-primary-ink" />
+        <p className="flex items-center gap-2 text-sm font-medium"><MailCheck className="size-4 text-blue" />
           {pending.step === "email_change" ? `Код за потвърждение на смяната е изпратен до текущия ви имейл ${pending.sentTo}` : `Изпратихме код до ${pending.sentTo}`}
         </p>
         <OtpInput label="Код от имейла" autoFocus disabled={confirming} />
@@ -86,7 +86,7 @@ export function PortalEmailVerification({ projectPublicId, maskedEmail, hasEmail
   return (
     <form action={requestClaim} className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
       <input type="hidden" name="projectPublicId" value={projectPublicId} />
-      <p className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-primary-ink" /> Потвърдете имейла си</p>
+      <p className="flex items-center gap-2 font-medium"><ShieldCheck className="size-4 text-blue" /> Потвърдете имейла си</p>
       <p className="text-sm leading-6 text-muted-foreground">
         {hasEmail
           ? `Преди да вземете решение, ще ви изпратим код до ${maskedEmail}. Само вие ще можете да одобрявате или отказвате оферти. Фирмата няма достъп до кода.`

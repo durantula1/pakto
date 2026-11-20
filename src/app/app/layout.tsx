@@ -122,29 +122,33 @@ export default async function WorkspaceLayout({
   ];
   const recent = recentNotifications(context);
   return (
-    <div id={WORKSPACE_SHELL_ID} data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"} className="group/shell min-h-dvh bg-background transition-[padding] duration-200 motion-reduce:transition-none lg:pl-[16.875rem] lg:data-[sidebar=collapsed]:pl-[5.125rem]">
+    <div id={WORKSPACE_SHELL_ID} data-ink={sidebarCollapsed ? "collapsed" : "expanded"} className="group/shell min-h-dvh bg-background transition-[padding] duration-200 motion-reduce:transition-none lg:pl-[16.875rem] lg:data-[sidebar=collapsed]:pl-[5.125rem]">
       <Suspense fallback={null}><NavigationProgress /></Suspense>
       <LiveNotifications />
       <Suspense fallback={null}><ActionNotice /></Suspense>
-      <aside className="hidden flex-col overflow-x-hidden rounded-2xl border bg-card p-3 text-foreground shadow-[0_0.625rem_1.875rem_-1.125rem_rgb(16_43_56/0.45)] transition-[width,padding] duration-200 motion-reduce:transition-none lg:fixed lg:inset-y-2.5 lg:left-2.5 lg:z-40 lg:flex lg:w-64 lg:overflow-y-auto lg:group-data-[sidebar=collapsed]/shell:w-16 lg:group-data-[sidebar=collapsed]/shell:px-2">
-        <Link href="/app" title={context.organizationName} className="flex items-center gap-2 rounded-xl p-1 hover:bg-muted lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:p-0.5">
-          <Image src="/pakto-mark.svg" alt="Pakto" width={32} height={32} loading="eager" className="size-8 shrink-0" />
-          <span className="line-clamp-2 min-w-0 text-sm leading-tight font-semibold lg:group-data-[sidebar=collapsed]/shell:sr-only">{context.organizationName}</span>
+      <aside className="hidden flex-col overflow-x-hidden border-r border-ink bg-paper text-foreground transition-[width] duration-200 motion-reduce:transition-none lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-[16.875rem] lg:overflow-y-auto lg:group-data-[sidebar=collapsed]/shell:w-[5.125rem]">
+        <Link href="/app" aria-label="Pakto, работен преглед" className="flex h-[3.75rem] shrink-0 items-center border-b border-ink px-5 lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0">
+          <Image src="/pakto-logo.svg" alt="" width={73} height={24} loading="eager" className="h-6 w-auto lg:group-data-[sidebar=collapsed]/shell:hidden" />
+          <Image src="/pakto-mark.svg" alt="" width={32} height={32} loading="eager" className="hidden size-8 lg:group-data-[sidebar=collapsed]/shell:block" />
         </Link>
-        <nav aria-label="Основна навигация" className="mt-5 flex flex-col gap-4">
+        <div title={context.organizationName} className="border-b border-ink px-5 py-4 lg:group-data-[sidebar=collapsed]/shell:sr-only">
+          <p className="line-clamp-2 text-sm leading-tight font-bold">{context.organizationName}</p>
+          <p className="mt-1 truncate font-mono text-2xs text-muted-foreground">{roleLabel(context)}</p>
+        </div>
+        <nav aria-label="Основна навигация" className="flex flex-col gap-4 py-4">
           {groups.map((group) => (
-            <div key={group.label} className="flex flex-col gap-0.5">
-              <span className="px-2.5 pb-1 text-xs font-semibold text-muted-foreground lg:group-data-[sidebar=collapsed]/shell:sr-only">{group.label}</span>
+            <div key={group.label} className="flex flex-col">
+              <span className="px-5 pb-1.5 font-mono text-2xs tracking-[0.06em] text-muted-foreground uppercase lg:group-data-[sidebar=collapsed]/shell:sr-only">{group.label}</span>
               {group.links.map((link) => <NavLink key={link.href} href={link.href} label={link.label} icon={link.icon} />)}
             </div>
           ))}
         </nav>
-        <div className="mt-auto pt-4">
+        <div className="mt-auto border-t border-ink p-3">
           <UserMenu variant="sidebar" {...userMenu} />
         </div>
       </aside>
       <section className="min-w-0 pb-24 lg:pb-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 bg-background/85 px-4 backdrop-blur sm:px-6 lg:pr-7 lg:pl-4">
+        <header className="sticky top-0 z-30 flex h-[3.75rem] items-center justify-between gap-3 border-b border-ink bg-background/90 px-4 backdrop-blur sm:px-6 lg:px-7">
           <Wordmark href="/app" className="lg:hidden" />
           <div className="hidden min-w-0 items-center gap-3 lg:flex">
             <SidebarToggle />
@@ -158,20 +162,20 @@ export default async function WorkspaceLayout({
           </div>
         </header>
         {/* Collapsing gives the content the room the sidebar frees, not just a left shift. */}
-        <main className="max-w-content px-4 pt-2 pb-6 transition-[max-width] duration-200 motion-reduce:transition-none sm:px-6 lg:pr-7 lg:pl-4 lg:group-data-[sidebar=collapsed]/shell:max-w-[93.5rem]">
+        <main className="max-w-content px-4 pt-6 pb-8 transition-[max-width] duration-200 motion-reduce:transition-none sm:px-6 lg:px-7 lg:pt-8 lg:group-data-[sidebar=collapsed]/shell:max-w-[93.5rem]">
           {pendingDeletion ? <div className="mb-6"><DeletionPendingBanner deleteOn={deletionDateFormat.format(accountDeletionDate(pendingDeletion))} companyName={account?.closureRequested ? context.organizationName : null} /></div> : null}
           {account?.consentMissing ? <div className="mb-6"><ConsentBanner /></div> : null}
           {children}
         </main>
         <DownloadTray aboveMobileNav />
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 items-center gap-1 border-t bg-card px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 text-foreground lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 items-center gap-1 border-t border-ink bg-paper px-2 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 text-foreground lg:hidden">
           <NavLink href="/app/projects" label="Проекти" icon={<FolderKanban className="size-5" />} variant="tab" />
           <NavLink href="/app/offers" label="Оферти" icon={<FileText className="size-5" />} variant="tab" />
           {quickCreate ? <Link
             href={quickCreate.href}
             prefetch={true}
             aria-label={quickCreate.label}
-            className="mx-auto grid size-12 -translate-y-4 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-card"
+            className="mx-auto grid size-12 -translate-y-4 place-items-center bg-primary text-primary-foreground shadow-[6px_6px_0_var(--ink)] ring-4 ring-card"
           >
             <CirclePlus className="size-6" />
           </Link> : <span />}

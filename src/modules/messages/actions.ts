@@ -97,7 +97,7 @@ async function emailClientAnswer(document: { id: string; organizationId: string;
     to: contact.email,
     subject: `${from} Ви отговори за „${document.title}“`,
     text: `Здравейте, ${contact.name}!\n\n${from} Ви отговори:\n\n${text}\n\nВижте отговора: ${link}`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(from)} Ви отговори за „${escapeHtml(document.title)}“:</p><blockquote style="margin:12px 0;padding:12px 16px;border-left:3px solid #f07c62;background:#f7f5f0;white-space:pre-line">${escapeHtml(text)}</blockquote><p style="margin-top:20px"><a href="${link}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Вижте отговора</a></p></div>`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(from)} Ви отговори за „${escapeHtml(document.title)}“:</p><blockquote style="margin:12px 0;padding:12px 16px;border-left:3px solid #1d36ff;background:#f1f0eb;white-space:pre-line">${escapeHtml(text)}</blockquote><p style="margin-top:20px"><a href="${link}" style="display:block;padding:14px 20px;background:#1d36ff;color:#fff;text-decoration:none;font-weight:600;text-align:center">Вижте отговора</a></p></div>`,
   });
 }
 

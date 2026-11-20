@@ -72,16 +72,16 @@ export const eventLabels: Record<string, string> = {
 
 /** Events worth a colored dot: the client's decisions and disputes. */
 const eventTones: Record<string, string> = {
-  decision_approved: "bg-brand-green",
-  decision_declined: "bg-tile-coral-foreground",
-  decision_changes_requested: "bg-tile-coral-foreground",
-  changes_requested: "bg-tile-coral-foreground",
-  decision_disputed: "bg-tile-coral-foreground",
-  decision_dispute_resolved: "bg-brand-green",
-  revision_expired: "bg-tile-coral-foreground",
-  acceptance_accepted: "bg-brand-green",
-  acceptance_issues: "bg-tile-coral-foreground",
-  document_canceled: "bg-tile-coral-foreground",
+  decision_approved: "bg-ok",
+  decision_declined: "bg-late",
+  decision_changes_requested: "bg-warn",
+  changes_requested: "bg-warn",
+  decision_disputed: "bg-late",
+  decision_dispute_resolved: "bg-ok",
+  revision_expired: "bg-late",
+  acceptance_accepted: "bg-ok",
+  acceptance_issues: "bg-late",
+  document_canceled: "bg-late",
 };
 
 const dateTime = (value: Date) => dateWithTime.format(value);
@@ -112,7 +112,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
                   </span>
                   <span className="flex items-center gap-3 text-sm">
                     <span className="tabular-nums text-muted-foreground">{formatAmount(revision.total)} {currencySymbol(revision.currency)}</span>
-                    <DownloadLink href={`/api/changes/${changeOrderId}/pdf?revision=${revision.id}`} label={`PDF · версия ${revision.revisionNumber}`} className="inline-flex items-center gap-1 font-medium text-primary-ink hover:underline">
+                    <DownloadLink href={`/api/changes/${changeOrderId}/pdf?revision=${revision.id}`} label={`PDF · версия ${revision.revisionNumber}`} className="inline-flex items-center gap-1 font-medium text-blue hover:underline">
                       <Download className="size-3.5" /> PDF
                     </DownloadLink>
                   </span>
@@ -125,13 +125,13 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
       <Card>
         <CardHeader><CardTitle>Събития</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {latestEventsHref ? <Link href={latestEventsHref} className="text-sm font-medium text-primary-ink hover:underline">Към най-новите събития</Link> : null}
+          {latestEventsHref ? <Link href={latestEventsHref} className="text-sm font-medium text-blue hover:underline">Към най-новите събития</Link> : null}
           {events.length ? (
             <ol>
               {events.map((event, index) => (
                 <li key={event.id} className="relative flex gap-3 pb-4 last:pb-0">
                   {index < events.length - 1 ? <span aria-hidden="true" className="absolute top-4 left-[0.3125rem] h-full w-px bg-border" /> : null}
-                  <span aria-hidden="true" className={cn("relative mt-1.5 size-2.5 shrink-0 rounded-full", eventTones[event.eventType] ?? "bg-muted-foreground/50")} />
+                  <span aria-hidden="true" className={cn("relative mt-1.5 size-2.5 shrink-0", eventTones[event.eventType] ?? "bg-muted-foreground/50")} />
                   <div>
                     <p className="text-sm font-medium">{eventLabels[event.eventType] ?? event.eventType}</p>
                     {eventDetail(event) ? <p className="mt-0.5 text-sm break-words whitespace-pre-line text-muted-foreground">„{eventDetail(event)}“</p> : null}
@@ -141,7 +141,7 @@ export function DocumentTimeline({ changeOrderId, approvedRevisionId, revisions,
               ))}
             </ol>
           ) : <EmptyResult title="Няма събития." />}
-          {olderEventsHref ? <Link href={olderEventsHref} className="text-sm font-medium text-primary-ink hover:underline">По-стари събития</Link> : null}
+          {olderEventsHref ? <Link href={olderEventsHref} className="text-sm font-medium text-blue hover:underline">По-стари събития</Link> : null}
         </CardContent>
       </Card>
     </div>

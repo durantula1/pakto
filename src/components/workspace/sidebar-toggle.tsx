@@ -7,7 +7,7 @@ import { SIDEBAR_COOKIE, WORKSPACE_SHELL_ID } from "@/components/workspace/sideb
 
 /**
  * Collapses the desktop sidebar to icons, from the start of the header. The layout reads the cookie on the server, so a reload
- * renders the saved width with no flash; toggling only flips `data-sidebar` on the shell and the
+ * renders the saved width with no flash; toggling only flips `data-ink` on the shell and the
  * CSS does the rest, so nothing re-renders.
  */
 export function SidebarToggle() {

@@ -28,23 +28,23 @@ export function FinanceDemo() {
       title="Оферта + одобрени промени"
       status={<StatusChip tone="info">{format(total)}</StatusChip>}
     >
-      <div className="rounded-xl bg-[#102b38] p-4 text-[#fffaf0]">
+      <div className="bg-ink p-4 text-card">
         <div className="flex items-end justify-between">
           <div>
-            <p className="font-mono demo-text-8 tracking-[0.12em] text-[#b8ced2]">
+            <p className="font-mono demo-text-8 tracking-[0.12em] text-border">
               ПОЛУЧЕНИ
             </p>
             <p className="text-2xl font-black tracking-[-0.06em]">
               <Ticker value={paid} format={format} />
             </p>
           </div>
-          <p className="font-mono demo-text-9 text-[#b8ced2]">
+          <p className="font-mono demo-text-9 text-border">
             ОСТАВА <Ticker value={total - paid} format={format} />
           </p>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
+        <div className="mt-3 h-2 overflow-hidden bg-white/15">
           <m.div
-            className="h-full origin-left rounded-full bg-[#bceba8]"
+            className="h-full origin-left bg-ok-tint"
             initial={false}
             animate={{ scaleX: paid / total }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -59,15 +59,15 @@ export function FinanceDemo() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-between rounded-xl bg-[#f4efe4] px-3.5 py-3 demo-text-12"
+              className="flex items-center justify-between bg-paper px-3.5 py-3 demo-text-12"
             >
               <span>
                 <b>{payment.label}</b>
-                <span className="ml-2 font-mono demo-text-9 text-[#52707d]">
+                <span className="ml-2 font-mono demo-text-9 text-muted-foreground">
                   {payment.date} · {payment.method}
                 </span>
               </span>
-              <span className="font-mono demo-text-11 text-[#1e765d]">
+              <span className="font-mono demo-text-11 text-ok">
                 +{format(payment.amount)}
               </span>
             </m.div>
@@ -77,10 +77,10 @@ export function FinanceDemo() {
       <m.div
         initial={false}
         animate={{ opacity: step >= 4 ? 1 : 0.15, y: step >= 4 ? 0 : 8 }}
-        className="mt-3 rounded-xl border border-[#102b38]/15 px-3.5 py-3"
+        className="mt-3 border border-ink px-3.5 py-3"
       >
         <div className="flex items-center justify-between">
-          <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+          <p className="font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
             МЕСЕЧНА СПРАВКА
           </p>
           <p className="demo-text-13 font-black">Септември 2026</p>
@@ -89,7 +89,7 @@ export function FinanceDemo() {
           {["Период", "Проект", "Вид плащане", "Начин"].map((filter) => (
             <span
               key={filter}
-              className="flex items-center gap-1 rounded-full bg-[#c5e3e5]/70 px-2.5 py-1 demo-text-9 font-bold"
+              className="flex items-center gap-1 bg-blue-tint/70 px-2.5 py-1 demo-text-9 font-bold"
             >
               <SlidersHorizontal className="size-3" /> {filter}
             </span>

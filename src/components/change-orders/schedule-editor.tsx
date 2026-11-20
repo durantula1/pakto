@@ -92,7 +92,7 @@ export function ScheduleEditor({ rows, setRows, deadline, today }: {
       </div>
       {total && deadline ? (
         tooLong ? (
-          <p role="status" className="flex items-start gap-2 rounded-lg bg-tile-sand p-3 text-sm text-tile-sand-foreground">
+          <p role="status" className="flex items-start gap-2 rounded-lg bg-warn-tint p-3 text-sm text-warn">
             <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>Графикът е по-дълъг от времето до крайния срок: до {formatDay(deadline)} остават {daysLabel(Math.max(0, daysBetween(today, deadline) + 1))}. Съкрати етапите или премести срока.</span>
           </p>

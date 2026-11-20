@@ -82,21 +82,21 @@ function Step({
           aria-hidden="true"
           className={cn(
             "absolute top-5 left-[0.4375rem] h-[calc(100%-1rem)] w-px lg:top-[0.6875rem] lg:left-5 lg:h-px lg:w-[calc(100%-1.5rem)]",
-            state === "done" ? "bg-brand-green" : "bg-border",
+            state === "done" ? "bg-ok-tint" : "bg-border",
           )}
         />
       )}
       <span
         aria-hidden="true"
         className={cn(
-          "relative mt-1 grid size-3.5 shrink-0 place-items-center rounded-full border-2",
+          "relative mt-1 grid size-3.5 shrink-0 place-items-center border-2",
           // A hairline of the foreground keeps the light green visible on the cream card.
           state === "done" &&
-            "border-brand-green bg-brand-green ring-1 ring-tile-mint-foreground/20",
+            "border-ok-tint bg-ok-tint ring-1 ring-ok/20",
           state === "current" && "border-primary bg-card",
           state === "pending" && "border-border bg-card",
           state === "alert" &&
-            "border-tile-coral-foreground bg-tile-coral-foreground",
+            "border-late bg-late",
         )}
       />
       <div className="min-w-0">
@@ -104,7 +104,7 @@ function Step({
           className={cn(
             "text-sm",
             state === "pending" ? "text-muted-foreground" : "font-medium",
-            state === "alert" && "text-tile-coral-foreground",
+            state === "alert" && "text-late",
           )}
         >
           {label}
@@ -244,7 +244,7 @@ export function DocumentStatusCard({
           ) : (
             <div
               role="alert"
-              className="rounded-lg bg-tile-coral p-3 text-sm text-tile-coral-foreground"
+              className="rounded-lg bg-late-tint p-3 text-sm text-late"
             >
               <p className="font-semibold">Клиентът оспори решението</p>
               <p className="mt-1">
@@ -476,7 +476,7 @@ export function DocumentFacts({
                 : "— (старо решение без код)"}
             </p>
             {change.fingerprint === "match" ? (
-              <p className="flex items-start gap-2 text-tile-mint-foreground">
+              <p className="flex items-start gap-2 text-ok">
                 <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Съдържанието е същото като при изпращането и решението.
               </p>
             ) : change.fingerprint === "mismatch" ? (

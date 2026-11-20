@@ -56,7 +56,7 @@ export async function emailClientReminder(document: Pending, reason: "nudge" | "
     to: contact.email,
     subject: projectSubject(document.projectName, subject),
     text: `Здравейте, ${contact.name}!\n\n${intro}\n\nМожете да я одобрите, да поискате промяна или да зададете въпрос тук: ${url}`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте и решете</a></p><p style="color:#71717a">Можете да я одобрите, да поискате промяна или да зададете въпрос.</p></div>`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;background:#1d36ff;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте и решете</a></p><p style="color:#6d6d68">Можете да я одобрите, да поискате промяна или да зададете въпрос.</p></div>`,
   });
   return true;
 }

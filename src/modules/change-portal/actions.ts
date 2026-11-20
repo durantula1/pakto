@@ -350,7 +350,7 @@ async function sendDecisionReceipt(decisionId: number) {
     to: row.verifiedEmail,
     subject: projectSubject(document?.projectName, `Разписка: ${decisionReceiptLabels[row.decision]} — ${row.title}`),
     text: `${facts.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nАко решението не е Ваше или е взето по грешка, можете да го оспорите тук: ${disputeUrl}`,
-    html: `<p>Записахме следното Ваше решение${document ? ` към ${escapeHtml(document.organizationName)}` : ""}:</p><table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#71717a">${escapeHtml(label!)}</td><td style="padding:4px 0;word-break:break-all">${escapeHtml(value!)}</td></tr>`).join("")}</table><p>Прилагаме PDF на точно тази версия. Запазете този имейл — той е Вашето независимо копие.</p><p>Ако решението не е Ваше или е взето по грешка, <a href="${disputeUrl}" style="color:#b91c1c;font-weight:600">оспорете го тук</a>.</p>`,
+    html: `<p>Записахме следното Ваше решение${document ? ` към ${escapeHtml(document.organizationName)}` : ""}:</p><table style="border-collapse:collapse">${facts.map(([label, value]) => `<tr><td style="padding:4px 12px 4px 0;color:#6d6d68">${escapeHtml(label!)}</td><td style="padding:4px 0;word-break:break-all">${escapeHtml(value!)}</td></tr>`).join("")}</table><p>Прилагаме PDF на точно тази версия. Запазете този имейл — той е Вашето независимо копие.</p><p>Ако решението не е Ваше или е взето по грешка, <a href="${disputeUrl}" style="color:#c2371f;font-weight:600">оспорете го тук</a>.</p>`,
     attachments: pdf ? [{ filename: pdf.filename, content: pdf.buffer }] : undefined,
   });
 }

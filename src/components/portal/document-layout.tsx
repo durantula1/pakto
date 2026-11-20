@@ -110,7 +110,7 @@ export function PortalDocumentLayout({
         >
           <div
             aria-hidden="true"
-            className="mx-auto mt-1 h-1 w-10 rounded-full bg-muted-foreground/30"
+            className="mx-auto mt-1 h-1 w-10 bg-muted-foreground/30"
           />
           <SheetHeader className="sr-only">
             <SheetTitle>Вашето решение · {amount}</SheetTitle>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function Slip({ label, meta, id, className, children }: { label: ReactNode; meta?: ReactNode; id?: string; className?: string; children: ReactNode }) {
   return (
     <section id={id} className={cn("scroll-mt-6 overflow-hidden rounded-3xl bg-card shadow-[inset_0_0_0_2px_color-mix(in_srgb,var(--primary)_45%,transparent)]", className)}>
-      <header className="flex items-baseline justify-between gap-3 bg-tile-coral px-5 py-3 text-sm font-semibold text-tile-coral-foreground">
+      <header className="flex items-baseline justify-between gap-3 bg-late-tint px-5 py-3 text-sm font-semibold text-late">
         <span>{label}</span>
         {meta ? <span className="font-normal">{meta}</span> : null}
       </header>
@@ -56,7 +56,7 @@ export function Quote({ by, tone = "muted", children, className }: { by?: ReactN
     <blockquote className={cn(
       "border-l-2 pl-3 text-sm",
       tone === "muted" && "border-foreground/20",
-      tone === "warning" && "border-tile-sand-foreground/50",
+      tone === "warning" && "border-warn/50",
       tone === "danger" && "border-destructive/60",
       className,
     )}>

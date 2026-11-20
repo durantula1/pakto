@@ -143,7 +143,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           <span>от {sinceFormat.format(project.createdAt)}</span>
         </>}
         action={
-          <div className="flex flex-wrap items-center gap-2 [&_a]:rounded-full [&>button]:rounded-full">
+          <div className="flex flex-wrap items-center gap-2 [&_a]: [&>button]:">
             {canOffer ? <Link href={`/app/offers/new?projectId=${project.id}`} className={cn("inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium", offersTotal ? "border bg-card" : "bg-primary text-primary-foreground")}><Plus className="size-4" /> Нова оферта</Link> : null}
             {canDraft && inForce.length ? <Link href={`/app/offers/changes/new?projectId=${project.id}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border bg-card px-2.5 text-sm font-medium"><Plus className="size-4" /> Нова промяна</Link> : null}
             {clientAccess}

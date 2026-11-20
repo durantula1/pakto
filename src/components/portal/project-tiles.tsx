@@ -22,8 +22,8 @@ export function nextInstallment(view: ScopeView) {
 
 function Bar({ percent, className }: { percent: number; className?: string }) {
   return (
-    <span aria-hidden="true" className={cn("block h-2 overflow-hidden rounded-full bg-foreground/12", className)}>
-      <span className="block h-full rounded-full bg-foreground" style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
+    <span aria-hidden="true" className={cn("block h-2 overflow-hidden bg-foreground/12", className)}>
+      <span className="block h-full bg-foreground" style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
     </span>
   );
 }
@@ -38,7 +38,7 @@ function Segments({ view }: { view: ScopeView }) {
   return (
     <span aria-hidden="true" className="flex gap-1">
       {view.milestones.map((item) => (
-        <span key={item.id} className={cn("h-2 flex-1 rounded-full", item.status === "completed" ? "bg-foreground" : item.id === now?.id && item.status === "in_progress" ? "bg-primary" : "bg-foreground/12")} />
+        <span key={item.id} className={cn("h-2 flex-1", item.status === "completed" ? "bg-foreground" : item.id === now?.id && item.status === "in_progress" ? "bg-primary" : "bg-foreground/12")} />
       ))}
     </span>
   );

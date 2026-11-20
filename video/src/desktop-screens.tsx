@@ -50,11 +50,11 @@ export function BrowserWindow({
         width,
         height,
         overflow: "hidden",
-        borderRadius: 16,
+        borderRadius: 0,
         background: color.card,
-        border: "1px solid rgba(16,43,56,.18)",
+        border: "1px solid rgba(11,11,11,.18)",
         boxShadow:
-          "0 50px 110px -40px rgba(16,43,56,.55), 0 2px 0 rgba(255,255,255,.6) inset",
+          "0 50px 110px -40px rgba(11,11,11,.55), 0 2px 0 rgba(255,255,255,.6) inset",
         fontFamily: font.sans,
         color: color.ink,
         ...style,
@@ -68,13 +68,13 @@ export function BrowserWindow({
           gap: 8,
           padding: "0 16px",
           background: "#ebe4d6",
-          borderBottom: "1px solid rgba(16,43,56,.1)",
+          borderBottom: "1px solid rgba(11,11,11,.1)",
         }}
       >
         {["#ff6b5f", "#ffbd2e", "#28c940"].map((dot) => (
           <span
             key={dot}
-            style={{ width: 12, height: 12, borderRadius: 99, background: dot }}
+            style={{ width: 12, height: 12, borderRadius: 0, background: dot }}
           />
         ))}
         <span
@@ -82,7 +82,7 @@ export function BrowserWindow({
             margin: "0 auto",
             minWidth: width * 0.42,
             padding: "6px 14px",
-            borderRadius: 8,
+            borderRadius: 0,
             background: "rgba(255,255,255,.75)",
             fontSize: 13,
             color: color.muted,
@@ -156,9 +156,9 @@ function Card({
       h={h}
       style={{
         padding: 22,
-        borderRadius: 18,
+        borderRadius: 0,
         background: "#fff",
-        border: "1px solid rgba(16,43,56,.12)",
+        border: "1px solid rgba(11,11,11,.12)",
         boxSizing: "border-box",
         ...style,
       }}
@@ -193,8 +193,8 @@ function Toast({
         alignItems: "center",
         gap: 10,
         padding: "14px 18px",
-        borderRadius: 14,
-        background: tone === "ok" ? "#1e765d" : color.ink,
+        borderRadius: 0,
+        background: tone === "ok" ? "#0e8a4a" : color.ink,
         color: color.sheet,
         fontSize: 15,
         fontWeight: 700,
@@ -208,7 +208,7 @@ function Toast({
           placeItems: "center",
           width: 24,
           height: 24,
-          borderRadius: 99,
+          borderRadius: 0,
           background: color.lime,
           color: color.ink,
           fontSize: 13,
@@ -254,9 +254,9 @@ function Notice({
         display: "flex",
         gap: 12,
         padding: 14,
-        borderRadius: 16,
+        borderRadius: 0,
         background: "rgba(255,255,255,.96)",
-        boxShadow: "0 18px 40px rgba(16,43,56,.25)",
+        boxShadow: "0 18px 40px rgba(11,11,11,.25)",
         transform: `translateX(${x}px)`,
       }}
     >
@@ -267,7 +267,7 @@ function Notice({
           width: 36,
           height: 36,
           flexShrink: 0,
-          borderRadius: 10,
+          borderRadius: 0,
           background: color.coral,
           fontSize: 17,
         }}
@@ -281,7 +281,7 @@ function Notice({
         <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700 }}>
           {title}
         </p>
-        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#35535e" }}>
+        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6d6d68" }}>
           {body}
         </p>
       </div>
@@ -325,7 +325,7 @@ export function FirmShell({
   children: ReactNode;
 }) {
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#f7f3ea" }}>
+    <div style={{ position: "absolute", inset: 0, background: "#f1f0eb" }}>
       <Abs
         x={12}
         y={12}
@@ -334,9 +334,9 @@ export function FirmShell({
         style={{
           padding: 12,
           boxSizing: "border-box",
-          borderRadius: 16,
+          borderRadius: 0,
           background: "#fff",
-          border: "1px solid rgba(16,43,56,.1)",
+          border: "1px solid rgba(11,11,11,.1)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -364,7 +364,7 @@ export function FirmShell({
                 style={{
                   margin: 0,
                   padding: "8px 10px",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   fontSize: 14,
                   fontWeight: link === "Оферти" ? 700 : 500,
                   background: link === "Оферти" ? color.paper : "transparent",
@@ -390,7 +390,7 @@ export function FirmShell({
         }}
       >
         <span
-          style={{ width: 1, height: 20, background: "rgba(16,43,56,.15)" }}
+          style={{ width: 1, height: 20, background: "rgba(11,11,11,.15)" }}
         />
         {crumb.split(" / ").map((part, index, all) => (
           <span
@@ -463,7 +463,7 @@ export function DeskRecord() {
                 key={kind}
                 style={{
                   padding: "8px 13px",
-                  borderRadius: 99,
+                  borderRadius: 0,
                   fontSize: 13,
                   fontWeight: 700,
                   background: index === 0 ? color.ink : color.paper,
@@ -480,8 +480,8 @@ export function DeskRecord() {
             marginTop: 16,
             padding: "12px 14px",
             minHeight: 64,
-            borderRadius: 12,
-            border: "1px solid rgba(16,43,56,.18)",
+            borderRadius: 0,
+            border: "1px solid rgba(11,11,11,.18)",
           }}
         >
           <Label style={{ fontSize: 10 }}>КАКВО СЕ ПРОМЕНЯ</Label>
@@ -522,14 +522,14 @@ export function DeskRecord() {
           style={{
             marginTop: 18,
             padding: "12px 14px",
-            borderRadius: 12,
-            border: "1.5px dashed rgba(16,43,56,.25)",
+            borderRadius: 0,
+            border: "1.5px dashed rgba(11,11,11,.25)",
             fontSize: 14,
             ...enter(frame, 120, 10),
           }}
         >
           <b>Вътрешна бележка:</b> кабелът минава през носещата стена.
-          <Label style={{ fontSize: 10, marginTop: 4, color: "#e86650" }}>
+          <Label style={{ fontSize: 10, marginTop: 4, color: "#1d36ff" }}>
             КЛИЕНТЪТ НЕ Я ВИЖДА
           </Label>
         </div>
@@ -684,7 +684,7 @@ export function DeskFirmStatus({
                     placeItems: "center",
                     width: 28,
                     height: 28,
-                    borderRadius: 99,
+                    borderRadius: 0,
                     fontSize: 14,
                     fontWeight: 900,
                     background: step.done
@@ -699,7 +699,7 @@ export function DeskFirmStatus({
                       : color.muted,
                     border: step.done
                       ? "none"
-                      : "2px dashed rgba(16,43,56,.25)",
+                      : "2px dashed rgba(11,11,11,.25)",
                   }}
                 >
                   {step.done ? "✓" : ""}
@@ -710,7 +710,7 @@ export function DeskFirmStatus({
                       flex: 1,
                       width: 2,
                       margin: "4px 0",
-                      background: step.done ? color.ink : "rgba(16,43,56,.15)",
+                      background: step.done ? color.ink : "rgba(11,11,11,.15)",
                     }}
                   />
                 ) : null}
@@ -782,7 +782,7 @@ export function DeskRevise() {
           style={{
             marginTop: 12,
             padding: "10px 12px",
-            borderRadius: 12,
+            borderRadius: 0,
             background: color.paper,
             fontSize: 14,
             opacity: interpolate(progress(frame, 50, 14), [0, 1], [1, 0.7]),
@@ -797,7 +797,7 @@ export function DeskRevise() {
           style={{
             marginTop: 8,
             padding: "10px 12px",
-            borderRadius: 12,
+            borderRadius: 0,
             border: `1.5px solid ${color.ink}`,
             fontSize: 14,
             ...enter(frame, 58, 12),
@@ -910,7 +910,7 @@ export function DeskMail() {
         style={{
           padding: "24px 18px",
           boxSizing: "border-box",
-          background: "#f7f3ea",
+          background: "#f1f0eb",
           fontSize: 14,
           lineHeight: 2.2,
           color: color.muted,
@@ -943,7 +943,7 @@ export function DeskMail() {
                 fontSize: 15,
                 background:
                   index === 0 && frame >= 8
-                    ? "rgba(255,118,95,.08)"
+                    ? "rgba(29,54,255,.08)"
                     : "transparent",
                 ...(index === 0 ? enter(frame, 8, 12) : {}),
               }}
@@ -987,7 +987,7 @@ export function DeskMail() {
               margin: "22px 0 0",
               fontSize: 16,
               lineHeight: 1.6,
-              color: "#284955",
+              color: "#262624",
             }}
           >
             Здравейте, Иван Петров!
@@ -1073,7 +1073,7 @@ function Portal({
   children: ReactNode;
 }) {
   return (
-    <div style={{ position: "absolute", inset: 0, background: "#f7f3ea" }}>
+    <div style={{ position: "absolute", inset: 0, background: "#f1f0eb" }}>
       <PortalTop version={version} />
       <Card x={24} y={120} w={536}>
         {doc}
@@ -1153,10 +1153,10 @@ export function DeskRequest() {
                 display: "flex",
                 alignItems: "center",
                 padding: "0 14px",
-                borderRadius: 12,
+                borderRadius: 0,
                 border: option.selected
                   ? `2px solid ${color.ink}`
-                  : "1px solid rgba(16,43,56,.15)",
+                  : "1px solid rgba(11,11,11,.15)",
                 ...enter(frame, 50 + index * 4, 8),
               }}
             >
@@ -1166,7 +1166,7 @@ export function DeskRequest() {
                     margin: 0,
                     fontSize: 15,
                     fontWeight: 700,
-                    color: index ? "#c2412d" : color.ink,
+                    color: index ? "#c2371f" : color.ink,
                   }}
                 >
                   {option.title}
@@ -1187,8 +1187,8 @@ export function DeskRequest() {
                   placeItems: "center",
                   width: 20,
                   height: 20,
-                  borderRadius: 99,
-                  border: `2px solid ${option.selected ? color.ink : "rgba(16,43,56,.25)"}`,
+                  borderRadius: 0,
+                  border: `2px solid ${option.selected ? color.ink : "rgba(11,11,11,.25)"}`,
                 }}
               >
                 {option.selected ? (
@@ -1196,7 +1196,7 @@ export function DeskRequest() {
                     style={{
                       width: 10,
                       height: 10,
-                      borderRadius: 99,
+                      borderRadius: 0,
                       background: color.ink,
                     }}
                   />
@@ -1213,8 +1213,8 @@ export function DeskRequest() {
               height: 80,
               padding: "10px 14px",
               boxSizing: "border-box",
-              borderRadius: 12,
-              border: "1px solid rgba(16,43,56,.2)",
+              borderRadius: 0,
+              border: "1px solid rgba(11,11,11,.2)",
               fontSize: 15,
               lineHeight: 1.4,
               ...enter(frame, 64, 8),
@@ -1256,7 +1256,7 @@ export function DeskRequest() {
             с ДДС · срок 10.10
           </p>
           <div style={{ marginTop: 24 }}>
-            <Button style={{ background: "#1e765d" }}>Одобрявам</Button>
+            <Button style={{ background: "#0e8a4a" }}>Одобрявам</Button>
           </div>
           <p
             style={{
@@ -1302,7 +1302,7 @@ export function DeskClientWaiting() {
           margin: "8px 0 0",
           fontSize: 15,
           lineHeight: 1.5,
-          color: "#284955",
+          color: "#262624",
         }}
       >
         {COMPANY} подготвя нова версия. Ще получите имейл, щом е готова.
@@ -1311,7 +1311,7 @@ export function DeskClientWaiting() {
         style={{
           marginTop: 16,
           padding: "12px 14px",
-          borderRadius: 12,
+          borderRadius: 0,
           background: color.paper,
           fontSize: 14,
           lineHeight: 1.45,
@@ -1411,8 +1411,8 @@ export function DeskApprove() {
                     width: 44,
                     height: 58,
                     marginRight: index === 2 ? 10 : 0,
-                    borderRadius: 12,
-                    border: `2px solid ${index < filled ? color.ink : "rgba(16,43,56,.2)"}`,
+                    borderRadius: 0,
+                    border: `2px solid ${index < filled ? color.ink : "rgba(11,11,11,.2)"}`,
                     fontFamily: font.mono,
                     fontSize: 24,
                     fontWeight: 700,
@@ -1432,7 +1432,7 @@ export function DeskApprove() {
             >
               <Button
                 scale={press(frame, 214)}
-                style={{ background: "#1e765d" }}
+                style={{ background: "#0e8a4a" }}
               >
                 Одобрявам · 384,00 €
               </Button>
@@ -1483,8 +1483,8 @@ export function DeskApprove() {
                 padding: "0 14px",
                 display: "flex",
                 alignItems: "center",
-                borderRadius: 12,
-                border: "1px solid rgba(16,43,56,.25)",
+                borderRadius: 0,
+                border: "1px solid rgba(11,11,11,.25)",
                 fontSize: 17,
                 fontWeight: 700,
               }}
@@ -1501,8 +1501,8 @@ export function DeskApprove() {
                 display: "flex",
                 gap: 10,
                 padding: 12,
-                borderRadius: 12,
-                background: "rgba(16,43,56,.05)",
+                borderRadius: 0,
+                background: "rgba(11,11,11,.05)",
                 fontSize: 13,
                 lineHeight: 1.45,
               }}
@@ -1514,7 +1514,7 @@ export function DeskApprove() {
                   width: 20,
                   height: 20,
                   flexShrink: 0,
-                  borderRadius: 5,
+                  borderRadius: 0,
                   background: frame >= 104 ? color.ink : "#fff",
                   border: `2px solid ${color.ink}`,
                   color: "#fff",
@@ -1568,7 +1568,7 @@ export function DeskSealed() {
           placeItems: "center",
           width: 56,
           height: 56,
-          borderRadius: 99,
+          borderRadius: 0,
           background: color.okBg,
           color: color.okText,
           fontSize: 28,
@@ -1592,7 +1592,7 @@ export function DeskSealed() {
           margin: "8px 0 0",
           fontSize: 15,
           lineHeight: 1.5,
-          color: "#284955",
+          color: "#262624",
         }}
       >
         Одобрихте версия 2 за 384,00 €. Разписката е в имейла ви.
@@ -1601,7 +1601,7 @@ export function DeskSealed() {
         style={{
           marginTop: 16,
           padding: 14,
-          borderRadius: 14,
+          borderRadius: 0,
           background: color.paper,
           fontFamily: font.mono,
           fontSize: 12,

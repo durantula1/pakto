@@ -12,16 +12,16 @@ export const clientStatusLabels: Record<string, string> = {
   canceled: "Анулирана от фирмата",
 };
 
-/** Three colours across the portal: coral waits for the client, blue is with the company, green is done. */
-const tones: Record<string, "success-soft" | "info-soft" | "danger-soft" | "secondary"> = {
-  sent: "danger-soft",
-  viewed: "danger-soft",
-  approved: "success-soft",
-  changes_requested: "info-soft",
-  superseded: "info-soft",
+/** The Ясно status colours: blue waits for the client, amber-brown is a requested change, green is done. */
+const tones: Record<string, "approved" | "sent" | "warning-soft" | "secondary"> = {
+  sent: "sent",
+  viewed: "sent",
+  approved: "approved",
+  changes_requested: "warning-soft",
+  superseded: "secondary",
 };
 
-const dots = { "success-soft": "bg-tile-mint-foreground", "info-soft": "bg-tile-blue-foreground", "danger-soft": "bg-tile-coral-foreground", secondary: "bg-muted-foreground/60" } as const;
+const dots = { approved: "bg-ok", sent: "bg-blue", "warning-soft": "bg-warn", secondary: "bg-muted-foreground/60" } as const;
 
 /** A dot in the same colour as the status badge, for a row that already shows the badge. */
 export function clientStatusDotClassName(status: string) {

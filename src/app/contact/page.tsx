@@ -20,7 +20,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
   const sender = await describeSender();
 
   return (
-    <div className="min-h-dvh bg-[#f7f4ec] px-4 py-10 sm:py-16">
+    <div className="min-h-dvh bg-paper px-4 py-10 sm:py-16">
       <div className="mx-auto mb-6 flex max-w-xl items-center justify-between gap-4">
         <Wordmark href="/" />
         {page ? <Link href={page} className="text-sm text-muted-foreground hover:text-foreground">← Назад</Link> : null}

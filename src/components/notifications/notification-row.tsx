@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 import type { NotificationIcon, NotificationItem } from "@/modules/notifications/kinds";
 
 const icons: Record<NotificationIcon, { icon: LucideIcon; tone: string }> = {
-  alert: { icon: TriangleAlert, tone: "bg-tile-coral text-tile-coral-foreground" },
-  check: { icon: Check, tone: "bg-tile-mint text-tile-mint-foreground" },
-  message: { icon: MessageCircle, tone: "bg-tile-blue text-tile-blue-foreground" },
-  euro: { icon: Euro, tone: "bg-tile-sand text-tile-sand-foreground" },
+  alert: { icon: TriangleAlert, tone: "bg-late-tint text-late" },
+  check: { icon: Check, tone: "bg-ok-tint text-ok" },
+  message: { icon: MessageCircle, tone: "bg-blue-tint text-blue" },
+  euro: { icon: Euro, tone: "bg-warn-tint text-warn" },
   user: { icon: UserRound, tone: "bg-muted text-muted-foreground" },
-  file: { icon: FileText, tone: "bg-tile-blue text-tile-blue-foreground" },
+  file: { icon: FileText, tone: "bg-blue-tint text-blue" },
 };
 
 const sofiaDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Sofia" });
@@ -47,7 +47,7 @@ export function groupByDay<T extends { createdAt: string }>(items: T[], now = ne
 
 function NotificationIconBadge({ icon, className }: { icon: NotificationIcon; className?: string }) {
   const { icon: Icon, tone } = icons[icon];
-  return <span aria-hidden="true" className={cn("grid size-9 shrink-0 place-items-center rounded-full", tone, className)}><Icon className="size-4" /></span>;
+  return <span aria-hidden="true" className={cn("grid size-9 shrink-0 place-items-center", tone, className)}><Icon className="size-4" /></span>;
 }
 
 /**
@@ -62,11 +62,11 @@ export function NotificationRow({ item, now, compact = false, aside }: { item: N
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className={cn("text-sm leading-snug", item.unread ? "font-semibold text-foreground" : "font-medium text-foreground/80", !compact && "sm:text-[0.9375rem]")}>{item.title}</span>
           {item.body ? <span className={cn("text-sm text-muted-foreground", compact && "truncate")}>{item.body}</span> : null}
-          {item.needsReply && item.unread ? <span className="mt-1 w-fit rounded-full bg-tile-coral px-2 py-0.5 text-2xs font-semibold text-tile-coral-foreground">Изисква отговор</span> : null}
+          {item.needsReply && item.unread ? <span className="mt-1 w-fit bg-late-tint px-2 py-0.5 text-2xs font-semibold text-late">Изисква отговор</span> : null}
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1.5 pt-0.5">
           <span className="text-xs whitespace-nowrap text-muted-foreground">{notificationTime(item.createdAt, now)}</span>
-          {item.unread ? <span className="size-2 rounded-full bg-primary"><span className="sr-only">Непрочетено</span></span> : null}
+          {item.unread ? <span className="size-2 bg-primary"><span className="sr-only">Непрочетено</span></span> : null}
         </span>
       </a>
       {aside}

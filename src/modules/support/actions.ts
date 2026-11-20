@@ -105,8 +105,8 @@ export async function sendSupportRequestAction(_: SupportState, formData: FormDa
       text: `${input.message}\n\n---\n${shown.map(([label, value]) => `${label}: ${value}`).join("\n")}`,
       html:
         `<p style="margin:0 0 16px;white-space:pre-wrap">${escapeHtml(input.message)}</p>`
-        + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #e4e4e7;font-size:13px;color:#52525b">`
-        + shown.map(([label, value]) => `<tr><td style="padding:6px 12px 0 0;vertical-align:top;white-space:nowrap;color:#71717a">${escapeHtml(label)}</td><td style="padding:6px 0 0;word-break:break-word">${escapeHtml(value)}</td></tr>`).join("")
+        + `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-top:1px solid #e3e2dc;font-size:13px;color:#6d6d68">`
+        + shown.map(([label, value]) => `<tr><td style="padding:6px 12px 0 0;vertical-align:top;white-space:nowrap;color:#6d6d68">${escapeHtml(label)}</td><td style="padding:6px 0 0;word-break:break-word">${escapeHtml(value)}</td></tr>`).join("")
         + `</table>`,
       attachments,
     });

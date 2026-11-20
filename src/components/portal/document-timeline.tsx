@@ -70,7 +70,7 @@ export function DocumentTimeline({ documents, projectPublicId, offerNames }: {
               <span className="text-xs text-muted-foreground">{month}</span>
             </p>
             <div className="flex flex-col items-center">
-              <span aria-hidden="true" className={cn("mt-4 size-3 shrink-0 rounded-full ring-4 ring-card", clientStatusDotClassName(lead.status))} />
+              <span aria-hidden="true" className={cn("mt-4 size-3 shrink-0 ring-4 ring-card", clientStatusDotClassName(lead.status))} />
               {!last ? <span className="w-0 flex-1 border-l-2 border-dashed border-foreground/15" /> : null}
             </div>
             <div className="min-w-0 pb-4">
@@ -135,7 +135,7 @@ function Amount({ document, small = false }: { document: TimelineDocument; small
 
 function Arrow({ small = false }: { small?: boolean }) {
   return (
-    <span aria-hidden="true" className={cn("hidden shrink-0 place-items-center rounded-full bg-muted sm:grid transition-colors group-hover/row:bg-foreground group-hover/row:text-background", small ? "size-7" : "size-8")}>
+    <span aria-hidden="true" className={cn("hidden shrink-0 place-items-center bg-muted sm:grid transition-colors group-hover/row:bg-foreground group-hover/row:text-background", small ? "size-7" : "size-8")}>
       <ArrowUpRight className={small ? "size-3.5" : "size-4"} />
     </span>
   );

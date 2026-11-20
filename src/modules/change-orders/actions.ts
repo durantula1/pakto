@@ -857,7 +857,7 @@ async function emailPortalLink(input: { organizationName: string; projectId: str
     to: input.contact.email,
     subject,
     text: `Здравейте, ${input.contact.name}!\n\n${intro}\n${facts.join("\n")}${changesText}\n\nПрегледайте я тук: ${url}\n\nЗа да потвърдите решението си, ще получите еднократен код на този имейл.`,
-    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin:0;padding:12px;border-radius:8px;background:#f4f4f5">${facts.map(escapeHtml).join("<br>")}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте ${input.documentKind === "offer" ? "офертата" : "промяната"}</a></p><p style="color:#71717a">За да потвърдите решението си, ще получите еднократен код на този имейл. Не препращайте този линк.</p></div>`,
+    html: `<div style="max-width:600px"><p>Здравейте, ${escapeHtml(input.contact.name)}!</p><p>${escapeHtml(intro)}</p><p style="margin:0;padding:12px;background:#f1f0eb">${facts.map(escapeHtml).join("<br>")}</p>${changesHtml}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;background:#1d36ff;color:#fff;text-decoration:none;font-weight:600;text-align:center">Прегледайте ${input.documentKind === "offer" ? "офертата" : "промяната"}</a></p><p style="color:#6d6d68">За да потвърдите решението си, ще получите еднократен код на този имейл. Не препращайте този линк.</p></div>`,
   });
   return "sent";
 }

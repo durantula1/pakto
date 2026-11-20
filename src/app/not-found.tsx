@@ -13,7 +13,7 @@ export default function NotFound() {
       <p className="text-muted-foreground">
         Адресът може да е грешен или линкът вече да не е активен. Ако сте клиент, отворете линка от последния имейл от фирмата.
       </p>
-      <Link href="/" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+      <Link href="/" className="bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-ink">
         Към началото
       </Link>
     </main>

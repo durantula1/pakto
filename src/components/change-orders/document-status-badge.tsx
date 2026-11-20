@@ -13,17 +13,17 @@ const documentStatusLabels: Record<string, string> = {
 };
 
 /**
- * Colour says whose move it is. With the team: draft (dashed, not yet real) and change requested (lilac).
- * With the client: sent (blue), then viewed (sand, a decision is near). Closed: approved (mint),
- * declined (coral), and stone for what is no longer active. `offerStatusTones` follows the same scheme.
+ * Colour says whose move it is, in the Ясно status colours. With the team: draft (dashed, not yet
+ * real) and change requested (warn). With the client: sent and viewed (blue). Closed: approved
+ * (solid green), declined (late), and grey for what is no longer active. `offerStatusTones` follows the same scheme.
  */
 const documentStatusTones: Record<string, BadgeVariant> = {
   draft: "draft",
-  sent: "info-soft",
-  viewed: "warning-soft",
-  approved: "success-soft",
+  sent: "sent",
+  viewed: "sent",
+  approved: "approved",
   declined: "danger-soft",
-  changes_requested: "lilac-soft",
+  changes_requested: "warning-soft",
   expired: "stone-soft",
   superseded: "stone-soft",
   canceled: "stone-struck",

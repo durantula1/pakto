@@ -4,8 +4,6 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Pause, Play } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 
-import { Reveal } from "./reveal";
-
 /**
  * The whole agreement in ~40 seconds, rendered from video/ (Remotion) into public/video, in two
  * clips: on phones (both sides' phones) and on desktop (Pakto and the portal in browser windows).
@@ -88,109 +86,80 @@ export function ProcessVideo() {
   const showPlay = !shouldPlay;
 
   return (
-    <section
-      id="workflow"
-      className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[16vh]"
-    >
-      <div className="mx-auto max-w-[93.75rem]">
-        <Reveal className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
-          <p className="mf-kicker">КАК РАБОТИ · 40 СЕКУНДИ</p>
-          <div>
-            <h2 className="mf-section-title">
-              От устна уговорка до потвърдено „да“.
-            </h2>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#49626b]">
-              В чата остава едно „добре“ – и спор след три седмици. В Pakto
-              остават оферта, нова версия и потвърдено одобрение.
-            </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.08} className="mt-12 lg:mt-16">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-[#49626b]">{descriptions[view]}</p>
-            <div
-              role="group"
-              aria-label="Как изглежда"
-              className="inline-flex rounded-full border border-[#102b38]/15 bg-[#fffdf7] p-1"
+    <div className="vid rv">
+      <div className="vh">
+        <div>
+          <p className="lbl">Видео · 40 секунди</p>
+          <p className="muted mt-1 text-[0.95rem]">{descriptions[view]}</p>
+        </div>
+        <div role="group" aria-label="Как изглежда" className="tg">
+          {views.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={view === id}
+              onClick={() => setPicked(id)}
             >
-              {views.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={view === id}
-                  onClick={() => setPicked(id)}
-                  className={`min-h-11 rounded-full px-5 text-sm font-bold transition-colors ${
-                    view === id
-                      ? "bg-[#102b38] text-[#fffaf0]"
-                      : "text-[#49626b] hover:text-[#102b38]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <figure>
-            <div
-              ref={frameRef}
-              className="relative overflow-hidden rounded-[1.75rem] border border-[#102b38]/15 bg-[#f4efe4] shadow-[0_40px_90px_-40px_rgba(16,43,56,.45)]"
-            >
-              {formats.map(({ id, className }, index) => {
-                const name = `pakto-${view}-${id}`;
-                return (
-                  <video
-                    // A new clip is a new element, so the browser loads its source afresh.
-                    key={name}
-                    ref={(video) => {
-                      videoRefs.current[index] = video;
-                    }}
-                    className={`block w-full ${className}`}
-                    // The poster waits too: at load it would compete with the hero for bandwidth.
-                    poster={near ? `/video/${name}.jpg` : undefined}
-                    muted
-                    loop
-                    playsInline
-                    preload="none"
-                    aria-describedby="process-video-description"
-                  >
-                    {near && index === active ? (
-                      <source src={`/video/${name}.mp4`} type="video/mp4" />
-                    ) : null}
-                  </video>
-                );
-              })}
-              <button
-                type="button"
-                onClick={toggle}
-                aria-label={showPlay ? "Пусни видеото" : "Спри видеото"}
-                className={`absolute grid place-items-center rounded-full bg-[#102b38] text-[#f4efe4] shadow-[0_12px_30px_rgba(16,43,56,.35)] transition-transform hover:scale-105 ${
-                  showPlay
-                    ? "left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2"
-                    : "bottom-4 right-4 size-10 opacity-80 hover:opacity-100"
-                }`}
-              >
-                {showPlay ? (
-                  <Play className="ml-0.5 size-6" />
-                ) : (
-                  <Pause className="size-4" />
-                )}
-              </button>
-            </div>
-            <figcaption id="process-video-description" className="sr-only">
-              Видео без звук, около 40 секунди. {descriptions[view]} Клиентът
-              пише в чат, а фирмата отговаря „Добре, после ще сметнем“, и три
-              седмици по-късно има спор за 450 €. С Pakto фирмата записва
-              промяната на проекта с цена и срок и я изпраща. Клиентът получава
-              линк по имейл, без регистрация, и иска промяна: два контакта и без
-              контакта за хладилника. Фирмата изпраща версия 2, а версия 1
-              остава заключена. Клиентът вижда какво се е променило, изписва
-              името си, въвежда кода от имейла и одобрява 384 €. Решението се
-              записва и фирмата веднага вижда, че е одобрено.
-            </figcaption>
-          </figure>
-        </Reveal>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
-    </section>
+      <figure>
+        <div ref={frameRef} className="vf">
+          {formats.map(({ id, className }, index) => {
+            const name = `pakto-${view}-${id}`;
+            return (
+              <video
+                // A new clip is a new element, so the browser loads its source afresh.
+                key={name}
+                ref={(video) => {
+                  videoRefs.current[index] = video;
+                }}
+                className={`block w-full ${className}`}
+                // The poster waits too: at load it would compete with the hero for bandwidth.
+                poster={near ? `/video/${name}.jpg` : undefined}
+                muted
+                loop
+                playsInline
+                preload="none"
+                aria-describedby="process-video-description"
+              >
+                {near && index === active ? (
+                  <source src={`/video/${name}.mp4`} type="video/mp4" />
+                ) : null}
+              </video>
+            );
+          })}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={showPlay ? "Пусни видеото" : "Спри видеото"}
+            className={`play ${
+              showPlay
+                ? "left-1/2 top-1/2 size-16 -translate-x-1/2 -translate-y-1/2"
+                : "bottom-4 right-4 size-10 opacity-80 hover:opacity-100"
+            }`}
+          >
+            {showPlay ? (
+              <Play className="ml-0.5 size-6" />
+            ) : (
+              <Pause className="size-4" />
+            )}
+          </button>
+        </div>
+        <figcaption id="process-video-description" className="sr-only">
+          Видео без звук, около 40 секунди. {descriptions[view]} Клиентът пише в
+          чат, а фирмата отговаря „Добре, после ще сметнем“, и три седмици
+          по-късно има спор за 450 €. С Pakto фирмата записва промяната на
+          проекта с цена и срок и я изпраща. Клиентът получава линк по имейл,
+          без регистрация, и иска промяна: два контакта и без контакта за
+          хладилника. Фирмата изпраща версия 2, а версия 1 остава заключена.
+          Клиентът вижда какво се е променило, изписва името си, въвежда кода от
+          имейла и одобрява 384 €. Решението се записва и фирмата веднага вижда,
+          че е одобрено.
+        </figcaption>
+      </figure>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ export default function Forbidden() {
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
       <h1 className="text-2xl font-semibold tracking-tight">Нямаш достъп до тази страница</h1>
       <p className="text-muted-foreground">Профилът или ролята ти не включват това. Ако ти трябва достъп, попитай собственика на фирмата.</p>
-      <Link href="/app" className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Към работния преглед</Link>
+      <Link href="/app" className="bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-ink">Към работния преглед</Link>
     </main>
   );
 }

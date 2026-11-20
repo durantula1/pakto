@@ -31,7 +31,7 @@ function initials(name: string) {
 function UserAvatar({ name, className }: { name: string; className?: string }) {
   return (
     <Avatar className={cn("rounded-lg after:rounded-lg", className)}>
-      <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-primary-ink">{initials(name)}</AvatarFallback>
+      <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-blue">{initials(name)}</AvatarFallback>
     </Avatar>
   );
 }

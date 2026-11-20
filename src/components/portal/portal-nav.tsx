@@ -26,7 +26,7 @@ export function PortalNav({ variant }: { variant: "top" | "bottom" }) {
     return (
       <>
         {sections.map((section) => (
-          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground", active === section.id && "bg-sidebar text-sidebar-foreground hover:bg-sidebar hover:text-sidebar-foreground")}>
+          <Link key={section.id} href={section.href} aria-current={active === section.id ? "page" : undefined} className={cn("relative inline-flex h-10 items-center gap-1.5 px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground", active === section.id && "bg-ink text-paper hover:bg-ink hover:text-paper")}>
             <section.icon className="size-4" /> {section.label}
           </Link>
         ))}
@@ -39,7 +39,7 @@ export function PortalNav({ variant }: { variant: "top" | "bottom" }) {
       {sections.map((section) => {
         const current = active === section.id;
         return (
-          <Link key={section.id} href={section.href} aria-current={current ? "page" : undefined} className={cn("relative flex h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors", current ? "bg-sidebar-foreground text-sidebar" : "text-sidebar-foreground/75 hover:text-sidebar-foreground")}>
+          <Link key={section.id} href={section.href} aria-current={current ? "page" : undefined} className={cn("relative flex h-12 items-center justify-center gap-2 px-4 text-sm font-semibold transition-colors", current ? "bg-paper text-ink" : "text-paper/75 hover:text-paper")}>
             <section.icon className="size-5 shrink-0" aria-hidden="true" />
             {section.label}
           </Link>

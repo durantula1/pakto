@@ -19,7 +19,7 @@ type DetailHeaderProps = {
 };
 
 const backClassName =
-  "inline-flex h-10 max-w-full shrink-0 items-center gap-2 self-start rounded-xl border bg-card px-3 text-sm font-medium text-foreground shadow-sm xl:max-w-56";
+  "inline-flex h-10 max-w-full shrink-0 items-center gap-2 self-start rounded-xl border bg-card px-3 text-sm font-medium text-foreground xl:max-w-56";
 
 export function DetailHeader({
   backHref,
@@ -93,9 +93,9 @@ export function DetailHeaderSkeleton({ backLabel, action = true, status = true, 
       inBreadcrumb={inBreadcrumb}
       backLabel={backLabel ?? <span className="flex h-5 items-center"><Skeleton className="h-3.5 w-20" /></span>}
       title={<div className={`flex items-center ${inBreadcrumb ? "h-[1.5625rem]" : "h-[1.875rem]"}`}><Skeleton className="h-6 w-64 max-w-full" /></div>}
-      status={status ? <Skeleton className={inBreadcrumb ? "h-6 w-20 rounded-full" : "h-5 w-20 rounded-full"} /> : null}
+      status={status ? <Skeleton className={inBreadcrumb ? "h-6 w-20" : "h-5 w-20"} /> : null}
       metadata={<span className="flex h-5 items-center"><Skeleton className="h-3.5 w-56 max-w-full" /></span>}
-      action={action ? <Skeleton className={inBreadcrumb ? "h-8 w-32 rounded-full" : "h-8 w-32 rounded-lg"} /> : undefined}
+      action={action ? <Skeleton className={inBreadcrumb ? "h-8 w-32" : "h-8 w-32 rounded-lg"} /> : undefined}
     />
   );
 }

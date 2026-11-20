@@ -99,7 +99,7 @@ export function ProjectCombobox({
         <Input
           id={id}
           placeholder={placeholder}
-          className={cn("flex h-8 w-full rounded-lg border border-input bg-transparent pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30", inputClassName)}
+          className={cn("flex h-8 w-full rounded-lg border border-input bg-transparent pr-8 pl-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50", inputClassName)}
         />
         <Button className="absolute inset-y-0 right-0 flex w-8 items-center justify-center text-muted-foreground">
           {loading ? <Loader2 className="size-4 animate-spin" /> : <ChevronDownIcon className="size-4" />}
@@ -107,7 +107,7 @@ export function ProjectCombobox({
       </div>
       <Popover
         offset={4}
-        className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10"
+        className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10"
       >
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"

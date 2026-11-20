@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
  */
 export function CountPill({ value, highlight = false }: { value: number; highlight?: boolean }) {
   return <span className={cn(
-    "ml-1 min-w-5 rounded-full px-1.5 text-center text-2xs font-semibold tabular-nums",
+    "ml-1 min-w-5 px-1.5 text-center text-2xs font-semibold tabular-nums",
     highlight
-      ? "bg-primary text-primary-foreground in-data-selected:bg-white in-data-selected:text-sidebar"
-      : "bg-sidebar-accent text-sidebar-foreground in-data-selected:bg-white in-data-selected:text-sidebar",
+      ? "bg-primary text-primary-foreground in-data-selected:bg-white in-data-selected:text-ink"
+      : "bg-ink-soft text-paper in-data-selected:bg-white in-data-selected:text-ink",
   )}>{value}</span>;
 }

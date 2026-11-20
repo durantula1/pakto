@@ -73,7 +73,7 @@ function ScheduleStagesForm({ projectId, offerId, items, deadline }: { projectId
         })}
       </ol>
       {late ? (
-        <p role="status" className="flex items-start gap-2 rounded-lg bg-tile-sand p-3 text-sm text-tile-sand-foreground">
+        <p role="status" className="flex items-start gap-2 rounded-lg bg-warn-tint p-3 text-sm text-warn">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>Последният етап свършва на {formatDay(last)}, след договорения краен срок {formatDay(deadline!)}. Започни по-рано или съкрати сроковете.</span>
         </p>

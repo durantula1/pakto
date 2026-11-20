@@ -27,7 +27,7 @@ function AppHeader({
         gap: 12,
         padding: "12px 20px 14px",
         borderBottom: `1px solid ${color.line}`,
-        background: "rgba(244,239,228,.7)",
+        background: "rgba(241,240,235,.7)",
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -96,7 +96,7 @@ function Sheet({ children, top }: { children: ReactNode; top: number }) {
         padding: "22px 20px",
         borderRadius: "26px 26px 0 0",
         background: "#fff",
-        boxShadow: "0 -18px 40px rgba(16,43,56,.12)",
+        boxShadow: "0 -18px 40px rgba(11,11,11,.12)",
         display: "flex",
         flexDirection: "column",
         gap: 14,
@@ -126,7 +126,7 @@ function Toast({
         bottom: 26,
         zIndex: 30,
         padding: "14px 16px",
-        borderRadius: 16,
+        borderRadius: 0,
         background: color.ink,
         color: color.sheet,
         fontSize: 15,
@@ -144,7 +144,7 @@ function Toast({
           placeItems: "center",
           width: 26,
           height: 26,
-          borderRadius: 99,
+          borderRadius: 0,
           background: color.lime,
           color: color.ink,
           fontSize: 14,
@@ -192,7 +192,7 @@ export function ChatScene() {
   const bubble = {
     maxWidth: 280,
     padding: "12px 15px",
-    borderRadius: 20,
+    borderRadius: 0,
     fontSize: 17,
     lineHeight: 1.35,
   } as const;
@@ -215,7 +215,7 @@ export function ChatScene() {
             placeItems: "center",
             width: 40,
             height: 40,
-            borderRadius: 99,
+            borderRadius: 0,
             background: color.sky,
             fontWeight: 900,
             fontSize: 15,
@@ -280,7 +280,7 @@ export function ChatScene() {
                 height: 3,
                 width: `${strike}%`,
                 background: color.coral,
-                borderRadius: 3,
+                borderRadius: 0,
               }}
             />
           </span>
@@ -302,8 +302,8 @@ export function ChatScene() {
             alignSelf: "center",
             margin: "10px 0 0",
             padding: "5px 12px",
-            borderRadius: 99,
-            background: "rgba(16,43,56,.08)",
+            borderRadius: 0,
+            background: "rgba(11,11,11,.08)",
             fontSize: 12,
             color: color.muted,
             ...enter(frame, 94, 8),
@@ -367,7 +367,7 @@ export function RecordScene() {
                 key={kind}
                 style={{
                   padding: "7px 11px",
-                  borderRadius: 99,
+                  borderRadius: 0,
                   fontSize: 12,
                   fontWeight: 700,
                   background: index === 0 ? color.ink : color.paper,
@@ -384,8 +384,8 @@ export function RecordScene() {
             marginTop: 14,
             padding: "12px 14px",
             minHeight: 70,
-            borderRadius: 14,
-            border: `1px solid rgba(16,43,56,.15)`,
+            borderRadius: 0,
+            border: `1px solid rgba(11,11,11,.15)`,
             background: "#fff",
           }}
         >
@@ -453,15 +453,15 @@ export function RecordScene() {
           style={{
             marginTop: 16,
             padding: "12px 14px",
-            borderRadius: 14,
-            border: `1.5px dashed rgba(16,43,56,.25)`,
+            borderRadius: 0,
+            border: `1.5px dashed rgba(11,11,11,.25)`,
             fontSize: 14,
             lineHeight: 1.4,
             ...enter(frame, 120, 10),
           }}
         >
           <b>Вътрешна бележка:</b> кабелът минава през носещата стена.
-          <Label style={{ fontSize: 10, marginTop: 4, color: "#e86650" }}>
+          <Label style={{ fontSize: 10, marginTop: 4, color: "#1d36ff" }}>
             КЛИЕНТЪТ НЕ Я ВИЖДА
           </Label>
         </div>
@@ -577,7 +577,7 @@ export function EmailScene() {
             marginTop: 22,
             fontSize: 16,
             lineHeight: 1.5,
-            color: "#284955",
+            color: "#262624",
           }}
         >
           <p style={{ margin: 0 }}>Здравейте, Иван Петров!</p>
@@ -663,10 +663,10 @@ export function RequestScene() {
                   alignItems: "center",
                   gap: 12,
                   padding: "12px 14px",
-                  borderRadius: 14,
+                  borderRadius: 0,
                   border: option.selected
                     ? `2px solid ${color.ink}`
-                    : `1px solid rgba(16,43,56,.15)`,
+                    : `1px solid rgba(11,11,11,.15)`,
                   ...enter(frame, 50 + index * 4, 8),
                 }}
               >
@@ -676,7 +676,7 @@ export function RequestScene() {
                       margin: 0,
                       fontSize: 16,
                       fontWeight: 700,
-                      color: index ? "#c2412d" : color.ink,
+                      color: index ? "#c2371f" : color.ink,
                     }}
                   >
                     {option.title}
@@ -697,8 +697,8 @@ export function RequestScene() {
                     placeItems: "center",
                     width: 22,
                     height: 22,
-                    borderRadius: 99,
-                    border: `2px solid ${option.selected ? color.ink : "rgba(16,43,56,.25)"}`,
+                    borderRadius: 0,
+                    border: `2px solid ${option.selected ? color.ink : "rgba(11,11,11,.25)"}`,
                   }}
                 >
                   {option.selected ? (
@@ -706,7 +706,7 @@ export function RequestScene() {
                       style={{
                         width: 11,
                         height: 11,
-                        borderRadius: 99,
+                        borderRadius: 0,
                         background: color.ink,
                       }}
                     />
@@ -718,8 +718,8 @@ export function RequestScene() {
               style={{
                 minHeight: 84,
                 padding: "12px 14px",
-                borderRadius: 14,
-                border: `1px solid rgba(16,43,56,.2)`,
+                borderRadius: 0,
+                border: `1px solid rgba(11,11,11,.2)`,
                 fontSize: 16,
                 lineHeight: 1.4,
                 ...enter(frame, 64, 8),
@@ -803,7 +803,7 @@ export function ReviseScene() {
         <div
           style={{
             padding: "12px 16px",
-            borderRadius: 16,
+            borderRadius: 0,
             background: color.paper,
             display: "flex",
             justifyContent: "space-between",
@@ -823,7 +823,7 @@ export function ReviseScene() {
           style={{
             marginTop: 10,
             padding: "14px 18px 6px",
-            borderRadius: 18,
+            borderRadius: 0,
             background: "#fff",
             border: `1.5px solid ${color.ink}`,
             ...enter(frame, 58, 30, 14),
@@ -1010,8 +1010,8 @@ export function ApproveScene() {
                     width: 46,
                     height: 58,
                     marginRight: index === 2 ? 10 : 0,
-                    borderRadius: 12,
-                    border: `2px solid ${index < filled ? color.ink : "rgba(16,43,56,.2)"}`,
+                    borderRadius: 0,
+                    border: `2px solid ${index < filled ? color.ink : "rgba(11,11,11,.2)"}`,
                     fontFamily: font.mono,
                     fontSize: 24,
                     fontWeight: 700,
@@ -1021,7 +1021,7 @@ export function ApproveScene() {
                 </span>
               ))}
             </div>
-            <Button scale={press(frame, 214)} style={{ background: "#1e765d" }}>
+            <Button scale={press(frame, 214)} style={{ background: "#0e8a4a" }}>
               Одобрявам · 384,00 €
             </Button>
           </>
@@ -1056,8 +1056,8 @@ export function ApproveScene() {
                 style={{
                   height: 48,
                   padding: "0 14px",
-                  borderRadius: 12,
-                  border: `1px solid rgba(16,43,56,.25)`,
+                  borderRadius: 0,
+                  border: `1px solid rgba(11,11,11,.25)`,
                   display: "flex",
                   alignItems: "center",
                   fontSize: 17,
@@ -1073,8 +1073,8 @@ export function ApproveScene() {
                 display: "flex",
                 gap: 10,
                 padding: 12,
-                borderRadius: 12,
-                background: "rgba(16,43,56,.05)",
+                borderRadius: 0,
+                background: "rgba(11,11,11,.05)",
                 fontSize: 13,
                 lineHeight: 1.45,
               }}
@@ -1086,7 +1086,7 @@ export function ApproveScene() {
                   width: 20,
                   height: 20,
                   flexShrink: 0,
-                  borderRadius: 5,
+                  borderRadius: 0,
                   background: frame >= 104 ? color.ink : "#fff",
                   border: `2px solid ${color.ink}`,
                   color: "#fff",
@@ -1143,7 +1143,7 @@ export function SealScene() {
             placeItems: "center",
             width: 64,
             height: 64,
-            borderRadius: 99,
+            borderRadius: 0,
             background: color.okBg,
             color: color.okText,
             fontSize: 32,
@@ -1163,7 +1163,7 @@ export function SealScene() {
           Решението е записано
         </p>
         <p
-          style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: "#284955" }}
+          style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: "#262624" }}
         >
           Одобрихте версия 2 за 384,00 €. Разписката е в имейла ви.
         </p>
@@ -1171,7 +1171,7 @@ export function SealScene() {
           style={{
             marginTop: 8,
             padding: 16,
-            borderRadius: 16,
+            borderRadius: 0,
             background: color.paper,
             fontFamily: font.mono,
             fontSize: 13,
@@ -1355,7 +1355,7 @@ export function FirmWaiting({
                     placeItems: "center",
                     width: 26,
                     height: 26,
-                    borderRadius: 99,
+                    borderRadius: 0,
                     fontSize: 14,
                     fontWeight: 900,
                     background: step.done
@@ -1370,7 +1370,7 @@ export function FirmWaiting({
                       : color.muted,
                     border: step.done
                       ? "none"
-                      : "2px dashed rgba(16,43,56,.25)",
+                      : "2px dashed rgba(11,11,11,.25)",
                     transform: `scale(${index === 1 && seenAt !== undefined ? interpolate(frame, [seenAt, seenAt + 5, seenAt + 12], [1, 1.25, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1})`,
                   }}
                 >
@@ -1381,7 +1381,7 @@ export function FirmWaiting({
                     style={{
                       flex: 1,
                       width: 2,
-                      background: step.done ? color.ink : "rgba(16,43,56,.15)",
+                      background: step.done ? color.ink : "rgba(11,11,11,.15)",
                       margin: "4px 0",
                     }}
                   />
@@ -1435,7 +1435,7 @@ export function ClientWaiting() {
             placeItems: "center",
             width: 56,
             height: 56,
-            borderRadius: 99,
+            borderRadius: 0,
             background: color.waitBg,
             color: color.waitText,
             fontSize: 26,
@@ -1454,7 +1454,7 @@ export function ClientWaiting() {
           Искането е изпратено
         </p>
         <p
-          style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: "#284955" }}
+          style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: "#262624" }}
         >
           {COMPANY} подготвя нова версия. Ще получите имейл, щом е готова.
         </p>
@@ -1462,7 +1462,7 @@ export function ClientWaiting() {
           style={{
             marginTop: 10,
             padding: "12px 14px",
-            borderRadius: 14,
+            borderRadius: 0,
             background: color.paper,
             fontSize: 14,
             lineHeight: 1.45,

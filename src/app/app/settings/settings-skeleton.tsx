@@ -7,7 +7,7 @@ type Control = "input" | "button" | "switch" | "segmented" | "logo" | "text" | "
 const controlClass: Record<Control, string> = {
   input: "h-9 w-full @xl:max-w-sm",
   button: "h-9 w-24",
-  switch: "h-6 w-10 rounded-full",
+  switch: "h-6 w-10",
   segmented: "h-9 w-full @xl:max-w-sm",
   logo: "h-44 w-full rounded-xl @xl:max-w-md",
   text: "h-4 w-40",
@@ -75,7 +75,7 @@ export function ProfileSettingsSkeleton() {
         <div className="grid gap-2">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="h-4 w-52" />
-          <div className="flex gap-1.5"><Skeleton className="h-5 w-20 rounded-full" /><Skeleton className="h-5 w-28 rounded-full" /></div>
+          <div className="flex gap-1.5"><Skeleton className="h-5 w-20" /><Skeleton className="h-5 w-28" /></div>
         </div>
       </div>
       <GroupSkeleton rows={["input", "input"]} />

@@ -56,7 +56,7 @@ export function SupportForm({ knownEmail, page }: { knownEmail: string | null; p
 
   if (state.ok) {
     return (
-      <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-primary-ink">
+      <p role="status" className="rounded-xl bg-primary/10 p-4 text-sm font-medium text-blue">
         Благодарим! Получихме съобщението и ще ви отговорим на имейла.
       </p>
     );
@@ -118,7 +118,7 @@ export function SupportForm({ knownEmail, page }: { knownEmail: string | null; p
                     URL.revokeObjectURL(entry.url);
                     setPicked(picked.filter((other) => other !== entry));
                   }}
-                  className="absolute top-1 right-1 grid size-6 place-items-center rounded-full bg-background/90 shadow-sm"
+                  className="absolute top-1 right-1 grid size-6 place-items-center bg-background/90"
                 >
                   <X className="size-3.5" />
                 </button>

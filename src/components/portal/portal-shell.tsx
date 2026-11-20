@@ -38,7 +38,7 @@ export function PortalShell({ organizationName, logoPath, nav, signedIn = false,
               // eslint-disable-next-line @next/next/no-img-element -- already an optimized PNG from storage
               <img src={logoUrl} alt="" className="h-9 max-w-24 shrink-0 object-contain" />
             ) : organizationName ? (
-              <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-sidebar text-sm font-semibold text-white">{initials(organizationName)}</span>
+              <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-ink text-sm font-semibold text-white">{initials(organizationName)}</span>
             ) : (
               <Wordmark href={null} className="shrink-0" />
             )}
@@ -59,7 +59,7 @@ export function PortalShell({ organizationName, logoPath, nav, signedIn = false,
       </main>
       {nav ? (
         <nav aria-label="Портал" className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
-          <div className="pointer-events-auto mx-auto max-w-sm rounded-full bg-sidebar p-1.5 shadow-[0_0.75rem_2rem_-0.75rem_rgb(16_43_56/0.55)]">
+          <div className="pointer-events-auto mx-auto max-w-sm bg-ink p-1.5 shadow-[0_0.75rem_2rem_-0.75rem_rgb(16_43_56/0.55)]">
             <PortalNav variant="bottom" />
           </div>
         </nav>

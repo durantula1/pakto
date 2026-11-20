@@ -46,7 +46,7 @@ export default async function TeamMemberPage({ params }: PageProps<"/app/team/[u
         title={name}
         status={<>
           <Badge variant={active ? "approved" : "outline"}>{active ? "Активен" : "Без достъп"}</Badge>
-          {active ? <Badge className="bg-sidebar text-sidebar-foreground">{roleLabel(member)}</Badge> : null}
+          {active ? <Badge className="bg-ink text-paper">{roleLabel(member)}</Badge> : null}
         </>}
         metadata={<>
           {member.email ? <span className="inline-flex min-w-0 items-center gap-1.5"><Mail className="size-4 shrink-0" /> <span className="truncate">{member.email}</span></span> : null}

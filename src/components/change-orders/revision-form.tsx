@@ -207,7 +207,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
         onConfirm={() => { const formData = confirmSend; if (formData) startTransition(() => action(formData)); }}
       />
       {withdrawsRevision ? (
-        <div role="note" className="rounded-xl bg-tile-sand px-4 py-3 text-sm text-tile-sand-foreground">
+        <div role="note" className="rounded-xl bg-warn-tint px-4 py-3 text-sm text-warn">
           <p className="font-semibold">Клиентът вече има версия {withdrawsRevision}.</p>
           <p className="mt-0.5">{canSend
             ? `При запазване тя се оттегля. „Запази и изпрати“ му изпраща новата версия с имейл за разликите; „Запази като чернова“ му показва „Офертата се обновява“, докато не я изпратиш.`
@@ -327,7 +327,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             ) : null}
 
             {isOffer && agreement ? (
-              <div role={lowerThanAgreed ? "alert" : undefined} className={lowerThanAgreed ? "rounded-xl bg-tile-coral px-4 py-3 text-sm text-tile-coral-foreground" : "rounded-xl bg-muted px-4 py-3 text-sm"}>
+              <div role={lowerThanAgreed ? "alert" : undefined} className={lowerThanAgreed ? "rounded-xl bg-late-tint px-4 py-3 text-sm text-late" : "rounded-xl bg-muted px-4 py-3 text-sm"}>
                 <p>Договорено досега: <span className="font-semibold tabular-nums">{formatMoney(agreement.contractMinor / 100)} {currencySymbol(currency)}</span> · вече платено: <span className="font-semibold tabular-nums">{formatMoney(agreement.paidMinor / 100)} {currencySymbol(currency)}</span></p>
                 <p className="mt-0.5">С тази версия: <span className="font-semibold tabular-nums">{formatMoney(nextContractMinor / 100)} {currencySymbol(currency)}</span>{absorbed.length ? " (отбелязаните промени не се добавят отделно)" : ""}</p>
                 {nextContractMinor < agreement.paidMinor ? <p className="mt-1 font-medium">Новата сума е под вече платеното. Провери редовете.</p>
@@ -362,7 +362,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
             <dl className="mt-3 space-y-2 text-sm">
               {bill.discountAmount ? <>
                 <BillRow label="Сума без отстъпка" value={formatMoney(bill.gross)} />
-                <BillRow label={discountLabel(discountType || null, discountValue)} value={`−${formatMoney(bill.discountAmount)}`} className="text-primary-ink" />
+                <BillRow label={discountLabel(discountType || null, discountValue)} value={`−${formatMoney(bill.discountAmount)}`} className="text-blue" />
               </> : null}
               <BillRow label="Без ДДС" value={`${sign}${formatMoney(bill.subtotal)}`} />
               <BillRow label={vatLabel(taxRate)} value={`${sign}${formatMoney(bill.taxAmount)}`} />

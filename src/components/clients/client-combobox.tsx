@@ -79,13 +79,13 @@ export function ClientCombobox({ name, id, defaultValue, allLabel, isRequired, c
         <Input
           id={id}
           placeholder="Име, имейл или телефон"
-          className={cn("flex h-11 w-full rounded-lg border border-input bg-transparent pr-9 pl-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm dark:bg-input/30", inputClassName)}
+          className={cn("flex h-11 w-full rounded-lg border border-input bg-transparent pr-9 pl-3 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:text-sm", inputClassName)}
         />
         <Button className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground">
           {loading ? <Loader2 className="size-4 animate-spin" /> : <ChevronDownIcon className="size-4" />}
         </Button>
       </div>
-      <Popover offset={4} className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">
+      <Popover offset={4} className="z-50 w-(--trigger-width) min-w-48 overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-[6px_6px_0_var(--ink)] ring-1 ring-foreground/10">
         <ListBox
           className="max-h-72 overflow-y-auto p-1 outline-hidden"
           renderEmptyState={() => <p className="px-2 py-3 text-sm text-muted-foreground">{loading || !activated ? "Търсене…" : "Няма намерени клиенти."}</p>}

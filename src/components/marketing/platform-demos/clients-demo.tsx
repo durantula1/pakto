@@ -41,7 +41,7 @@ export function ClientsDemo() {
       title="Иван Петров"
       status={<StatusChip tone="info">2 ПРОЕКТА</StatusChip>}
     >
-      <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+      <p className="font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
         ПРОЕКТИ НА КЛИЕНТА
       </p>
       <div className="mt-2 min-h-[6.75rem] space-y-2">
@@ -52,11 +52,11 @@ export function ClientsDemo() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-between gap-3 rounded-xl bg-[#f4efe4] px-3.5 py-2.5"
+              className="flex items-center justify-between gap-3 bg-paper px-3.5 py-2.5"
             >
               <span className="min-w-0">
                 <b className="block truncate demo-text-12">{object.name}</b>
-                <span className="font-mono demo-text-9 text-[#52707d]">
+                <span className="font-mono demo-text-9 text-muted-foreground">
                   {object.docs}
                 </span>
               </span>
@@ -73,13 +73,13 @@ export function ClientsDemo() {
       <m.div
         initial={false}
         animate={{ opacity: step >= 3 ? 1 : 0.15, y: step >= 3 ? 0 : 8 }}
-        className="mt-3 rounded-xl bg-[#102b38] p-3.5 text-[#fffaf0]"
+        className="mt-3 bg-ink p-3.5 text-card"
       >
         <div className="flex items-center justify-between">
-          <p className="font-mono demo-text-8 tracking-[0.12em] text-[#b8ced2]">
+          <p className="font-mono demo-text-8 tracking-[0.12em] text-border">
             ЕТАПИ · ВСИЧКИ ПРОЕКТИ
           </p>
-          <CalendarClock className="size-3.5 text-[#b8ced2]" />
+          <CalendarClock className="size-3.5 text-border" />
         </div>
         <ul className="mt-2 divide-y divide-white/10">
           {stages.map((stage) => (
@@ -89,11 +89,11 @@ export function ClientsDemo() {
             >
               <span className="min-w-0">
                 <b className="block truncate demo-text-11">{stage.name}</b>
-                <span className="font-mono demo-text-8 text-[#b8ced2]">
+                <span className="font-mono demo-text-8 text-border">
                   {stage.object} · {stage.due}
                 </span>
               </span>
-              <span className="shrink-0 rounded-full bg-[#fee8a5] px-2 py-0.5 font-mono demo-text-8 font-bold text-[#73570d]">
+              <span className="shrink-0 bg-warn-tint px-2 py-0.5 font-mono demo-text-8 font-bold text-warn">
                 {stage.label}
               </span>
             </li>
@@ -103,9 +103,9 @@ export function ClientsDemo() {
       <m.div
         initial={false}
         animate={{ opacity: step >= 4 ? 1 : 0.15, y: step >= 4 ? 0 : 8 }}
-        className="mt-3 flex items-center justify-between rounded-xl border border-[#102b38]/15 px-3.5 py-3"
+        className="mt-3 flex items-center justify-between border border-ink px-3.5 py-3"
       >
-        <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+        <p className="font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
           ОСТАВА ЗА ПЛАЩАНЕ ОТ КЛИЕНТА
         </p>
         <p className="demo-text-13 font-black">944 €</p>

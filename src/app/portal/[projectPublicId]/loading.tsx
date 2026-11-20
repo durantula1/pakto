@@ -17,7 +17,7 @@ export default function PortalProjectLoading() {
           <div key={index} className="flex flex-col gap-2 rounded-2xl border bg-card p-4">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-1.5 w-full rounded-full" />
+            <Skeleton className="h-1.5 w-full" />
             <Skeleton className="h-3 w-28 max-w-full" />
           </div>
         ))}

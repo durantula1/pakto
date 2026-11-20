@@ -24,12 +24,10 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingIncludes: {
     "/api/changes/[changeOrderId]/pdf": [
-      "./src/modules/pdf/fonts/NotoSans-Regular.ttf",
-      "./src/modules/pdf/fonts/NotoSans-SemiBold.ttf",
+      "./src/modules/pdf/fonts/*.ttf",
     ],
     "/api/organization/demo-offer": [
-      "./src/modules/pdf/fonts/NotoSans-Regular.ttf",
-      "./src/modules/pdf/fonts/NotoSans-SemiBold.ttf",
+      "./src/modules/pdf/fonts/*.ttf",
     ],
   },
   async redirects() {

@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 type Item = { id: string; label: string };
 
 /**
- * Contents of a long page (FAQ topics, legal sections) that marks the section being read, in the
- * logo's green. A section counts as current while it crosses a band just below the header.
+ * Contents of a long page (FAQ topics, legal sections) that marks the section being read, in ink. A section counts as current while it crosses a band just below the header.
  */
 export function SectionNav({
   items,
@@ -64,8 +63,8 @@ export function SectionNav({
             aria-current={current ? "location" : undefined}
             className={`border px-3 py-2 text-sm font-bold transition-colors ${
               current
-                ? "border-[#102b38] bg-[#bceba8]"
-                : "border-[#102b38]/25 hover:bg-[#bceba8]/60"
+                ? "border-ink bg-ink text-paper"
+                : "border-ink hover:bg-blue-tint"
             }`}
           >
             {item.label}
@@ -82,7 +81,7 @@ export function SectionNav({
       {mobileChips && chips("lg:hidden")}
       <nav aria-label={label} className="mt-10 hidden lg:block">
         <p className="text-sm font-bold">{label}</p>
-        <ol className="mt-3 border-l border-[#102b38]/15">
+        <ol className="mt-3 border-l border-ink">
           {items.map((item, index) => {
             const current = active === item.id;
             return (
@@ -92,13 +91,13 @@ export function SectionNav({
                   aria-current={current ? "location" : undefined}
                   className={`-ml-px flex gap-3 border-l-2 py-1.5 pl-4 text-sm transition-colors ${
                     current
-                      ? "border-[#102b38] bg-[#bceba8] font-bold text-[#102b38]"
-                      : "border-transparent text-[#46636e] hover:text-[#102b38]"
+                      ? "border-ink bg-ink text-paper font-bold text-ink"
+                      : "border-transparent text-muted-foreground hover:text-ink"
                   }`}
                 >
                   {numbered && (
                     <span
-                      className={`font-mono text-xs leading-5 ${current ? "text-[#102b38]" : "text-[#b5412d]"}`}
+                      className={`font-mono text-xs leading-5 ${current ? "text-ink" : "text-blue"}`}
                     >
                       {String(index + 1).padStart(2, "0")}
                     </span>

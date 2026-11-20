@@ -149,8 +149,8 @@ export function ScenarioPlayer() {
   const current = scenario.steps[step]!;
 
   return (
-    <section aria-label="Сценарии" className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
-      <div role="tablist" aria-label="Избери сценарий" className="-mx-1 flex gap-1 overflow-x-auto rounded-xl bg-sidebar p-1 shadow-sm">
+    <section aria-label="Сценарии" className="rounded-2xl border bg-card p-4 sm:p-6">
+      <div role="tablist" aria-label="Избери сценарий" className="-mx-1 flex gap-1 overflow-x-auto rounded-xl bg-ink p-1">
         {scenarios.map((item) => (
           <button
             key={item.id}
@@ -160,7 +160,7 @@ export function ScenarioPlayer() {
             onClick={() => choose(item.id)}
             className={cn(
               "h-10 shrink-0 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-              item.id === scenarioId ? "bg-primary font-semibold text-primary-foreground shadow-sm" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              item.id === scenarioId ? "bg-primary font-semibold text-primary-foreground" : "text-paper/70 hover:bg-ink-soft hover:text-paper",
             )}
           >
             {item.label}
@@ -176,7 +176,7 @@ export function ScenarioPlayer() {
           <div className="sticky top-0 z-10 hidden grid-cols-2 gap-3 bg-card pb-3 sm:grid">
             {(["company", "client"] as const).map((lane) => {
               const Icon = laneMeta[lane].icon;
-              return <p key={lane} className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2 text-sm font-semibold"><Icon className="size-4 text-primary-ink" />{laneMeta[lane].label}</p>;
+              return <p key={lane} className="flex items-center justify-center gap-2 rounded-lg bg-muted py-2 text-sm font-semibold"><Icon className="size-4 text-blue" />{laneMeta[lane].label}</p>;
             })}
           </div>
           <ol className="relative flex flex-col gap-2">
@@ -205,21 +205,21 @@ export function ScenarioPlayer() {
                       "relative flex min-h-16 items-start gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                       item.lane === "client" && "sm:col-start-2",
                       item.lane === "both" && "sm:mx-auto sm:w-2/3",
-                      active ? "border-primary bg-primary/10 shadow-sm" : done ? "bg-card" : "border-dashed bg-card",
+                      active ? "border-primary bg-primary/10" : done ? "bg-card" : "border-dashed bg-card",
                     )}
                   >
-                    <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
+                    <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", active ? "bg-primary text-primary-foreground" : done ? "bg-primary/15 text-blue" : "bg-muted text-muted-foreground")}>
                       <Icon className="size-4" />
                     </span>
                     <span className="min-w-0">
                       <span className="flex items-center gap-1.5 text-2xs font-medium uppercase tracking-wide text-muted-foreground sm:hidden"><LaneIcon className="size-3" />{laneMeta[item.lane].label}</span>
                       <span className="block font-semibold leading-snug">{item.title}</span>
-                      {item.status ? <span className="mt-1 inline-block rounded-full bg-sidebar px-2 py-0.5 text-2xs font-semibold text-sidebar-foreground">{item.status}</span> : null}
+                      {item.status ? <span className="mt-1 inline-block bg-ink px-2 py-0.5 text-2xs font-semibold text-paper">{item.status}</span> : null}
                     </span>
                     {active ? (
                       <motion.span
                         layoutId="guide-document"
-                        className="absolute -right-2 -top-2 grid size-8 place-items-center rounded-lg bg-sidebar text-primary shadow-md"
+                        className="absolute -right-2 -top-2 grid size-8 place-items-center rounded-lg bg-ink text-primary shadow-[6px_6px_0_var(--ink)]"
                         transition={{ type: "spring", stiffness: 260, damping: 26 }}
                         aria-hidden="true"
                       >
@@ -235,8 +235,8 @@ export function ScenarioPlayer() {
 
         {/* Plain-language narration of the current step. */}
         <div className="-order-1 xl:order-none xl:sticky xl:top-24 xl:self-start">
-          <div className="rounded-2xl bg-sidebar p-5 text-sidebar-foreground shadow-sm">
-            <p className="text-xs font-medium uppercase tracking-wide text-sidebar-foreground/60">Стъпка {step + 1} от {scenario.steps.length} · {laneMeta[current.lane].label}</p>
+          <div className="rounded-2xl bg-ink p-5 text-paper">
+            <p className="text-xs font-medium uppercase tracking-wide text-paper/60">Стъпка {step + 1} от {scenario.steps.length} · {laneMeta[current.lane].label}</p>
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${scenario.id}-${step}`}
@@ -247,10 +247,10 @@ export function ScenarioPlayer() {
                 aria-live="polite"
               >
                 <p className="mt-2 text-xl font-semibold leading-tight text-white">{current.title}</p>
-                <p className="mt-2 leading-6 text-sidebar-foreground/80">{current.text}</p>
+                <p className="mt-2 leading-6 text-paper/80">{current.text}</p>
               </motion.div>
             </AnimatePresence>
-            <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-4 h-1 overflow-hidden bg-white/10">
               <motion.div className="h-full bg-primary" animate={{ width: `${((step + 1) / scenario.steps.length) * 100}%` }} transition={{ duration: 0.3 }} />
             </div>
             <div className="mt-4 grid grid-cols-[auto_1fr_auto] gap-2">

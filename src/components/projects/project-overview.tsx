@@ -33,7 +33,7 @@ export function PortalSummary({ state, view }: { state: ProjectState; view: Scop
         <BillLine label="Платено" amount={`− ${formatCents(view.paidMinor, view.currency)}`} muted />
       </div>
       <BillLine
-        className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-primary-ink")}
+        className={cn("mt-3 border-t-[3px] border-double border-foreground/25 pt-3", left > 0n && "text-blue")}
         strong
         label={left > 0n ? "Остава да платите" : left < 0n ? "Надплатено" : "Изплатено изцяло"}
         amount={formatCents(left < 0n ? -left : left, view.currency)}
@@ -67,8 +67,8 @@ export function PortalSchedule({ view, foldDone = false }: {
   };
   return <section className="rounded-3xl bg-card px-3 py-4 sm:px-5">
     <p className="flex flex-wrap items-center gap-2 px-1 text-sm">
-      {view.milestones.length ? <span className="rounded-full bg-tile-mint px-3 py-1 font-medium text-tile-mint-foreground">{done} от {view.milestones.length} {view.milestones.length === 1 ? "етап готов" : "етапа готови"}</span> : null}
-      {view.deadline ? <span className="rounded-full bg-muted px-3 py-1 text-muted-foreground">Краен срок <strong className="font-semibold text-foreground">{formatDay(view.deadline)}</strong></span> : null}
+      {view.milestones.length ? <span className="bg-ok-tint px-3 py-1 font-medium text-ok">{done} от {view.milestones.length} {view.milestones.length === 1 ? "етап готов" : "етапа готови"}</span> : null}
+      {view.deadline ? <span className="bg-muted px-3 py-1 text-muted-foreground">Краен срок <strong className="font-semibold text-foreground">{formatDay(view.deadline)}</strong></span> : null}
     </p>
     {view.milestones.length ? <StageList view={view} now={now} next={next} name={name} foldDone={foldDone} /> : <p className="mt-2 text-sm text-muted-foreground">Фирмата още не е добавила етапи.</p>}
   </section>;
@@ -104,20 +104,20 @@ function StageList({ view, now, next, name, foldDone }: {
           <span className="text-xs text-muted-foreground">{month}</span>
         </p>
         <div className="flex flex-col items-center">
-          <span className={cn("mt-4 grid size-4 shrink-0 place-items-center rounded-full",
-            completed ? "bg-brand-green" : current ? "bg-primary ring-4 ring-primary/25" : "border-2 border-foreground/25 bg-card")}>
+          <span className={cn("mt-4 grid size-4 shrink-0 place-items-center",
+            completed ? "bg-ok-tint" : current ? "bg-primary ring-4 ring-primary/25" : "border-2 border-foreground/25 bg-card")}>
             {completed ? <Check className="size-2.5" strokeWidth={4} /> : null}
           </span>
           {line ? <span className="w-0.5 flex-1 border-l-2 border-dashed border-foreground/15" /> : null}
         </div>
         <div className="min-w-0 pb-3">
-          <div className={cn("rounded-2xl px-3.5 py-3", current ? "bg-sidebar text-sidebar-foreground" : completed ? "bg-tile-mint/60" : "bg-muted/60")}>
+          <div className={cn("rounded-2xl px-3.5 py-3", current ? "bg-ink text-paper" : completed ? "bg-ok-tint/60" : "bg-muted/60")}>
             <p className={cn("font-semibold", current && "text-white")}>
               {item.title}
-              {offerName || change ? <span className={cn("ml-1.5 text-xs font-normal", current ? "text-sidebar-foreground/70" : "text-muted-foreground")}>{[offerName, change ? `от ${documentName("change", change.sequenceNumber)}` : null].filter(Boolean).join(" · ")}</span> : null}
+              {offerName || change ? <span className={cn("ml-1.5 text-xs font-normal", current ? "text-paper/70" : "text-muted-foreground")}>{[offerName, change ? `от ${documentName("change", change.sequenceNumber)}` : null].filter(Boolean).join(" · ")}</span> : null}
             </p>
-            <p className={cn("text-sm", current ? "text-sidebar-foreground/75" : "text-muted-foreground", overdue && (current ? "font-medium text-primary" : "text-destructive"))}>{when}</p>
-            {item.previousDueOn && !completed ? <Quote tone="warning" className={cn("mt-1 text-xs", current ? "text-sidebar-foreground/75" : "text-muted-foreground")}>Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}
+            <p className={cn("text-sm", current ? "text-paper/75" : "text-muted-foreground", overdue && (current ? "font-medium text-primary" : "text-destructive"))}>{when}</p>
+            {item.previousDueOn && !completed ? <Quote tone="warning" className={cn("mt-1 text-xs", current ? "text-paper/75" : "text-muted-foreground")}>Преместен от {formatDay(item.previousDueOn)}{item.dueChangeReason ? ` · ${item.dueChangeReason}` : ""}</Quote> : null}
           </div>
         </div>
       </li>;
@@ -126,7 +126,7 @@ function StageList({ view, now, next, name, foldDone }: {
     {fold ? (
       <details className="group mt-4 [&>summary::-webkit-details-marker]:hidden">
         <summary className="flex min-h-11 cursor-pointer list-none outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 items-center gap-3 pl-[3.125rem] text-sm">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-green"><Check className="size-3.5" strokeWidth={3} /></span>
+          <span className="grid size-6 shrink-0 place-items-center bg-ok-tint"><Check className="size-3.5" strokeWidth={3} /></span>
           <span className="font-medium">{finished.length} завършени етапа</span>
           <span className="text-muted-foreground underline-offset-4 group-open:hidden hover:underline">покажи</span>
         </summary>
@@ -189,7 +189,7 @@ export function PortalPayments({ view, portalPublicId, claims, canAct, showBalan
   const balance = <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
     {view.hasAgreement ? <>
       <span>Платено <strong className="whitespace-nowrap tabular-nums">{formatCents(view.paidMinor, view.currency)}</strong> <span className="whitespace-nowrap text-muted-foreground">от {formatCents(view.contractMinor, view.currency)}</span></span>
-      <span className={cn("font-semibold whitespace-nowrap tabular-nums", view.remainingMinor > 0n ? "text-primary-ink" : "text-muted-foreground")}>
+      <span className={cn("font-semibold whitespace-nowrap tabular-nums", view.remainingMinor > 0n ? "text-blue" : "text-muted-foreground")}>
         {/* Paid in full: the bar below already says "изплатено". */}
         {view.remainingMinor === 0n ? null : `${overpaid ? "надплатено" : "остава"} ${formatCents(overpaid ? -view.remainingMinor : view.remainingMinor, view.currency)}`}
       </span>

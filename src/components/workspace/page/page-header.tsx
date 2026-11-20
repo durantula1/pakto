@@ -30,9 +30,9 @@ export function PageHeader({ page, back, actions, variant = "default" }: {
         : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          {eyebrow ? <p className="text-sm font-semibold text-primary-ink">{eyebrow}</p> : null}
-          <h1 className={cn("text-3xl font-semibold tracking-tight", eyebrow && "mt-1")}>{copy.title}</h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">{copy.description}</p>
+          {eyebrow ? <p className="font-mono text-xs tracking-[0.06em] text-muted-foreground uppercase">{eyebrow}</p> : null}
+          <h1 className={cn("text-4xl leading-[0.95] font-black tracking-[-0.05em] sm:text-5xl", eyebrow && "mt-2")}>{copy.title}</h1>
+          <p className="mt-3 max-w-2xl text-muted-foreground">{copy.description}</p>
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2 max-lg:[&:not(:has(>:not(.hidden)))]:hidden">{actions}</div> : null}
       </div>
@@ -50,7 +50,7 @@ export function PageAction({ href, children, hideOnMobile = false }: {
     <Link
       href={href}
       className={cn(
-        "min-h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90",
+        "min-h-10 items-center gap-2 bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-ink",
         hideOnMobile ? "hidden lg:inline-flex" : "inline-flex",
       )}
     >

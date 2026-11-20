@@ -143,7 +143,7 @@ export function PortalDecisionForm({
             <button type="button" onClick={() => setCodeFor(null)} className="-ml-1 inline-flex min-h-11 items-center gap-1 self-start px-1 text-sm font-medium text-muted-foreground hover:text-foreground">
               <ArrowLeft className="size-4" /> Назад
             </button>
-            <h3 className="flex items-center gap-2 text-lg font-semibold"><MailCheck className="size-5 text-primary-ink" /> Въведете кода от имейла</h3>
+            <h3 className="flex items-center gap-2 text-lg font-semibold"><MailCheck className="size-5 text-blue" /> Въведете кода от имейла</h3>
             <p className="text-sm leading-6 text-muted-foreground">Изпратихме 6-цифрен код на {codeState.sentTo}. Кодът е само за вас, фирмата не го вижда.</p>
           </div>
           <OtpInput label="Код от имейла" autoFocus disabled={submitting} />
@@ -185,7 +185,7 @@ export function PortalDecisionForm({
                     value={id}
                     className={({ isSelected, isFocusVisible }) => cn(
                       "flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border bg-card px-4 py-3 outline-none transition",
-                      isSelected ? (id === "declined" ? "border-destructive bg-destructive/5" : "border-foreground shadow-sm") : "hover:border-foreground/40",
+                      isSelected ? (id === "declined" ? "border-destructive bg-destructive/5" : "border-foreground") : "hover:border-foreground/40",
                       isFocusVisible && "ring-[3px] ring-ring/50",
                     )}
                   >
@@ -196,15 +196,15 @@ export function PortalDecisionForm({
                           <span className={cn("font-semibold", id === "declined" && "text-destructive")}>{title}</span>
                           <span className="text-sm text-muted-foreground">{hint(isOffer ? "Офертата" : "Промяната")}</span>
                         </span>
-                        <span aria-hidden="true" className={cn("grid size-5 shrink-0 place-items-center rounded-full border-2", isSelected ? "border-foreground" : "border-foreground/25")}>
-                          {isSelected ? <span className="size-2.5 rounded-full bg-foreground" /> : null}
+                        <span aria-hidden="true" className={cn("grid size-5 shrink-0 place-items-center border-2", isSelected ? "border-foreground" : "border-foreground/25")}>
+                          {isSelected ? <span className="size-2.5 bg-foreground" /> : null}
                         </span>
                       </>
                     )}
                   </Radio>
                 ))}
               </RadioGroup>
-              <p className="rounded-xl bg-tile-blue/60 px-3.5 py-2.5 text-sm leading-6 text-tile-blue-foreground">
+              <p className="rounded-xl bg-blue-tint/60 px-3.5 py-2.5 text-sm leading-6 text-blue">
                 Имате само въпрос? Задайте го в „Въпроси по {isOffer ? "тази оферта" : "тази промяна"}“ – {isOffer ? "офертата" : "промяната"} ще продължи да чака решението ви.
               </p>
               <label className="flex flex-col gap-2">

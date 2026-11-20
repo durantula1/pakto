@@ -23,18 +23,18 @@ const panels: Record<
     label: "Работа",
     title: "График на работата",
     icon: Hammer,
-    tile: "bg-tile-mint text-tile-mint-foreground",
-    frame: "bg-tile-mint/45",
-    notch: "bg-[color-mix(in_srgb,var(--tile-mint)_45%,var(--background))]",
+    tile: "bg-ok-tint text-ok",
+    frame: "bg-ok-tint/45",
+    notch: "bg-[color-mix(in_srgb,var(--ok-tint)_45%,var(--background))]",
     notchAt: "left-[calc(25%-0.5rem)]",
   },
   money: {
     label: "Плащания",
     title: "Плащания по проекта",
     icon: Wallet,
-    tile: "bg-tile-sand text-tile-sand-foreground",
-    frame: "bg-tile-sand/45",
-    notch: "bg-[color-mix(in_srgb,var(--tile-sand)_45%,var(--background))]",
+    tile: "bg-warn-tint text-warn",
+    frame: "bg-warn-tint/45",
+    notch: "bg-[color-mix(in_srgb,var(--warn-tint)_45%,var(--background))]",
     notchAt: "left-[calc(75%-0.5rem)]",
   },
 };
@@ -145,14 +145,14 @@ export function ProjectGlance({
               <span className="flex items-center justify-between gap-2">
                 <span
                   aria-hidden="true"
-                  className="grid size-10 shrink-0 place-items-center rounded-full bg-card/80"
+                  className="grid size-10 shrink-0 place-items-center bg-card/80"
                 >
                   <Icon className="size-4.5" />
                 </span>
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "grid size-8 shrink-0 place-items-center rounded-full transition-colors",
+                    "grid size-8 shrink-0 place-items-center transition-colors",
                     current ? "bg-foreground text-background" : "bg-card/80",
                   )}
                 >
@@ -195,7 +195,7 @@ export function ProjectGlance({
                   <button
                     type="button"
                     onClick={() => choose(null)}
-                    className="inline-flex h-9 items-center gap-1 rounded-full bg-card/80 px-3 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    className="inline-flex h-9 items-center gap-1 bg-card/80 px-3 text-sm font-medium text-muted-foreground hover:text-foreground"
                   >
                     <X className="size-4" aria-hidden="true" /> Затвори
                   </button>

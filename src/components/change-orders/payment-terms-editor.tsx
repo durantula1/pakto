@@ -76,9 +76,9 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
       <p className="text-sm text-muted-foreground">Клиентът одобрява и условията. След одобрение от тях стават вноските в платежния план.</p>
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
         {paymentPresets.map((preset) => (
-          <Button key={preset.id} type="button" variant="outline" size="sm" className="shrink-0 rounded-full" onPress={() => setRows(preset.terms.map((term) => row(term)))}>{preset.label}</Button>
+          <Button key={preset.id} type="button" variant="outline" size="sm" className="shrink-0" onPress={() => setRows(preset.terms.map((term) => row(term)))}>{preset.label}</Button>
         ))}
-        {rows.length ? <Button type="button" variant="ghost" size="sm" className="shrink-0 rounded-full" onPress={() => setRows([])}>Без условия</Button> : null}
+        {rows.length ? <Button type="button" variant="ghost" size="sm" className="shrink-0" onPress={() => setRows([])}>Без условия</Button> : null}
       </div>
       {rows.length ? (
         <ol className="@container flex flex-col gap-2">
@@ -111,7 +111,7 @@ export function PaymentTermsEditor({ rows, setRows, total, stages }: {
       <div className="flex flex-wrap items-center justify-between gap-2">
         {rows.length < PAYMENT_TERMS_MAX ? <Button type="button" variant="outline" size="sm" onPress={() => setRows([...rows, row({ percent: Math.max(0, 100 - percent) || undefined })])}><Plus data-icon="inline-start" />Добави плащане</Button> : <span />}
         {named.length ? (
-          <p className={cn("flex items-center gap-1.5 text-sm tabular-nums", percent === 100 ? "text-muted-foreground" : "font-medium text-tile-sand-foreground")}>
+          <p className={cn("flex items-center gap-1.5 text-sm tabular-nums", percent === 100 ? "text-muted-foreground" : "font-medium text-warn")}>
             {percent === 100 ? null : <TriangleAlert className="size-4" aria-hidden="true" />}
             Общо {formatPercent(percent)}{percent === 100 ? "" : " · трябва да е 100 %"}
           </p>
