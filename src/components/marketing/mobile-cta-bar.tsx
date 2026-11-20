@@ -37,7 +37,9 @@ export function MobileCtaBar({
       for (const entry of entries) seen.set(entry.target, entry.isIntersecting);
       // Below the hero only: scrolling back up above it hides the bar too.
       const pastHero = !seen.get(hero) && hero.getBoundingClientRect().top < 0;
-      setVisible(pastHero && !seen.get(final) && !quiet.some((node) => seen.get(node)));
+      setVisible(
+        pastHero && !seen.get(final) && !quiet.some((node) => seen.get(node)),
+      );
     });
     observer.observe(hero);
     observer.observe(final);
@@ -51,19 +53,19 @@ export function MobileCtaBar({
     <div
       aria-hidden={!visible}
       inert={!visible}
-      className={`fixed inset-x-0 bottom-0 z-[60] border-t border-[#102b38]/15 bg-[#f4efe4]/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-300 ease-out md:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-[60] border-t border-ink bg-paper/90 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-300 ease-out md:hidden ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}
     >
-      <Link href="/app" className="mf-when-in mf-primary-button w-full">
-        КЪМ ПРОЕКТИТЕ <ArrowRight className="size-4" />
+      <Link href="/app" className="mf-when-in btn p w-full">
+        Към проектите <ArrowRight className="size-4" />
       </Link>
       <Link
         href="/sign-up"
         prefetch={false}
-        className="mf-when-out mf-primary-button w-full"
+        className="mf-when-out btn p w-full"
       >
-        ЗАПОЧНИ БЕЗПЛАТНО <ArrowRight className="size-4" />
+        Започни безплатно <ArrowRight className="size-4" />
       </Link>
     </div>
   );

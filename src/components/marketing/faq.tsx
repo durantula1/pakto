@@ -1,9 +1,4 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-
-import { FaqItem } from "./faq-item";
-import { Reveal } from "./reveal";
-
+/** The questions on the landing page (and first on /faq), also its FAQPage structured data. */
 export const faqQuestions = [
   {
     q: "Колко струва?",
@@ -30,33 +25,3 @@ export const faqQuestions = [
     a: "Не. Pakto пази договореното и записва получените суми, а клиентът вижда колко е платил и колко остава. Фактурите издаваш с програмата, която ползваш и сега.",
   },
 ] as const;
-
-export function Faq() {
-  return (
-    <section id="faq" className="bg-[#f4efe4] px-[6vw] py-[14vh] lg:py-[16vh]">
-      <div className="mx-auto grid max-w-[93.75rem] gap-12 lg:grid-cols-[0.75fr_1.25fr]">
-        <Reveal>
-          <p className="mf-kicker">ВЪПРОСИ</p>
-          <h2 className="mf-section-title mt-10">
-            Често задавани
-            <br />въпроси.
-          </h2>
-        </Reveal>
-        <Reveal delay={0.08}>
-          <div className="border-t border-[#102b38]/20">
-            {faqQuestions.map(({ q, a }) => (
-              <FaqItem key={q} q={q} a={a} />
-            ))}
-          </div>
-          <Link
-            href="/faq"
-            className="mt-8 inline-flex items-center gap-2 border-b border-[#102b38] pb-1 pt-1.5 font-mono text-[0.6875rem] font-bold tracking-[0.12em] transition-colors hover:border-[#e85f48] hover:text-[#e85f48]"
-          >
-            ВСИЧКИ ВЪПРОСИ: ЕКИП, ПРАВА, СРОКОВЕ{" "}
-            <ArrowUpRight className="size-3.5" />
-          </Link>
-        </Reveal>
-      </div>
-    </section>
-  );
-}

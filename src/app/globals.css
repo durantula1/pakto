@@ -324,3 +324,9 @@ html[data-navigating] #workspace-shell main {
   outline: 2px solid var(--destructive);
   outline-offset: 3px;
 }
+
+/* Signed-in vs visitor buttons; <html data-auth> is set before paint by the root layout's inline script. */
+html:not([data-auth="in"]) .mf-when-in,
+html[data-auth="in"] .mf-when-out {
+  display: none !important;
+}

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
-import "./marketing.css";
+import "./site.css";
 
 import { faqQuestions } from "@/components/marketing/faq";
-import { LandingExperience } from "@/components/marketing/landing-experience";
+import { Landing } from "@/components/marketing/landing";
 import { productDefinition, siteUrl } from "@/lib/seo/site";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -49,7 +49,7 @@ export default function HomePage() {
         // Static, trusted content; `<` is escaped so the JSON cannot close the script tag.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
       />
-      <LandingExperience />
+      <Landing />
     </>
   );
 }
