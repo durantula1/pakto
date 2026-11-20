@@ -1,27 +1,28 @@
 import { Easing, interpolate } from "remotion";
 
-/** The landing page's palette (src/app/marketing.css), so the video and the page read as one. */
+/** The "Ясно" palette (src/app/globals.css), so the video and the product read as one. Keys keep their old names. */
 export const color = {
-  ink: "#102b38",
-  paper: "#f4efe4",
-  card: "#fffdf7",
-  sheet: "#fffaf0",
-  coral: "#ff765f",
-  stamp: "#d14b35",
-  lime: "#bceba8",
-  sky: "#c5e3e5",
-  muted: "#52707d",
-  line: "rgba(16, 43, 56, 0.1)",
-  okBg: "#d9f3cf",
-  okText: "#16623f",
-  waitBg: "#ffe7a8",
-  waitText: "#755710",
+  ink: "#0b0b0b",
+  paper: "#f1f0eb",
+  card: "#ffffff",
+  sheet: "#ffffff",
+  coral: "#1d36ff",
+  stamp: "#0e8a4a",
+  lime: "#e3f1e8",
+  sky: "#eef0ff",
+  muted: "#6d6d68",
+  line: "rgba(11, 11, 11, 0.12)",
+  okBg: "#e3f1e8",
+  okText: "#0e8a4a",
+  waitBg: "#f6ecdc",
+  waitText: "#a45a00",
 } as const;
 
 export const font = {
-  sans: 'Arial, Helvetica, "Segoe UI", sans-serif',
-  serif: 'Georgia, "Times New Roman", serif',
-  mono: 'Menlo, "SFMono-Regular", Consolas, monospace',
+  sans: '"Inter Tight", Arial, Helvetica, "Segoe UI", sans-serif',
+  // No serif in the Ясно design: the hand-lettered labels use the text face too.
+  serif: '"Inter Tight", Arial, Helvetica, sans-serif',
+  mono: '"IBM Plex Mono", Menlo, "SFMono-Regular", Consolas, monospace',
 } as const;
 
 export const FPS = 30;

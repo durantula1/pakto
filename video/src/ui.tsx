@@ -20,10 +20,10 @@ export function Phone({
         width: SCREEN.width + 24,
         height: SCREEN.height + 24,
         padding: 12,
-        borderRadius: 58,
+        borderRadius: 0,
         background: color.ink,
         boxShadow:
-          "0 60px 120px -30px rgba(16,43,56,.45), 0 0 0 1px rgba(16,43,56,.2)",
+          "0 60px 120px -30px rgba(11,11,11,.45), 0 0 0 1px rgba(11,11,11,.2)",
         ...style,
       }}
     >
@@ -33,7 +33,7 @@ export function Phone({
           width: SCREEN.width,
           height: SCREEN.height,
           overflow: "hidden",
-          borderRadius: 46,
+          borderRadius: 0,
           background: color.card,
           fontFamily: font.sans,
           color: color.ink,
@@ -55,7 +55,7 @@ export function Phone({
             style={{
               width: 110,
               height: 30,
-              borderRadius: 20,
+              borderRadius: 0,
               background: color.ink,
               marginTop: 4,
             }}
@@ -80,7 +80,7 @@ export function Chip({
   const tones = {
     ok: { background: color.okBg, color: color.okText },
     wait: { background: color.waitBg, color: color.waitText },
-    muted: { background: "rgba(16,43,56,.08)", color: color.muted },
+    muted: { background: "rgba(11,11,11,.08)", color: color.muted },
     info: { background: color.sky, color: "#17485a" },
   } as const;
   return (
@@ -88,7 +88,7 @@ export function Chip({
       style={{
         display: "inline-block",
         padding: "5px 11px",
-        borderRadius: 999,
+        borderRadius: 0,
         fontFamily: font.mono,
         fontSize: 11,
         fontWeight: 700,
@@ -134,8 +134,8 @@ const marks = {
   changed: { sign: "~", background: color.waitBg, color: color.waitText },
   removed: {
     sign: "−",
-    background: "rgba(16,43,56,.06)",
-    color: "rgba(16,43,56,.5)",
+    background: "rgba(11,11,11,.06)",
+    color: "rgba(11,11,11,.5)",
   },
 } as const;
 
@@ -175,7 +175,7 @@ export function Line({
             width: 24,
             height: 24,
             flexShrink: 0,
-            borderRadius: 7,
+            borderRadius: 0,
             fontFamily: font.mono,
             fontSize: 14,
             fontWeight: 700,
@@ -192,7 +192,7 @@ export function Line({
             margin: 0,
             fontSize: 16,
             fontWeight: 700,
-            color: removed ? "rgba(16,43,56,.45)" : color.ink,
+            color: removed ? "rgba(11,11,11,.45)" : color.ink,
             textDecoration: removed ? "line-through" : "none",
           }}
         >
@@ -205,7 +205,7 @@ export function Line({
       <div style={{ textAlign: "right", fontFamily: font.mono, fontSize: 15 }}>
         <span
           style={{
-            color: removed ? "rgba(16,43,56,.4)" : color.ink,
+            color: removed ? "rgba(11,11,11,.4)" : color.ink,
             textDecoration: removed ? "line-through" : "none",
           }}
         >
@@ -216,7 +216,7 @@ export function Line({
             style={{
               display: "block",
               fontSize: 12,
-              color: "rgba(16,43,56,.4)",
+              color: "rgba(11,11,11,.4)",
             }}
           >
             {was}
@@ -244,12 +244,12 @@ export function Button({
         display: "grid",
         placeItems: "center",
         height: 52,
-        borderRadius: 14,
+        borderRadius: 0,
         fontSize: 16,
         fontWeight: 700,
         background: dark ? color.ink : "transparent",
         color: dark ? color.sheet : color.ink,
-        border: dark ? "none" : `1.5px solid rgba(16,43,56,.2)`,
+        border: dark ? "none" : `1.5px solid rgba(11,11,11,.2)`,
         transform: `scale(${scale})`,
         ...style,
       }}
@@ -282,9 +282,9 @@ export function Banner({
         display: "flex",
         gap: 12,
         padding: 14,
-        borderRadius: 22,
+        borderRadius: 0,
         background: "rgba(255,255,255,.92)",
-        boxShadow: "0 18px 40px rgba(16,43,56,.22)",
+        boxShadow: "0 18px 40px rgba(11,11,11,.22)",
         ...style,
       }}
     >
@@ -295,7 +295,7 @@ export function Banner({
           width: 38,
           height: 38,
           flexShrink: 0,
-          borderRadius: 10,
+          borderRadius: 0,
           background: color.coral,
           color: color.ink,
           fontSize: 18,
@@ -319,7 +319,7 @@ export function Banner({
         <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700 }}>
           {title}
         </p>
-        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#35535e" }}>
+        <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6d6d68" }}>
           {body}
         </p>
       </div>
@@ -357,7 +357,7 @@ export function Stamp({
           position: "relative",
           padding: "8px 14px",
           border: `4px solid ${ink}`,
-          borderRadius: 8,
+          borderRadius: 0,
           fontFamily: font.mono,
           color: ink,
           textAlign: "center",
@@ -372,7 +372,7 @@ export function Stamp({
             position: "absolute",
             inset: 4,
             border: `1.5px solid ${ink}`,
-            borderRadius: 4,
+            borderRadius: 0,
           }}
         />
         <span

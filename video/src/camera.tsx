@@ -137,7 +137,7 @@ export function Desk({ width, height }: { width: number; height: number }) {
           inset: 0,
           opacity: 0.45,
           backgroundImage:
-            "linear-gradient(rgba(16,43,56,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(16,43,56,.06) 1px, transparent 1px)",
+            "linear-gradient(rgba(11,11,11,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(11,11,11,.06) 1px, transparent 1px)",
           backgroundSize: "96px 96px",
         }}
       />
@@ -188,7 +188,7 @@ export function Note({
           height: 5,
           marginTop: 2,
           width: `${visible * 100}%`,
-          borderRadius: 5,
+          borderRadius: 0,
           background: color.coral,
         }}
       />
@@ -234,7 +234,7 @@ export function Captions({ layout }: { layout: Layout }) {
           lineHeight: 1.32,
           boxDecorationBreak: "clone",
           WebkitBoxDecorationBreak: "clone",
-          borderRadius: 10,
+          borderRadius: 0,
           background: color.ink,
           fontFamily: font.sans,
           fontSize,
@@ -292,8 +292,8 @@ export function DateStamp({ layout }: { layout: Layout }) {
         style={{
           width: 14,
           height: 14,
-          borderRadius: 99,
-          background: before ? color.stamp : "#1e765d",
+          borderRadius: 0,
+          background: before ? color.stamp : "#0e8a4a",
           opacity: Math.floor(frame / 15) % 2 && before ? 0.3 : 1,
         }}
       />
@@ -353,11 +353,11 @@ export function Flight({
         alignItems: "center",
         gap: 12,
         padding: "14px 20px",
-        borderRadius: 18,
+        borderRadius: 0,
         background: dark ? color.ink : color.coral,
         color: dark ? color.sheet : color.ink,
         fontFamily: font.sans,
-        boxShadow: "0 30px 60px -18px rgba(16,43,56,.5)",
+        boxShadow: "0 30px 60px -18px rgba(11,11,11,.5)",
         whiteSpace: "nowrap",
       }}
     >
@@ -365,7 +365,7 @@ export function Flight({
       <span
         style={{
           padding: "4px 10px",
-          borderRadius: 99,
+          borderRadius: 0,
           fontFamily: font.mono,
           fontSize: 15,
           fontWeight: 700,
@@ -406,8 +406,8 @@ export function Tap({ at, x, y }: { at: number; x: number; y: number }) {
           height: 46,
           left: -23,
           top: -23,
-          borderRadius: 99,
-          background: "rgba(16,43,56,.28)",
+          borderRadius: 0,
+          background: "rgba(11,11,11,.28)",
           border: "2px solid rgba(255,255,255,.8)",
           opacity: inP * out,
           transform: `scale(${frame < at ? 1.2 - inP * 0.2 : 0.9})`,
@@ -420,7 +420,7 @@ export function Tap({ at, x, y }: { at: number; x: number; y: number }) {
           height: 46,
           left: -23,
           top: -23,
-          borderRadius: 99,
+          borderRadius: 0,
           border: `3px solid ${color.coral}`,
           opacity: frame >= at ? (1 - ring) * 0.9 : 0,
           transform: `scale(${1 + ring * 1.2})`,
@@ -480,7 +480,7 @@ export function Cursor({
             height: 40,
             left: -20,
             top: -20,
-            borderRadius: 99,
+            borderRadius: 0,
             border: `3px solid ${color.coral}`,
             opacity: 1 - ring,
             transform: `scale(${0.6 + ring * 1.3})`,
@@ -497,7 +497,7 @@ export function Cursor({
           top: -3,
           transform: `scale(${dip})`,
           transformOrigin: "4px 3px",
-          filter: "drop-shadow(0 4px 6px rgba(16,43,56,.35))",
+          filter: "drop-shadow(0 4px 6px rgba(11,11,11,.35))",
         }}
       >
         <path
