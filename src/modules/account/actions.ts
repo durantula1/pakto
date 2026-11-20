@@ -194,6 +194,6 @@ async function sendDeletionScheduledEmail(to: string, deleteOn: Date, companyNam
     to,
     subject: "Профилът ти в Pakto ще бъде изтрит",
     text: `Получихме заявка за изтриване на профила ти в Pakto.\n\n${what} окончателно на ${date} Ако заявката не е от теб или си промениш решението, влез до тази дата и натисни „Отмени изтриването“: ${link}`,
-    html: `<div style="font-family:system-ui,sans-serif;max-width:520px;color:#102b38"><p>Получихме заявка за изтриване на профила ти в Pakto.</p><p>${escapeHtml(what)} окончателно на <strong>${escapeHtml(date)}</strong>${date.endsWith(".") ? "" : "."}</p><p style="color:#5b6b70;font-size:14px">Ако заявката не е от теб или си промениш решението, <a href="${link}">влез</a> до тази дата и натисни „Отмени изтриването“.</p></div>`,
+    html: `<div style="font-family:system-ui,sans-serif;max-width:520px;color:#0b0b0b"><p>Получихме заявка за изтриване на профила ти в Pakto.</p><p>${escapeHtml(what)} окончателно на <strong>${escapeHtml(date)}</strong>${date.endsWith(".") ? "" : "."}</p><p style="color:#6d6d68;font-size:14px">Ако заявката не е от теб или си промениш решението, <a href="${link}">влез</a> до тази дата и натисни „Отмени изтриването“.</p></div>`,
   });
 }

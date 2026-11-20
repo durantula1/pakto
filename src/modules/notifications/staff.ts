@@ -78,7 +78,7 @@ async function emailStaffNotifications(ids: string[]) {
       to: row.email,
       subject: row.title,
       text: `${row.title}${row.body ? `\n\n${row.body}` : ""}\n\nОтвори: ${url}\n\nНастрой кои известия получаваш по имейл: ${appUrl}/app/settings/notifications`,
-      html: `<div style="max-width:600px"><p style="font-size:16px;font-weight:600">${escapeHtml(row.title)}</p>${row.body ? `<p style="white-space:pre-line">${escapeHtml(row.body)}</p>` : ""}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;border-radius:10px;background:#18181b;color:#fff;text-decoration:none;font-weight:600;text-align:center">Отвори в Pakto</a></p><p style="color:#71717a;font-size:13px"><a href="${appUrl}/app/settings/notifications" style="color:#71717a">Настрой</a> кои известия получаваш по имейл.</p></div>`,
+      html: `<div style="max-width:600px"><p style="font-size:16px;font-weight:600">${escapeHtml(row.title)}</p>${row.body ? `<p style="white-space:pre-line">${escapeHtml(row.body)}</p>` : ""}<p style="margin-top:20px"><a href="${url}" style="display:block;padding:14px 20px;background:#1d36ff;color:#fff;text-decoration:none;font-weight:600;text-align:center">Отвори в Pakto</a></p><p style="color:#6d6d68;font-size:13px"><a href="${appUrl}/app/settings/notifications" style="color:#6d6d68">Настрой</a> кои известия получаваш по имейл.</p></div>`,
     }).catch((cause) => console.error("[staff-email]", row.id, cause));
   }
 }

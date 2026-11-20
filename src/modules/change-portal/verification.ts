@@ -76,13 +76,13 @@ export async function issueOtp(input: {
     });
   });
 
-  const summary = input.summary ? `<p style="margin:16px 0;padding:12px;border-radius:8px;background:#f4f4f5">${escapeHtml(input.summary)}</p>` : "";
+  const summary = input.summary ? `<p style="margin:16px 0;padding:12px;background:#f1f0eb">${escapeHtml(input.summary)}</p>` : "";
   await sendEmail({
     kind: "otp",
     to: input.email,
     subject: `Код за ${purposeText[input.purpose]}: ${code}`,
     text: `Вашият код за ${purposeText[input.purpose]} е ${code}. Валиден е 10 минути.${input.summary ? `\n\n${input.summary}` : ""}\n\nАко не сте го поискали Вие, не го споделяйте с никого.`,
-    html: `<p>Вашият код за ${purposeText[input.purpose]}:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>${summary}<p style="color:#71717a">Валиден е 10 минути. Ако не сте го поискали Вие, не го споделяйте с никого — включително с фирмата.</p>`,
+    html: `<p>Вашият код за ${purposeText[input.purpose]}:</p><p style="font-size:28px;font-weight:700;letter-spacing:6px">${code}</p>${summary}<p style="color:#6d6d68">Валиден е 10 минути. Ако не сте го поискали Вие, не го споделяйте с никого — включително с фирмата.</p>`,
   });
   return id;
 }

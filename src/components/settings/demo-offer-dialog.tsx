@@ -132,9 +132,9 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
     ["Изпратена", date.format(sent)],
     ["Валидна до", date.format(new Date(sent.getTime() + 14 * 86_400_000))],
   ];
-  const ink = "#1c2420";
-  const muted = "#66706b";
-  const rule = "#dfe3df";
+  const ink = "#0b0b0b";
+  const muted = "#6d6d68";
+  const rule = "#e3e2dc";
   const label = { fontSize: "8pt", color: muted, textTransform: "uppercase", letterSpacing: "0.4pt" } as const;
 
   return (
@@ -143,7 +143,7 @@ function PdfSheet({ organizationName, logo }: { organizationName: string; logo: 
         className="relative origin-top-left bg-white shadow-[6px_6px_0_var(--ink)]"
         style={{
           width: SHEET_WIDTH, height: SHEET_HEIGHT, transform: `scale(${scale})`,
-          padding: "40pt 44pt 56pt", color: ink, fontFamily: "'Noto Sans', sans-serif", fontSize: "10pt", lineHeight: 1.4,
+          padding: "40pt 44pt 56pt", color: ink, fontFamily: "var(--font-sans)", fontSize: "10pt", lineHeight: 1.4,
         }}
       >
         <div className="flex items-start justify-between" style={{ paddingBottom: "16pt", borderBottom: `1.5pt solid ${ink}` }}>
