@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 
 import { Art, at } from "./line-art";
 
-const ink = "#102b38";
-const coral = "#ff765f";
+const ink = "#0b0b0b";
+const coral = "#1d36ff";
 
 /** One digit: a wide pastel band drawn first, then a thin ink line slightly off it, like a two-colour print. */
 function Digit({
@@ -59,22 +59,22 @@ export function NotFoundArt({ className }: { className?: string }) {
       viewBox="0 0 240 120"
       className={className}
     >
-      <Digit d="M50 20L24 72H72M60 44V100" color="#ffd36e" delay={0} />
+      <Digit d="M50 20L24 72H72M60 44V100" color="#f6ecdc" delay={0} />
       <g className="mf-art-drift-l">
         <Digit
           d="M114 17A24 24 0 0 0 96 40V80A24 24 0 0 0 114 103"
-          color="#c5e3e5"
+          color="#eef0ff"
           delay={350}
         />
       </g>
       <g className="mf-art-drift-r">
         <Digit
           d="M126 17A24 24 0 0 1 144 40V80A24 24 0 0 1 126 103"
-          color="#c5e3e5"
+          color="#eef0ff"
           delay={500}
         />
       </g>
-      <Digit d="M194 20L168 72H216M204 44V100" color="#bceba8" delay={700} />
+      <Digit d="M194 20L168 72H216M204 44V100" color="#e3f1e8" delay={700} />
       <Sparks>
         <path d="M120 1v8" pathLength="1" data-draw style={at(1300)} />
         <path d="M110 4l4 6" pathLength="1" data-draw style={at(1400)} />
@@ -102,7 +102,7 @@ export function NoResultsArt({ className }: { className?: string }) {
     >
       <path
         d={card}
-        stroke="#c5e3e5"
+        stroke="#eef0ff"
         strokeWidth="9"
         pathLength="1"
         data-draw
@@ -124,7 +124,7 @@ export function NoResultsArt({ className }: { className?: string }) {
         </g>
       </g>
       <g className="mf-art-bob">
-        <circle cx="104" cy="72" r="18" fill="#fffaf0" stroke="none" />
+        <circle cx="104" cy="72" r="18" fill="#ffffff" stroke="none" />
         <circle
           cx="104"
           cy="72"
@@ -154,7 +154,7 @@ export function NoResultsArt({ className }: { className?: string }) {
       </g>
       <path
         d="M124 22c3-6 9-7 9-3s-5 8-2 8 6-9 10-8-1 7 3 6"
-        stroke="#bceba8"
+        stroke="#e3f1e8"
         strokeWidth="3"
         pathLength="1"
         data-draw

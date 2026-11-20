@@ -16,7 +16,7 @@ export function AuthHeading({
 }) {
   return (
     <div className="mb-7 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-      <h1 className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-ink">
+      <h1 className="text-xs font-semibold uppercase tracking-[0.14em] text-blue">
         {title}
       </h1>
       {link ? (
@@ -24,7 +24,7 @@ export function AuthHeading({
           {question}{" "}
           <Link
             href={link.href}
-            className="font-semibold text-primary-ink underline-offset-4 hover:underline"
+            className="font-semibold text-blue underline-offset-4 hover:underline"
           >
             {link.label}
           </Link>

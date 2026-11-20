@@ -16,14 +16,14 @@ export const metadata: Metadata = { title: "Покана в екип" };
 
 function Shell({ children }: { children: React.ReactNode }) {
   return <main className="grid min-h-dvh place-items-center bg-background p-4"><SignupConversionSlot />
-    <div className="w-full max-w-md overflow-hidden rounded-2xl border bg-card shadow-sm">
+    <div className="w-full max-w-md overflow-hidden border border-ink bg-card">
       <div className="bg-sidebar px-6 py-5"><Wordmark inverse href={null} /></div>
       <div className="flex flex-col gap-5 p-6">{children}</div>
     </div>
   </main>;
 }
 
-const buttonClass = "inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold";
+const buttonClass = "inline-flex h-11 items-center justify-center px-5 text-sm font-semibold";
 
 export default async function JoinTeamPage({ params }: PageProps<"/join/[token]">) {
   const { token } = await params;
@@ -37,14 +37,14 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
 
   const summary = <>
     <div>
-      <p className="text-sm font-semibold text-primary-ink">Покана за екипа</p>
+      <p className="text-sm font-semibold text-blue">Покана за екипа</p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">{invite.organizationName}</h1>
       <p className="mt-2 text-muted-foreground">{invite.inviterName ? `${invite.inviterName} те кани` : "Поканен си"} като <strong className="text-foreground">{roleLabel(invite)}</strong>.</p>
     </div>
-    <div className="rounded-xl bg-secondary p-4 text-sm">
+    <div className="bg-secondary p-4 text-sm">
       <p className="font-medium">Проекти: {invite.role === "owner" || invite.allProjects ? "всички" : invite.projectIds.length ? `${invite.projectIds.length} избрани` : "ще бъдат добавени"}</p>
       <ul className="mt-2 grid gap-1">
-        {granted.map((item) => <li key={item.key} className="flex items-center gap-2"><Check className="size-4 text-primary-ink" />{item.label}</li>)}
+        {granted.map((item) => <li key={item.key} className="flex items-center gap-2"><Check className="size-4 text-blue" />{item.label}</li>)}
       </ul>
     </div>
   </>;
@@ -62,7 +62,7 @@ export default async function JoinTeamPage({ params }: PageProps<"/join/[token]"
   if (user.email?.toLowerCase() !== invite.email) {
     return <Shell>
       {summary}
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+      <div className="border border-destructive/30 bg-destructive/5 p-4 text-sm">
         <p className="font-semibold">Този профил не е поканеният</p>
         <p className="mt-1 text-muted-foreground">Поканата е за друг имейл адрес. Излез и влез с адреса, на който е изпратена.</p>
       </div>

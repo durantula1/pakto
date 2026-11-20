@@ -34,7 +34,7 @@ export function OfferDemo() {
         </StatusChip>
       }
     >
-      <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-1 pb-2 font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+      <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 px-1 pb-2 font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
         <span>ОПИСАНИЕ</span>
         <span>К-ВО</span>
         <span className="w-16 text-right">СУМА</span>
@@ -48,10 +48,10 @@ export function OfferDemo() {
               opacity: step > index ? 1 : 0.15,
               x: step > index ? 0 : 12,
             }}
-            className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 rounded-xl bg-[#f4efe4] px-3.5 py-3 demo-text-12"
+            className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 bg-paper px-3.5 py-3 demo-text-12"
           >
             <span className="truncate font-bold">{line.label}</span>
-            <span className="font-mono demo-text-10 text-[#52707d]">
+            <span className="font-mono demo-text-10 text-muted-foreground">
               {line.qty} {line.unit} × {line.price} €
             </span>
             <span className="w-16 text-right font-mono demo-text-11">
@@ -60,8 +60,8 @@ export function OfferDemo() {
           </m.div>
         ))}
       </div>
-      <div className="mt-4 grid grid-cols-[1fr_auto] gap-4 border-t border-[#102b38]/10 pt-4">
-        <div className="space-y-1 font-mono demo-text-10 text-[#52707d]">
+      <div className="mt-4 grid grid-cols-[1fr_auto] gap-4 border-t border-ink pt-4">
+        <div className="space-y-1 font-mono demo-text-10 text-muted-foreground">
           <p>
             БЕЗ ДДС · <Ticker value={subtotal} format={format} />
           </p>
@@ -73,13 +73,13 @@ export function OfferDemo() {
           </p>
         </div>
         <div className="text-right">
-          <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+          <p className="font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
             ОБЩО
           </p>
           <p className="text-2xl font-black tracking-[-0.06em]">
             <Ticker value={subtotal * 1.2} format={format} />
           </p>
-          <p className="mt-1 font-mono demo-text-9 text-[#1e765d]">
+          <p className="mt-1 font-mono demo-text-9 text-ok">
             {step >= 5 ? "Одобрена · 14:02" : " "}
           </p>
         </div>

@@ -31,15 +31,15 @@ type Props = {
 /** The opening slide: the mark with the versions of one offer orbiting it. */
 function HelloVisual() {
   const chips = [
-    { label: "ПР-042 · в. 1", value: "450 €", tone: "bg-[#102b38]/8 text-[#52707d] line-through", place: "left-0 top-6 -rotate-6" },
-    { label: "ПР-042 · в. 2", value: "384 €", tone: "bg-[#c5e3e5] text-[#17485a]", place: "right-0 top-16 rotate-3" },
-    { label: "ОДОБРЕНА", value: "с код от имейла", tone: "bg-[#bceba8] text-[#102b38]", place: "bottom-4 left-6 rotate-2" },
+    { label: "ПР-042 · в. 1", value: "450 €", tone: "bg-ink/8 text-muted-foreground line-through", place: "left-0 top-6 -rotate-6" },
+    { label: "ПР-042 · в. 2", value: "384 €", tone: "bg-blue-tint text-blue", place: "right-0 top-16 rotate-3" },
+    { label: "ОДОБРЕНА", value: "с код от имейла", tone: "bg-ok-tint text-ink", place: "bottom-4 left-6 rotate-2" },
   ];
   return (
     <div aria-hidden="true" className="relative mx-auto aspect-square w-full max-w-[18rem] sm:max-w-[22rem]">
-      <div className="absolute inset-[12%] rounded-full border border-[#102b38]/10" />
-      <div className="absolute inset-[26%] rounded-full border border-dashed border-[#102b38]/15 motion-safe:animate-[spin_40s_linear_infinite]" />
-      <div className="absolute inset-[36%] grid place-items-center rounded-[2rem] bg-[#fffdf7] shadow-[0_30px_70px_rgba(16,43,56,.16)]">
+      <div className="absolute inset-[12%] border border-ink" />
+      <div className="absolute inset-[26%] border border-dashed border-ink motion-safe:animate-[spin_40s_linear_infinite]" />
+      <div className="absolute inset-[36%] grid place-items-center bg-card shadow-[6px_6px_0_var(--ink)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/pakto-mark.svg" alt="" className="size-3/5" />
       </div>
@@ -49,9 +49,9 @@ function HelloVisual() {
           style={{ animationDelay: `${300 + index * 250}ms` }}
           className={cn("absolute fill-mode-both motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-700", chip.place)}
         >
-          <div className="rounded-2xl border border-[#102b38]/10 bg-[#fffdf7] px-3.5 py-2.5 shadow-[0_18px_40px_rgba(16,43,56,.12)]">
-            <p className="font-mono text-[0.625rem] font-bold tracking-[0.12em] text-[#52707d]">{chip.label}</p>
-            <p className={cn("mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold", chip.tone)}>{chip.value}</p>
+          <div className="border border-ink bg-card px-3.5 py-2.5 shadow-[6px_6px_0_var(--ink)]">
+            <p className="font-mono text-[0.625rem] font-bold tracking-[0.12em] text-muted-foreground">{chip.label}</p>
+            <p className={cn("mt-1 inline-block px-2 py-0.5 text-xs font-bold", chip.tone)}>{chip.value}</p>
           </div>
         </div>
       ))}
@@ -62,18 +62,18 @@ function HelloVisual() {
 /** For a team member: what the owner gave them, instead of the team settings they cannot open. */
 function AccessVisual({ organizationName, roleLabel }: { organizationName: string; roleLabel: string }) {
   return (
-    <div aria-hidden="true" className="mx-auto w-full max-w-[24rem] rounded-[1.375rem] border border-[#102b38]/15 bg-[#fffdf7] p-5 shadow-[0_30px_70px_rgba(16,43,56,.14)]">
+    <div aria-hidden="true" className="mx-auto w-full max-w-[24rem] border border-ink bg-card p-5 shadow-[6px_6px_0_var(--ink)]">
       <div className="flex items-center gap-3">
-        <span className="grid size-11 place-items-center rounded-2xl bg-[#c5e3e5] text-[#17485a]"><ShieldCheck className="size-5" /></span>
+        <span className="grid size-11 place-items-center bg-blue-tint text-blue"><ShieldCheck className="size-5" /></span>
         <div className="min-w-0">
           <p className="truncate text-sm font-black">{organizationName}</p>
-          <p className="text-xs text-[#52707d]">Твоята роля: {roleLabel}</p>
+          <p className="text-xs text-muted-foreground">Твоята роля: {roleLabel}</p>
         </div>
       </div>
       <ul className="mt-5 space-y-2">
         {["Проектите, до които имаш достъп", "Офертите и промените по тях", "Известия, когато клиентът реши"].map((item) => (
-          <li key={item} className="flex items-center gap-2.5 rounded-xl bg-[#f4efe4] px-3 py-2.5 text-xs font-bold">
-            <span className="grid size-4 shrink-0 place-items-center rounded-full bg-[#bceba8]"><Check className="size-2.5" /></span>
+          <li key={item} className="flex items-center gap-2.5 bg-paper px-3 py-2.5 text-xs font-bold">
+            <span className="grid size-4 shrink-0 place-items-center bg-ok-tint"><Check className="size-2.5" /></span>
             {item}
           </li>
         ))}
@@ -85,14 +85,14 @@ function AccessVisual({ organizationName, roleLabel }: { organizationName: strin
 function FinishVisual() {
   return (
     <div aria-hidden="true" className="relative mx-auto grid aspect-square w-full max-w-[12rem] place-items-center sm:max-w-[18rem]">
-      <div className="absolute inset-0 rounded-full bg-[#bceba8]/50 motion-safe:animate-ping [animation-duration:2.4s]" />
-      <div className="absolute inset-[14%] rounded-full bg-[#bceba8]" />
+      <div className="absolute inset-0 bg-ok-tint/50 motion-safe:animate-ping [animation-duration:2.4s]" />
+      <div className="absolute inset-[14%] bg-ok-tint" />
       <m.span
         initial={{ scale: 0.6, opacity: 0 }}
         whileInView={{ scale: 1, opacity: 1 }}
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.2 }}
-        className="relative grid size-20 place-items-center rounded-full bg-[#102b38] text-[#fffaf0] sm:size-28"
+        className="relative grid size-20 place-items-center bg-ink text-card sm:size-28"
       >
         <Check className="size-9 sm:size-12" strokeWidth={2.5} />
       </m.span>
@@ -110,10 +110,10 @@ function SubmitButton({ next, variant = "primary", children }: { next: string; v
       value={next}
       disabled={pending}
       className={cn(
-        "inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-bold transition-[background-color,transform] outline-none focus-visible:ring-[3px] focus-visible:ring-[#ff765f]/60 active:scale-[0.98] disabled:opacity-70",
-        variant === "primary" && "bg-[#102b38] text-[#fffaf0] hover:bg-[#17485a]",
-        variant === "secondary" && "border border-[#102b38]/20 bg-[#fffdf7] text-[#102b38] hover:bg-white",
-        variant === "ghost" && "h-10 px-3 text-[#52707d] hover:text-[#102b38]",
+        "inline-flex h-12 items-center justify-center gap-2 px-6 text-sm font-bold transition-[background-color,transform] outline-none focus-visible:ring-[3px] focus-visible:ring-blue/60 active:scale-[0.98] disabled:opacity-70",
+        variant === "primary" && "bg-ink text-card hover:bg-blue",
+        variant === "secondary" && "border border-ink bg-card text-ink hover:bg-white",
+        variant === "ghost" && "h-10 px-3 text-muted-foreground hover:text-ink",
       )}
     >
       {mine ? <LoaderCircle className="size-4 animate-spin" /> : null}
@@ -127,7 +127,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
     {
       id: "hello",
       kicker: "ДОБРЕ ДОШЪЛ",
-      title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-[#ff765f]">Договореното – записано и потвърдено.</span></>,
+      title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-blue">Договореното – записано и потвърдено.</span></>,
       text: `Pakto пази какво сте договорили с клиента: офертата, всяка промяна, сроковете и плащанията. ${owner ? "" : `Вече си в екипа на „${organizationName}“. `}Ето най-важното за минута.`,
       points: ["Всичко по проекта на едно място", "Клиентът решава от телефона", "Всяко „да“ остава записано"],
       visual: <HelloVisual />,
@@ -236,7 +236,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={loadMotionFeatures} strict>
-        <form action={finishWelcomeAction} className="flex h-dvh flex-col overflow-hidden bg-[#f4efe4] text-[#102b38]">
+        <form action={finishWelcomeAction} className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
           <header className="flex h-16 shrink-0 items-center justify-between gap-3 px-4 sm:px-8">
             <Wordmark href={null} />
             {active < last ? <SubmitButton next="/app" variant="ghost">Пропусни</SubmitButton> : null}
@@ -269,16 +269,16 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
                       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: shown ? 0.1 : 0 }}
                       className="order-2 lg:order-1"
                     >
-                      <span className="inline-block rounded-full bg-[#c5e3e5] px-3 py-1 font-mono text-xs font-bold tracking-[0.08em]">
+                      <span className="inline-block bg-blue-tint px-3 py-1 font-mono text-xs font-bold tracking-[0.08em]">
                         {String(index + 1).padStart(2, "0")} · {kicker}
                       </span>
                       <h1 className="mt-4 max-w-lg text-[1.75rem] leading-[1.04] font-black tracking-[-0.05em] sm:text-5xl">{title}</h1>
-                      <p className="mt-4 max-w-md text-[0.9375rem] leading-7 text-[#49626b]">{text}</p>
+                      <p className="mt-4 max-w-md text-[0.9375rem] leading-7 text-muted-foreground">{text}</p>
                       {!final ? (
                         <ul className="mt-5 space-y-2.5">
                           {points.map((point) => (
                             <li key={point} className="flex items-start gap-2.5 text-sm font-bold">
-                              <span className="mt-0.5 grid size-4 shrink-0 place-items-center rounded-full bg-[#bceba8]"><Check className="size-2.5" /></span>
+                              <span className="mt-0.5 grid size-4 shrink-0 place-items-center bg-ok-tint"><Check className="size-2.5" /></span>
                               {point}
                             </li>
                           ))}
@@ -309,7 +309,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
               onClick={() => goTo(active - 1)}
               disabled={active === 0}
               aria-label="Назад"
-              className="grid size-12 place-items-center rounded-full border border-[#102b38]/20 bg-[#fffdf7] outline-none transition-opacity focus-visible:ring-[3px] focus-visible:ring-[#ff765f]/60 disabled:pointer-events-none disabled:opacity-0"
+              className="grid size-12 place-items-center border border-ink bg-card outline-none transition-opacity focus-visible:ring-[3px] focus-visible:ring-blue/60 disabled:pointer-events-none disabled:opacity-0"
             >
               <ArrowLeft className="size-5" />
             </button>
@@ -323,8 +323,8 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
                   aria-label={`Към слайд ${index + 1}`}
                   aria-current={index === active ? "step" : undefined}
                   className={cn(
-                    "h-2 rounded-full outline-none transition-[width,background-color] duration-300 focus-visible:ring-[3px] focus-visible:ring-[#ff765f]/60",
-                    index === active ? "w-7 bg-[#ff765f]" : "w-2 bg-[#102b38]/20 hover:bg-[#102b38]/40",
+                    "h-2 outline-none transition-[width,background-color] duration-300 focus-visible:ring-[3px] focus-visible:ring-blue/60",
+                    index === active ? "w-7 bg-blue" : "w-2 bg-ink/20 hover:bg-ink/40",
                   )}
                 />
               ))}
@@ -334,13 +334,13 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
               <button
                 type="button"
                 onClick={() => goTo(active + 1)}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-[#102b38] px-5 text-sm font-bold text-[#fffaf0] outline-none transition-[background-color,transform] hover:bg-[#17485a] focus-visible:ring-[3px] focus-visible:ring-[#ff765f]/60 active:scale-[0.98]"
+                className="inline-flex h-12 items-center gap-2 bg-ink px-5 text-sm font-bold text-card outline-none transition-[background-color,transform] hover:bg-blue focus-visible:ring-[3px] focus-visible:ring-blue/60 active:scale-[0.98]"
               >
                 Напред
                 <ArrowRight className="size-4" />
               </button>
             ) : (
-              <span className="grid size-12 place-items-center text-[#ff765f]" aria-hidden="true"><Sparkles className="size-5" /></span>
+              <span className="grid size-12 place-items-center text-blue" aria-hidden="true"><Sparkles className="size-5" /></span>
             )}
           </footer>
         </form>

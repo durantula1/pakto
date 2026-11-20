@@ -18,10 +18,10 @@ const permissions = [
 function Toggle({ on }: { on: boolean }) {
   return (
     <span
-      className={`relative h-4 w-7 shrink-0 rounded-full transition-colors duration-500 ${on ? "bg-[#1e765d]" : "bg-[#102b38]/15"}`}
+      className={`relative h-4 w-7 shrink-0 transition-colors duration-500 ${on ? "bg-ok" : "bg-ink/15"}`}
     >
       <m.i
-        className="absolute left-0.5 top-0.5 size-3 rounded-full bg-white shadow"
+        className="absolute left-0.5 top-0.5 size-3 bg-white shadow"
         initial={false}
         animate={{ x: on ? "0.75rem" : "0rem" }}
       />
@@ -46,7 +46,7 @@ export function TeamDemo() {
       }
     >
       <div className="grid gap-3 sm:grid-cols-[1.1fr_.9fr]">
-        <ul className="divide-y divide-[#102b38]/8 rounded-xl bg-[#f4efe4] px-3">
+        <ul className="divide-y divide-ink/8 bg-paper px-3">
           {permissions.map((permission) => (
             <li
               key={permission.key}
@@ -57,13 +57,13 @@ export function TeamDemo() {
             </li>
           ))}
         </ul>
-        <div className="rounded-xl border border-[#102b38]/15 p-3">
-          <p className="font-mono demo-text-8 tracking-[0.12em] text-[#52707d]">
+        <div className="border border-ink p-3">
+          <p className="font-mono demo-text-8 tracking-[0.12em] text-muted-foreground">
             ТАКА ГО ВИЖДА ГЕОРГИ
           </p>
           <div className="mt-2 space-y-1 demo-text-11 font-bold">
             {["Проекти", "Оферти и промени", "Известия"].map((item) => (
-              <p key={item} className="rounded-md bg-[#f4efe4] px-2 py-1.5">
+              <p key={item} className="bg-paper px-2 py-1.5">
                 {item}
               </p>
             ))}
@@ -73,12 +73,12 @@ export function TeamDemo() {
                 opacity: financeOn ? 1 : 0,
                 height: financeOn ? "auto" : 0,
               }}
-              className="overflow-hidden rounded-md bg-[#bceba8] px-2 py-1.5"
+              className="overflow-hidden bg-ok-tint px-2 py-1.5"
             >
               Плащания
             </m.p>
           </div>
-          <div className="relative mt-3 overflow-hidden rounded-lg bg-[#fee8a5]/70 p-2.5 demo-text-10">
+          <div className="relative mt-3 overflow-hidden bg-warn-tint/70 p-2.5 demo-text-10">
             <p
               className={`transition-all duration-500 ${notesOn ? "" : "blur-[5px]"}`}
             >

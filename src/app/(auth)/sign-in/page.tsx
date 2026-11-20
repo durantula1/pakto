@@ -24,7 +24,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
     <div className="w-full">
       <AuthHeading title="Вход в профила" question="Нямаш профил?" link={{ href: `/sign-up${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}`, label: "Регистрация →" }} />
       {account === "gone" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Този профил вече не съществува. Регистрирай се отново, ако искаш да го ползваш пак.</p> : null}
-      {account === "password-updated" ? <p role="status" className="mb-6 rounded-xl bg-tile-mint px-3 py-2.5 text-sm text-tile-mint-foreground">Паролата е сменена. Влез с новата парола.</p> : null}
+      {account === "password-updated" ? <p role="status" className="mb-6 rounded-xl bg-ok-tint px-3 py-2.5 text-sm text-ok">Паролата е сменена. Влез с новата парола.</p> : null}
       {account === "deletion-scheduled" ? <p role="status" className="mb-6 rounded-xl bg-muted px-3 py-2.5 text-sm">Профилът ще бъде изтрит след {ACCOUNT_DELETION_GRACE_DAYS} дни. Ако се откажеш, влез отново преди това и отмени изтриването.</p> : null}
       {error === "confirmation" ? <p role="alert" className="mb-6 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">Линкът за потвърждение е изтекъл или вече е използван. Ако профилът ти вече е потвърден, просто влез. Ако не е, опитай да влезеш и ще ти предложим нов линк.</p> : null}
       {typeof error === "string" && error !== "confirmation" ? <p role="alert" className="mb-6 rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">{GOOGLE_ERRORS[error] ?? GOOGLE_ERRORS.google}</p> : null}

@@ -19,7 +19,7 @@ export default function AuthLayout({
       <div className="grid w-full flex-1 lg:grid-cols-2">
         <div className="hidden items-center justify-end lg:flex lg:pr-16 xl:pr-24">
           <div className="w-full max-w-lg py-10">
-            <p className="text-6xl font-medium leading-[1.02] tracking-[-0.035em] xl:text-[4rem]">
+            <p className="text-6xl font-black leading-[0.92] tracking-[-0.06em] xl:text-[4rem]">
               Договореното
               <br />с клиента –
               <br />

@@ -48,17 +48,17 @@ export function DemoFrame({
     <div
       ref={frameRef}
       aria-hidden="true"
-      className="mf-demo overflow-hidden rounded-[1.375rem] border border-[#102b38]/15 bg-[#fffdf7] shadow-[0_30px_70px_rgba(16,43,56,.14)]"
+      className="mf-demo overflow-hidden border border-ink bg-card shadow-[6px_6px_0_var(--ink)]"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-[#102b38]/10 bg-[#f4efe4]/70 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-ink bg-paper/70 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex gap-1.5" aria-hidden="true">
-            <i className="size-2 rounded-full bg-[#ff765f]" />
-            <i className="size-2 rounded-full bg-[#ffd36e]" />
-            <i className="size-2 rounded-full bg-[#bceba8]" />
+            <i className="size-2 bg-blue" />
+            <i className="size-2 bg-warn-tint" />
+            <i className="size-2 bg-ok-tint" />
           </span>
           <div className="min-w-0">
-            <p className="truncate font-mono demo-text-8 tracking-[0.14em] text-[#52707d]">
+            <p className="truncate font-mono demo-text-8 tracking-[0.14em] text-muted-foreground">
               {crumb}
             </p>
             <p className="truncate demo-text-13 font-black tracking-[-0.03em]">
@@ -81,15 +81,15 @@ export function StatusChip({
   children: ReactNode;
 }) {
   const tones = {
-    wait: "bg-[#fee8a5] text-[#73570d]",
-    ok: "bg-[#bceba8] text-[#102b38]",
-    info: "bg-[#c5e3e5] text-[#17485a]",
-    muted: "bg-[#102b38]/8 text-[#52707d]",
+    wait: "bg-warn-tint text-warn",
+    ok: "bg-ok-tint text-ink",
+    info: "bg-blue-tint text-blue",
+    muted: "bg-ink/8 text-muted-foreground",
   } as const;
 
   return (
     <span
-      className={`shrink-0 rounded-full px-2.5 py-1 font-mono demo-text-8 font-bold tracking-[0.1em] transition-colors duration-500 ${tones[tone]}`}
+      className={`shrink-0 px-2.5 py-1 font-mono demo-text-8 font-bold tracking-[0.1em] transition-colors duration-500 ${tones[tone]}`}
     >
       {children}
     </span>
