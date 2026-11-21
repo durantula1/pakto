@@ -56,6 +56,8 @@ export function ProcessVideo() {
   // "auto" plays on scroll unless the visitor prefers reduced motion; the button overrides it.
   const [choice, setChoice] = useState<"auto" | "play" | "pause">("auto");
   const shouldPlay = choice === "play" || (choice === "auto" && !reduceMotion);
+  // The browser refused to start the clip (iOS Low Power Mode, data saver): show "play", not "pause".
+  const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
     const frame = frameRef.current;
@@ -75,15 +77,23 @@ export function ProcessVideo() {
   useEffect(() => {
     const video = videoRefs.current[active];
     if (!video || !near) return;
-    if (inView && shouldPlay) void video.play().catch(() => {});
-    else video.pause();
+    if (inView && shouldPlay) {
+      video.play().catch(() => setBlocked(true));
+    } else video.pause();
   }, [active, inView, near, shouldPlay, view]);
 
   function toggle() {
-    setChoice(shouldPlay ? "pause" : "play");
+    if (shouldPlay && !blocked) {
+      setChoice("pause");
+      return;
+    }
+    setChoice("play");
+    setBlocked(false);
+    // Inside the tap itself, where browsers allow playback.
+    void videoRefs.current[active]?.play().catch(() => setBlocked(true));
   }
 
-  const showPlay = !shouldPlay;
+  const showPlay = !shouldPlay || blocked;
 
   return (
     <div className="vid rv">
@@ -123,6 +133,7 @@ export function ProcessVideo() {
                 loop
                 playsInline
                 preload="none"
+                onPlaying={() => setBlocked(false)}
                 aria-describedby="process-video-description"
               >
                 {near && index === active ? (
