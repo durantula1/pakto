@@ -78,7 +78,11 @@ export function ProcessVideo() {
     const video = videoRefs.current[active];
     if (!video || !near) return;
     if (inView && shouldPlay) {
-      video.play().catch(() => setBlocked(true));
+      video.play().catch((error: unknown) => {
+        // Only a refusal is "blocked"; a clip that is still switching just plays on canplay.
+        if (error instanceof DOMException && error.name === "NotAllowedError")
+          setBlocked(true);
+      });
     } else video.pause();
   }, [active, inView, near, shouldPlay, view]);
 
@@ -121,8 +125,9 @@ export function ProcessVideo() {
             const name = `pakto-${view}-${id}`;
             return (
               <video
-                // A new clip is a new element, so the browser loads its source afresh.
-                key={name}
+                // One element per format, kept when the clip changes: a video that has already played
+                // keeps its permission to autoplay, which a freshly created one does not on phones.
+                key={id}
                 ref={(video) => {
                   videoRefs.current[index] = video;
                 }}
@@ -133,13 +138,17 @@ export function ProcessVideo() {
                 loop
                 playsInline
                 preload="none"
+                src={
+                  near && index === active ? `/video/${name}.mp4` : undefined
+                }
                 onPlaying={() => setBlocked(false)}
+                // A new src has to load before it can play; start it as soon as it can.
+                onCanPlay={(event) => {
+                  if (index === active && inView && shouldPlay)
+                    event.currentTarget.play().catch(() => {});
+                }}
                 aria-describedby="process-video-description"
-              >
-                {near && index === active ? (
-                  <source src={`/video/${name}.mp4`} type="video/mp4" />
-                ) : null}
-              </video>
+              />
             );
           })}
           <button
