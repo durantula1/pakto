@@ -929,7 +929,7 @@ export function Landing() {
       <section id="po-tvoya-nachin" className="sec">
         <SectionHead
           num="04 / По твоя начин"
-          title="Работи така, както вече работиш."
+          title="Работи по твоите правила."
           text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
         />
         <div className="g12 trust wmodes">
