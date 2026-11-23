@@ -15,7 +15,7 @@ import { MilestoneDialog } from "@/components/projects/milestone-dialog";
 import { ScheduleStagesDialog } from "@/components/projects/schedule-stages-dialog";
 import { documentCode, formatDay } from "@/modules/change-orders/labels";
 import { daysLabel, scheduleDays } from "@/modules/change-orders/schedule";
-import { deleteInstallmentAction, deleteMilestoneAction, updateChangeWorkAction, updateMilestoneAction } from "@/modules/projects/operations";
+import { deleteInstallmentAction, deleteMilestoneAction, recordStageAcceptanceAction, requestStageAcceptanceAction, updateChangeWorkAction, updateMilestoneAction } from "@/modules/projects/operations";
 import { offerStatusLabels, offerStatusTones } from "@/modules/projects/offer-status";
 import type { PaymentInbox } from "@/modules/projects/payment-inbox";
 import { offerLabel, scopeView } from "@/modules/projects/scope";
@@ -45,8 +45,9 @@ export const stageWork = (item: Milestone) => item.changeOrderId ? `change:${ite
  * The work of one approved offer: its schedule turned into dated stages (with those of its approved
  * changes, marked "от ПР-…"), the extra work of the changes, and the handover.
  */
-export function OfferWork({ state, offer, projectId, canManage, today, stageFor }: {
+export function OfferWork({ state, offer, projectId, canManage, today, stageFor, handover = "portal" }: {
   state: ProjectState;
+  handover?: StageHandoverMode;
   offer: OfferState;
   projectId: string;
   canManage: boolean;
@@ -103,7 +104,7 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
           return {
             id: item.id,
             cells: [
-              <span key="title" className="min-w-0"><span className="block">{item.title}</span>{change ? <span className="block text-xs text-muted-foreground">от {documentCode("change", change.sequenceNumber)} · {change.title}</span> : null}</span>,
+              <span key="title" className="min-w-0"><span className="block">{item.title}</span>{change ? <span className="block text-xs text-muted-foreground">от {documentCode("change", change.sequenceNumber)} · {change.title}</span> : null}<StageTasks item={item} /><StageHandover projectId={projectId} item={item} mode={handover} canManage={canManage} /></span>,
               <StageDue key="due" item={item} overdue={overdue} afterDeadline={afterDeadline} deadline={offer.deadline} />,
               canManage
                 ? <StatusSelect key="status" label={`Статус на ${item.title}`} name="status" value={item.status} options={stageOptions} action={updateMilestoneAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е обновен" />
@@ -246,6 +247,34 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
     }))}
     footer={footer}
   />;
+}
+
+/** How a finished stage is handed over: asked in the client's portal, or recorded by the team. */
+export type StageHandoverMode = "portal" | "staff";
+
+/** A finished stage's handover: ask the client (or record it), then its state in one badge. */
+export function StageHandover({ projectId, item, mode, canManage }: { projectId: string; item: Milestone; mode: StageHandoverMode; canManage: boolean }) {
+  const acceptance = item.acceptance;
+  if (acceptance?.kind === "accepted") return <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"><Badge variant="success-soft">Приет</Badge>{acceptance.typedName ? `от ${acceptance.typedName}` : "отбелязано от екипа"} на {dayFormat.format(acceptance.createdAt)}</span>;
+  if (acceptance?.kind === "requested") return <span className="mt-1 flex"><Badge variant="info-soft">Чака приемане от клиента</Badge></span>;
+  if (item.status !== "completed" && acceptance?.kind !== "issues") return null;
+  const ask = canManage && item.status === "completed" ? (mode === "portal"
+    ? <ConfirmDialog tone="default" trigger={<Button type="button" variant="outline" size="sm">{acceptance ? "Поискай приемане отново" : "Поискай приемане"}</Button>} title={`Да поискам ли приемане на „${item.title}“?`} description="Клиентът получава имейл и приема етапа в портала с код или пише забележки. Плащанията след този етап стават дължими в деня на приемането." confirmLabel="Поискай приемане" action={requestStageAcceptanceAction} fields={{ projectId, milestoneId: item.id }} success="Искането е изпратено на клиента" />
+    : <ConfirmDialog tone="default" trigger={<Button type="button" variant="outline" size="sm">Отбележи като приет</Button>} title={`Клиентът прие ли „${item.title}“?`} description="Записва, че клиентът е приел етапа (на място, по телефона, с протокол). Плащанията след този етап стават дължими днес." confirmLabel="Клиентът го прие" action={recordStageAcceptanceAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е отбелязан като приет" />) : null;
+  return <span className="mt-1 flex flex-col items-start gap-1">
+    {acceptance?.kind === "issues" ? <span className="flex flex-wrap items-center gap-1.5 text-xs"><Badge variant="danger-soft">Забележки от клиента</Badge><span className="text-muted-foreground">{acceptance.note}</span></span> : null}
+    {ask}
+  </span>;
+}
+
+/** "2 от 3 задачи готови" under a stage, and a nudge when all are done but the stage is still open. */
+export function StageTasks({ item }: { item: Milestone }) {
+  if (!item.tasksTotal) return null;
+  const allDone = item.tasksDone === item.tasksTotal;
+  return <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+    <Link href={`/app/projects/${item.projectId}?tab=tasks`} className="hover:underline">{item.tasksDone} от {item.tasksTotal} {item.tasksTotal === 1 ? "задача готова" : "задачи готови"}</Link>
+    {allDone && item.status !== "completed" ? <Badge variant="success-soft">задачите са готови</Badge> : null}
+  </span>;
 }
 
 export function StageDue({ item, overdue, afterDeadline, deadline }: { item: Milestone; overdue: boolean; afterDeadline: boolean; deadline: string | null }) {

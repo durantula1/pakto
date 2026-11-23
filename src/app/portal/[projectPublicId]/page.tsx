@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
 import { ChevronDown, History, Lock, MapPin } from "lucide-react";
+import { AcceptancePanel } from "@/components/portal/acceptance-panel";
+import { ChoicePanel } from "@/components/portal/choice-panel";
+import { listProjectChoices } from "@/modules/client-choices/queries";
 import {
   PortalSteps,
   stepAmount,
@@ -51,7 +54,12 @@ export default async function PortalProjectPage({
   if (!data || !data.state) notFound();
   const path = `/portal/${projectPublicId}`;
   const state = data.state;
-  const navigation = await clientNavigation(data.session);
+  const [navigation, choices] = await Promise.all([
+    clientNavigation(data.session),
+    // Questions are answered only through the full portal; a view-only one shows none.
+    data.session.portalMode === "full" ? listProjectChoices(data.session.organizationId, data.session.projectId) : Promise.resolve([]),
+  ]);
+  const openChoices = choices.filter((choice) => !choice.answer);
   const isApprover = data.session.contactRole === "approver";
   const verified = !!data.session.contactEmailVerifiedAt;
   const active = data.project.status === "active";
@@ -73,6 +81,8 @@ export default async function PortalProjectPage({
   );
   const documents = data.documents.filter((document) => !agreed.has(document.id));
   const multipleOffers = state.offers.length > 1;
+  // Stages the company asked to accept, and those the client answered with remarks (shown until asked again).
+  const stageHandovers = state.milestones.filter((item) => item.acceptance && item.acceptance.kind !== "accepted");
   const awaitingAcceptance = state.offers.filter(
     (offer) => offer.status === "awaiting_acceptance",
   );
@@ -134,6 +144,25 @@ export default async function PortalProjectPage({
           detail: "Работата е готова. Прегледайте я и я приемете.",
           href: `${path}/changes/${offer.id}#acceptance`,
           action: "Прегледайте и приемете",
+        })),
+        ...stageHandovers.filter((item) => item.acceptance?.kind === "requested").map((item) => ({
+          key: `accept-stage-${item.id}`,
+          kind: "Приемане на етап",
+          tone: "accept" as const,
+          title: item.title,
+          detail: "Етапът е завършен. Прегледайте го и го приемете.",
+          href: `#acceptance-${item.id}`,
+          action: "Прегледайте и приемете",
+        })),
+        ...openChoices.map((choice) => ({
+          key: `choice-${choice.id}`,
+          kind: "Въпрос от фирмата",
+          tone: "decide" as const,
+          title: choice.question,
+          detail: choice.options.map((option) => option.label).join(" · "),
+          due: choice.dueOn ? new Date(`${choice.dueOn}T12:00:00Z`) : null,
+          href: `#choice-${choice.id}`,
+          action: "Изберете",
         })),
       ]
     : [];
@@ -209,6 +238,38 @@ export default async function PortalProjectPage({
           ) : null
         }
       />
+
+      {stageHandovers.length ? (
+        <div className="flex flex-col gap-3">
+          {stageHandovers.map((item) => (
+            <AcceptancePanel
+              key={item.id}
+              projectPublicId={projectPublicId}
+              stage={{ id: item.id, title: item.title }}
+              code="Етап"
+              acceptance={item.acceptance!}
+              organizationName={data.project.organizationName}
+              signerName={data.session.contactName}
+              canAnswer={active && isApprover && verified}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {choices.length && active ? (
+        <div className="flex flex-col gap-3">
+          {/* Open questions first; the last few answers stay as one-line receipts. */}
+          {[...openChoices, ...choices.filter((choice) => choice.answer).slice(0, 3)].map((choice) => (
+            <ChoicePanel
+              key={choice.id}
+              projectPublicId={projectPublicId}
+              choice={choice}
+              organizationName={data.project.organizationName}
+              canAnswer={isApprover}
+            />
+          ))}
+        </div>
+      ) : null}
 
       {/* 2. How are the work and the money going? */}
       {all.hasAgreement ? (

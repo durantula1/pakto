@@ -51,11 +51,17 @@ export type TaskItem = {
   projectName: string;
   assigneeId: string | null;
   assigneeName: string | null;
+  /** The stage of the project this task is part of. */
+  milestoneId: string | null;
+  milestoneTitle: string | null;
   /** The caller may change this task (assignee, own task or the right to assign). */
   canEdit: boolean;
 };
 
 export type TaskPerson = { userId: string; name: string };
+
+/** An open stage a task can be part of. */
+export type TaskStage = { id: string; projectId: string; title: string; dueOn: string };
 
 export function isOverdue(task: Pick<TaskItem, "dueOn" | "status">, today: string) {
   return task.status !== "done" && task.dueOn !== null && task.dueOn < today;

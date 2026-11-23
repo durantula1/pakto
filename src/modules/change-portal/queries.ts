@@ -10,6 +10,7 @@ import {
   changeOrders,
   paymentClaims,
   portalDecisions,
+  recordedAgreements,
   timelineEvents,
 } from "@/db/schema";
 import { getPortalSession } from "@/modules/change-portal/session";
@@ -78,16 +79,17 @@ function portalDocumentScope(projectId: string, statuses: readonly (typeof clien
 
 /**
  * The project as the client sees it: no drafts, and stages and installments only once the offer
- * they belong to is approved (project-level ones once any offer is).
+ * they belong to is approved. Project-level ones (work agreed without an offer) are always shown.
  */
 function clientView(state: ProjectState): ProjectState {
   const offers = state.offers.filter((offer) => offer.clientVisible && offer.status !== "draft");
   const inForce = new Set(state.offersInForce.map((offer) => offer.id));
-  const visible = (offerId: string | null) => (offerId ? inForce.has(offerId) : inForce.size > 0);
+  const visible = (offerId: string | null) => (offerId ? inForce.has(offerId) : true);
   return {
     ...state,
     offers,
-    milestones: state.milestones.filter((item) => visible(item.offerId)),
+    // The team's own tasks stay internal.
+    milestones: state.milestones.filter((item) => visible(item.offerId)).map((item) => ({ ...item, tasksTotal: 0, tasksDone: 0 })),
     nextMilestone: state.milestones.find((item) => item.status !== "completed" && visible(item.offerId)) ?? null,
     installments: state.installments.filter((item) => visible(item.offerId)),
   };
@@ -233,8 +235,10 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
       ?? revisions.find((revision) => revision.frozenAt && revision.revisionNumber < change.revisionNumber)
     : revisions.find((revision) => revision.frozenAt && revision.revisionNumber < change.revisionNumber);
   const isOffer = change.documentKind === "offer";
-  const [decision, lineItems, schedule, terms, absorbedChanges, attachments, previousLines, previousSchedule] = await Promise.all([
+  const [decision, agreement, lineItems, schedule, terms, absorbedChanges, attachments, previousLines, previousSchedule] = await Promise.all([
     db.select().from(portalDecisions).where(eq(portalDecisions.revisionId, change.revisionId)).limit(1).then((rows) => rows[0] ?? null),
+    // The team recorded that the client agreed (a call, a signed contract): shown instead of a decision.
+    db.select({ method: recordedAgreements.method, agreedOn: recordedAgreements.agreedOn }).from(recordedAgreements).where(eq(recordedAgreements.revisionId, change.revisionId)).limit(1).then((rows) => rows[0] ?? null),
     db.select().from(changeOrderLineItems).where(eq(changeOrderLineItems.revisionId, change.revisionId)).orderBy(asc(changeOrderLineItems.position)),
     listRevisionSchedule(change.revisionId),
     isOffer ? db.select().from(changeOrderPaymentTerms).where(eq(changeOrderPaymentTerms.revisionId, change.revisionId)).orderBy(asc(changeOrderPaymentTerms.position)) : Promise.resolve([]),
@@ -250,5 +254,5 @@ async function loadPortalChange(session: PortalSession, changeOrderId: string) {
     : null;
 
   const logo = documentLogo({ revisionLogoPath: change.logoStoragePath, organizationLogoPath: project.organizationLogoPath, size: project.organizationLogoSize });
-  return { expired: false as const, data: { project, session, change, logo, revisions, events, decision, lineItems, schedule, diff, paymentTerms, absorbedChanges, attachments, state: state ? clientView(state) : null, claims: isOffer ? claims : [], thread, unreadAnswers } };
+  return { expired: false as const, data: { project, session, change, logo, revisions, events, decision, agreement, lineItems, schedule, diff, paymentTerms, absorbedChanges, attachments, state: state ? clientView(state) : null, claims: isOffer ? claims : [], thread, unreadAnswers } };
 }

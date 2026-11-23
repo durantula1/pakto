@@ -3,10 +3,26 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button as AriaButton, Header } from "react-aria-components";
-import { Bell, Building2, ChartNoAxesColumn, ChevronsUpDown, CircleUserRound, LifeBuoy, LogOut, ShieldCheck } from "lucide-react";
+import {
+  Bell,
+  Building2,
+  ChartNoAxesColumn,
+  ChevronsUpDown,
+  CircleUserRound,
+  Compass,
+  LifeBuoy,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { startNavigationProgress } from "@/components/workspace/navigation-progress";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/modules/auth/actions";
@@ -25,19 +41,34 @@ type Props = {
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1]![0] : "")).toUpperCase() || "?";
+  return (
+    (
+      (parts[0]?.[0] ?? "") +
+      (parts.length > 1 ? parts[parts.length - 1]![0] : "")
+    ).toUpperCase() || "?"
+  );
 }
 
 function UserAvatar({ name, className }: { name: string; className?: string }) {
   return (
     <Avatar className={cn("rounded-lg after:rounded-lg", className)}>
-      <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-blue">{initials(name)}</AvatarFallback>
+      <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-blue">
+        {initials(name)}
+      </AvatarFallback>
     </Avatar>
   );
 }
 
 /** Account, settings and sign-out in one place, like the user menu in shadcn-admin. */
-export function UserMenu({ name, email, roleLabel, organizationName, owner, admin, variant }: Props) {
+export function UserMenu({
+  name,
+  email,
+  roleLabel,
+  organizationName,
+  owner,
+  admin,
+  variant,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [signingOut, startSignOut] = useTransition();
@@ -45,8 +76,13 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, admi
     { id: "/app/settings", label: "Профил и вход", icon: CircleUserRound },
     { id: "/app/settings/notifications", label: "Известия", icon: Bell },
     { id: "/app/settings/privacy", label: "Данни и профил", icon: ShieldCheck },
-    ...(owner ? [{ id: "/app/settings/organization", label: "Фирма", icon: Building2 }] : []),
-    ...(admin ? [{ id: "/app/admin", label: "Админ", icon: ChartNoAxesColumn }] : []),
+    ...(owner
+      ? [{ id: "/app/settings/organization", label: "Фирма", icon: Building2 }]
+      : []),
+    ...(admin
+      ? [{ id: "/app/admin", label: "Админ", icon: ChartNoAxesColumn }]
+      : []),
+    { id: "/app/guide", label: "Как работи Pakto", icon: Compass },
   ];
 
   function onAction(key: React.Key) {
@@ -67,12 +103,17 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, admi
           <UserAvatar name={name} />
           <span className="min-w-0 flex-1 lg:group-data-[sidebar=collapsed]/shell:sr-only">
             <span className="block truncate text-sm font-medium">{name}</span>
-            <span className="block truncate text-xs text-muted-foreground">{email}</span>
+            <span className="block truncate text-xs text-muted-foreground">
+              {email}
+            </span>
           </span>
           <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground lg:group-data-[sidebar=collapsed]/shell:hidden" />
         </AriaButton>
       ) : (
-        <AriaButton aria-label="Профил и настройки" className="grid size-10 place-items-center rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+        <AriaButton
+          aria-label="Профил и настройки"
+          className="grid size-10 place-items-center rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
           <UserAvatar name={name} />
         </AriaButton>
       )}
@@ -88,26 +129,46 @@ export function UserMenu({ name, email, roleLabel, organizationName, owner, admi
             <span className="flex items-center gap-2.5">
               <UserAvatar name={name} />
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{name}</span>
-                <span className="block truncate text-xs text-muted-foreground">{email}</span>
+                <span className="block truncate text-sm font-medium">
+                  {name}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {email}
+                </span>
               </span>
             </span>
-            <span className="mt-1.5 block truncate text-xs text-muted-foreground">{roleLabel} · {organizationName}</span>
+            <span className="mt-1.5 block truncate text-xs text-muted-foreground">
+              {roleLabel} · {organizationName}
+            </span>
           </Header>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           {links.map((link) => (
-            <DropdownMenuItem key={link.id} id={link.id} textValue={link.label} className="min-h-9">
+            <DropdownMenuItem
+              key={link.id}
+              id={link.id}
+              textValue={link.label}
+              className="min-h-9"
+            >
               <link.icon /> {link.label}
             </DropdownMenuItem>
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem id={`/contact?from=${encodeURIComponent(pathname)}`} textValue="Съобщи за проблем" className="min-h-9">
+        <DropdownMenuItem
+          id={`/contact?from=${encodeURIComponent(pathname)}`}
+          textValue="Съобщи за проблем"
+          className="min-h-9"
+        >
           <LifeBuoy /> Съобщи за проблем
         </DropdownMenuItem>
-        <DropdownMenuItem id="sign-out" variant="destructive" textValue="Изход" className="min-h-9">
+        <DropdownMenuItem
+          id="sign-out"
+          variant="destructive"
+          textValue="Изход"
+          className="min-h-9"
+        >
           <LogOut /> {signingOut ? "Излизане…" : "Изход"}
         </DropdownMenuItem>
       </DropdownMenu>

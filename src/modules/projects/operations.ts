@@ -8,8 +8,9 @@ import "@/lib/zod-messages";
 import { getDatabase } from "@/db";
 import {
   changeOrderPaymentTerms, changeOrderRevisions, changeOrderScheduleItems, changeOrders, offerAcceptances, paymentClaims, paymentDisputes,
-  paymentInstallments, projectMilestones, projectReceipts, staffNotifications, timelineEvents,
+  organizations, paymentInstallments, projectMilestones, projectReceipts, stageAcceptances, staffNotifications, timelineEvents,
 } from "@/db/schema";
+import { latestStageHandover, makeStagePaymentsDue } from "@/modules/projects/stage-acceptance";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
@@ -50,7 +51,7 @@ async function offerOf(db: Executor, organizationId: string, projectId: string, 
 
 /**
  * A stage may point at one approved change; it then belongs to that change's offer. Otherwise it
- * belongs to the chosen offer. A stage never belongs to the project alone.
+ * belongs to the chosen offer, or to the project itself (work agreed without an offer).
  */
 async function stageOwner(db: Executor, organizationId: string, projectId: string, input: { changeOrderId: string | null; offerId: string | null }) {
   if (input.changeOrderId) {
@@ -60,7 +61,6 @@ async function stageOwner(db: Executor, organizationId: string, projectId: strin
     return { changeOrderId: change.id, offerId: change.offerId };
   }
   const offerId = await offerOf(db, organizationId, projectId, input.offerId);
-  if (!offerId) throw new Error("Избери към коя оферта е етапът.");
   return { changeOrderId: null, offerId };
 }
 
@@ -74,7 +74,7 @@ const milestoneFields = z.object({
   projectId: uuid,
   title: z.string().trim().min(2, "Името е твърде кратко.").max(180),
   dueOn: z.iso.date("Избери срок."),
-  /** "offer:<id>" or "change:<id>" */
+  /** "offer:<id>", "change:<id>" or "project" (no offer) */
   work: z.string().optional(),
   reason: z.string().trim().max(300).optional(),
 });
@@ -190,6 +190,8 @@ export async function deleteMilestoneAction(formData: FormData): Promise<ActionR
     await getDatabase().transaction(async (tx) => {
       const [installment] = await tx.select({ title: paymentInstallments.title }).from(paymentInstallments).where(eq(paymentInstallments.milestoneId, milestoneId)).limit(1);
       if (installment) throw new Error(`Към етапа е свързана вноската „${installment.title}“. Първо я премести на друга дата.`);
+      const [handover] = await tx.select({ id: stageAcceptances.id }).from(stageAcceptances).where(eq(stageAcceptances.milestoneId, milestoneId)).limit(1);
+      if (handover) throw new Error("Етапът вече е предаван на клиента и остава в историята. Не може да се изтрие.");
       const [removed] = await tx.delete(projectMilestones)
         .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, context.organizationId)))
         .returning({ title: projectMilestones.title, dueOn: projectMilestones.dueOn, offerId: projectMilestones.offerId });
@@ -228,6 +230,17 @@ const installmentFields = z.object({
   amount: money,
 });
 
+const monthNames = ["януари", "февруари", "март", "април", "май", "юни", "юли", "август", "септември", "октомври", "ноември", "декември"];
+
+/** The same day `months` later, kept inside shorter months (31 January → 28 February). */
+function addMonths(day: string, months: number) {
+  const [year, month, date] = day.split("-").map(Number) as [number, number, number];
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const last = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(date, last));
+  return target.toISOString().slice(0, 10);
+}
+
 async function checkedStage(db: Executor, projectId: string, milestoneId: string | null, offerId: string | null) {
   if (!milestoneId) return null;
   const [milestone] = await db.select({ id: projectMilestones.id, offerId: projectMilestones.offerId }).from(projectMilestones)
@@ -240,15 +253,27 @@ async function checkedStage(db: Executor, projectId: string, milestoneId: string
 /** A planned installment added by hand (outside the offer's payment terms, or when it has none). */
 export async function addInstallmentAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
-    const data = installmentFields.parse(Object.fromEntries(formData));
+    const data = installmentFields.extend({
+      /** How many monthly installments to add, one per month from the first date (a subscription). */
+      months: z.coerce.number().int().min(1).max(36).default(1),
+    }).parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
     await requireProjectCapability(context, data.projectId, "payment");
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
     const db = getDatabase();
+    // No offer: a payment agreed for the project itself (a contract on paper, a subscription).
     const offerId = await offerOf(db, context.organizationId, data.projectId, data.offerId);
-    if (!offerId) throw new Error("Избери към коя оферта е вноската.");
     const milestoneId = await checkedStage(db, data.projectId, data.milestoneId, offerId);
-    await db.insert(paymentInstallments).values({ organizationId: context.organizationId, projectId: data.projectId, offerId, milestoneId, kind: data.kind, title: data.title, amount: data.amount, currency: "EUR", dueOn: data.dueOn, createdBy: context.userId });
+    const rows = Array.from({ length: data.months }, (_, index) => {
+      const dueOn = addMonths(data.dueOn, index);
+      const [year, month] = dueOn.split("-").map(Number) as [number, number];
+      return {
+        organizationId: context.organizationId, projectId: data.projectId, offerId, milestoneId: index === 0 ? milestoneId : null, kind: data.kind,
+        title: data.months > 1 ? `${data.title} · ${monthNames[month - 1]} ${year}`.slice(0, 180) : data.title,
+        amount: data.amount, currency: "EUR", dueOn, createdBy: context.userId,
+      };
+    });
+    await db.insert(paymentInstallments).values(rows);
     refresh(data.projectId);
   }, "Вноската не беше добавена.");
 }
@@ -261,7 +286,6 @@ export async function editInstallmentAction(formData: FormData): Promise<ActionR
     await requireActiveProject(context.organizationId, data.projectId, { allowCompleted: true });
     const db = getDatabase();
     const offerId = await offerOf(db, context.organizationId, data.projectId, data.offerId);
-    if (!offerId) throw new Error("Избери към коя оферта е вноската.");
     const milestoneId = await checkedStage(db, data.projectId, data.milestoneId, offerId);
     await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${data.projectId}))`);
@@ -557,4 +581,61 @@ export async function requestAcceptanceAction(formData: FormData): Promise<Actio
     });
     refresh(projectId);
   }, "Искането не беше изпратено.");
+}
+
+const stageHandoverSchema = z.object({ projectId: uuid, milestoneId: uuid, note: z.string().trim().max(2000).optional() });
+
+/** The stage, finished, in a project of this company. */
+async function finishedStage(organizationId: string, projectId: string, milestoneId: string) {
+  const [stage] = await getDatabase().select({ title: projectMilestones.title, status: projectMilestones.status, offerId: projectMilestones.offerId, organizationName: organizations.name })
+    .from(projectMilestones)
+    .innerJoin(organizations, eq(organizations.id, projectMilestones.organizationId))
+    .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, organizationId))).limit(1);
+  if (!stage) throw new Error("Етапът не е намерен.");
+  if (stage.status !== "completed") throw new Error("Първо отбележи етапа като завършен.");
+  return stage;
+}
+
+/** Asks the client to accept one finished stage in the portal. Its "after this stage" payments fall due on acceptance. */
+export async function requestStageAcceptanceAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { projectId, milestoneId, note } = stageHandoverSchema.parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    if (context.features.portalMode !== "full") throw new Error("Без пълен клиентски портал отбележи приемането сам.");
+    await requireProjectCapability(context, projectId, "milestone");
+    await requireActiveProject(context.organizationId, projectId);
+    const stage = await finishedStage(context.organizationId, projectId, milestoneId);
+    await getDatabase().transaction(async (tx) => {
+      const latest = await latestStageHandover(tx, milestoneId);
+      if (latest === "accepted") throw new Error("Клиентът вече прие този етап.");
+      if (latest === "requested") throw new Error("Приемането вече чака клиента.");
+      await tx.insert(stageAcceptances).values({ organizationId: context.organizationId, projectId, milestoneId, kind: "requested", note: note || null, actorType: "staff", actorId: context.userId });
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: stage.offerId, actorType: "staff", actorId: context.userId, eventType: "stage_acceptance_requested", visibility: "client", metadata: { title: stage.title, note: note || null } });
+    });
+    emailClient(projectId, {
+      subject: `${stage.organizationName} завърши етап „${stage.title}“ и очаква да го приемете`,
+      intro: `${stage.organizationName} отбеляза етап „${stage.title}“ като завършен. В портала можете да го приемете или да опишете забележките си. Плащанията, свързани с етапа, стават дължими след приемането.`,
+      facts: note ? [["Бележка от фирмата", note]] : undefined,
+      cta: "Прегледайте етапа",
+    });
+    refresh(projectId);
+  }, "Искането не беше изпратено.");
+}
+
+/** Without the full client portal the team records that the client accepted the stage (on site, by phone). */
+export async function recordStageAcceptanceAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { projectId, milestoneId, note } = stageHandoverSchema.parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    await requireProjectCapability(context, projectId, "milestone");
+    await requireActiveProject(context.organizationId, projectId);
+    const stage = await finishedStage(context.organizationId, projectId, milestoneId);
+    await getDatabase().transaction(async (tx) => {
+      if (await latestStageHandover(tx, milestoneId) === "accepted") throw new Error("Етапът вече е приет.");
+      await tx.insert(stageAcceptances).values({ organizationId: context.organizationId, projectId, milestoneId, kind: "accepted", note: note || null, actorType: "staff", actorId: context.userId });
+      await makeStagePaymentsDue(tx, milestoneId);
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: stage.offerId, actorType: "staff", actorId: context.userId, eventType: "stage_acceptance_recorded", visibility: "client", metadata: { title: stage.title, note: note || null } });
+    });
+    refresh(projectId);
+  }, "Приемането не беше записано.");
 }

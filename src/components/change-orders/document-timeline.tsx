@@ -21,6 +21,7 @@ export const eventLabels: Record<string, string> = {
   revision_expired: "Срокът за решение изтече",
   client_reminded: "Изпратено напомняне към клиента",
   decision_approved: "Одобрена от клиента",
+  agreement_recorded: "Отбелязана като договорена",
   decision_declined: "Отказана от клиента",
   changes_requested: "Клиентът поиска промяна",
   decision_changes_requested: "Клиентът поиска промяна",
@@ -43,6 +44,14 @@ export const eventLabels: Record<string, string> = {
   acceptance_requested: "Поискано приемане на работата",
   acceptance_accepted: "Клиентът прие работата",
   acceptance_issues: "Клиентът изпрати забележки",
+  stage_acceptance_requested: "Поискано приемане на етап",
+  stage_acceptance_accepted: "Клиентът прие етап",
+  stage_acceptance_issues: "Клиентът изпрати забележки по етап",
+  stage_acceptance_recorded: "Етапът е отбелязан като приет",
+  choice_asked: "Клиентът е попитан за избор",
+  choice_answered: "Клиентът направи избор",
+  choice_recorded: "Отбелязан избор на клиента",
+  choice_canceled: "Въпросът към клиента е отменен",
   work_status_changed: "Обновен статус на работата",
   contact_verified: "Клиентът потвърди имейла си",
   contact_email_changed: "Клиентът смени имейла си",
@@ -73,6 +82,7 @@ export const eventLabels: Record<string, string> = {
 /** Events worth a colored dot: the client's decisions and disputes. */
 const eventTones: Record<string, string> = {
   decision_approved: "bg-ok",
+  agreement_recorded: "bg-ok",
   decision_declined: "bg-late",
   decision_changes_requested: "bg-warn",
   changes_requested: "bg-warn",
@@ -81,6 +91,9 @@ const eventTones: Record<string, string> = {
   revision_expired: "bg-late",
   acceptance_accepted: "bg-ok",
   acceptance_issues: "bg-late",
+  stage_acceptance_accepted: "bg-ok",
+  stage_acceptance_recorded: "bg-ok",
+  stage_acceptance_issues: "bg-late",
   document_canceled: "bg-late",
 };
 

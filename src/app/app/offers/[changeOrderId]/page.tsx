@@ -101,7 +101,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const offerState = execution?.state.offers.find((item) => item.id === change.id) ?? null;
   // Work and money of an offer in force (or one waiting for a new version to be decided).
   const inForce = !!offerState && (offerState.inForce || offerState.approved);
-  const showMoney = can(member, "payments.record") || can(member, "finance.view");
+  const showMoney = context.features.finance && (can(member, "payments.record") || can(member, "finance.view"));
   const projectOpen = change.projectStatus === "active";
   const tab = eventsBefore !== undefined ? "history"
     : requestedTab === "messages" && showThread ? "messages"
@@ -175,7 +175,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
               ) : null}
             </TabsContent>
             {inForce && execution && offerState ? <TabsContent id="stages" className="pt-5">
-              <OfferWork state={execution.state} offer={offerState} projectId={change.projectId} canManage={can(member, "milestones.manage") && projectOpen} today={today} stageFor={typeof query.stageFor === "string" ? query.stageFor : null} />
+              <OfferWork state={execution.state} offer={offerState} projectId={change.projectId} canManage={can(member, "milestones.manage") && projectOpen} today={today} stageFor={typeof query.stageFor === "string" ? query.stageFor : null} handover={context.features.portalMode === "full" ? "portal" : "staff"} />
             </TabsContent> : null}
             {inForce && showMoney && execution && offerState ? <TabsContent id="payments" className="pt-5">
               <OfferPayments state={execution.state} offer={offerState} projectId={change.projectId} canRecord={can(member, "payments.record") && change.projectStatus !== "archived"} today={today} inbox={execution.inbox} />

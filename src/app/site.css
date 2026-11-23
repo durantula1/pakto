@@ -129,7 +129,9 @@ html:has(.ys) {
 .ys .nav .links {
   grid-column: 4 / 10;
   display: flex;
-  gap: 1.8rem;
+  justify-content: center;
+  gap: clamp(1rem, 2vw, 1.8rem);
+  white-space: nowrap;
   font-size: 0.92rem;
 }
 .ys .nav .links a {
@@ -1381,45 +1383,6 @@ html:has(.ys) {
 }
 
 /* Facts and trust */
-.ys .facts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.ys .facts div {
-  padding: 2rem;
-  border-right: 1px solid var(--line);
-}
-.ys .facts div:last-child {
-  border: 0;
-}
-.ys .facts b {
-  display: block;
-  font-size: clamp(3.5rem, 7vw, 7rem);
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 0.9;
-  font-variant-numeric: tabular-nums;
-}
-.ys .facts span {
-  display: block;
-  margin-top: 1rem;
-  color: var(--g);
-  max-width: 14rem;
-}
-@media (max-width: 48rem) {
-  .ys .facts {
-    grid-template-columns: 1fr 1fr;
-  }
-  .ys .facts div {
-    padding: 1.4rem 1.1rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .ys .facts div:nth-child(2) {
-    border-right: 0;
-  }
-}
 .ys .trust {
   margin-top: 5rem;
 }
@@ -1447,6 +1410,356 @@ html:has(.ys) {
 @media (max-width: 48rem) {
   .ys .trust .col {
     grid-column: 1 / -1;
+  }
+}
+
+/* Work modes: a miniature of the app under each card */
+.ys .wm {
+  margin-top: 1.25rem;
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+/* The three miniatures line up at the bottom even when the texts differ in length. */
+.ys .wmodes .col {
+  display: flex;
+  flex-direction: column;
+}
+.ys .wmodes .wm {
+  margin-top: auto;
+}
+.ys .wmodes .col p {
+  margin-bottom: 1.25rem;
+}
+.ys .wm-mods {
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--line);
+  color: var(--g);
+  font-size: 0.7rem;
+}
+/* The four scenes. Final state is the default; the story plays only after the card scrolls in. */
+.ys .wms {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  height: 10.5rem;
+  padding: 0.9rem 1rem 1rem;
+  font-size: 0.82rem;
+}
+.ys .wms .mono {
+  font-family: var(--font-mono);
+}
+.ys .wms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 600;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ink);
+}
+.ys .wms-head b {
+  font-weight: 600;
+}
+.ys .wms .tag {
+  font-style: normal;
+}
+
+/* Сам: sent → approved, then the payment bar fills. */
+.ys .wms-st {
+  display: grid;
+  justify-items: end;
+}
+.ys .wms-st > * {
+  grid-area: 1 / 1;
+}
+.ys .wms-st .b {
+  visibility: hidden;
+}
+.ys .wms-lines {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 0.2rem;
+  color: var(--g);
+  font-size: 0.72rem;
+}
+.ys .wms-lines b {
+  color: var(--ink);
+  font-weight: 500;
+  text-align: right;
+}
+.ys .wms-total {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+}
+.ys .wms-total b {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.ys .wms-bar {
+  height: 0.5rem;
+  border: 1px solid var(--ink);
+}
+.ys .wms-bar i {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  transform-origin: left;
+}
+
+/* Екип: Иван's card moves from "В работа" to "Готово", stage 2 turns green. */
+.ys .wms-cols,
+.ys .wms-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 0.4rem;
+}
+.ys .wms-cols {
+  font-size: 0.66rem;
+  color: var(--g);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--ink);
+}
+.ys .wms-board {
+  grid-template-rows: repeat(2, 1.7rem);
+  row-gap: 0.35rem;
+}
+.ys .wms-card {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--ink);
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ys .wms-card:nth-child(1) {
+  grid-area: 1 / 1;
+}
+.ys .wms-card:nth-child(2) {
+  grid-area: 1 / 2;
+}
+.ys .wms-card.done {
+  grid-area: 1 / 3;
+  color: var(--g);
+  border-color: var(--line);
+  text-decoration: line-through;
+}
+.ys .wms-move {
+  grid-area: 2 / 3;
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+.ys .wms-av {
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  background: var(--ink);
+  color: #fff;
+  font-style: normal;
+  font-size: 0.6rem;
+}
+.ys .wms-stage {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1.6rem) 1fr;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+}
+.ys .wms-stage .mono {
+  text-align: right;
+}
+.ys .wms-seg {
+  height: 0.5rem;
+  border: 1px solid var(--ink);
+}
+.ys .wms-seg.on,
+.ys .wms-seg.fill {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+/* Договор: months fill one by one, April waits in blue. */
+.ys .wms-months {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.2rem;
+}
+.ys .wms-months span {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: center;
+}
+.ys .wms-months i {
+  width: 100%;
+  aspect-ratio: 1 / 1.6;
+  border: 1px solid var(--ink);
+}
+.ys .wms-months .paid i {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+.ys .wms-months .due i {
+  border: 2px solid var(--blue);
+}
+.ys .wms-months small {
+  font-size: 0.6rem;
+  color: var(--g);
+}
+.ys .wms-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+}
+.ys .wms-foot .due-t {
+  color: var(--blue);
+}
+
+/* По телефона: the call's waveform, then the stamp. */
+.ys .wms-wave {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 2.2rem;
+}
+.ys .wms-wave i {
+  flex: 1;
+  max-width: 0.3rem;
+  height: calc(var(--h) * 7%);
+  background: var(--ink);
+}
+.ys .wms-note {
+  position: relative;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+.ys .wms-stamp {
+  position: absolute;
+  right: 0;
+  bottom: 1.7rem;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid var(--ok);
+  color: var(--ok);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transform: rotate(-7deg);
+  background: color-mix(in srgb, #fff 85%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Сам */
+  .ys .wmodes .rv.in .wms-st .b {
+    animation: wms-out 0.01s linear 1.1s both;
+    visibility: visible;
+  }
+  .ys .wmodes .rv.in .wms-st .ok {
+    animation: wms-stamp 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) 1.1s both;
+  }
+  .ys .wmodes .rv.in .wms-bar i {
+    animation: wms-fill 0.9s cubic-bezier(0.6, 0, 0.2, 1) 1.5s both;
+  }
+  /* Екип */
+  .ys .wmodes .rv.in .wms-move {
+    animation:
+      wms-move 0.7s cubic-bezier(0.6, 0, 0.2, 1) 1.3s both,
+      wms-green 0.2s linear 2s both;
+  }
+  .ys .wmodes .rv.in .wms-seg.fill {
+    animation: wms-fill 0.5s ease 2.1s both;
+    transform-origin: left;
+  }
+  /* Договор */
+  .ys .wmodes .rv.in .wms-months .paid i {
+    animation: wms-month 0.25s ease both;
+    animation-delay: calc(1.3s + var(--i) * 0.22s);
+  }
+  .ys .wmodes .rv.in .wms-months .due i {
+    animation: wms-pulse 0.9s ease 2.1s 2 both;
+  }
+  .ys .wmodes .rv.in .wms-foot {
+    animation: wms-in 0.3s ease 2s both;
+  }
+  /* По телефона */
+  .ys .wmodes .rv.in .wms-wave i {
+    animation: wms-bar 0.35s ease both;
+    animation-delay: calc(1.2s + var(--i) * 0.03s);
+    transform-origin: center;
+  }
+  .ys .wmodes .rv.in .wms-note > span:first-child {
+    animation: wms-in 0.3s ease 2s both;
+  }
+  .ys .wmodes .rv.in .wms-stamp {
+    animation: wms-slam 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) 2.4s both;
+  }
+}
+@keyframes wms-out {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes wms-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes wms-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes wms-move {
+  from {
+    transform: translateX(calc(-100% - 0.4rem));
+  }
+}
+@keyframes wms-green {
+  from {
+    background: #fff;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+}
+@keyframes wms-month {
+  from {
+    background: transparent;
+    border-color: var(--ink);
+  }
+}
+@keyframes wms-pulse {
+  50% {
+    transform: scale(1.18);
+  }
+}
+@keyframes wms-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.3rem);
+  }
+}
+@keyframes wms-bar {
+  from {
+    transform: scaleY(0.15);
+  }
+}
+@keyframes wms-slam {
+  from {
+    opacity: 0;
+    transform: rotate(-7deg) scale(2.2);
   }
 }
 

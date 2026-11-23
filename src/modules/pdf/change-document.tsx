@@ -10,6 +10,8 @@ import { maskEmail } from "@/lib/email/send";
 import { formatPercent } from "@/lib/money";
 import { dateOnly, dateWithTime } from "@/lib/dates";
 import { daysLabel } from "@/modules/change-orders/schedule";
+import { agreementLine } from "@/modules/change-orders/labels";
+import type { AgreementMethod } from "@/db/schema";
 
 // The product's text face, Inter Tight, as full static TTFs (Latin + Cyrillic + €). IBM Plex Mono is
 // left out: fontkit cannot read the Google Fonts TTF. The @fontsource woff files are unicode-range subsets, and react-pdf
@@ -76,7 +78,7 @@ function formatDeadline(value: string | null) {
   return value ? dateFormat.format(new Date(`${value}T12:00:00Z`)) : null;
 }
 
-export function ChangePdfDocument({ organization, logo, project, siteAddress, contact, kind, code, revision, lines, schedule = [], paymentTerms = [], absorbedChanges = [], decision, photos = [] }: {
+export function ChangePdfDocument({ organization, logo, project, siteAddress, contact, kind, code, revision, lines, schedule = [], paymentTerms = [], absorbedChanges = [], decision, agreement = null, photos = [] }: {
   organization: string; logo?: PdfLogo | null; project: string; siteAddress: string; contact: string; kind: "offer" | "change"; code: string;
   revision: { title: string; description: string; reason: string | null; revisionNumber: number; changeKind: string; subtotal: string; taxAmount: string; total: string; currency: string; taxRate: string; agreedDeadline: string | null; contentHash: string | null; frozenAt: Date | null; clientNote: string | null; responseDueAt?: Date | null; discountType?: "percent" | "amount" | null; discountValue?: string | null; discountAmount?: string | null };
   lines: Line[];
@@ -87,6 +89,8 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
   /** Approved changes this version includes in its price. */
   absorbedChanges?: Array<{ title: string; total: string }>;
   decision: { decision: string; typedName: string; createdAt: Date; verifiedEmail?: string | null; ip?: string | null; signature?: Buffer | null } | null;
+  /** The team recorded the client's agreement (a call, a signed contract) instead of a decision in the portal. */
+  agreement?: { method: AgreementMethod; agreedOn: string; note: string | null } | null;
   photos?: PdfPhoto[];
 }) {
   const money = new Intl.NumberFormat("bg-BG", { style: "currency", currency: revision.currency.trim() || "EUR", useGrouping: "always" });
@@ -196,6 +200,14 @@ export function ChangePdfDocument({ organization, logo, project, siteAddress, co
           <View key={index} style={styles.summaryRow}><Text>{change.title}</Text><Text>{money.format(Number(change.total))}</Text></View>
         ))}
         <Text style={styles.note}>Тези промени са част от цената на тази версия и не се добавят отделно.</Text>
+      </View>
+    ) : null}
+
+    {agreement && !decision ? (
+      <View style={styles.decision} wrap={false}>
+        <Text style={styles.heading}>Договорено</Text>
+        <Text>{agreementLine(agreement.method, agreement.agreedOn)}, отбелязано от {organization}.</Text>
+        {agreement.note ? <Text style={{ color: muted }}>{agreement.note}</Text> : null}
       </View>
     ) : null}
 

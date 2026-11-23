@@ -21,6 +21,11 @@ import {
 import { sql } from "drizzle-orm";
 import type { AttributionTouch } from "@/lib/analytics/touch";
 
+export type ApprovalMode = "client" | "staff";
+export type PortalMode = "full" | "view_only" | "off";
+export type WorkProfile = "solo" | "team" | "contract";
+export type AgreementMethod = "verbal" | "signed" | "email" | "other";
+
 export const appSchema = pgSchema("app");
 
 export const memberRole = appSchema.enum("member_role", [
@@ -76,6 +81,8 @@ export const profiles = appSchema.table("profiles", {
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
   /** When the user went through or skipped the welcome screens; null shows them on the next visit to /app. */
   welcomeSeenAt: timestamp("welcome_seen_at", { withTimezone: true }),
+  /** Version of the "what's new" screens the user has seen (src/lib/whats-new.ts); null = none yet. */
+  whatsNewSeen: text("whats_new_seen"),
   ...timestamps,
 }, (table) => [
   index("profiles_deletion_due_idx").on(table.deletionRequestedAt).where(sql`${table.deletionRequestedAt} is not null and ${table.deletedAt} is null`),
@@ -121,6 +128,15 @@ export const organizations = appSchema.table(
     stageWarningDays: integer("stage_warning_days").notNull().default(7),
     /** Set when the sole member deletes their account; app.purge_organization() removes the company later. */
     closureRequestedAt: timestamp("closure_requested_at", { withTimezone: true }),
+    /** "client": the client approves in the portal; "staff": the team records the agreement. */
+    approvalMode: text("approval_mode").$type<ApprovalMode>().notNull().default("client"),
+    /** "full", "view_only" (the client sees, decides nothing) or "off" (no links, no client emails). */
+    portalMode: text("portal_mode").$type<PortalMode>().notNull().default("full"),
+    tasksEnabled: boolean("tasks_enabled").notNull().default(true),
+    catalogEnabled: boolean("catalog_enabled").notNull().default(true),
+    financeEnabled: boolean("finance_enabled").notNull().default(true),
+    /** What the owner picked at sign-up; it only set the defaults above. */
+    workProfile: text("work_profile").$type<WorkProfile>(),
     ...timestamps,
   },
   (table) => [uniqueIndex("organizations_slug_uidx").on(table.slug)],
@@ -465,6 +481,8 @@ export const changeOrders = appSchema.table(
       .default("not_started"),
     /** The approved offer version that includes this change; the change then no longer adds to the price. */
     absorbedByRevisionId: bigint("absorbed_by_revision_id", { mode: "number" }),
+    /** Overrides the company's approval mode for this document; null = the company's. */
+    approvalMode: text("approval_mode").$type<ApprovalMode>(),
     createdBy: uuid("created_by").notNull(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps,
@@ -1020,6 +1038,77 @@ export const offerAcceptances = appSchema.table(
   ],
 );
 
+/** Handover of one stage, like `offerAcceptances` for a whole offer. Append-only; the latest row is the state. */
+export const stageAcceptances = appSchema.table(
+  "stage_acceptances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    milestoneId: uuid("milestone_id").notNull().references(() => projectMilestones.id),
+    kind: text("kind", { enum: ["requested", "accepted", "issues"] }).notNull(),
+    note: text("note"),
+    typedName: text("typed_name"),
+    /** "staff" when the team recorded it (no full client portal). */
+    actorType: text("actor_type", { enum: ["staff", "portal_contact"] }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    ip: inet("ip"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("stage_acceptances_milestone_idx").on(table.milestoneId, table.createdAt),
+    index("stage_acceptances_project_idx").on(table.projectId, table.createdAt),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "stage_acceptances_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
+/** One option of a client choice. `image` is a path in the "client-choices" bucket. */
+export type ChoiceOption = { key: string; label: string; description: string | null; image: string | null };
+
+/** A small question to the client without a price. Options never change once asked. */
+export const clientChoices = appSchema.table(
+  "client_choices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    question: text("question").notNull(),
+    note: text("note"),
+    options: jsonb("options").$type<ChoiceOption[]>().notNull(),
+    dueOn: date("due_on"),
+    createdBy: uuid("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("client_choices_project_idx").on(table.projectId, table.createdAt),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "client_choices_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
+/** The one answer to a client choice. Append-only. */
+export const clientChoiceAnswers = appSchema.table(
+  "client_choice_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    choiceId: uuid("choice_id").notNull().references(() => clientChoices.id, { onDelete: "cascade" }),
+    optionKey: text("option_key").notNull(),
+    comment: text("comment"),
+    actorType: text("actor_type", { enum: ["staff", "portal_contact"] }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    ip: inet("ip"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("client_choice_answers_choice_uidx").on(table.choiceId),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "client_choice_answers_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
 export const internalNotes = appSchema.table(
   "internal_notes",
   {
@@ -1215,6 +1304,8 @@ export const tasks = appSchema.table(
     status: taskStatus("status").notNull().default("todo"),
     assigneeId: uuid("assignee_id"),
     dueOn: date("due_on"),
+    /** The stage of the project this task is part of; cleared when the stage is deleted. */
+    milestoneId: uuid("milestone_id").references(() => projectMilestones.id, { onDelete: "set null" }),
     createdBy: uuid("created_by").notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     ...timestamps,
@@ -1227,6 +1318,28 @@ export const tasks = appSchema.table(
     }).onDelete("cascade"),
     index("tasks_org_status_due_idx").on(table.organizationId, table.status, table.dueOn),
     index("tasks_project_idx").on(table.projectId),
+    index("tasks_milestone_idx").on(table.milestoneId).where(sql`${table.milestoneId} is not null`),
     index("tasks_assignee_idx").on(table.organizationId, table.assigneeId).where(sql`${table.assigneeId} is not null`),
+  ],
+);
+
+/** An agreement the team recorded instead of the client's decision in the portal. Append-only. */
+export const recordedAgreements = appSchema.table(
+  "recorded_agreements",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id").notNull(),
+    revisionId: bigint("revision_id", { mode: "number" }).notNull().references(() => changeOrderRevisions.id, { onDelete: "cascade" }),
+    method: text("method").$type<AgreementMethod>().notNull(),
+    agreedOn: date("agreed_on").notNull(),
+    note: text("note"),
+    revisionContentHash: text("revision_content_hash").notNull(),
+    recordedBy: uuid("recorded_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("recorded_agreements_revision_uidx").on(table.revisionId),
+    index("recorded_agreements_project_idx").on(table.projectId),
   ],
 );

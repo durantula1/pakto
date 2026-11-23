@@ -4,7 +4,7 @@ import { cache } from "react";
 import { and, asc, eq } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { organizationMembers, organizations } from "@/db/schema";
+import { organizationMembers, organizations, type ApprovalMode, type PortalMode } from "@/db/schema";
 import type { Permission } from "@/lib/authz/permissions";
 import { getSessionUser } from "@/lib/auth/server";
 
@@ -16,7 +16,30 @@ export type TenantContext = {
   role: "owner" | "admin" | "member" | "field" | "office";
   permissions: Permission[];
   allProjects: boolean;
+  features: OrganizationFeatures;
 };
+
+/** How the company works with Pakto: chosen in Settings → Company, preset by the sign-up profile. */
+export type OrganizationFeatures = {
+  approvalMode: ApprovalMode;
+  portalMode: PortalMode;
+  tasks: boolean;
+  catalog: boolean;
+  finance: boolean;
+};
+
+class ModuleDisabledError extends Error {
+  readonly code = "MODULE_DISABLED";
+}
+
+const moduleNames = { tasks: "Задачи", catalog: "Каталог", finance: "Финанси" } as const;
+
+/** Refuses a write to a module the company has switched off. Its data stays; switching it on brings it back. */
+export function requireModule(context: TenantContext, module: keyof typeof moduleNames) {
+  if (!context.features[module]) {
+    throw new ModuleDisabledError(`Модулът „${moduleNames[module]}“ е изключен. Включи го от Настройки → Фирма.`);
+  }
+}
 
 class AuthenticationRequiredError extends Error {
   readonly code = "UNAUTHORIZED";
@@ -51,6 +74,11 @@ export const getOptionalTenantContext = cache(
         role: organizationMembers.role,
         permissions: organizationMembers.permissions,
         allProjects: organizationMembers.allProjects,
+        approvalMode: organizations.approvalMode,
+        portalMode: organizations.portalMode,
+        tasksEnabled: organizations.tasksEnabled,
+        catalogEnabled: organizations.catalogEnabled,
+        financeEnabled: organizations.financeEnabled,
       })
       .from(organizationMembers)
       .innerJoin(
@@ -78,6 +106,13 @@ export const getOptionalTenantContext = cache(
       role: membership.role,
       permissions: membership.permissions,
       allProjects: membership.allProjects,
+      features: {
+        approvalMode: membership.approvalMode,
+        portalMode: membership.portalMode,
+        tasks: membership.tasksEnabled,
+        catalog: membership.catalogEnabled,
+        finance: membership.financeEnabled,
+      },
     };
   },
 );

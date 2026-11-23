@@ -1,16 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import "@/lib/zod-messages";
 
 import { getDatabase } from "@/db";
-import { organizationMembers, projectMembers, projects, tasks } from "@/db/schema";
+import { organizationMembers, projectMembers, projectMilestones, projects, tasks } from "@/db/schema";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { can } from "@/lib/authz/permissions";
 import { requireProjectCapability } from "@/lib/authz/project-access";
-import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
+import { requireModule, requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
 import { notifyUsers } from "@/modules/notifications/staff";
 import { taskStatuses } from "./labels";
 
@@ -22,6 +22,7 @@ const taskFields = {
   description: z.string().trim().max(2000, "Описанието е твърде дълго.").optional(),
   assigneeId: optionalUuid,
   dueOn: optionalDate,
+  milestoneId: optionalUuid,
 };
 
 const createSchema = z.object({ projectId: z.uuid("Избери проект."), ...taskFields });
@@ -44,6 +45,15 @@ async function requireAssignable(context: TenantContext, projectId: string, assi
   const [assigned] = await getDatabase().select({ userId: projectMembers.userId }).from(projectMembers)
     .where(and(eq(projectMembers.projectId, projectId), eq(projectMembers.userId, assigneeId))).limit(1);
   if (!assigned) throw new Error("Този човек няма достъп до проекта. Добави го към проекта от „Екип“.");
+}
+
+/** A stage of the same project, or none. */
+async function checkedStage(context: TenantContext, projectId: string, milestoneId: string | undefined) {
+  if (!milestoneId) return null;
+  const [stage] = await getDatabase().select({ id: projectMilestones.id }).from(projectMilestones)
+    .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, context.organizationId))).limit(1);
+  if (!stage) throw new Error("Етапът не е от този проект.");
+  return stage.id;
 }
 
 /** Without the right to assign, a task can only be yours or nobody's. */
@@ -69,13 +79,16 @@ export async function createTaskAction(formData: FormData): Promise<ActionResult
   return attempt(async () => {
     const data = createSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     await requireProjectCapability(context, data.projectId, "view");
     const [project] = await getDatabase().select({ status: projects.status }).from(projects)
       .where(and(eq(projects.id, data.projectId), eq(projects.organizationId, context.organizationId))).limit(1);
     if (project?.status !== "active") throw new Error("Към приключен или архивиран проект не се добавят задачи.");
     const assigneeId = resolveAssignee(context, data.assigneeId);
     if (assigneeId) await requireAssignable(context, data.projectId, assigneeId);
+    const milestoneId = await checkedStage(context, data.projectId, data.milestoneId);
     await getDatabase().insert(tasks).values({
+      milestoneId,
       organizationId: context.organizationId,
       projectId: data.projectId,
       title: data.title,
@@ -103,12 +116,15 @@ export async function updateTaskAction(formData: FormData): Promise<ActionResult
   return attempt(async () => {
     const data = updateSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task, mine } = await loadTask(context, data.taskId);
     if (!mine && !can(context, "tasks.assign")) throw new Error("Задачата е на колега. Само който дава задачи може да я променя.");
     // The assignee is changed by who may assign; others keep it as it is.
     const assigneeId = can(context, "tasks.assign") ? (data.assigneeId || null) : task.assigneeId;
     if (assigneeId && assigneeId !== task.assigneeId) await requireAssignable(context, task.projectId, assigneeId);
+    const milestoneId = await checkedStage(context, task.projectId, data.milestoneId);
     await getDatabase().update(tasks).set({
+      milestoneId,
       title: data.title,
       description: data.description || null,
       assigneeId,
@@ -120,26 +136,45 @@ export async function updateTaskAction(formData: FormData): Promise<ActionResult
   }, "Задачата не беше записана. Опитай отново.");
 }
 
-export async function setTaskStatusAction(formData: FormData): Promise<ActionResult> {
-  return attempt(async () => {
+/** The stage whose last task was just finished, so the board can offer to mark the stage done (never automatic). */
+export type StageReady = { projectId: string; milestoneId: string; title: string };
+
+export async function setTaskStatusAction(formData: FormData): Promise<ActionResult & { stageReady?: StageReady }> {
+  let stageReady: StageReady | undefined;
+  const result = await attempt(async () => {
     const taskId = z.uuid().parse(formData.get("taskId"));
     const status = z.enum(taskStatuses).parse(formData.get("status"));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task, mine } = await loadTask(context, taskId);
     if (!mine && !can(context, "tasks.assign")) throw new Error("Задачата е на колега. Само който дава задачи може да я мести.");
-    await getDatabase().update(tasks).set({
+    const db = getDatabase();
+    await db.update(tasks).set({
       status,
       completedAt: status === "done" ? new Date() : null,
       updatedAt: new Date(),
     }).where(and(eq(tasks.id, task.id), eq(tasks.organizationId, context.organizationId)));
+    if (status === "done" && task.milestoneId) {
+      const [stage] = await db.select({
+        id: projectMilestones.id,
+        title: projectMilestones.title,
+        status: projectMilestones.status,
+        open: sql<number>`(select count(*)::int from app.tasks t where t.milestone_id = app.project_milestones.id and t.status <> 'done')`,
+      }).from(projectMilestones)
+        .where(and(eq(projectMilestones.id, task.milestoneId), eq(projectMilestones.organizationId, context.organizationId), ne(projectMilestones.status, "completed"))).limit(1);
+      // Only who manages stages is asked; finishing a stage can make a payment due and emails the client.
+      if (stage && stage.open === 0 && can(context, "milestones.manage")) stageReady = { projectId: task.projectId, milestoneId: stage.id, title: stage.title };
+    }
     revalidateTasks(task.projectId);
   }, "Статусът не беше записан. Опитай отново.");
+  return result.error ? result : { ...result, stageReady };
 }
 
 export async function deleteTaskAction(formData: FormData): Promise<ActionResult> {
   return attempt(async () => {
     const taskId = z.uuid().parse(formData.get("taskId"));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task } = await loadTask(context, taskId);
     if (!can(context, "tasks.assign") && task.createdBy !== context.userId) throw new Error("Задачата може да изтрие само който я е създал или който дава задачи.");
     await getDatabase().delete(tasks).where(and(eq(tasks.id, task.id), eq(tasks.organizationId, context.organizationId)));

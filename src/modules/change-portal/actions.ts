@@ -13,6 +13,8 @@ import {
   changeOrderRevisions,
   changeOrders,
   offerAcceptances,
+  projectMilestones,
+  stageAcceptances,
   paymentClaims,
   paymentDisputes,
   paymentInstallments,
@@ -34,6 +36,7 @@ import { parseSignature, removeSignature, storeSignature } from "@/modules/chang
 import { applyApprovedChange, applyApprovedOffer } from "@/modules/change-orders/approval";
 import { sofiaToday } from "@/modules/finance/queries";
 import { getProjectState } from "@/modules/projects/state";
+import { latestStageHandover, makeStagePaymentsDue } from "@/modules/projects/stage-acceptance";
 import { formatAmount } from "@/lib/money";
 import { currencySymbol } from "@/lib/money";
 import { dateWithTime } from "@/lib/dates";
@@ -57,6 +60,7 @@ async function decisionContext(data: z.infer<typeof decisionSchema>) {
   const session = await getPortalSession(data.projectPublicId);
   if (!session || session.contactRole !== "approver") throw new Error("Решението може да вземе само одобряващият, посочен от фирмата.");
   if (session.projectStatus !== "active") throw new Error("Проектът е приключен. Свържете се с фирмата.");
+  if (session.portalMode !== "full") throw new Error("Офертите се договарят директно с фирмата. Свържете се с тях.");
   // The decision code goes to the contact's email, so the first decision also confirms it.
   if (!session.contactEmail) throw new Error("Първо потвърдете имейла си.");
   if (await isOrganizationStaff(session.organizationId)) {
@@ -553,6 +557,93 @@ export async function answerAcceptanceAction(formData: FormData): Promise<{ erro
       await notifyProjectStaff(tx, {
         organizationId: session.organizationId, projectId: session.projectId, eventType: data.answer === "accepted" ? "acceptance_accepted" : "acceptance_issues",
         title: data.answer === "accepted" ? `Клиентът прие работата по „${offer?.title ?? ""}“` : `Клиентът има забележки по „${offer?.title ?? ""}“`,
+        body: data.note || null, href: `/app/projects/${session.projectId}?tab=work`,
+      });
+    });
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Отговорът не беше записан. Опитайте отново." };
+  }
+  revalidatePath(`/portal/${data.projectPublicId}`, "layout");
+  revalidatePath(`/app/projects/${session.projectId}`);
+  return {};
+}
+
+/** A stage of this project the company asked the client to accept. */
+async function handoverStage(projectId: string, milestoneId: string) {
+  const [stage] = await getDatabase().select({ id: projectMilestones.id, title: projectMilestones.title, offerId: projectMilestones.offerId })
+    .from(projectMilestones).where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId))).limit(1);
+  if (!stage) throw new Error("Етапът не е намерен.");
+  return stage;
+}
+
+/** Accepting a stage is signed with a code to the approver's email, like accepting a whole offer. */
+export async function requestStageAcceptanceCodeAction(formData: FormData): Promise<{ error?: string; otpId?: string; sentTo?: string }> {
+  const parsed = z.object({ projectPublicId: z.uuid(), milestoneId: z.uuid(), typedName: z.string().trim().max(160).optional() }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Нещо не е попълнено правилно. Опитайте отново." };
+  const data = parsed.data;
+  if (!data.typedName || data.typedName.length < 2) return { error: "Въведете името си." };
+  try {
+    const session = await acceptanceSession(data.projectPublicId);
+    const stage = await handoverStage(session.projectId, data.milestoneId);
+    const otpId = await issueOtp({
+      sessionId: session.id,
+      contactId: session.contactId,
+      purpose: "acceptance",
+      email: session.contactEmail!,
+      ip: clientIp(await headers()),
+      summary: `Приемане на етап „${stage.title}“ от ${data.typedName}.`,
+    });
+    return { otpId, sentTo: maskEmail(session.contactEmail!) };
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Кодът не беше изпратен. Опитайте отново." };
+  }
+}
+
+/** The client's answer to "please accept this stage": accepted (name and emailed code) or remarks to fix. */
+export async function answerStageAcceptanceAction(formData: FormData): Promise<{ error?: string }> {
+  const parsed = z.object({
+    projectPublicId: z.uuid(),
+    milestoneId: z.uuid(),
+    answer: z.enum(["accepted", "issues"]),
+    typedName: z.string().trim().max(160).optional(),
+    note: z.string().trim().max(2000).optional(),
+    otpId: z.uuid().optional(),
+    code: z.string().trim().optional(),
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Нещо не е попълнено правилно. Опитайте отново." };
+  const data = parsed.data;
+  if (data.answer === "accepted" && (!data.typedName || data.typedName.length < 2)) return { error: "Въведете името си." };
+  if (data.answer === "accepted" && (!data.otpId || !/^\d{6}$/.test(data.code ?? ""))) return { error: "Въведете 6-цифрения код от имейла." };
+  if (data.answer === "issues" && (!data.note || data.note.length < 5)) return { error: "Опишете забележките си." };
+  let session: Awaited<ReturnType<typeof acceptanceSession>>;
+  let stage: Awaited<ReturnType<typeof handoverStage>>;
+  try {
+    session = await acceptanceSession(data.projectPublicId);
+    stage = await handoverStage(session.projectId, data.milestoneId);
+    if (data.answer === "accepted") await checkOtp({ otpId: data.otpId!, code: data.code!, sessionId: session.id, contactId: session.contactId, purpose: "acceptance" });
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Отговорът не беше записан. Опитайте отново." };
+  }
+  const requestHeaders = await headers();
+  try {
+    await getDatabase().transaction(async (tx) => {
+      if (await latestStageHandover(tx, stage.id) !== "requested") throw new Error("Фирмата още не е поискала приемане или вече сте отговорили.");
+      if (data.answer === "accepted") await consumeOtp(tx, data.otpId!);
+      await tx.insert(stageAcceptances).values({
+        organizationId: session.organizationId, projectId: session.projectId, milestoneId: stage.id, kind: data.answer,
+        note: data.note || null, typedName: data.answer === "accepted" ? data.typedName! : null,
+        actorType: "portal_contact", actorId: session.contactId, ip: clientIp(requestHeaders), userAgent: requestHeaders.get("user-agent"),
+      });
+      if (data.answer === "accepted") await makeStagePaymentsDue(tx, stage.id);
+      await tx.insert(timelineEvents).values({
+        organizationId: session.organizationId, projectId: session.projectId, changeOrderId: stage.offerId, actorType: "portal_contact", actorId: session.contactId,
+        eventType: data.answer === "accepted" ? "stage_acceptance_accepted" : "stage_acceptance_issues", visibility: "client",
+        metadata: { title: stage.title, typedName: data.typedName || null, note: data.note || null },
+      });
+      // Same notice types as a whole offer's handover, so the team's email settings apply.
+      await notifyProjectStaff(tx, {
+        organizationId: session.organizationId, projectId: session.projectId, eventType: data.answer === "accepted" ? "acceptance_accepted" : "acceptance_issues",
+        title: data.answer === "accepted" ? `Клиентът прие етап „${stage.title}“` : `Клиентът има забележки по етап „${stage.title}“`,
         body: data.note || null, href: `/app/projects/${session.projectId}?tab=work`,
       });
     });

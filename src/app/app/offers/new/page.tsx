@@ -76,6 +76,8 @@ export default async function NewOfferPage({
             initial={initial}
             catalog={catalog}
             canSaveCatalog
+            catalogEnabled={context.features.catalog}
+            paymentTermsEnabled={context.features.finance}
             defaultProject={defaultProject}
             defaultTaxRate={organization?.defaultTaxRate ?? "20.00"}
           />

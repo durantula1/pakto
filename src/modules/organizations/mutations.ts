@@ -9,7 +9,20 @@ import {
   organizations,
   profiles,
   signupAttributions,
+  type WorkProfile,
 } from "@/db/schema";
+
+/**
+ * Where each sign-up profile starts; every switch stays in Settings → Модули.
+ * Самостоятелна дейност: one person, clients approve with a link, no Задачи or Каталог.
+ * Екип с онлайн одобрение: everything on.
+ * Работа по договор: agreed on paper, the team records it; the client portal is for viewing.
+ */
+const workProfilePresets = {
+  solo: { approvalMode: "client", portalMode: "full", tasksEnabled: false, catalogEnabled: false, financeEnabled: true },
+  team: { approvalMode: "client", portalMode: "full", tasksEnabled: true, catalogEnabled: true, financeEnabled: true },
+  contract: { approvalMode: "staff", portalMode: "view_only", tasksEnabled: true, catalogEnabled: true, financeEnabled: true },
+} as const satisfies Record<WorkProfile, Partial<typeof organizations.$inferInsert>>;
 
 function slugify(value: string) {
   const base = value
@@ -26,6 +39,7 @@ export async function bootstrapOrganization(input: {
   displayName: string;
   organizationName: string;
   currency: string;
+  profile?: WorkProfile;
 }) {
   const database = getDatabase();
 
@@ -60,6 +74,7 @@ export async function bootstrapOrganization(input: {
         name: input.organizationName,
         slug: slugify(input.organizationName),
         defaultCurrency: input.currency,
+        ...(input.profile ? { workProfile: input.profile, ...workProfilePresets[input.profile] } : {}),
       })
       .returning({ id: organizations.id });
 

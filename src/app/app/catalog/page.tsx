@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FilePlus2 } from "lucide-react";
@@ -24,6 +25,7 @@ export const metadata: Metadata = { title: "Каталог" };
 
 export default async function CatalogPage({ searchParams }: PageProps<"/app/catalog">) {
   const [query, context] = await Promise.all([searchParams, requireTenantContext()]);
+  if (!context.features.catalog) notFound();
   const [member, items, templates] = await Promise.all([getCurrentMember(context), listCatalog(context.organizationId), listTemplates(context.organizationId)]);
   const canEdit = can(member, "offers.edit");
 

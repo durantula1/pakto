@@ -12,9 +12,11 @@ import {
   changeOrders,
   organizations,
   portalDecisions,
+  profiles,
   projectContacts,
   projectMembers,
   projects,
+  recordedAgreements,
   revisionAbsorbedChanges,
   timelineEvents,
 } from "@/db/schema";
@@ -190,6 +192,9 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
       approvedRevisionId: changeOrders.approvedRevisionId,
       lifecycleStatus: changeOrders.lifecycleStatus,
       workStatus: changeOrders.workStatus,
+      documentApprovalMode: changeOrders.approvalMode,
+      organizationApprovalMode: organizations.approvalMode,
+      portalMode: organizations.portalMode,
       projectId: projects.id,
       projectPublicId: projects.publicId,
       projectName: projects.name,
@@ -257,7 +262,7 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
   if (!change) return null;
 
   const isOffer = change.documentKind === "offer";
-  const [extra, revisions, eventRows, disputeEvent, decision, lineItems, baselineOffer, schedule, terms, absorbedChanges] = await Promise.all([
+  const [extra, revisions, eventRows, disputeEvent, decision, agreement, lineItems, baselineOffer, schedule, terms, absorbedChanges] = await Promise.all([
     options.extra ? options.extra(change) : Promise.resolve(undefined as Extra),
     getDatabase()
       .select()
@@ -299,6 +304,17 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
       .limit(1)
       .then((rows) => rows[0] ?? null),
     getDatabase()
+      .select({
+        method: recordedAgreements.method, agreedOn: recordedAgreements.agreedOn, note: recordedAgreements.note,
+        revisionContentHash: recordedAgreements.revisionContentHash, createdAt: recordedAgreements.createdAt,
+        recordedByName: profiles.displayName,
+      })
+      .from(recordedAgreements)
+      .leftJoin(profiles, eq(profiles.id, recordedAgreements.recordedBy))
+      .where(and(eq(recordedAgreements.revisionId, change.revisionId), eq(recordedAgreements.organizationId, organizationId)))
+      .limit(1)
+      .then((rows) => rows[0] ?? null),
+    getDatabase()
       .select()
       .from(changeOrderLineItems)
       .where(eq(changeOrderLineItems.revisionId, change.revisionId))
@@ -325,8 +341,12 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
   const { revisionLogoPath, organizationLogoPath, organizationLogoSize, ...rest } = change;
   const logo = documentLogo({ revisionLogoPath, organizationLogoPath, size: organizationLogoSize });
   // Read again from the stored rows: proves the version is still what was sent and what the client decided on.
-  const fingerprint = decision ? await verifyRevision(change.revisionId, decision.revisionContentHash) : null;
-  return { ...rest, logo, revisions, events, hasOlderEvents, disputeEvent, decision, fingerprint, lineItems, baselineOffer, schedule, paymentTerms, absorbedChanges, extra };
+  const decidedHash = decision?.revisionContentHash ?? agreement?.revisionContentHash;
+  const fingerprint = decidedHash ? await verifyRevision(change.revisionId, decidedHash) : null;
+  // Whether the client confirms this document in the portal or the team records the agreement.
+  // Without the full client portal the client has nowhere to approve, so the team records it.
+  const approvalMode = rest.portalMode === "full" ? rest.documentApprovalMode ?? rest.organizationApprovalMode : "staff";
+  return { ...rest, approvalMode, logo, revisions, events, hasOlderEvents, disputeEvent, decision, agreement, fingerprint, lineItems, baselineOffer, schedule, paymentTerms, absorbedChanges, extra };
 }
 
 /** Tab title for an offer or change page, under the same project and draft visibility as the page itself. */

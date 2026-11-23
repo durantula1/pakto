@@ -118,7 +118,7 @@ Pakto работи на собствен VPS в Hostinger (KVM 2, Ubuntu 24.04, 
 ## 7. Вход, файлове, live
 
 - **Служители:** Better Auth (`src/lib/auth/server.ts`), таблици `app.auth_*`, bcrypt пароли. Лимити за опити в паметта на процеса (`src/lib/auth/limits.ts`), по IP от `X-Forwarded-For`, който подава Caddy.
-- **Файлове:** под `FILES_DIR/<папка>/<път>` (`src/lib/storage/`): `change-attachments` (снимки и PDF към оферти, през `/api/attachments/[id]` след проверка на достъпа), `decision-signatures` (подписи на клиенти), `organization-logos` (публични през `/api/logos/...`, кеш за година). Качването е с подписан билет за 10 минути към `PUT /api/uploads`.
+- **Файлове:** под `FILES_DIR/<папка>/<път>` (`src/lib/storage/`): `change-attachments` (снимки и PDF към оферти, през `/api/attachments/[id]` след проверка на достъпа), `decision-signatures` (подписи на клиенти), `organization-logos` (публични през `/api/logos/...`, кеш за година), `client-choices` (снимки към въпросите „Попитай клиента“, през `/api/choices/[id]/[вариант]` за екипа или портала на проекта). Качването е с подписан билет за 10 минути към `PUT /api/uploads`.
 - **Live:** тригерът на `app.staff_notifications` прави `pg_notify('staff_refresh')`, един `LISTEN` на процес (`src/lib/live/hub.ts`), `/api/live` го праща като server-sent events. Порталът на клиента пита `/api/portal/pulse` на интервали.
 - **Пренасочванията от route handlers** се строят от `NEXT_PUBLIC_APP_URL` (`appUrl()`), не от `request.url`: зад Caddy адресът на заявката е този на контейнера (`0.0.0.0:3000`).
 

@@ -21,9 +21,13 @@ import {
   projectContacts,
   projectReceipts,
   projects,
+  recordedAgreements,
   revisionAbsorbedChanges,
   timelineEvents,
 } from "@/db/schema";
+import { applyApprovedChange, applyApprovedOffer } from "@/modules/change-orders/approval";
+import { agreementMethodLabels } from "@/modules/change-orders/labels";
+import { notifyProjectStaff } from "@/modules/notifications/staff";
 import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { createStablePortalToken } from "@/lib/crypto/portal-token";
@@ -684,6 +688,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
   const [target] = await database.select({ projectId: changeOrders.projectId })
     .from(changeOrders).where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
   if (!target) throw new Error("Не намерихме тази оферта или промяна.");
+  if (context.features.portalMode !== "full") throw new Error("Клиентският портал е изключен, няма къде да изпратиш. Отбележи офертата като договорена.");
   await requireProjectCapability(context, target.projectId, "send");
   await requireActiveProject(context.organizationId, target.projectId);
   await assertSendable(context.organizationId, changeOrderId);
@@ -928,4 +933,113 @@ export async function cancelDocumentAction(formData: FormData): Promise<ActionRe
     revalidatePath(`/app/projects/${document.projectId}`);
     revalidatePath("/app/offers");
   }, "Анулирането не беше записано.");
+}
+
+const agreementSchema = z.object({
+  changeOrderId: z.uuid(),
+  method: z.enum(["verbal", "signed", "email", "other"], { message: "Избери как се съгласи клиентът." }),
+  agreedOn: z.iso.date({ message: "Избери дата." }),
+  note: z.string().trim().max(1000, "Бележката е до 1000 знака.").optional(),
+});
+
+/**
+ * The client agreed outside Pakto (verbally, a signed contract, an email): the team records it.
+ * A draft is frozen first, exactly as on sending, so the agreed content gets the same number,
+ * hash and protection. Then the version comes into force the same way as a client's approval in
+ * the portal: the offer's stages and payment plan are created, an approved change counts.
+ */
+export async function recordAgreementAction(formData: FormData): Promise<ActionResult> {
+  let target: { changeOrderId: string; projectId: string } | null = null;
+  const result = await attempt(async () => {
+    const data = agreementSchema.parse(Object.fromEntries(formData));
+    if (data.agreedOn > sofiaToday()) throw new Error("Датата на съгласието не може да е в бъдещето.");
+    const context = await requireTenantContext();
+    const db = getDatabase();
+    const [document] = await db.select({ projectId: changeOrders.projectId }).from(changeOrders)
+      .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
+    if (!document) throw new Error("Не намерихме тази оферта или промяна.");
+    await requireProjectCapability(context, document.projectId, "send");
+    await requireActiveProject(context.organizationId, document.projectId);
+    await assertSendable(context.organizationId, data.changeOrderId);
+    await db.transaction(async (tx) => {
+      const [change] = await tx.select({
+        id: changeOrders.id,
+        projectId: changeOrders.projectId,
+        documentKind: changeOrders.documentKind,
+        baselineOfferId: changeOrders.baselineOfferId,
+        revisionId: changeOrders.currentRevisionId,
+      }).from(changeOrders)
+        .where(and(eq(changeOrders.id, data.changeOrderId), eq(changeOrders.organizationId, context.organizationId)))
+        .for("update").limit(1);
+      if (!change?.revisionId) throw new Error("Не намерихме тази оферта или промяна.");
+      const [organization] = await tx.select({ logoStoragePath: organizations.logoStoragePath }).from(organizations).where(eq(organizations.id, context.organizationId)).limit(1);
+      const [revision] = await tx.select().from(changeOrderRevisions).where(eq(changeOrderRevisions.id, change.revisionId)).for("update").limit(1);
+      if (!revision) throw new Error("Не намерихме тази версия.");
+      if (revision.status === "approved") throw new Error("Тази версия вече е одобрена.");
+      if (!["draft", "sent", "viewed"].includes(revision.status)) throw new Error("Тази версия вече не чака решение.");
+      if (revision.status === "draft" && ((change.documentKind === "offer" && !revision.agreedDeadline) || revision.scheduleImpactType === "unknown" || (revision.scheduleImpactType === "days" && !revision.agreedDeadline))) {
+        throw new Error("Попълни крайния срок, преди да отбележиш съгласието.");
+      }
+
+      const now = new Date();
+      let contentHash = revision.contentHash;
+      if (revision.status === "draft") {
+        // Frozen as on sending; the price held until the moment of agreement.
+        contentHash = await revisionFingerprint(tx, revision, change.id, now);
+        await numberOnFirstSend(tx, { id: change.id, projectId: change.projectId, documentKind: change.documentKind });
+        await tx.update(changeOrderRevisions)
+          .set({ status: "sent", frozenAt: now, contentHash, responseDueAt: now, logoStoragePath: organization?.logoStoragePath ?? null })
+          .where(and(eq(changeOrderRevisions.id, revision.id), eq(changeOrderRevisions.status, "draft")));
+      }
+      if (!contentHash) throw new Error("Тази версия не може да бъде отбелязана.");
+
+      await tx.insert(recordedAgreements).values({
+        organizationId: context.organizationId, projectId: change.projectId, revisionId: revision.id,
+        method: data.method, agreedOn: data.agreedOn, note: data.note || null, revisionContentHash: contentHash, recordedBy: context.userId,
+      });
+      await tx.update(changeOrderRevisions).set({ status: "approved" }).where(eq(changeOrderRevisions.id, revision.id));
+      await tx.update(changeOrders).set({ lifecycleStatus: "resolved", approvedRevisionId: revision.id, updatedAt: now }).where(eq(changeOrders.id, change.id));
+      if (change.documentKind === "offer") {
+        await applyApprovedOffer(tx, { organizationId: context.organizationId, projectId: change.projectId, offerId: change.id, revisionId: revision.id, approvedAt: now });
+      } else if (change.baselineOfferId) {
+        await applyApprovedChange(tx, { organizationId: context.organizationId, projectId: change.projectId, changeOrderId: change.id, offerId: change.baselineOfferId, revisionId: revision.id, approvedAt: now });
+      }
+      await tx.insert(timelineEvents).values({
+        organizationId: context.organizationId, projectId: change.projectId, changeOrderId: change.id, revisionId: revision.id,
+        actorType: "staff", actorId: context.userId, eventType: "agreement_recorded", visibility: "client",
+        metadata: { revisionNumber: revision.revisionNumber, contentHash, method: data.method, agreedOn: data.agreedOn, note: data.note || null },
+      });
+      await notifyProjectStaff(tx, {
+        organizationId: context.organizationId, projectId: change.projectId, eventType: "agreement_recorded", excludeUserId: context.userId,
+        title: `Договорено: „${revision.title}“ (${agreementMethodLabels[data.method].toLowerCase()})`,
+        body: data.note || null, href: `/app/offers/${change.id}`,
+      });
+    });
+    target = { changeOrderId: data.changeOrderId, projectId: document.projectId };
+  }, "Съгласието не беше записано. Опитай отново.");
+  if (result.error || !target) return result;
+  const { changeOrderId, projectId } = target;
+  revalidatePath(`/app/offers/${changeOrderId}`);
+  revalidatePath(`/app/projects/${projectId}`);
+  revalidatePath("/app/offers");
+  redirect(`/app/offers/${changeOrderId}?notice=agreed`);
+}
+
+const approvalModeSchema = z.object({ changeOrderId: z.uuid(), mode: z.enum(["client", "staff", "company"]) });
+
+/** Overrides, for one offer or change, how the client confirms it; "company" goes back to the company's setting. */
+export async function setDocumentApprovalModeAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { changeOrderId, mode } = approvalModeSchema.parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    if (mode === "client" && context.features.portalMode !== "full") throw new Error("Клиентът потвърждава с линк само при пълен клиентски портал.");
+    const db = getDatabase();
+    const [document] = await db.select({ projectId: changeOrders.projectId }).from(changeOrders)
+      .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
+    if (!document) throw new Error("Не намерихме тази оферта или промяна.");
+    await requireProjectCapability(context, document.projectId, "send");
+    await db.update(changeOrders).set({ approvalMode: mode === "company" ? null : mode, updatedAt: new Date() })
+      .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId)));
+    revalidatePath(`/app/offers/${changeOrderId}`);
+  }, "Настройката не беше записана.");
 }

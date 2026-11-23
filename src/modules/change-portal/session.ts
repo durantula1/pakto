@@ -47,6 +47,8 @@ const sessionFields = {
   organizationLogoSize: organizations.logoSize,
   organizationPhone: organizations.phone,
   organizationCurrency: organizations.defaultCurrency,
+  /** "full", "view_only" (no decisions) or "off" (no portal: the session opens nothing). */
+  portalMode: organizations.portalMode,
   contactId: projectContacts.id,
   contactName: projectContacts.name,
   contactRole: projectContacts.portalRole,
@@ -123,10 +125,12 @@ export const getPortalSession = cache(async (projectPublicId: string) => {
   for (const cookie of cookieStore.getAll()) {
     if (!cookie.name.startsWith(CLIENT_COOKIE_PREFIX)) continue;
     const session = await clientSession(cookie.value, projectPublicId);
-    if (session) return session;
+    // The company switched its client portal off: links and open sessions open nothing.
+    if (session) return session.portalMode === "off" ? null : session;
   }
   const projectSecret = cookieStore.get(`${PORTAL_COOKIE}_${projectPublicId}`)?.value;
-  return projectSecret ? projectSession(projectSecret, projectPublicId) : null;
+  const session = projectSecret ? await projectSession(projectSecret, projectPublicId) : null;
+  return session?.portalMode === "off" ? null : session;
 });
 
 /**

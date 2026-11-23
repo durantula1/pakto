@@ -34,7 +34,7 @@ async function sendClientEmail(projectId: string, message: ClientMessage) {
     .from(projectContacts)
     .innerJoin(projects, eq(projects.id, projectContacts.projectId))
     .innerJoin(organizations, eq(organizations.id, projects.organizationId))
-    .where(and(eq(projectContacts.projectId, projectId), eq(projectContacts.isPrimary, true), eq(projectContacts.portalRole, "approver"), isNull(projectContacts.removedAt)))
+    .where(and(eq(projectContacts.projectId, projectId), eq(projectContacts.isPrimary, true), eq(projectContacts.portalRole, "approver"), isNull(projectContacts.removedAt), ne(organizations.portalMode, "off")))
     .limit(1);
   if (!contact?.email) return false;
   const url = await getActivePortalLink(projectId, contact.id);
@@ -83,6 +83,7 @@ export async function sendClientDigests(now = new Date()) {
     .where(and(
       eq(projects.status, "active"),
       eq(organizations.clientScheduleDigestEnabled, true),
+      ne(organizations.portalMode, "off"),
       eq(timelineEvents.visibility, "client"),
       eq(timelineEvents.actorType, "staff"),
       inArray(timelineEvents.eventType, [...digestEvents]),

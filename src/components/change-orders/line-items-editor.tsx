@@ -55,10 +55,12 @@ const columnsClassName = "xl:grid-cols-[minmax(0,1fr)_6.5rem_4.5rem_9.5rem_5.5re
  * The offer's lines as an editable table: column headings and a total per line on wide screens,
  * one card per line on phones. Catalog picks fill the first empty line, otherwise they are appended.
  */
-export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = false, minQuantity = 0, currency = "EUR", title = "Услуги и материали", description }: {
+export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = false, catalogEnabled = true, minQuantity = 0, currency = "EUR", title = "Услуги и материали", description }: {
   lines: Line[];
   setLines: Dispatch<SetStateAction<Line[]>>;
   catalog: CatalogPick[];
+  /** The "Каталог" module is on: pick lines from it and save lines to it. */
+  catalogEnabled?: boolean;
   canSaveCatalog?: boolean;
   /** Existing offers can hold fractional quantities (0.5 m³), so editing them allows anything above zero. */
   minQuantity?: number;
@@ -91,7 +93,7 @@ export function LineItemsEditor({ lines, setLines, catalog, canSaveCatalog = fal
           {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
         </div>
         <div className="flex shrink-0 gap-2">
-          <CatalogPicker items={catalog} onPick={addFromCatalog} currency={currency} />
+          {catalogEnabled ? <CatalogPicker items={catalog} onPick={addFromCatalog} currency={currency} /> : null}
           <Button
             type="button"
             variant="outline"

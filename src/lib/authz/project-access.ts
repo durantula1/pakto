@@ -5,7 +5,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { getDatabase } from "@/db";
 import { projects } from "@/db/schema";
 import { can, type Permission } from "@/lib/authz/permissions";
-import type { TenantContext } from "@/lib/authz/tenant-context";
+import { requireModule, type TenantContext } from "@/lib/authz/tenant-context";
 
 export type ProjectCapability = "view" | "draft" | "offer" | "send" | "milestone" | "payment" | "manage";
 
@@ -43,6 +43,8 @@ export async function requireProjectCapability(
   projectId: string,
   capability: ProjectCapability,
 ) {
+  // Payments belong to the "Финанси" module; a company that switched it off records none.
+  if (capability === "payment") requireModule(context, "finance");
   const member = await getCurrentMember(context);
   // One round trip: the project, and whether the caller is assigned to it. Fully qualified: in a
   // single-table select Drizzle writes a bare "id", which is fragile inside a subquery.

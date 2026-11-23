@@ -13,6 +13,7 @@ const messages: Record<string, string> = {
   "revision-saved": "Новата версия е запазена",
   "draft-saved": "Черновата е запазена",
   sent: "Изпратено. Клиентът получи имейл с линка.",
+  agreed: "Отбелязано като договорено. Етапите и плащанията вече са в проекта.",
 };
 
 /** Something the user has to act on; shown as a lasting warning instead of a success toast. */

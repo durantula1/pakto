@@ -3,12 +3,12 @@ import "server-only";
 import { and, asc, desc, eq, exists, gte, isNull, ne, or, sql } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { organizationMembers, profiles, projectMembers, projects, tasks } from "@/db/schema";
+import { organizationMembers, profiles, projectMembers, projectMilestones, projects, tasks } from "@/db/schema";
 import { can } from "@/lib/authz/permissions";
 import { seesAllProjects } from "@/lib/authz/project-access";
 import type { TenantContext } from "@/lib/authz/tenant-context";
 import { sofiaTodayIso } from "@/lib/sofia-today";
-import type { TaskItem, TaskPerson } from "./labels";
+import type { TaskItem, TaskPerson, TaskStage } from "./labels";
 
 /** Done tasks stay on the board for a month, then only the project's own list shows them. */
 const DONE_VISIBLE_DAYS = 30;
@@ -46,10 +46,13 @@ export async function listTasks(context: TenantContext, options: { projectId?: s
       projectName: projects.name,
       assigneeId: tasks.assigneeId,
       assigneeName: profiles.displayName,
+      milestoneId: tasks.milestoneId,
+      milestoneTitle: projectMilestones.title,
     })
     .from(tasks)
     .innerJoin(projects, eq(projects.id, tasks.projectId))
     .leftJoin(profiles, eq(profiles.id, tasks.assigneeId))
+    .leftJoin(projectMilestones, eq(projectMilestones.id, tasks.milestoneId))
     .where(and(
       visibleTasks(context),
       options.projectId ? eq(tasks.projectId, options.projectId) : undefined,
@@ -62,6 +65,7 @@ export async function listTasks(context: TenantContext, options: { projectId?: s
   return rows.map((row) => ({
     ...row,
     assigneeName: row.assigneeName ?? null,
+    milestoneTitle: row.milestoneTitle ?? null,
     canEdit: assign || row.assigneeId === context.userId,
   }));
 }
@@ -101,6 +105,25 @@ export async function listTaskProjects(context: TenantContext) {
     ))
     .orderBy(desc(projects.updatedAt))
     .limit(200);
+}
+
+/** Stages not finished yet in the projects the caller may add tasks to (one project, when given). */
+export async function listTaskStages(context: TenantContext, projectId?: string): Promise<TaskStage[]> {
+  const db = getDatabase();
+  return db
+    .select({ id: projectMilestones.id, projectId: projectMilestones.projectId, title: projectMilestones.title, dueOn: projectMilestones.dueOn })
+    .from(projectMilestones)
+    .innerJoin(projects, eq(projects.id, projectMilestones.projectId))
+    .where(and(
+      eq(projectMilestones.organizationId, context.organizationId),
+      eq(projects.organizationId, context.organizationId),
+      eq(projects.status, "active"),
+      ne(projectMilestones.status, "completed"),
+      projectId ? eq(projectMilestones.projectId, projectId) : undefined,
+      seesAllProjects(context) ? undefined : exists(db.select({ id: projectMembers.projectId }).from(projectMembers).where(and(eq(projectMembers.projectId, projects.id), eq(projectMembers.userId, context.userId)))),
+    ))
+    .orderBy(asc(projectMilestones.dueOn))
+    .limit(500);
 }
 
 export async function countOpenTasksForUser(context: TenantContext) {

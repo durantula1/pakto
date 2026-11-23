@@ -19,7 +19,8 @@
     "db:reset": "docker compose -f docker-compose.dev.yml down -v && pnpm db:up && pnpm db:migrate",
     "db:new": "docker compose -f docker-compose.dev.yml --profile tools run --rm migrate new",
     "db:seed": "docker compose -f docker-compose.dev.yml exec -T postgres psql -U pakto_owner -d pakto -v ON_ERROR_STOP=1 -q < db/seed.sql",
-    "db:pull": "bash scripts/db-pull.sh"
+    "db:pull": "bash scripts/db-pull.sh",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -48,6 +49,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.10.0",
     "@types/react": "19.2.18",

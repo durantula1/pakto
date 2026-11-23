@@ -4,7 +4,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { and, eq } from "drizzle-orm";
 
 import { getDatabase } from "@/db";
-import { changeOrderLineItems, changeOrderRevisions, changeOrders, organizations, portalDecisions, projectContacts, projects } from "@/db/schema";
+import { changeOrderLineItems, changeOrderRevisions, changeOrders, organizations, portalDecisions, projectContacts, projects, recordedAgreements } from "@/db/schema";
 import { loadRevisionPhotos } from "@/modules/change-orders/attachment-data";
 import { documentCode } from "@/modules/change-orders/labels";
 import { listRevisionAbsorbedChanges, listRevisionPaymentTerms, listRevisionSchedule } from "@/modules/change-orders/queries";
@@ -30,9 +30,10 @@ export async function renderChangePdf(document: NonNullable<Awaited<ReturnType<t
   const [revision] = await db.select().from(changeOrderRevisions)
     .where(and(eq(changeOrderRevisions.id, revisionId), eq(changeOrderRevisions.changeOrderId, document.id))).limit(1);
   if (!revision?.frozenAt || !revision.contentHash) return null;
-  const [lines, [decision], photos, schedule, paymentTerms, absorbedChanges] = await Promise.all([
+  const [lines, [decision], [agreement], photos, schedule, paymentTerms, absorbedChanges] = await Promise.all([
     db.select().from(changeOrderLineItems).where(eq(changeOrderLineItems.revisionId, revision.id)).orderBy(changeOrderLineItems.position),
     db.select({ decision: portalDecisions.decision, typedName: portalDecisions.typedName, createdAt: portalDecisions.createdAt, verifiedEmail: portalDecisions.verifiedEmail, ip: portalDecisions.ip, signatureStoragePath: portalDecisions.signatureStoragePath }).from(portalDecisions).where(eq(portalDecisions.revisionId, revision.id)).limit(1),
+    db.select({ method: recordedAgreements.method, agreedOn: recordedAgreements.agreedOn, note: recordedAgreements.note }).from(recordedAgreements).where(eq(recordedAgreements.revisionId, revision.id)).limit(1),
     // A missing storage key must not block the PDF itself.
     loadRevisionPhotos(revision.id).catch(() => []),
     listRevisionSchedule(revision.id),
@@ -46,7 +47,7 @@ export async function renderChangePdf(document: NonNullable<Awaited<ReturnType<t
   ]);
   const code = documentCode(document.kind, document.sequenceNumber);
   // A decided version names the person as they signed it; the contact may have been edited since.
-  const buffer = await renderToBuffer(ChangePdfDocument({ organization: document.organizationName, logo: logo ? { ...logo, size: document.organizationLogoSize } : null, project: document.projectName, siteAddress: document.siteAddress, contact: decision?.typedName ?? document.contactName ?? "Клиент", kind: document.kind, code, revision, lines, schedule, paymentTerms, absorbedChanges, decision: decision ? { ...decision, signature } : null, photos }));
+  const buffer = await renderToBuffer(ChangePdfDocument({ organization: document.organizationName, logo: logo ? { ...logo, size: document.organizationLogoSize } : null, project: document.projectName, siteAddress: document.siteAddress, contact: decision?.typedName ?? document.contactName ?? "Клиент", kind: document.kind, code, revision, lines, schedule, paymentTerms, absorbedChanges, decision: decision ? { ...decision, signature } : null, agreement: agreement ?? null, photos }));
   // The file is named as the app names the document ("ОФ-001-v2.pdf"); `asciiFilename` is the fallback for old mail clients and headers.
   return { buffer, filename: `${code}-v${revision.revisionNumber}.pdf`, asciiFilename: `${document.kind === "offer" ? "oferta" : "promyana"}-${document.sequenceNumber}-v${revision.revisionNumber}.pdf` };
 }

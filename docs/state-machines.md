@@ -43,6 +43,14 @@ archived -> completed      (owner restores)
 
 `offer_acceptances` is append-only; the latest row is the state: `requested` (staff) -> `accepted` (approver with a confirmed email, typed name, IP) | `issues` (note) -> `requested` again.
 
+## Stage handover (2026-11-23)
+
+`stage_acceptances` is append-only per milestone (offer or project-level); the latest row is the state, read under an advisory lock: `requested` (staff, full portal, completed stage) -> `accepted` (approver, typed name + email code) | `issues` (note) -> `requested` again. Without the full portal staff record `accepted` themselves. On `accepted`, unpaid installments linked to the stage become due today. A stage with any handover row cannot be deleted.
+
+## Client choices (2026-11-23)
+
+`client_choices` (2–6 options, optional photos in the `client-choices` bucket) -> one append-only `client_choice_answers` row (approver in the full portal, or staff recording a pick made by phone). Unanswered choices can be canceled (`canceled_at`); answered ones cannot. No price: a change that costs money is a change order.
+
 ## Client payments
 
 - "Платих": `payment_claims` `pending -> confirmed` (creates the receipt) `| rejected` (with a reason the client sees).

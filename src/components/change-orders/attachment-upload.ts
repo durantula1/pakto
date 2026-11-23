@@ -17,7 +17,7 @@ export function formatFileSize(bytes: number) {
  * Phone photos are 3–10 MB and sometimes HEIC. Redrawing them as a JPEG of at most 2000px
  * keeps uploads fast on site and gives every browser (and the PDF) a format it can show.
  */
-async function prepareFile(file: File): Promise<{ blob: Blob; name: string; mimeType: "application/pdf" | "image/jpeg" }> {
+export async function prepareFile(file: File): Promise<{ blob: Blob; name: string; mimeType: "application/pdf" | "image/jpeg" }> {
   if (file.type === "application/pdf") return { blob: file, name: file.name, mimeType: "application/pdf" };
   if (!file.type.startsWith("image/")) throw new Error(`„${file.name}“: позволени са снимки и PDF.`);
   const bitmap = await createImageBitmap(file).catch(() => null);

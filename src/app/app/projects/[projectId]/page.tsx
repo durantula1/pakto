@@ -21,8 +21,10 @@ import { ListPagination } from "@/components/workspace/list-filters";
 import { PaymentClaimsBlock, PaymentDisputesAlert } from "@/components/projects/project-controls";
 import { ProjectPaymentsSummary, ProjectWorkSummary } from "@/components/projects/project-summary";
 import { TaskBoard } from "@/components/tasks/task-board";
-import { canAssignTasks, listAssignablePeople, listTasks } from "@/modules/tasks/queries";
+import { canAssignTasks, listAssignablePeople, listTaskStages, listTasks } from "@/modules/tasks/queries";
 import { ClientAccess } from "@/components/projects/client-access";
+import { ClientChoices } from "@/components/projects/client-choices";
+import { listProjectChoices } from "@/modules/client-choices/queries";
 import { ProjectMenu } from "@/components/projects/project-menu";
 import { CountPill } from "@/components/workspace/tab-count";
 import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
@@ -45,7 +47,7 @@ import { dateOnly } from "@/lib/dates";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = dateOnly;
-const tabs = ["overview", "documents", "work", "tasks", "payments", "notes"] as const;
+const tabs = ["overview", "documents", "work", "choices", "tasks", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/projects/[projectId]">): Promise<Metadata> {
@@ -64,15 +66,17 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople] = await Promise.all([
+  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople, taskStages, choices] = await Promise.all([
     orForbidden(requireProjectCapability(context, projectId, "view")),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
     getProjectState(context.organizationId, projectId),
     listPaymentInbox(context.organizationId, projectId),
     listProjectContacts(projectId),
-    listTasks(context, { projectId, includeOldDone: true }),
-    listAssignablePeople(context, projectId),
+    context.features.tasks ? listTasks(context, { projectId, includeOldDone: true }) : Promise.resolve([]),
+    context.features.tasks ? listAssignablePeople(context, projectId) : Promise.resolve([]),
+    context.features.tasks ? listTaskStages(context, projectId) : Promise.resolve([]),
+    listProjectChoices(context.organizationId, projectId, { includeCanceled: true }),
   ]);
   if (!project || !state) notFound();
   const { disputes, claims } = inbox;
@@ -87,12 +91,15 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const canSend = can(member, "documents.send");
   const canOffer = can(member, "offers.edit") && active;
   const canDraft = can(member, "changes.draft") && active;
-  const canRecordPayments = can(member, "payments.record") && project.status !== "archived";
-  const showPayments = can(member, "payments.record") || can(member, "finance.view");
+  // The "Финанси" module off (Settings → Company → Modules): no payment plan or payments on the project.
+  const canRecordPayments = context.features.finance && can(member, "payments.record") && project.status !== "archived";
+  const showPayments = context.features.finance && (can(member, "payments.record") || can(member, "finance.view"));
   const isOwner = member.role === "owner";
   const today = sofiaTodayIso();
 
   const inForce = state.offersInForce;
+  // Something is agreed: an offer in force, or a payment plan agreed without an offer.
+  const agreed = inForce.length > 0 || state.unassigned.installments.length > 0;
   const pendingClaims = claims.map((claim) => ({
     ...claim,
     offerLabel: claim.offerId ? offerLabel(state.offers.find((offer) => offer.id === claim.offerId) ?? { sequenceNumber: 0, title: "" }) : null,
@@ -116,13 +123,19 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     issues: "има забележки от клиента",
   };
   const here = `/app/projects/${projectId}`;
+  // Questions to the client (tab "Избори"): shown when there are some or the person can ask one.
+  const showChoices = choices.length > 0 || (canSend && active);
+  const openChoices = choices.filter((item) => !item.answer && !item.canceledAt).length;
   const openItems = [
     ...(openStages ? [{ label: openStages === 1 ? "1 етап не е завършен" : `${openStages} етапа не са завършени`, href: `${here}?tab=work` }] : []),
-    ...(showPayments && state.remainingMinor > 0n && inForce.length ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
+    ...(showPayments && state.remainingMinor > 0n && agreed ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
     ...state.pendingDocuments.map((item) => ({ label: `${named(item.kind, item.sequenceNumber, item.title)} чака решение от клиента`, href: `/app/offers/${item.id}` })),
+    ...(openChoices ? [{ label: openChoices === 1 ? "1 въпрос чака отговор от клиента" : `${openChoices} въпроса чакат отговор от клиента`, href: `${here}?tab=choices` }] : []),
     ...inForce.flatMap((offer) => handover[offer.status] ? [{ label: `Работата по ${named("offer", offer.sequenceNumber, offer.title)} ${handover[offer.status]}`, href: `/app/offers/${offer.id}?tab=stages` }] : []),
   ];
-  const clientAccess = <ClientAccess projectId={projectId} contacts={contacts} canEdit={canSend && project.status !== "archived"} isOwner={isOwner} defaultOpen={query.panel === "client"} />;
+  const showTasks = context.features.tasks;
+  // With the client portal switched off there are no links to hand out.
+  const clientAccess = context.features.portalMode === "off" ? null : <ClientAccess projectId={projectId} contacts={contacts} canEdit={canSend && project.status !== "archived"} isOwner={isOwner} defaultOpen={query.panel === "client"} />;
 
   return (
     <PageShell>
@@ -160,19 +173,20 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       <div className={projectStatsClassName}>
         {/* Price, paid and remaining are finance: a role without "finance.view" sees the deadline only. */}
         {showPayments ? <>
-          <StatCard tone="mint" label={projectStatLabels.price} value={inForce.length ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : "Очаква одобрена оферта"} />
+          <StatCard tone="mint" label={projectStatLabels.price} value={agreed ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : agreed ? "По платежния план" : "Очаква одобрена оферта"} />
           <StatCard tone="teal" label={projectStatLabels.paid} value={formatCents(state.paidMinor, state.currency)} hint={paidPercent !== null ? `${paidPercent}% от договореното` : `${state.receiptsTotal} ${state.receiptsTotal === 1 ? "плащане" : "плащания"}`} />
-          <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={inForce.length && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={inForce.length ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : inForce.length && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
+          <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={agreed && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={agreed ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : agreed && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
         </> : null}
         <StatCard tone={daysToDeadline !== null && daysToDeadline < 0 && active ? "coral" : "blue"} label={projectStatLabels.deadline} value={state.deadline ? formatDay(state.deadline) : "—"} hint={daysToDeadline === null ? "Очаква одобрение" : daysToDeadline > 0 ? `След ${daysToDeadline} ${daysToDeadline === 1 ? "ден" : "дни"}` : daysToDeadline === 0 ? "Днес" : `Изтекъл преди ${-daysToDeadline} ${daysToDeadline === -1 ? "ден" : "дни"}`} />
       </div>
       {showPayments ? <PaymentDisputesAlert projectId={projectId} disputes={disputes} canResolve={canRecordPayments} /> : null}
-      <DetailTabs key={tab} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) ? "overview" : tab}>
+      <DetailTabs key={tab} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) || (tab === "tasks" && !showTasks) || (tab === "choices" && !showChoices) ? "overview" : tab}>
         <TabsList>
           <TabsTrigger id="overview">{projectTabLabels.overview}</TabsTrigger>
           <TabsTrigger id="documents">{projectTabLabels.documents}</TabsTrigger>
           <TabsTrigger id="work">{projectTabLabels.work}</TabsTrigger>
-          <TabsTrigger id="tasks">{projectTabLabels.tasks}{projectTasks.some((item) => item.status !== "done") ? <CountPill value={projectTasks.filter((item) => item.status !== "done").length} /> : null}</TabsTrigger>
+          {showChoices ? <TabsTrigger id="choices">{projectTabLabels.choices}{openChoices ? <CountPill value={openChoices} /> : null}</TabsTrigger> : null}
+          {showTasks ? <TabsTrigger id="tasks">{projectTabLabels.tasks}{projectTasks.some((item) => item.status !== "done") ? <CountPill value={projectTasks.filter((item) => item.status !== "done").length} /> : null}</TabsTrigger> : null}
           {showPayments ? <TabsTrigger id="payments">{projectTabLabels.payments}{disputes.length || claims.length ? <CountPill value={disputes.length + claims.length} highlight /> : null}</TabsTrigger> : null}
           {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}{notesCount ? <CountPill value={notesCount} /> : null}</TabsTrigger> : null}
         </TabsList>
@@ -192,12 +206,16 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
             <ProjectDocuments documents={documents} path={path} />
           </Suspense>
         </TabsContent>
-        <TabsContent id="work" className="pt-5">
-          <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} />
+        <TabsContent id="work" className="flex flex-col gap-8 pt-5">
+          <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} handover={context.features.portalMode === "full" ? "portal" : "staff"} />
         </TabsContent>
-        <TabsContent id="tasks" className="pt-5">
+        {showChoices ? <TabsContent id="choices" className="pt-5">
+          <ClientChoices projectId={projectId} choices={choices} canAsk={canSend && active} portal={context.features.portalMode === "full"} />
+        </TabsContent> : null}
+        {showTasks ? <TabsContent id="tasks" className="pt-5">
           <TaskBoard
             tasks={projectTasks}
+            stages={taskStages}
             people={can(member, "tasks.view_all") || canAssignTasks(context) ? taskPeople : taskPeople.filter((person) => person.userId === context.userId)}
             projects={active ? [{ id: project.id, name: project.name }] : []}
             fixedProject={{ id: project.id, name: project.name }}
@@ -207,7 +225,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
             seesEveryone={can(member, "tasks.view_all")}
             canCreate={active}
           />
-        </TabsContent>
+        </TabsContent> : null}
         {showPayments ? <TabsContent id="payments" className="flex flex-col gap-5 pt-5">
           <PaymentClaimsBlock projectId={projectId} claims={pendingClaims} canResolve={canRecordPayments} />
           <ProjectPaymentsSummary state={state} projectId={projectId} canRecord={canRecordPayments} today={today} inbox={inbox} allReceiptsHref={allReceiptsHref} />

@@ -9,7 +9,6 @@ import {
   changeOrders,
   documentMessages,
   offerAcceptances,
-  portalDecisions,
   projectMilestones,
   projectReceipts,
 } from "@/db/schema";
@@ -88,7 +87,6 @@ export async function clientProjectCards(organizationId: string, projectIds: str
       total: changeOrderRevisions.total,
     }).from(changeOrders)
       .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
-      .innerJoin(portalDecisions, eq(portalDecisions.revisionId, changeOrderRevisions.id))
       .where(changeScope),
     db.select({
       projectId: projectMilestones.projectId,

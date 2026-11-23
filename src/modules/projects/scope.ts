@@ -20,15 +20,15 @@ export function scopeView(state: ProjectState, scope: OfferScope) {
     installments: state.installments.filter((item) => match(item.offerId)),
     receipts,
     pendingDocuments: state.pendingDocuments.filter((item) => scope === "all" || (item.kind === "offer" ? item.id === scope : item.baselineOfferId === scope)),
-    contractMinor: offer ? offer.contractMinor : scope === "none" ? 0n : state.contractMinor,
+    contractMinor: offer ? offer.contractMinor : scope === "none" ? state.unassigned.plannedMinor : state.contractMinor,
     paidMinor: offer ? offer.paidMinor : scope === "none" ? state.unassigned.paidMinor : state.paidMinor,
-    remainingMinor: offer ? offer.remainingMinor : scope === "none" ? 0n : state.remainingMinor,
+    remainingMinor: offer ? offer.remainingMinor : scope === "none" ? state.unassigned.plannedMinor - state.unassigned.paidMinor : state.remainingMinor,
     deadline: offer ? offer.deadline : scope === "none" ? null : state.deadline,
     /** Only the project-wide list is capped; a scoped list shows what the cap left. */
     receiptsTotal: scope === "all" ? state.receiptsTotal : receipts.length,
     currency: offer?.currency ?? state.currency,
-    /** Something the client approved backs the figures. */
-    hasAgreement: offer ? offer.inForce : scope === "all" && state.offersInForce.length > 0,
+    /** Something the client approved, or a payment plan agreed without an offer, backs the figures. */
+    hasAgreement: offer ? offer.inForce : (scope === "all" && state.offersInForce.length > 0) || state.unassigned.installments.length > 0,
   };
 }
 

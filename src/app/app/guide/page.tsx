@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard } from "lucide-react";
+import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard, CalendarRange } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
 import { ScenarioPlayer } from "@/components/guide/scenario-player";
@@ -16,6 +17,13 @@ const promises = [
 const clientRules = [
   { icon: Contact, title: "Един клиент – няколко проекта", text: "Един клиент може да има няколко проекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
   { icon: FolderKanban, title: "Проектът е една работа за един клиент", text: "Нова работа за същия клиент е нов проект: „Нов проект“ → „Съществуващ клиент“. Още работа по същия проект е нова оферта в него." },
+  { icon: CalendarRange, title: "Проект и без оферта", text: "За работа по договор или абонамент добавяш етапи и вноски направо в проекта. Клиентът ги вижда в портала." },
+];
+
+const stageStatuses: Array<{ label: string; variant: "sent" | "approved" | "warning-soft"; text: string }> = [
+  { label: "Чака приемане", variant: "sent", text: "Поиска приемане на етапа. Клиентът има имейл и го вижда в портала." },
+  { label: "Приет", variant: "approved", text: "Клиентът прие етапа с името си и код или ти го отбеляза. Вноската за него става дължима." },
+  { label: "Забележки", variant: "warning-soft", text: "Клиентът писа какво да се поправи. След поправката поискай приемане отново." },
 ];
 
 const statuses: Array<{ status: string; text: string }> = [
@@ -31,7 +39,7 @@ const statuses: Array<{ status: string; text: string }> = [
 
 const visibility = [
   { who: "Екипът вижда", icon: Eye, items: ["Всички версии, чернови и история", "Вътрешните бележки (ако имат право)", "Кога клиентът е отворил офертата", "Плащанията (ако имат право)"] },
-  { who: "Клиентът вижда", icon: KeyRound, items: ["Само изпратените версии", "Какво се е променило спрямо предишната", "До кога е валидна офертата", "PDF и разписка за всяко свое решение"] },
+  { who: "Клиентът вижда", icon: KeyRound, items: ["Само изпратените версии", "Какво се е променило спрямо предишната", "До кога е валидна офертата", "PDF и разписка за всяко свое решение", "Етапите, които чакат да ги приеме", "Въпросите ти с варианти („Попитай клиента“)"] },
   { who: "Клиентът никога не вижда", icon: EyeOff, items: ["Черновите ти", "Вътрешните бележки", "Кой от екипа какво е правил"] },
 ];
 
@@ -73,6 +81,15 @@ export default function GuidePage() {
           {statuses.map(({ status, text }) => (
             <div key={status} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
               <dt className="shrink-0"><DocumentStatusBadge status={status} /></dt>
+              <dd className="text-sm leading-6">{text}</dd>
+            </div>
+          ))}
+        </dl>
+        <h3 className="mt-6 font-semibold">Етапите и приемането</h3>
+        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+          {stageStatuses.map(({ label, variant, text }) => (
+            <div key={label} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
+              <dt className="shrink-0"><Badge variant={variant}>{label}</Badge></dt>
               <dd className="text-sm leading-6">{text}</dd>
             </div>
           ))}

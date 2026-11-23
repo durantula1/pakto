@@ -14,40 +14,49 @@ import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
 import { createTaskAction, deleteTaskAction, setTaskStatusAction, updateTaskAction } from "@/modules/tasks/actions";
-import { taskStatusLabels, taskStatuses, type TaskItem, type TaskPerson, type TaskStatus } from "@/modules/tasks/labels";
+import { taskStatusLabels, taskStatuses, type TaskItem, type TaskPerson, type TaskStage, type TaskStatus } from "@/modules/tasks/labels";
+import { offerStageDone } from "@/components/tasks/stage-ready";
 
 const NONE = "none";
 
 export type TaskSheetTarget = { mode: "create"; projectId?: string; assigneeId?: string } | { mode: "edit"; task: TaskItem };
 
 /** One panel for creating and editing a task, so both read the same. */
-export function TaskSheet({ target, onClose, projects, people, canAssign, currentUserId }: {
+export function TaskSheet({ target, onClose, projects, people, stages = [], canAssign, currentUserId }: {
   target: TaskSheetTarget | null;
   onClose: () => void;
   projects: { id: string; name: string }[];
   people: TaskPerson[];
+  stages?: TaskStage[];
   canAssign: boolean;
   currentUserId: string;
 }) {
   return (
     <SheetContent side="right" isOpen={target !== null} onOpenChange={(open) => { if (!open) onClose(); }} className="w-full overflow-y-auto sm:max-w-md data-[side=right]:sm:max-w-md">
-      {target ? <TaskPanel key={target.mode === "edit" ? target.task.id : "new"} target={target} onClose={onClose} projects={projects} people={people} canAssign={canAssign} currentUserId={currentUserId} /> : null}
+      {target ? <TaskPanel key={target.mode === "edit" ? target.task.id : "new"} target={target} onClose={onClose} projects={projects} people={people} stages={stages} canAssign={canAssign} currentUserId={currentUserId} /> : null}
     </SheetContent>
   );
 }
 
-function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId }: {
+function TaskPanel({ target, onClose, projects, people, stages, canAssign, currentUserId }: {
   target: TaskSheetTarget;
   onClose: () => void;
   projects: { id: string; name: string }[];
   people: TaskPerson[];
+  stages: TaskStage[];
   canAssign: boolean;
   currentUserId: string;
 }) {
   const task = target.mode === "edit" ? target.task : null;
   const [projectId, setProjectId] = useState(task?.projectId ?? (target.mode === "create" ? target.projectId : undefined) ?? "");
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId ?? (target.mode === "create" ? target.assigneeId : undefined) ?? (canAssign ? NONE : currentUserId));
+  const [milestoneId, setMilestoneId] = useState(task?.milestoneId ?? NONE);
   const [pending, startTransition] = useTransition();
+  // The project's open stages, and the task's own stage even when it is already finished.
+  const projectStages = stages.filter((stage) => stage.projectId === projectId);
+  const stageChoices = task?.milestoneId && task.milestoneTitle && !projectStages.some((stage) => stage.id === task.milestoneId)
+    ? [{ id: task.milestoneId, title: task.milestoneTitle }, ...projectStages]
+    : projectStages;
   const editable = target.mode === "create" || task!.canEdit;
   // Without the right to assign, the only choices are yourself and nobody.
   const assignable = canAssign ? people : people.filter((person) => person.userId === currentUserId);
@@ -58,7 +67,11 @@ function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId
     startTransition(async () => {
       const result = await action(formData);
       if (result && typeof result === "object" && "error" in result && typeof result.error === "string") toast.error(result.error);
-      else { toast.success(success); onClose(); }
+      else {
+        toast.success(success);
+        onClose();
+        if (result && typeof result === "object" && "stageReady" in result) offerStageDone(result.stageReady as Parameters<typeof offerStageDone>[0]);
+      }
     });
   }
 
@@ -90,12 +103,23 @@ function TaskPanel({ target, onClose, projects, people, canAssign, currentUserId
             <FieldLabel htmlFor="task-project">Проект</FieldLabel>
             {task ? <p id="task-project" className="text-sm">{task.projectName}</p> : <>
               <input type="hidden" name="projectId" value={projectId} />
-              <Select aria-label="Проект" selectedKey={projectId || null} onSelectionChange={(key) => setProjectId(String(key))} placeholder="Избери проект">
+              <Select aria-label="Проект" selectedKey={projectId || null} onSelectionChange={(key) => { setProjectId(String(key)); setMilestoneId(NONE); }} placeholder="Избери проект">
                 <SelectTrigger id="task-project" className="h-11 w-full"><SelectValue /></SelectTrigger>
                 <SelectContent><SelectGroup>{projects.map((project) => <SelectItem key={project.id} id={project.id}>{project.name}</SelectItem>)}</SelectGroup></SelectContent>
               </Select>
             </>}
           </Field>
+          {stageChoices.length ? <Field>
+            <FieldLabel htmlFor="task-stage">Етап</FieldLabel>
+            <input type="hidden" name="milestoneId" value={milestoneId === NONE ? "" : milestoneId} />
+            <Select aria-label="Етап" selectedKey={milestoneId} onSelectionChange={(key) => setMilestoneId(String(key))} isDisabled={!editable}>
+              <SelectTrigger id="task-stage" className="h-11 w-full"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectGroup>
+                <SelectItem id={NONE}>Без етап</SelectItem>
+                {stageChoices.map((stage) => <SelectItem key={stage.id} id={stage.id}>{stage.title}</SelectItem>)}
+              </SelectGroup></SelectContent>
+            </Select>
+          </Field> : <input type="hidden" name="milestoneId" value={milestoneId === NONE ? "" : milestoneId} />}
           <Field>
             <FieldLabel htmlFor="task-assignee">Отговорник</FieldLabel>
             <input type="hidden" name="assigneeId" value={assigneeId === NONE ? "" : assigneeId} />
