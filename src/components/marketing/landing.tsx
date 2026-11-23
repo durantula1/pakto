@@ -870,7 +870,7 @@ export function Landing() {
       <section id="proekti" className="sec">
         <SectionHead
           num="04 / Проекти"
-          title="Всички проекти на един поглед."
+          title="Всички проекти на едно място."
           text="Кое чака клиента, кое закъснява, кое е платено. Избери филтър или отвори проект."
         />
         <div className="pad rv">
