@@ -28,6 +28,8 @@ export default defineConfig({
     trace: "off",
     screenshot: "only-on-failure",
     ...devices["Desktop Chrome"],
+    // Optional: a Chromium that is already installed (cloud, CI) instead of the one Playwright downloads.
+    launchOptions: process.env.E2E_CHROMIUM ? { executablePath: process.env.E2E_CHROMIUM, args: ["--no-sandbox"] } : {},
   },
   webServer: {
     command: `pnpm exec next dev -p ${PORT}`,

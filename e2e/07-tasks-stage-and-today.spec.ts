@@ -26,8 +26,8 @@ test("последната задача в „Готово“ пита дали 
        values ('${ORG_ID}', '${PROJECT_ID}', 'Последна задача', 'review', '${USER_ID}', '${USER_ID}', '00000000-0000-4000-8000-0000000a0002')`);
   await page.goto("/app/tasks");
   await page.getByText("Последна задача").first().click();
-  await page.getByRole("radio", { name: "Готово" }).click();
-  await page.getByRole("button", { name: "Запази" }).click();
+  await page.getByRole("dialog").locator("label").filter({ hasText: /^Готово$/ }).click();
+  // Статусът се сменя веднага с клика (няма „Запази“).
   await expect(page.getByText(/Всички задачи по „Етап за приключване“ са готови/)).toBeVisible();
   expect(sql(`select status from app.project_milestones where id = '00000000-0000-4000-8000-0000000a0002'`)).toBe("planned");
   await page.getByRole("button", { name: "Етапът е завършен" }).click();

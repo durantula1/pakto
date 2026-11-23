@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { expect, type Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
 
 export const DEMO = { email: "demo@pakto.local", password: "pakto-dev-2026" };
 export const OFFER_ID = "00000000-0000-4000-8000-000000000050";
@@ -9,6 +9,11 @@ export const USER_ID = "00000000-0000-4000-8000-000000000001";
 
 /** Runs one SQL statement as the owner role in pakto_e2e and returns the trimmed output. */
 export function sql(statement: string): string {
+  if (process.env.E2E_PG_ADMIN) {
+    // Postgres without Docker (cloud, CI): see e2e/support/prepare-db-local.sh.
+    const url = process.env.E2E_PG_ADMIN.replace(/\/\/[^@]*@/, "//pakto_owner:pakto_dev@").replace(/\/$/, "") + "/pakto_e2e";
+    return execFileSync("psql", [url, "-At", "-v", "ON_ERROR_STOP=1", "-c", statement], { encoding: "utf8" }).trim();
+  }
   return execFileSync(
     "docker",
     ["compose", "-f", "docker-compose.dev.yml", "exec", "-T", "postgres", "psql", "-U", "pakto_owner", "-d", "pakto_e2e", "-At", "-v", "ON_ERROR_STOP=1", "-c", statement],
@@ -16,12 +21,24 @@ export function sql(statement: string): string {
   ).trim();
 }
 
-export async function signIn(page: Page) {
+// The sign-in form allows 10 attempts per email in 15 minutes (src/lib/auth/limits.ts), so a suite that logs in
+// before every test would be blocked. The session cookies of each address are kept after the first sign-in.
+const sessions = new Map<string, Parameters<BrowserContext["addCookies"]>[0]>();
+
+export async function signIn(page: Page, account: { email: string; password: string } = DEMO) {
+  const cached = sessions.get(account.email);
+  if (cached) {
+    await page.context().addCookies(cached);
+    await page.goto("/app");
+    if (/\/app|\/onboarding|\/welcome/.test(new URL(page.url()).pathname)) return;
+    await page.context().clearCookies();
+  }
   await page.goto("/sign-in");
-  await page.getByLabel("Имейл").fill(DEMO.email);
-  await page.locator('input[type="password"]').fill(DEMO.password);
+  await page.getByLabel("Имейл").fill(account.email);
+  await page.locator('input[type="password"]').fill(account.password);
   await page.getByRole("button", { name: "Влез", exact: true }).click();
-  await page.waitForURL(/\/app/);
+  await page.waitForURL(/\/app|\/onboarding|\/welcome/);
+  sessions.set(account.email, await page.context().cookies());
 }
 
 /** Closes the "what's new" dialog if it is open, so it does not cover the page under test. */

@@ -114,7 +114,7 @@ export function ProjectWorkSummary({ state, projectId, canManage, today, handove
         }))}
       />
     </section> : null}
-    {loose.length || (canManage && !offers.length) ? <section className="flex flex-col gap-3">
+    {loose.length || canManage ? <section className="flex flex-col gap-3">
       <SectionHeader title={offers.length ? "Етапи без оферта" : "Етапи"} description={offers.length ? "Работа, договорена извън офертите. Клиентът ги вижда в портала." : "Работа, договорена без оферта: по договор на хартия, абонамент или на думи. Клиентът ги вижда в портала."} action={addStage} />
       {loose.length ? <>
         {openLoose.length ? <DataTable

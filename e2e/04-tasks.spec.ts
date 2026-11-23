@@ -29,8 +29,8 @@ test("задача не може да има празно заглавие", asy
 });
 
 test("задача към етап: етапът показва колко задачи са готови", async ({ page }) => {
-  sql(`insert into app.project_milestones (id, organization_id, project_id, title, due_on, work_status)
-        select gen_random_uuid(), organization_id, id, 'Окабеляване', current_date + 10, 'planned'
+  sql(`insert into app.project_milestones (id, organization_id, project_id, title, due_on, status, created_by)
+        select gen_random_uuid(), organization_id, id, 'Окабеляване', current_date + 10, 'planned', '00000000-0000-4000-8000-000000000001'
         from app.projects where id = '00000000-0000-4000-8000-000000000030'`);
   await page.goto("/app/projects/00000000-0000-4000-8000-000000000030");
   await expect(page.getByText("Окабеляване").first()).toBeVisible();

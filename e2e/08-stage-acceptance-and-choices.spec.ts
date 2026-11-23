@@ -24,9 +24,8 @@ test("избор от клиента: има отделен таб с брояч
   sql(`insert into app.client_choices (organization_id, project_id, question, options, created_by)
        values ('${ORG_ID}', '${PROJECT_ID}', 'Коя плочка за банята?', '[{"key":"a","label":"Бяла"},{"key":"b","label":"Сива"}]', '${USER_ID}')`);
   await openProject(page);
-  const tab = page.getByRole("tab", { name: /Въпроси|Избори/ });
-  await expect(tab).toContainText("1");
-  await tab.click();
+  await expect(page.getByRole("tab", { name: /Въпроси/ })).toContainText("1");
+  await openProject(page, "choices"); // таб през адреса: клик преди хидратацията в dev не превключва
   await expect(page.getByText("Коя плочка за банята?")).toBeVisible();
 });
 
@@ -34,11 +33,10 @@ test("избор от клиента: екипът записва отговор
   sql(`insert into app.client_choices (id, organization_id, project_id, question, options, created_by)
        values ('00000000-0000-4000-8000-0000000b0001', '${ORG_ID}', '${PROJECT_ID}', 'Цвят на контактите?', '[{"key":"a","label":"Бял"},{"key":"b","label":"Черен"}]', '${USER_ID}')`);
   await openProject(page, "choices");
-  await page.getByRole("button", { name: /Запиши отговор|Клиентът каза/ }).first().click();
+  await page.getByRole("button", { name: "Отбележи избора" }).first().click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Какво избра клиентът?")).toBeVisible();
-  await dialog.getByText("Черен", { exact: true }).click();
-  await dialog.getByRole("button", { name: "Запиши" }).click();
+  await dialog.getByRole("button", { name: "Запиши", exact: true }).click(); // първият вариант е избран по подразбиране
   await expect.poll(() => sql(`select count(*) from app.client_choice_answers where choice_id = '00000000-0000-4000-8000-0000000b0001'`)).toBe("1");
   expect(() => sql(`update app.client_choice_answers set option_key = 'a'`)).toThrow();
   expect(() => sql(`delete from app.client_choice_answers`)).toThrow();

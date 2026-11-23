@@ -20,27 +20,28 @@ test("изключен модул „Задачи“ изчезва от мен�
   setOrg({ tasks_enabled: false });
   await page.goto("/app");
   await expect(page.getByRole("link", { name: "Задачи", exact: true })).toHaveCount(0);
-  const response = await page.goto("/app/tasks");
-  expect(response?.status()).toBe(404);
+  await page.goto("/app/tasks");
+  await expect(page.getByRole("heading", { name: "Страницата не е намерена" })).toBeVisible();
 });
 
 test("изключен модул „Каталог“ изчезва от менюто и страницата му не се отваря", async ({ page }) => {
   setOrg({ catalog_enabled: false });
   await page.goto("/app");
   await expect(page.getByRole("link", { name: "Каталог", exact: true })).toHaveCount(0);
-  expect((await page.goto("/app/catalog"))?.status()).toBe(404);
+  await page.goto("/app/catalog");
+  await expect(page.getByRole("heading", { name: "Страницата не е намерена" })).toBeVisible();
 });
 
 test("изключен модул „Пари“ крие „Плащания“", async ({ page }) => {
   setOrg({ finance_enabled: false });
   await page.goto("/app");
   await expect(page.getByRole("link", { name: "Плащания", exact: true })).toHaveCount(0);
-  expect((await page.goto("/app/finance"))?.status()).toBe(404);
+  await page.goto("/app/finance");
+  await expect(page.getByRole("heading", { name: "Страницата не е намерена" })).toBeVisible();
 });
 
 test("настройките за модули се запазват от страницата Фирма → Модули", async ({ page }) => {
-  await page.goto("/app/settings/organization");
-  await page.getByRole("tab", { name: "Модули" }).click();
+  await page.goto("/app/settings/organization?tab=modules");
   await page.getByRole("button", { name: /Модул „Задачи“/ }).click();
   await page.getByRole("option", { name: "Изключен" }).click();
   await expect.poll(() => sql(`select tasks_enabled from app.organizations where name = 'Демо Ремонти'`)).toBe("f");

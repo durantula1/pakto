@@ -13,7 +13,9 @@ test("етап без оферта се добавя от проекта и се
   await page.getByRole("button", { name: "Добави етап" }).first().click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Име").fill("Боядисване на хола");
-  await dialog.getByRole("group", { name: /Срок/ }).first().click().catch(() => {});
+  // Срокът се избира от календара (15-о число на отворения месец).
+  await dialog.getByRole("button", { name: "Срок" }).click();
+  await page.getByRole("gridcell").getByText("15", { exact: true }).first().click();
   await dialog.getByRole("button", { name: "Добави етап" }).click();
   await expect(page.getByText("Боядисване на хола").first()).toBeVisible();
   expect(sql(`select count(*) from app.project_milestones where title = 'Боядисване на хола' and offer_id is null`)).toBe("1");

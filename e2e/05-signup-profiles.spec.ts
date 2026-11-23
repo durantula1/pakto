@@ -17,6 +17,7 @@ for (const [index, profile] of profiles.entries()) {
     const email = `profil-${profile.value}@pakto.local`;
     const company = `Фирма ${profile.value}`;
     sql(`insert into app.auth_users (id, name, email, email_verified) values ('${id}', 'Тест ${profile.value}', '${email}', true) on conflict do nothing`);
+    sql(`insert into app.profiles (id, display_name, email) values ('${id}', 'Тест ${profile.value}', '${email}') on conflict do nothing`);
     sql(`insert into app.auth_accounts (user_id, account_id, provider_id, password) select '${id}', '${id}', 'credential', '${HASH}' where not exists (select 1 from app.auth_accounts where user_id = '${id}')`);
 
     await page.goto("/sign-in");

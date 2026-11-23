@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { OFFER_ID, resetOrg, signIn, skipWhatsNew, sql, USER_ID } from "./support/helpers";
+import { OFFER_ID, resetOrg, setOrg, signIn, skipWhatsNew, sql, USER_ID } from "./support/helpers";
 
 test.beforeEach(async ({ page }) => {
   resetOrg();
@@ -10,6 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("екипът отбелязва чернова като договорена: заключва се и се записва съгласието", async ({ page }) => {
+  setOrg({ approval_mode: "staff" }); // инак основното действие е „Изпрати на клиента“
   await page.goto(`/app/offers/${OFFER_ID}`);
   await page.getByRole("button", { name: /Отбележи като договорено|Договорено извън Pakto/ }).click();
   const dialog = page.getByRole("dialog");
@@ -30,7 +31,9 @@ test("записаното съгласие не може да се промен
   expect(() => sql(`delete from app.recorded_agreements`)).toThrow();
 });
 
-test("договорената оферта вече не се редактира", async ({ page }) => {
+test("договорената версия не се редактира: формата създава нова версия", async ({ page }) => {
   await page.goto(`/app/offers/${OFFER_ID}/edit`);
-  await expect(page.getByRole("button", { name: /Запази/ })).toHaveCount(0);
+  // Одобрена оферта може да се предоговаря, но версия 1 остава непроменена в историята.
+  await expect(page.getByText("Нова версия 2 (от версия 1)")).toBeVisible();
+  await expect(page.getByText("Версия 1 остава в историята.")).toBeVisible();
 });
