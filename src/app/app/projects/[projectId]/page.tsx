@@ -47,7 +47,7 @@ import { dateOnly } from "@/lib/dates";
 
 const sinceFormat = new Intl.DateTimeFormat("bg-BG", { month: "long", year: "numeric", timeZone: "Europe/Sofia" });
 const dayFormat = dateOnly;
-const tabs = ["overview", "documents", "work", "tasks", "payments", "notes"] as const;
+const tabs = ["overview", "documents", "work", "choices", "tasks", "payments", "notes"] as const;
 const DOCUMENTS_PAGE_SIZE = 10;
 
 export async function generateMetadata({ params }: PageProps<"/app/projects/[projectId]">): Promise<Metadata> {
@@ -123,10 +123,14 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     issues: "има забележки от клиента",
   };
   const here = `/app/projects/${projectId}`;
+  // Questions to the client (tab "Избори"): shown when there are some or the person can ask one.
+  const showChoices = choices.length > 0 || (canSend && active);
+  const openChoices = choices.filter((item) => !item.answer && !item.canceledAt).length;
   const openItems = [
     ...(openStages ? [{ label: openStages === 1 ? "1 етап не е завършен" : `${openStages} етапа не са завършени`, href: `${here}?tab=work` }] : []),
     ...(showPayments && state.remainingMinor > 0n && agreed ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
     ...state.pendingDocuments.map((item) => ({ label: `${named(item.kind, item.sequenceNumber, item.title)} чака решение от клиента`, href: `/app/offers/${item.id}` })),
+    ...(openChoices ? [{ label: openChoices === 1 ? "1 въпрос чака отговор от клиента" : `${openChoices} въпроса чакат отговор от клиента`, href: `${here}?tab=choices` }] : []),
     ...inForce.flatMap((offer) => handover[offer.status] ? [{ label: `Работата по ${named("offer", offer.sequenceNumber, offer.title)} ${handover[offer.status]}`, href: `/app/offers/${offer.id}?tab=stages` }] : []),
   ];
   const showTasks = context.features.tasks;
@@ -176,11 +180,12 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         <StatCard tone={daysToDeadline !== null && daysToDeadline < 0 && active ? "coral" : "blue"} label={projectStatLabels.deadline} value={state.deadline ? formatDay(state.deadline) : "—"} hint={daysToDeadline === null ? "Очаква одобрение" : daysToDeadline > 0 ? `След ${daysToDeadline} ${daysToDeadline === 1 ? "ден" : "дни"}` : daysToDeadline === 0 ? "Днес" : `Изтекъл преди ${-daysToDeadline} ${daysToDeadline === -1 ? "ден" : "дни"}`} />
       </div>
       {showPayments ? <PaymentDisputesAlert projectId={projectId} disputes={disputes} canResolve={canRecordPayments} /> : null}
-      <DetailTabs key={tab} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) || (tab === "tasks" && !showTasks) ? "overview" : tab}>
+      <DetailTabs key={tab} defaultTab={(tab === "payments" && !showPayments) || (tab === "notes" && !canNotes) || (tab === "tasks" && !showTasks) || (tab === "choices" && !showChoices) ? "overview" : tab}>
         <TabsList>
           <TabsTrigger id="overview">{projectTabLabels.overview}</TabsTrigger>
           <TabsTrigger id="documents">{projectTabLabels.documents}</TabsTrigger>
           <TabsTrigger id="work">{projectTabLabels.work}</TabsTrigger>
+          {showChoices ? <TabsTrigger id="choices">{projectTabLabels.choices}{openChoices ? <CountPill value={openChoices} /> : null}</TabsTrigger> : null}
           {showTasks ? <TabsTrigger id="tasks">{projectTabLabels.tasks}{projectTasks.some((item) => item.status !== "done") ? <CountPill value={projectTasks.filter((item) => item.status !== "done").length} /> : null}</TabsTrigger> : null}
           {showPayments ? <TabsTrigger id="payments">{projectTabLabels.payments}{disputes.length || claims.length ? <CountPill value={disputes.length + claims.length} highlight /> : null}</TabsTrigger> : null}
           {notesTotal ? <TabsTrigger id="notes">{projectTabLabels.notes}{notesCount ? <CountPill value={notesCount} /> : null}</TabsTrigger> : null}
@@ -203,8 +208,10 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         </TabsContent>
         <TabsContent id="work" className="flex flex-col gap-8 pt-5">
           <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} handover={context.features.portalMode === "full" ? "portal" : "staff"} />
-          <ClientChoices projectId={projectId} choices={choices} canAsk={canSend && active} portal={context.features.portalMode === "full"} />
         </TabsContent>
+        {showChoices ? <TabsContent id="choices" className="pt-5">
+          <ClientChoices projectId={projectId} choices={choices} canAsk={canSend && active} portal={context.features.portalMode === "full"} />
+        </TabsContent> : null}
         {showTasks ? <TabsContent id="tasks" className="pt-5">
           <TaskBoard
             tasks={projectTasks}

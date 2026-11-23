@@ -108,7 +108,7 @@ export async function answerChoiceAction(
         eventType: "choice_answered",
         title: `Клиентът избра „${option.label}“: ${choice.question}`,
         body: data.comment || null,
-        href: `/app/projects/${session.projectId}?tab=work#choices`,
+        href: `/app/projects/${session.projectId}?tab=choices`,
       });
     });
   } catch (cause) {

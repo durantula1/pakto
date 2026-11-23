@@ -3,9 +3,10 @@ import { ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { DataTable } from "@/components/workspace/data-table";
+import { DataTable, type DataTableColumn } from "@/components/workspace/data-table";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { PaidBar } from "@/components/projects/paid-bar";
+import { FinishedGroup } from "@/components/projects/finished-group";
 import { InstallmentActions, ReceiptsTable, SectionHeader, StageActions, StageDue, StageHandover, StageTasks, offerWorkOptions, type StageHandoverMode } from "@/components/projects/offer-execution";
 import { InstallmentDialog, RecordPaymentDialog } from "@/components/projects/project-controls";
 import { MilestoneDialog } from "@/components/projects/milestone-dialog";
@@ -61,6 +62,20 @@ export function ProjectWorkSummary({ state, projectId, canManage, today, handove
   const loose = state.unassigned.milestones;
   const workOptions = [projectWork, ...offers.flatMap((offer) => offerWorkOptions(offer).map((option) => (several ? { ...option, label: `${documentCode("offer", offer.sequenceNumber)} · ${option.label}` } : option)))];
   const addStage = canManage ? <MilestoneDialog projectId={projectId} deadline={null} workOptions={workOptions} clientSees initial={{ title: "", dueOn: "", work: "project" }} trigger={<Button type="button" variant="outline"><Plus data-icon="inline-start" />Добави етап</Button>} /> : null;
+  const looseColumns: DataTableColumn[] = [{ id: "title", header: "Етап", mobile: "primary" }, { id: "due", header: "Срок" }, { id: "status", header: "Статус", className: "sm:w-px" }, ...(canManage ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])];
+  const looseRow = (item: (typeof loose)[number]) => ({
+          id: item.id,
+          cells: [
+            <span key="title" className="min-w-0"><span className="block">{item.title}</span><StageTasks item={item} /><StageHandover projectId={projectId} item={item} mode={handover} canManage={canManage} /></span>,
+            <StageDue key="due" item={item} overdue={item.status !== "completed" && item.dueOn < today} afterDeadline={false} deadline={null} />,
+            canManage
+              ? <StatusSelect key="status" label={`Статус на ${item.title}`} name="status" value={item.status} options={stageOptions} action={updateMilestoneAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е обновен" />
+              : <Badge key="status" variant="secondary">{stageLabels[item.status] ?? item.status}</Badge>,
+            ...(canManage ? [<StageActions key="actions" projectId={projectId} item={item} deadline={null} workOptions={workOptions} />] : []),
+          ],
+  });
+  const openLoose = loose.filter((item) => item.status !== "completed");
+  const doneLoose = loose.filter((item) => item.status === "completed");
   return <div className="flex flex-col gap-8">
     {offers.length ? <section className="flex flex-col gap-3">
       <SectionHeader title="Етапи по оферти" description="Графикът, приемането на работата и допълнителната работа са в самата оферта. Отвори я, за да ги управляваш." />
@@ -101,21 +116,16 @@ export function ProjectWorkSummary({ state, projectId, canManage, today, handove
     </section> : null}
     {loose.length || (canManage && !offers.length) ? <section className="flex flex-col gap-3">
       <SectionHeader title={offers.length ? "Етапи без оферта" : "Етапи"} description={offers.length ? "Работа, договорена извън офертите. Клиентът ги вижда в портала." : "Работа, договорена без оферта: по договор на хартия, абонамент или на думи. Клиентът ги вижда в портала."} action={addStage} />
-      {loose.length ? <DataTable
-        label="Етапи без оферта"
-        columns={[{ id: "title", header: "Етап", mobile: "primary" }, { id: "due", header: "Срок" }, { id: "status", header: "Статус", className: "sm:w-px" }, ...(canManage ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
-        rows={loose.map((item) => ({
-          id: item.id,
-          cells: [
-            <span key="title" className="min-w-0"><span className="block">{item.title}</span><StageTasks item={item} /><StageHandover projectId={projectId} item={item} mode={handover} canManage={canManage} /></span>,
-            <StageDue key="due" item={item} overdue={item.status !== "completed" && item.dueOn < today} afterDeadline={false} deadline={null} />,
-            canManage
-              ? <StatusSelect key="status" label={`Статус на ${item.title}`} name="status" value={item.status} options={stageOptions} action={updateMilestoneAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е обновен" />
-              : <Badge key="status" variant="secondary">{stageLabels[item.status] ?? item.status}</Badge>,
-            ...(canManage ? [<StageActions key="actions" projectId={projectId} item={item} deadline={null} workOptions={workOptions} />] : []),
-          ],
-        }))}
-      /> : <EmptyResult className="rounded-xl border border-dashed" title="Още няма етапи." description={offers.length ? "Етапите на офертите са в самите оферти." : "Етапите на оферта се появяват след одобрението ѝ. Ако работите без оферта, добави етапите тук."} />}
+      {loose.length ? <>
+        {openLoose.length ? <DataTable
+          label="Етапи без оферта"
+          columns={looseColumns}
+          rows={openLoose.map(looseRow)}
+        /> : <p className="text-sm text-muted-foreground">Всички етапи без оферта са завършени.</p>}
+        {doneLoose.length ? <FinishedGroup label="Завършени етапи" count={doneLoose.length}>
+          <DataTable label="Завършени етапи без оферта" columns={looseColumns} rows={doneLoose.map(looseRow)} />
+        </FinishedGroup> : null}
+      </>: <EmptyResult className="rounded-xl border border-dashed" title="Още няма етапи." description={offers.length ? "Етапите на офертите са в самите оферти." : "Етапите на оферта се появяват след одобрението ѝ. Ако работите без оферта, добави етапите тук."} />}
     </section> : offers.length ? null : <EmptyResult className="rounded-xl border border-dashed" title="Още няма етапи." description="Етапите се водят в одобрена оферта. Клиентът ги вижда след одобрението." />}
   </div>;
 }
@@ -146,6 +156,18 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
   const addProjectInstallment = canRecord ? <InstallmentDialog projectId={projectId} offerOptions={[{ value: "none", label: projectWork.label }]} stages={projectStages} repeat /> : null;
   const looseReceipts = state.receipts.filter((item) => !item.offerId);
   const looseInstallments = state.unassigned.installments;
+  const installmentColumns: DataTableColumn[] = [{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Срок за плащане" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])];
+  const installmentRow = (item: (typeof looseInstallments)[number]) => ({
+            id: item.id,
+            cells: [
+              <span key="title" className="min-w-0"><span className="block">{item.title}</span><span className="block text-xs text-muted-foreground">{paymentLabels[item.kind] ?? item.kind}{item.remainingMinor <= 0n ? " · платена" : ""}</span></span>,
+              <span key="due" className={cn("tabular-nums", item.dueOn < today && item.remainingMinor > 0n && "font-medium text-destructive")}>{formatDay(item.dueOn)}</span>,
+              <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {currencySymbol(item.currency)}</span>,
+              ...(canRecord ? [<InstallmentActions key="actions" projectId={projectId} item={item} offerOptions={placeOptions} stages={stageChoices} />] : []),
+            ],
+  });
+  const openInstallments = looseInstallments.filter((item) => item.remainingMinor > 0n);
+  const paidInstallments = looseInstallments.filter((item) => item.remainingMinor <= 0n);
   return <div className="flex flex-col gap-8">
     <section className="flex flex-col gap-3">
       <SectionHeader
@@ -182,19 +204,10 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
           <span className="text-muted-foreground">Платено <span className="font-medium text-foreground tabular-nums">{formatCents(state.unassigned.paidMinor, state.currency)}</span></span>
           <span className="text-muted-foreground">от <span className="font-medium text-foreground tabular-nums">{formatCents(state.unassigned.plannedMinor, state.currency)}</span></span>
         </div>
-        <DataTable
-          label="Вноски без оферта"
-          columns={[{ id: "title", header: "Вноска", mobile: "primary" }, { id: "due", header: "Срок за плащане" }, { id: "amount", header: "Сума", className: "text-right" }, ...(canRecord ? [{ id: "actions", header: "", className: "text-right sm:w-px", mobile: "actions" as const }] : [])]}
-          rows={looseInstallments.map((item) => ({
-            id: item.id,
-            cells: [
-              <span key="title" className="min-w-0"><span className="block">{item.title}</span><span className="block text-xs text-muted-foreground">{paymentLabels[item.kind] ?? item.kind}{item.remainingMinor <= 0n ? " · платена" : ""}</span></span>,
-              <span key="due" className={cn("tabular-nums", item.dueOn < today && item.remainingMinor > 0n && "font-medium text-destructive")}>{formatDay(item.dueOn)}</span>,
-              <span key="amount" className="tabular-nums whitespace-nowrap">{formatAmount(item.amount)} {currencySymbol(item.currency)}</span>,
-              ...(canRecord ? [<InstallmentActions key="actions" projectId={projectId} item={item} offerOptions={placeOptions} stages={stageChoices} />] : []),
-            ],
-          }))}
-        />
+        {openInstallments.length ? <DataTable label="Вноски без оферта" columns={installmentColumns} rows={openInstallments.map(installmentRow)} /> : <p className="text-sm text-muted-foreground">Всички вноски без оферта са платени.</p>}
+        {paidInstallments.length ? <FinishedGroup label="Платени вноски" count={paidInstallments.length}>
+          <DataTable label="Платени вноски без оферта" columns={installmentColumns} rows={paidInstallments.map(installmentRow)} />
+        </FinishedGroup> : null}
       </> : <EmptyResult className="rounded-xl border border-dashed" title="Още няма вноски без оферта." description="Например месечен абонамент или плащане по договор на хартия." />}
     </section> : null}
     {state.receipts.length ? <section className="flex flex-col gap-3">
