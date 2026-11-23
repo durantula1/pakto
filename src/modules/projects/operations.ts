@@ -8,8 +8,9 @@ import "@/lib/zod-messages";
 import { getDatabase } from "@/db";
 import {
   changeOrderPaymentTerms, changeOrderRevisions, changeOrderScheduleItems, changeOrders, offerAcceptances, paymentClaims, paymentDisputes,
-  paymentInstallments, projectMilestones, projectReceipts, staffNotifications, timelineEvents,
+  organizations, paymentInstallments, projectMilestones, projectReceipts, stageAcceptances, staffNotifications, timelineEvents,
 } from "@/db/schema";
+import { latestStageHandover, makeStagePaymentsDue } from "@/modules/projects/stage-acceptance";
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { requireProjectCapability } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
@@ -189,6 +190,8 @@ export async function deleteMilestoneAction(formData: FormData): Promise<ActionR
     await getDatabase().transaction(async (tx) => {
       const [installment] = await tx.select({ title: paymentInstallments.title }).from(paymentInstallments).where(eq(paymentInstallments.milestoneId, milestoneId)).limit(1);
       if (installment) throw new Error(`Към етапа е свързана вноската „${installment.title}“. Първо я премести на друга дата.`);
+      const [handover] = await tx.select({ id: stageAcceptances.id }).from(stageAcceptances).where(eq(stageAcceptances.milestoneId, milestoneId)).limit(1);
+      if (handover) throw new Error("Етапът вече е предаван на клиента и остава в историята. Не може да се изтрие.");
       const [removed] = await tx.delete(projectMilestones)
         .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, context.organizationId)))
         .returning({ title: projectMilestones.title, dueOn: projectMilestones.dueOn, offerId: projectMilestones.offerId });
@@ -578,4 +581,61 @@ export async function requestAcceptanceAction(formData: FormData): Promise<Actio
     });
     refresh(projectId);
   }, "Искането не беше изпратено.");
+}
+
+const stageHandoverSchema = z.object({ projectId: uuid, milestoneId: uuid, note: z.string().trim().max(2000).optional() });
+
+/** The stage, finished, in a project of this company. */
+async function finishedStage(organizationId: string, projectId: string, milestoneId: string) {
+  const [stage] = await getDatabase().select({ title: projectMilestones.title, status: projectMilestones.status, offerId: projectMilestones.offerId, organizationName: organizations.name })
+    .from(projectMilestones)
+    .innerJoin(organizations, eq(organizations.id, projectMilestones.organizationId))
+    .where(and(eq(projectMilestones.id, milestoneId), eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, organizationId))).limit(1);
+  if (!stage) throw new Error("Етапът не е намерен.");
+  if (stage.status !== "completed") throw new Error("Първо отбележи етапа като завършен.");
+  return stage;
+}
+
+/** Asks the client to accept one finished stage in the portal. Its "after this stage" payments fall due on acceptance. */
+export async function requestStageAcceptanceAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { projectId, milestoneId, note } = stageHandoverSchema.parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    if (context.features.portalMode !== "full") throw new Error("Без пълен клиентски портал отбележи приемането сам.");
+    await requireProjectCapability(context, projectId, "milestone");
+    await requireActiveProject(context.organizationId, projectId);
+    const stage = await finishedStage(context.organizationId, projectId, milestoneId);
+    await getDatabase().transaction(async (tx) => {
+      const latest = await latestStageHandover(tx, milestoneId);
+      if (latest === "accepted") throw new Error("Клиентът вече прие този етап.");
+      if (latest === "requested") throw new Error("Приемането вече чака клиента.");
+      await tx.insert(stageAcceptances).values({ organizationId: context.organizationId, projectId, milestoneId, kind: "requested", note: note || null, actorType: "staff", actorId: context.userId });
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: stage.offerId, actorType: "staff", actorId: context.userId, eventType: "stage_acceptance_requested", visibility: "client", metadata: { title: stage.title, note: note || null } });
+    });
+    emailClient(projectId, {
+      subject: `${stage.organizationName} завърши етап „${stage.title}“ и очаква да го приемете`,
+      intro: `${stage.organizationName} отбеляза етап „${stage.title}“ като завършен. В портала можете да го приемете или да опишете забележките си. Плащанията, свързани с етапа, стават дължими след приемането.`,
+      facts: note ? [["Бележка от фирмата", note]] : undefined,
+      cta: "Прегледайте етапа",
+    });
+    refresh(projectId);
+  }, "Искането не беше изпратено.");
+}
+
+/** Without the full client portal the team records that the client accepted the stage (on site, by phone). */
+export async function recordStageAcceptanceAction(formData: FormData): Promise<ActionResult> {
+  return attempt(async () => {
+    const { projectId, milestoneId, note } = stageHandoverSchema.parse(Object.fromEntries(formData));
+    const context = await requireTenantContext();
+    await requireProjectCapability(context, projectId, "milestone");
+    await requireActiveProject(context.organizationId, projectId);
+    const stage = await finishedStage(context.organizationId, projectId, milestoneId);
+    await getDatabase().transaction(async (tx) => {
+      if (await latestStageHandover(tx, milestoneId) === "accepted") throw new Error("Етапът вече е приет.");
+      await tx.insert(stageAcceptances).values({ organizationId: context.organizationId, projectId, milestoneId, kind: "accepted", note: note || null, actorType: "staff", actorId: context.userId });
+      await makeStagePaymentsDue(tx, milestoneId);
+      await tx.insert(timelineEvents).values({ organizationId: context.organizationId, projectId, changeOrderId: stage.offerId, actorType: "staff", actorId: context.userId, eventType: "stage_acceptance_recorded", visibility: "client", metadata: { title: stage.title, note: note || null } });
+    });
+    refresh(projectId);
+  }, "Приемането не беше записано.");
 }

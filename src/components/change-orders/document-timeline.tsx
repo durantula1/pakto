@@ -44,6 +44,10 @@ export const eventLabels: Record<string, string> = {
   acceptance_requested: "Поискано приемане на работата",
   acceptance_accepted: "Клиентът прие работата",
   acceptance_issues: "Клиентът изпрати забележки",
+  stage_acceptance_requested: "Поискано приемане на етап",
+  stage_acceptance_accepted: "Клиентът прие етап",
+  stage_acceptance_issues: "Клиентът изпрати забележки по етап",
+  stage_acceptance_recorded: "Етапът е отбелязан като приет",
   work_status_changed: "Обновен статус на работата",
   contact_verified: "Клиентът потвърди имейла си",
   contact_email_changed: "Клиентът смени имейла си",
@@ -83,6 +87,9 @@ const eventTones: Record<string, string> = {
   revision_expired: "bg-late",
   acceptance_accepted: "bg-ok",
   acceptance_issues: "bg-late",
+  stage_acceptance_accepted: "bg-ok",
+  stage_acceptance_recorded: "bg-ok",
+  stage_acceptance_issues: "bg-late",
   document_canceled: "bg-late",
 };
 

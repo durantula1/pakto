@@ -199,7 +199,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
           </Suspense>
         </TabsContent>
         <TabsContent id="work" className="pt-5">
-          <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} />
+          <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} handover={context.features.portalMode === "full" ? "portal" : "staff"} />
         </TabsContent>
         {showTasks ? <TabsContent id="tasks" className="pt-5">
           <TaskBoard

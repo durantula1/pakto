@@ -64,6 +64,10 @@ const eventLabels: Record<string, string> = {
   acceptance_requested: "Фирмата поиска приемане на работата",
   acceptance_accepted: "Работата е приета",
   acceptance_issues: "Изпратени забележки по работата",
+  stage_acceptance_requested: "Фирмата поиска приемане на етап",
+  stage_acceptance_accepted: "Етапът е приет",
+  stage_acceptance_issues: "Изпратени забележки по етап",
+  stage_acceptance_recorded: "Фирмата отбеляза етапа като приет",
 };
 
 type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode; note?: string | null };

@@ -1036,6 +1036,31 @@ export const offerAcceptances = appSchema.table(
   ],
 );
 
+/** Handover of one stage, like `offerAcceptances` for a whole offer. Append-only; the latest row is the state. */
+export const stageAcceptances = appSchema.table(
+  "stage_acceptances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    milestoneId: uuid("milestone_id").notNull().references(() => projectMilestones.id),
+    kind: text("kind", { enum: ["requested", "accepted", "issues"] }).notNull(),
+    note: text("note"),
+    typedName: text("typed_name"),
+    /** "staff" when the team recorded it (no full client portal). */
+    actorType: text("actor_type", { enum: ["staff", "portal_contact"] }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    ip: inet("ip"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("stage_acceptances_milestone_idx").on(table.milestoneId, table.createdAt),
+    index("stage_acceptances_project_idx").on(table.projectId, table.createdAt),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "stage_acceptances_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
 export const internalNotes = appSchema.table(
   "internal_notes",
   {

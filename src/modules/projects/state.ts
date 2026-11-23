@@ -14,6 +14,7 @@ import {
   paymentInstallments,
   portalDecisions,
   projectMilestones,
+  stageAcceptances,
   recordedAgreements,
   projectReceipts,
   projects,
@@ -61,7 +62,7 @@ export async function getProjectState(organizationId: string, projectId: string)
   // Everything in one parallel round: every query filters by the project and the organization,
   // so a wrong project id simply returns empty rows and the project check below returns null.
   const receiptScope = and(eq(projectReceipts.projectId, projectId), eq(projectReceipts.organizationId, organizationId));
-  const [[project], offerRows, changeRows, milestones, installments, latestReceipts, receiptTotals, receiptsByOffer, installmentReceipts, pendingDocuments, acceptances, schedules, disputes] = await Promise.all([
+  const [[project], offerRows, changeRows, stageRows, installments, latestReceipts, receiptTotals, receiptsByOffer, installmentReceipts, pendingDocuments, acceptances, schedules, disputes, stageHandovers] = await Promise.all([
     db.select({ id: projects.id, name: projects.name, status: projects.status })
       .from(projects)
       .where(and(eq(projects.id, projectId), eq(projects.organizationId, organizationId)))
@@ -156,10 +157,17 @@ export async function getProjectState(organizationId: string, projectId: string)
       .from(paymentDisputes)
       .where(and(eq(paymentDisputes.projectId, projectId), eq(paymentDisputes.organizationId, organizationId)))
       .orderBy(asc(paymentDisputes.createdAt)),
+    // The latest handover row of each stage: its acceptance state.
+    db.selectDistinctOn([stageAcceptances.milestoneId], { milestoneId: stageAcceptances.milestoneId, kind: stageAcceptances.kind, note: stageAcceptances.note, typedName: stageAcceptances.typedName, actorType: stageAcceptances.actorType, createdAt: stageAcceptances.createdAt })
+      .from(stageAcceptances)
+      .where(and(eq(stageAcceptances.projectId, projectId), eq(stageAcceptances.organizationId, organizationId)))
+      .orderBy(stageAcceptances.milestoneId, desc(stageAcceptances.createdAt)),
   ]);
   if (!project) return null;
   // Newest are fetched first so the cut keeps the latest ones; display stays chronological.
   const receipts = latestReceipts.reverse();
+  const handoverByStage = new Map(stageHandovers.map((row) => [row.milestoneId, row]));
+  const milestones = stageRows.map((row) => ({ ...row, acceptance: handoverByStage.get(row.id) ?? null }));
 
   const receivedByInstallment = new Map(installmentReceipts.map((row) => [row.installmentId, cents(row.received)]));
   const paidByOffer = new Map(receiptsByOffer.map((row) => [row.offerId, cents(row.paid)]));
