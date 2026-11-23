@@ -120,3 +120,7 @@ Status: accepted 2026-09-22, обновено 07.10.2026. Тук са решен
   и носи версията, към която е писано. Клиентът ги вижда под офертата, а
   отговорът му идва по имейл с линк към тях. За всичко друго порталът показва
   телефона на фирмата (`organizations.phone`) като бутони за обаждане и Viber.
+
+## Work modes and modules (2026-11-23)
+
+The company decides how agreements are confirmed (`approval_mode`: client link or staff record), how much the client sees (`portal_mode`: full, view_only, off) and which modules are on (tasks, catalog, finance). `requireTenantContext()` exposes them as `context.features`; servers check them, menus hide what is off, and data of a switched-off module is kept. With the portal off no client email is sent and client links open nothing. Stages and installments may belong to the project instead of an offer; they count toward the project's plan and appear in the portal like offer stages.

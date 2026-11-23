@@ -11,6 +11,14 @@ A project holds one or more agreements; each is an approved base offer with its 
 5. Record deposits, partial and final receipts separately from planned installments. Correct a receipt with reversal records; review monthly received amounts by currency and project. A client can dispute a receipt, and an authorized staff member can resolve or correct it.
 6. Reuse one client link for a project contact. An owner can rotate it and invalidate prior grants and sessions. PDF downloads are available from frozen offer and change revisions.
 
+7. Record an agreement made outside Pakto („Отбележи като договорено“: method, date, note); it applies the offer like a portal approval. The company picks who confirms by default (client link or staff) and the client portal mode (full, view only, off).
+8. Switch modules on and off (Задачи, Каталог, Финанси, Клиентски портал); a sign-up profile (самостоятелна дейност, екип с онлайн одобрение, работа по договор) presets them.
+9. Plan stages and installments without an offer, including monthly repeats (up to 36), for contract or subscription work.
+10. Link tasks to stages; when the last task of a stage is done, staff are offered to complete it. „Днес“ in Задачи shows who works on what today.
+11. Hand over a single stage: the client accepts it or sends remarks; acceptance makes the stage's installments due.
+12. Ask the client a small choice without a price („Попитай клиента“) and get the pick in the portal, with staff notification and history.
+13. People registered before a release see a one-time „Новото в Pakto“ walkthrough (`profiles.whats_new_seen`, version in `src/lib/whats-new.ts`).
+
 The pilot does not issue invoices or replace accounting software. The first 2–3 months are free for 5–10 independent tradespeople and small teams. Track projects created, documents sent and approved, payments recorded, return usage, and friction before pricing paid plans.
 
 ## Release gate
