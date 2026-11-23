@@ -19,9 +19,17 @@ export function NavLink({
   /** Rendered on the icon's corner, e.g. an unread count. */
   badge?: ReactNode;
 }) {
-  const iconWithBadge = badge ? <span className="relative inline-flex">{icon}{badge}</span> : icon;
+  const iconWithBadge = badge ? (
+    <span className="relative inline-flex">
+      {icon}
+      {badge}
+    </span>
+  ) : (
+    icon
+  );
   const pathname = usePathname();
-  const active = href === "/app" ? pathname === href : pathname.startsWith(href);
+  const active =
+    href === "/app" ? pathname === href : pathname.startsWith(href);
   if (variant === "tab") {
     return (
       <Link
@@ -36,7 +44,9 @@ export function NavLink({
         )}
       >
         {iconWithBadge}
-        <span className="max-w-full truncate text-3xs font-medium">{label}</span>
+        <span className="max-w-full truncate text-3xs font-medium">
+          {label}
+        </span>
         <NavPending />
       </Link>
     );
@@ -48,15 +58,19 @@ export function NavLink({
       title={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex h-10 items-center gap-2.5 px-5 text-[0.95rem] transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
+        "relative flex h-9 items-center gap-2.5 px-5 text-[0.95rem] transition lg:group-data-[sidebar=collapsed]/shell:justify-center lg:group-data-[sidebar=collapsed]/shell:px-0",
         active
           ? "bg-ink font-semibold text-paper"
           : "font-medium text-foreground/80 hover:bg-muted hover:text-foreground",
       )}
     >
       {/* Words only, as in the approved design; the icons stay for the collapsed rail. */}
-      <span className="hidden lg:group-data-[sidebar=collapsed]/shell:inline-flex">{iconWithBadge}</span>
-      <span className="min-w-0 flex-1 truncate lg:group-data-[sidebar=collapsed]/shell:sr-only">{label}</span>
+      <span className="hidden lg:group-data-[sidebar=collapsed]/shell:inline-flex">
+        {iconWithBadge}
+      </span>
+      <span className="min-w-0 flex-1 truncate lg:group-data-[sidebar=collapsed]/shell:sr-only">
+        {label}
+      </span>
       <NavPending />
     </Link>
   );
