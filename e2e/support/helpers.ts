@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { createHash, createHmac, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { expect, type BrowserContext, type Page } from "@playwright/test";
 
 export const DEMO = { email: "demo@pakto.local", password: "pakto-dev-2026" };
@@ -75,9 +77,95 @@ export function markWhatsNewSeen() {
 
 /** Last email sent to an address, from Mailpit (http://localhost:8025). Used for one-time codes. */
 export async function lastEmailTo(address: string): Promise<{ subject: string; text: string }> {
-  const list = await (await fetch(`http://localhost:8025/api/v1/search?query=${encodeURIComponent(`to:${address}`)}&limit=1`)).json() as { messages: { ID: string; Subject: string }[] };
-  const message = list.messages[0];
-  if (!message) throw new Error(`Няма писмо до ${address} в Mailpit`);
-  const full = await (await fetch(`http://localhost:8025/api/v1/message/${message.ID}`)).json() as { Text: string };
-  return { subject: message.Subject, text: full.Text };
+  // The email leaves through the outbox a moment after the action, so wait a little for it.
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const list = await (await fetch(`http://localhost:8025/api/v1/search?query=${encodeURIComponent(`to:${address}`)}&limit=1`)).json() as { messages: { ID: string; Subject: string }[] };
+    const message = list.messages[0];
+    if (message) {
+      const full = await (await fetch(`http://localhost:8025/api/v1/message/${message.ID}`)).json() as { Text: string };
+      return { subject: message.Subject, text: full.Text };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Няма писмо до ${address} в Mailpit`);
+}
+
+/** The client's portal link from an email text (the "Отвори" link, /access/<token>). */
+export function clientLink(emailText: string): string {
+  const match = emailText.match(/https?:\/\/\S*\/access\/[\w.\-~%]+(?:\?\S*)?/);
+  if (!match) throw new Error("Няма линк към портала в писмото");
+  return match[0];
+}
+
+/** The 6-digit code from the last email to an address (portal confirmation codes). */
+export async function lastCodeTo(address: string): Promise<string> {
+  const { text } = await lastEmailTo(address);
+  const match = text.match(/\b(\d{6})\b/);
+  if (!match) throw new Error(`Няма код в последното писмо до ${address}`);
+  return match[1]!;
+}
+
+/** Types a 6-digit code into the split code field of the portal. */
+export async function typeCode(page: Page, code: string) {
+  await page.getByRole("textbox", { name: /цифра|код/i }).first().click().catch(() => {});
+  await page.keyboard.type(code);
+}
+
+const PORTAL_PROJECT = "00000000-0000-4000-8000-000000000030";
+const CLIENT_CONTACT = "00000000-0000-4000-8000-000000000040";
+
+/** A fresh private link for the demo client, made the way the app derives it (PORTAL_LINK_SECRET from .env.local). */
+export function createClientLink(): string {
+  const env = readFileSync(".env.local", "utf8");
+  const secret = env.split("\n").find((row) => row.startsWith("PORTAL_LINK_SECRET="))?.slice("PORTAL_LINK_SECRET=".length).trim();
+  if (!secret) throw new Error("PORTAL_LINK_SECRET липсва в .env.local");
+  const id = randomUUID();
+  const token = `${id}.${createHmac("sha256", secret).update(`portal:${id}`).digest("base64url")}`;
+  const hash = createHash("sha256").update(token, "utf8").digest("hex");
+  sql(`insert into app.portal_grants (id, project_contact_id, project_id, token_hash, created_by, token_ciphertext) values ('${id}', '${CLIENT_CONTACT}', '${PORTAL_PROJECT}', '${hash}', '${USER_ID}', 'derived-v1')`);
+  return `http://localhost:3100/access/${token}`;
+}
+
+/** A new draft offer on the demo project (the seeded one changes state in the tests that send or approve it). */
+export function newDraftOffer(title = "Нова оферта за клиента"): string {
+  const id = randomUUID();
+  sql(`do $$ declare rev bigint; begin
+    insert into app.change_orders (id, organization_id, project_id, sequence_number, document_kind, created_by)
+    values ('${id}', '${ORG_ID}', '${PROJECT_ID}', (select coalesce(max(sequence_number), 0) + 1 from app.change_orders where project_id = '${PROJECT_ID}' and document_kind = 'offer'), 'offer', '${USER_ID}');
+    insert into app.change_order_revisions (change_order_id, revision_number, title, description, currency, subtotal, tax_rate, tax_amount, total, agreed_deadline, created_by)
+    values ('${id}', 1, '${title}', 'Описание за клиента.', 'EUR', 450.00, 0, 0, 450.00, current_date + 21, '${USER_ID}') returning id into rev;
+    insert into app.change_order_line_items (revision_id, "position", description, quantity, unit, unit_price, line_total)
+    values (rev, 1, 'Работа', 3, 'бр.', 150.00, 450.00);
+    update app.change_orders set current_revision_id = rev where id = '${id}';
+  end $$`);
+  return id;
+}
+
+/** The limit of 5 codes per client in 15 minutes would stop a suite that asks for many; the tests start with none. */
+export function clearClientCodes() {
+  sql("update app.portal_otps set created_at = created_at - interval '2 hours'");
+}
+
+/** Empties Mailpit, so the next email to an address is certainly the one the test just caused. */
+export async function clearMailbox() {
+  await fetch("http://localhost:8025/api/v1/messages", { method: "DELETE" });
+}
+
+/** Waits for a confirmation-code email to an address and returns its 6-digit code. */
+export async function waitForCode(address: string): Promise<string> {
+  let code = "";
+  await expect
+    .poll(
+      async () => {
+        const list = (await (await fetch(`http://localhost:8025/api/v1/search?query=${encodeURIComponent(`to:${address} subject:Код`)}&limit=1`)).json()) as { messages: { ID: string }[] };
+        const message = list.messages[0];
+        if (!message) return false;
+        const full = (await (await fetch(`http://localhost:8025/api/v1/message/${message.ID}`)).json()) as { Text: string };
+        code = full.Text.match(/\b(\d{6})\b/)?.[1] ?? "";
+        return !!code;
+      },
+      { timeout: 20000, message: `Няма писмо с код до ${address}` },
+    )
+    .toBe(true);
+  return code;
 }
