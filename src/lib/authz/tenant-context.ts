@@ -32,7 +32,7 @@ class ModuleDisabledError extends Error {
   readonly code = "MODULE_DISABLED";
 }
 
-const moduleNames = { tasks: "Задачи", catalog: "Каталог", finance: "Пари" } as const;
+const moduleNames = { tasks: "Задачи", catalog: "Каталог", finance: "Финанси" } as const;
 
 /** Refuses a write to a module the company has switched off. Its data stays; switching it on brings it back. */
 export function requireModule(context: TenantContext, module: keyof typeof moduleNames) {

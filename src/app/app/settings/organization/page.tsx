@@ -88,8 +88,8 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
             <SettingsRow label="Модул „Каталог“" description="Услуги и материали с цени, които се добавят в офертите с едно докосване.">
               <AutoSaveSelect label="Модул „Каталог“" name="catalog" value={organization.catalogEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
             </SettingsRow>
-            <SettingsRow label="Модул „Пари“" description="Планът за плащане в офертите, плащанията по проектите и страницата „Плащания“.">
-              <AutoSaveSelect label="Модул „Пари“" name="finance" value={organization.financeEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
+            <SettingsRow label="Модул „Финанси“" description="Планът за плащане в офертите, плащанията по проектите и страницата „Плащания“.">
+              <AutoSaveSelect label="Модул „Финанси“" name="finance" value={organization.financeEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
               <AutoSaveStatus />
             </SettingsRow>
           </AutoSaveForm>

@@ -91,7 +91,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const canSend = can(member, "documents.send");
   const canOffer = can(member, "offers.edit") && active;
   const canDraft = can(member, "changes.draft") && active;
-  // The "Пари" module off (Settings → Company → Modules): no payment plan or payments on the project.
+  // The "Финанси" module off (Settings → Company → Modules): no payment plan or payments on the project.
   const canRecordPayments = context.features.finance && can(member, "payments.record") && project.status !== "archived";
   const showPayments = context.features.finance && (can(member, "payments.record") || can(member, "finance.view"));
   const isOwner = member.role === "owner";

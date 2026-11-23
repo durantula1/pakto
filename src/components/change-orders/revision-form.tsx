@@ -70,7 +70,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   withdrawsRevision?: number;
   canSend?: boolean;
   catalog?: CatalogPick[];
-  /** The company's "Каталог" and "Пари" modules (Settings → Company → Modules). */
+  /** The company's "Каталог" and "Финанси" modules (Settings → Company → Modules). */
   catalogEnabled?: boolean;
   paymentTermsEnabled?: boolean;
   currency?: string;

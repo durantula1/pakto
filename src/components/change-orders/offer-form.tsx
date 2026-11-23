@@ -86,7 +86,7 @@ export function OfferForm({
   defaultTaxRate: string;
   catalog?: CatalogPick[];
   canSaveCatalog?: boolean;
-  /** The company's "Каталог" and "Пари" modules (Settings → Company → Modules). */
+  /** The company's "Каталог" and "Финанси" modules (Settings → Company → Modules). */
   catalogEnabled?: boolean;
   paymentTermsEnabled?: boolean;
   initial?: OfferFormInitial | null;

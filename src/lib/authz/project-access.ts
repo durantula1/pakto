@@ -43,7 +43,7 @@ export async function requireProjectCapability(
   projectId: string,
   capability: ProjectCapability,
 ) {
-  // Payments belong to the "Пари" module; a company that switched it off records none.
+  // Payments belong to the "Финанси" module; a company that switched it off records none.
   if (capability === "payment") requireModule(context, "finance");
   const member = await getCurrentMember(context);
   // One round trip: the project, and whether the caller is assigned to it. Fully qualified: in a
