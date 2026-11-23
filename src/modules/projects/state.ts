@@ -169,8 +169,8 @@ export async function getProjectState(organizationId: string, projectId: string)
   });
   // Money recorded against the offer but not against a particular installment still pays the plan:
   // it covers the unpaid installments in the order they fall due, so the client is never asked again for it.
+  // Project-level money (no offer) pays the project-level installments the same way.
   for (const [offerId, paid] of paidByOffer) {
-    if (!offerId) continue;
     const mine = installmentRows.filter((row) => row.offerId === offerId);
     let loose = paid - mine.reduce((sum, row) => sum + row.receivedMinor, 0n);
     for (const row of mine) {
@@ -238,11 +238,17 @@ export async function getProjectState(organizationId: string, projectId: string)
   });
 
   const inForce = offers.filter((offer) => offer.inForce);
-  const contractMinor = inForce.reduce((sum, offer) => sum + offer.contractMinor, 0n);
+  // Work agreed without an offer (a contract on paper, a subscription): its payment plan is what was agreed.
+  const projectInstallments = installmentRows.filter((item) => !item.offerId);
+  const projectStages = milestones.filter((item) => !item.offerId);
+  const projectPlanMinor = projectInstallments.reduce((sum, item) => sum + cents(item.amount), 0n);
+  const contractMinor = inForce.reduce((sum, offer) => sum + offer.contractMinor, 0n) + projectPlanMinor;
   const paidMinor = cents(receiptTotals?.paid);
   // The project ends with its last agreement; accepted offers no longer hold the project open.
-  const openDeadlines = inForce.filter((offer) => offer.status !== "accepted").map((offer) => offer.deadline).filter((day): day is string => !!day);
-  const allDeadlines = inForce.map((offer) => offer.deadline).filter((day): day is string => !!day);
+  // Stages agreed without an offer count too: the last of them is the project's deadline.
+  const projectDeadline = projectStages.map((item) => item.dueOn).sort().at(-1) ?? null;
+  const openDeadlines = [...inForce.filter((offer) => offer.status !== "accepted").map((offer) => offer.deadline), projectStages.some((item) => item.status !== "completed") ? projectDeadline : null].filter((day): day is string => !!day);
+  const allDeadlines = [...inForce.map((offer) => offer.deadline), projectDeadline].filter((day): day is string => !!day);
   const deadline = (openDeadlines.length ? openDeadlines : allDeadlines).sort().at(-1) ?? null;
 
   return {
@@ -263,8 +269,9 @@ export async function getProjectState(organizationId: string, projectId: string)
     lastReceiptOn: receiptTotals?.latest ?? null,
     /** Project-level rows: not tied to one offer. */
     unassigned: {
-      milestones: milestones.filter((item) => !item.offerId),
-      installments: installmentRows.filter((item) => !item.offerId),
+      milestones: projectStages,
+      installments: projectInstallments,
+      plannedMinor: projectPlanMinor,
       paidMinor: paidByOffer.get(null) ?? 0n,
       receiptsCount: receiptsByOffer.find((row) => row.offerId === null)?.count ?? 0,
     },
@@ -293,7 +300,7 @@ export async function getProjectsTotals(organizationId: string, projectIds: stri
   if (!projectIds.length) return totals;
   const db = getDatabase();
   const offerScope = and(inArray(changeOrders.projectId, projectIds), eq(changeOrders.organizationId, organizationId), isNull(changeOrders.archivedAt));
-  const [offerRows, changeRows, started, acceptances, receipts] = await Promise.all([
+  const [offerRows, changeRows, started, acceptances, receipts, projectPlans] = await Promise.all([
     db.select({
       id: changeOrders.id,
       projectId: changeOrders.projectId,
@@ -324,7 +331,13 @@ export async function getProjectsTotals(organizationId: string, projectIds: stri
       .from(projectReceipts)
       .where(and(inArray(projectReceipts.projectId, projectIds), eq(projectReceipts.organizationId, organizationId)))
       .groupBy(projectReceipts.projectId),
+    // Installments agreed for the project itself, without an offer.
+    db.select({ projectId: paymentInstallments.projectId, planned: sql<string>`coalesce(sum(${paymentInstallments.amount}), 0)::text` })
+      .from(paymentInstallments)
+      .where(and(inArray(paymentInstallments.projectId, projectIds), eq(paymentInstallments.organizationId, organizationId), isNull(paymentInstallments.offerId)))
+      .groupBy(paymentInstallments.projectId),
   ]);
+  const planByProject = new Map(projectPlans.map((row) => [row.projectId, cents(row.planned)]));
 
   const changesByOffer = new Map<string, bigint>();
   for (const change of changeRows) {
@@ -354,7 +367,7 @@ export async function getProjectsTotals(organizationId: string, projectIds: stri
     });
     const inForce = offers.filter((offer) => offer.inForce);
     const receipt = paidByProject.get(projectId);
-    const contractMinor = inForce.reduce((sum, offer) => sum + offer.contractMinor, 0n);
+    const contractMinor = inForce.reduce((sum, offer) => sum + offer.contractMinor, 0n) + (planByProject.get(projectId) ?? 0n);
     const paidMinor = cents(receipt?.paid);
     totals.set(projectId, {
       currency: inForce[0]?.currency ?? offers[0]?.currency ?? receipt?.currency ?? "EUR",

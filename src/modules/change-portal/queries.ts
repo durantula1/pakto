@@ -79,12 +79,12 @@ function portalDocumentScope(projectId: string, statuses: readonly (typeof clien
 
 /**
  * The project as the client sees it: no drafts, and stages and installments only once the offer
- * they belong to is approved (project-level ones once any offer is).
+ * they belong to is approved. Project-level ones (work agreed without an offer) are always shown.
  */
 function clientView(state: ProjectState): ProjectState {
   const offers = state.offers.filter((offer) => offer.clientVisible && offer.status !== "draft");
   const inForce = new Set(state.offersInForce.map((offer) => offer.id));
-  const visible = (offerId: string | null) => (offerId ? inForce.has(offerId) : inForce.size > 0);
+  const visible = (offerId: string | null) => (offerId ? inForce.has(offerId) : true);
   return {
     ...state,
     offers,

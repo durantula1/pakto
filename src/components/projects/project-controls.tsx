@@ -138,19 +138,30 @@ function OfferField({ options, value, hint }: { options: OfferOption[]; value?: 
 
 type Installment = ProjectState["installments"][number];
 
+const repeatOptions = [
+  { value: "1", label: "Еднократно" },
+  { value: "3", label: "Всеки месец, 3 месеца" },
+  { value: "6", label: "Всеки месец, 6 месеца" },
+  { value: "12", label: "Всеки месец, 12 месеца" },
+  { value: "24", label: "Всеки месец, 24 месеца" },
+];
+
 /** Adds a planned installment by hand, or edits one (also those made from the offer's payment terms). */
-export function InstallmentDialog({ projectId, offerOptions, stages, installment }: {
+export function InstallmentDialog({ projectId, offerOptions, stages, installment, repeat = false, label = "Добави вноска" }: {
   projectId: string;
   offerOptions: OfferOption[];
   stages: { value: string; label: string; offerId: string | null }[];
   installment?: Installment;
+  /** Offer a monthly repeat (a subscription agreed without an offer). */
+  repeat?: boolean;
+  label?: string;
 }) {
   const key = installment?.id ?? "new";
   const stageOptions = [{ value: "none", label: "Без етап" }, ...stages.map((stage) => ({ value: stage.value, label: stage.label }))];
   return <DialogTrigger>
     {installment
       ? <Button type="button" variant="ghost" size="icon" className="size-9" aria-label={`Редактирай ${installment.title}`}><Pencil /></Button>
-      : <Button type="button" variant="outline"><Plus data-icon="inline-start" />Добави вноска</Button>}
+      : <Button type="button" variant="outline"><Plus data-icon="inline-start" />{label}</Button>}
     <Dialog className="sm:max-w-lg">
       <DialogHeader>
         <DialogTitle>{installment ? "Редактирай вноската" : "Нова вноска"}</DialogTitle>
@@ -165,6 +176,7 @@ export function InstallmentDialog({ projectId, offerOptions, stages, installment
         <Field><FieldLabel>Вид</FieldLabel><FilterSelect name="kind" value={installment?.kind ?? "progress"} options={paymentKinds} /></Field>
         {stages.length ? <Field><FieldLabel>След етап</FieldLabel><FilterSelect name="milestoneId" value={installment?.milestoneId ?? "none"} options={stageOptions} /></Field> : null}
         <OfferField options={offerOptions} value={installment ? installment.offerId ?? "none" : undefined} />
+        {repeat && !installment ? <Field className="sm:col-span-2"><FieldLabel>Повтаряне</FieldLabel><FilterSelect name="months" value="1" options={repeatOptions} /><p className="text-xs text-muted-foreground">За абонамент: добавя по една вноска всеки месец от избраната дата.</p></Field> : null}
         <div className="flex justify-end gap-2 sm:col-span-2"><DialogClose>Отказ</DialogClose><ActionSubmit>{installment ? "Запази" : "Добави"}</ActionSubmit></div>
       </ActionForm>
     </Dialog>

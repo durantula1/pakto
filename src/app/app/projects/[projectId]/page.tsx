@@ -94,6 +94,8 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const today = sofiaTodayIso();
 
   const inForce = state.offersInForce;
+  // Something is agreed: an offer in force, or a payment plan agreed without an offer.
+  const agreed = inForce.length > 0 || state.unassigned.installments.length > 0;
   const pendingClaims = claims.map((claim) => ({
     ...claim,
     offerLabel: claim.offerId ? offerLabel(state.offers.find((offer) => offer.id === claim.offerId) ?? { sequenceNumber: 0, title: "" }) : null,
@@ -119,7 +121,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const here = `/app/projects/${projectId}`;
   const openItems = [
     ...(openStages ? [{ label: openStages === 1 ? "1 етап не е завършен" : `${openStages} етапа не са завършени`, href: `${here}?tab=work` }] : []),
-    ...(showPayments && state.remainingMinor > 0n && inForce.length ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
+    ...(showPayments && state.remainingMinor > 0n && agreed ? [{ label: `${formatCents(state.remainingMinor, state.currency)} не са платени`, href: `${here}?tab=payments` }] : []),
     ...state.pendingDocuments.map((item) => ({ label: `${named(item.kind, item.sequenceNumber, item.title)} чака решение от клиента`, href: `/app/offers/${item.id}` })),
     ...inForce.flatMap((offer) => handover[offer.status] ? [{ label: `Работата по ${named("offer", offer.sequenceNumber, offer.title)} ${handover[offer.status]}`, href: `/app/offers/${offer.id}?tab=stages` }] : []),
   ];
@@ -163,9 +165,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       <div className={projectStatsClassName}>
         {/* Price, paid and remaining are finance: a role without "finance.view" sees the deadline only. */}
         {showPayments ? <>
-          <StatCard tone="mint" label={projectStatLabels.price} value={inForce.length ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : "Очаква одобрена оферта"} />
+          <StatCard tone="mint" label={projectStatLabels.price} value={agreed ? formatCents(state.contractMinor, state.currency) : "—"} hint={inForce.length ? (inForce.length > 1 ? `${inForce.length} оферти${state.changes.length ? ` и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : ""}` : state.changes.length ? `Оферта и ${state.changes.length} ${state.changes.length === 1 ? "промяна" : "промени"}` : "Основна оферта") : agreed ? "По платежния план" : "Очаква одобрена оферта"} />
           <StatCard tone="teal" label={projectStatLabels.paid} value={formatCents(state.paidMinor, state.currency)} hint={paidPercent !== null ? `${paidPercent}% от договореното` : `${state.receiptsTotal} ${state.receiptsTotal === 1 ? "плащане" : "плащания"}`} />
-          <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={inForce.length && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={inForce.length ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : inForce.length && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
+          <StatCard tone={overdueMinor > 0n ? "coral" : "sand"} label={agreed && state.remainingMinor < 0n ? "Надплатено" : projectStatLabels.remaining} value={agreed ? formatCents(state.remainingMinor < 0n ? -state.remainingMinor : state.remainingMinor, state.currency) : "—"} hint={overdueMinor > 0n ? `Просрочено ${formatCents(overdueMinor, state.currency)}` : agreed && state.remainingMinor <= 0n ? "Изплатено изцяло" : "Няма просрочени вноски"} />
         </> : null}
         <StatCard tone={daysToDeadline !== null && daysToDeadline < 0 && active ? "coral" : "blue"} label={projectStatLabels.deadline} value={state.deadline ? formatDay(state.deadline) : "—"} hint={daysToDeadline === null ? "Очаква одобрение" : daysToDeadline > 0 ? `След ${daysToDeadline} ${daysToDeadline === 1 ? "ден" : "дни"}` : daysToDeadline === 0 ? "Днес" : `Изтекъл преди ${-daysToDeadline} ${daysToDeadline === -1 ? "ден" : "дни"}`} />
       </div>
