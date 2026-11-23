@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MailPlus } from "lucide-react";
+import { MailPlus, X } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { InviteForm } from "@/components/team/invite-form";
@@ -12,6 +12,7 @@ import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
 import { DataTable } from "@/components/workspace/data-table";
 import { FilterSelect } from "@/components/workspace/filter-select";
 import { FilterBar, ListPagination, SearchField } from "@/components/workspace/list-filters";
+import { EmptyResultAction, EmptyResultActions } from "@/components/workspace/page/empty-result";
 import { PageHeader } from "@/components/workspace/page/page-header";
 import { EmptyState, PageShell } from "@/components/workspace/page/page-shell";
 import { PERMISSION_KEYS, PRESETS, can, roleLabel } from "@/lib/authz/permissions";
@@ -64,7 +65,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <TabsList>
         <TabsTrigger id="members">Членове</TabsTrigger>
         <TabsTrigger id="invites">Покани</TabsTrigger>
-        <TabsTrigger id="approvals">Одобрения</TabsTrigger>
+        <TabsTrigger id="approvals">За потвърждение</TabsTrigger>
       </TabsList>
       <TabsContent id="members" className="flex flex-col gap-4 pt-4">
         <FilterBar>
@@ -94,7 +95,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
             };
           })}
           footer={<ListPagination path="/app/team" params={{ q: term, status }} page={page} total={total} />}
-        /> : <EmptyState title="Няма хора с тези филтри" />}
+        /> : <EmptyState title="Няма хора с тези филтри"><EmptyResultActions><EmptyResultAction href="/app/team"><X />Изчисти филтрите</EmptyResultAction></EmptyResultActions></EmptyState>}
       </TabsContent>
       <TabsContent id="invites" className="pt-4">
         {pendingInvites.length ? <DataTable
@@ -110,7 +111,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               <ConfirmDialog key={invite.id} trigger={<Button type="button" variant="destructive" size="sm">Отмени поканата</Button>} title="Да отменя ли поканата?" description={`Линкът в поканата за ${invite.email} спира да работи. Можеш да поканиш човека отново.`} confirmLabel="Отмени поканата" action={revokeTeamInviteAction} fields={{ inviteId: invite.id }} success="Поканата е отменена" />,
             ],
           }))}
-        /> : <EmptyState title="Няма чакащи покани" />}
+        /> : <EmptyState title="Няма чакащи покани" description="Тук са поканите, които още не са приети. Нова покана изпращаш с „Покани служител“." />}
       </TabsContent>
       <TabsContent id="approvals" className="pt-4">
         {requests.length ? <DataTable
@@ -136,7 +137,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
               ],
             };
           })}
-        /> : <EmptyState title="Няма промени за одобрение" />}
+        /> : <EmptyState title="Няма нищо за потвърждение" description="Смяна на собственик или премахване от екипа чака потвърждение от друг собственик. Такива заявки се появяват тук." />}
       </TabsContent>
     </Tabs>
   </PageShell>;

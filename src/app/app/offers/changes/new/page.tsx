@@ -46,7 +46,7 @@ export default async function NewChangePage({
           />
         </div>
       ) : (
-        <EmptyState title="Първо добави проект с одобряващ.">
+        <EmptyState title="Промяната е към одобрена оферта." description="Създай проект и изпрати оферта. След като клиентът я одобри, оттук добавяш промени.">
           <Link href="/app/projects?new=1" className="mt-3 inline-block font-semibold text-blue">
             Създай проект →
           </Link>

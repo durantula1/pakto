@@ -352,13 +352,15 @@ export function QuickChangeForm({
             <label className="mb-2 block text-sm font-medium">
               Бележка към клиента
             </label>
-            <Textarea name="clientNote" placeholder="Видима в защитения портал" />
+            <Textarea name="clientNote" aria-describedby="quick-change-client-note-hint" />
+            <p id="quick-change-client-note-hint" className="mt-1.5 text-sm text-muted-foreground">Клиентът я вижда в портала и в PDF-а.</p>
           </div>
           <div>
             <label className="mb-2 block text-sm font-medium">
               Вътрешна бележка
             </label>
-            <Textarea name="internalNote" placeholder="Видима само за екипа" />
+            <Textarea name="internalNote" aria-describedby="quick-change-internal-note-hint" />
+            <p id="quick-change-internal-note-hint" className="mt-1.5 text-sm text-muted-foreground">Само за екипа.</p>
           </div>
         </section>
       )}

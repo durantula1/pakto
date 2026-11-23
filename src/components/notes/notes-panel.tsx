@@ -54,7 +54,7 @@ export function NotesPanel({ projectId, changeOrderId, notes, legacy = [], curre
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 font-semibold"><Lock className="size-4 text-muted-foreground" aria-hidden="true" />Вътрешни бележки</h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">Само за екипа. Клиентът не ги вижда нито в портала, нито в PDF-а.</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Клиентът не ги вижда.</p>
         </div>
         <AddNoteDialog projectId={projectId} changeOrderId={changeOrderId} placeholder={placeholder} onAdd={(body) => {
           const now = new Date();

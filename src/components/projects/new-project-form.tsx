@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
 import { ClientCombobox } from "@/components/clients/client-combobox";
@@ -79,7 +79,6 @@ function NewProjectPanel({ defaultClient = null }: { defaultClient?: ClientOptio
     <>
       <SheetHeader className="px-6 pt-6">
         <SheetTitle className="text-lg font-semibold">Нов проект</SheetTitle>
-        <SheetDescription>Добави проекта и одобряващия.</SheetDescription>
       </SheetHeader>
       <div className="px-6 pb-8">
         <NewProjectForm defaultClient={defaultClient} />

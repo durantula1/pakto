@@ -36,7 +36,7 @@ export default function AuthLayout({
       </div>
       <p className="text-center text-sm text-muted-foreground">
         Проблем с входа или въпрос?{" "}
-        <Link href="/contact" className="font-medium text-foreground underline-offset-4 hover:underline">Пиши ни</Link>
+        <Link href="/contact" className="font-medium text-foreground underline-offset-4 hover:underline">Връзка с нас</Link>
       </p>
     </main>
   );
