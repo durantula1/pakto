@@ -29,6 +29,7 @@ export async function getAccountSummary(userId: string) {
       email: profiles.email,
       deletionRequestedAt: profiles.deletionRequestedAt,
       welcomeSeen: sql<boolean>`${profiles.welcomeSeenAt} is not null`,
+      whatsNewSeen: profiles.whatsNewSeen,
       /** True when the current version of the terms or the privacy policy has no recorded acceptance. */
       consentMissing: sql<boolean>`(
         select count(distinct c.document) from ${userConsents} c

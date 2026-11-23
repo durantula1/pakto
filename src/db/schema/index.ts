@@ -81,6 +81,8 @@ export const profiles = appSchema.table("profiles", {
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
   /** When the user went through or skipped the welcome screens; null shows them on the next visit to /app. */
   welcomeSeenAt: timestamp("welcome_seen_at", { withTimezone: true }),
+  /** Version of the "what's new" screens the user has seen (src/lib/whats-new.ts); null = none yet. */
+  whatsNewSeen: text("whats_new_seen"),
   ...timestamps,
 }, (table) => [
   index("profiles_deletion_due_idx").on(table.deletionRequestedAt).where(sql`${table.deletionRequestedAt} is not null and ${table.deletedAt} is null`),

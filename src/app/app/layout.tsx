@@ -58,6 +58,8 @@ import {
   NotificationBellFallback,
 } from "@/components/notifications/notification-bell";
 import { dateOnly } from "@/lib/dates";
+import { WHATS_NEW_VERSION } from "@/lib/whats-new";
+import { WhatsNewDialog } from "@/components/workspace/whats-new-dialog";
 
 const deletionDateFormat = dateOnly;
 
@@ -347,6 +349,9 @@ export default async function WorkspaceLayout({
             <div className="mb-6">
               <ConsentBanner />
             </div>
+          ) : null}
+          {account?.welcomeSeen && account.whatsNewSeen !== WHATS_NEW_VERSION ? (
+            <WhatsNewDialog owner={owner} features={context.features} />
           ) : null}
           {children}
         </main>

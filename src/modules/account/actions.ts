@@ -18,6 +18,7 @@ import { auth, getSessionUser, signOutEverywhere, userHasPassword, verifyUserPas
 import { recordLegalConsent } from "@/modules/account/mutations";
 import { getAccountDeletionPlan, getLeaveBlocker } from "@/modules/account/queries";
 import { dateOnly } from "@/lib/dates";
+import { WHATS_NEW_VERSION } from "@/lib/whats-new";
 
 type ActionResult = { error?: string } | void;
 
@@ -49,10 +50,20 @@ export async function finishWelcomeAction(formData: FormData) {
   const next = z.enum(welcomeTargets).catch("/app").parse(formData.get("next"));
   const { user } = await currentUser();
   await getDatabase().update(profiles)
-    .set({ welcomeSeenAt: new Date(), updatedAt: new Date() })
+    // Someone who just started has nothing "new" to hear about.
+    .set({ welcomeSeenAt: new Date(), whatsNewSeen: WHATS_NEW_VERSION, updatedAt: new Date() })
     .where(and(eq(profiles.id, user.id), isNull(profiles.welcomeSeenAt)));
   revalidatePath("/app", "layout");
   redirect(next);
+}
+
+/** Closes the "what's new" screens for good (until the next version). */
+export async function dismissWhatsNewAction() {
+  const { user } = await currentUser();
+  await getDatabase().update(profiles)
+    .set({ whatsNewSeen: WHATS_NEW_VERSION, updatedAt: new Date() })
+    .where(eq(profiles.id, user.id));
+  revalidatePath("/app", "layout");
 }
 
 export async function changeEmailAction(formData: FormData): Promise<ActionResult> {
