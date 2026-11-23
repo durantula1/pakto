@@ -8,12 +8,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { TaskSheet, type TaskSheetTarget } from "@/components/tasks/task-sheet";
+import { offerStageDone } from "@/components/tasks/stage-ready";
 import { segmentClassName, segmentGroupClassName } from "@/components/workspace/segmented";
 import { cn } from "@/lib/utils";
 import { setTaskStatusAction } from "@/modules/tasks/actions";
 import {
   initials, isOverdue, projectTone, taskStatusDots, taskStatusLabels, taskStatuses,
-  type TaskItem, type TaskPerson, type TaskStatus,
+  type TaskItem, type TaskPerson, type TaskStage, type TaskStatus,
 } from "@/modules/tasks/labels";
 
 const UNASSIGNED = "none";
@@ -29,9 +30,11 @@ function formatDue(dueOn: string, today: string) {
  * person and project happens here on the loaded tasks, so a click answers at once.
  */
 export function TaskBoard({
-  tasks, people, projects, today, currentUserId, canAssign, seesEveryone, fixedProject, canCreate = true,
+  tasks, people, projects, stages = [], today, currentUserId, canAssign, seesEveryone, fixedProject, canCreate = true,
 }: {
   tasks: TaskItem[];
+  /** Open stages a task can be part of. */
+  stages?: TaskStage[];
   people: TaskPerson[];
   projects: { id: string; name: string }[];
   today: string;
@@ -83,6 +86,7 @@ export function TaskBoard({
     startMoving(async () => {
       const result = await setTaskStatusAction(formData);
       if (result.error) toast.error(result.error);
+      else offerStageDone(result.stageReady);
       setMoved((state) => { const next = { ...state }; delete next[task.id]; return next; });
     });
   }
@@ -146,7 +150,7 @@ export function TaskBoard({
           Още няма задачи. Добави първата с „Нова задача“: какво, за кой проект, кой я прави и до кога. Клиентът не ги вижда.
         </p>
       ) : view === "board" ? (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
+        <DndContext id="task-board" sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {taskStatuses.map((status) => (
               <Column key={status} status={status} tasks={shown.filter((task) => task.status === status)} today={today} fixedProject={fixedProject}
@@ -161,7 +165,7 @@ export function TaskBoard({
         <ListView tasks={shown} today={today} fixedProject={fixedProject} people={people} onOpen={(task) => setTarget({ mode: "edit", task })} groupByPerson={seesEveryone} />
       )}
 
-      <TaskSheet target={sheetTarget} onClose={() => setTarget(null)} projects={fixedProject ? [fixedProject] : projects} people={people} canAssign={canAssign} currentUserId={currentUserId} />
+      <TaskSheet target={sheetTarget} onClose={() => setTarget(null)} projects={fixedProject ? [fixedProject] : projects} people={people} stages={stages} canAssign={canAssign} currentUserId={currentUserId} />
     </div>
   );
 }
@@ -237,6 +241,7 @@ function CardView({ task, today, fixedProject, onOpen, overlay = false }: {
     startTransition(async () => {
       const result = await setTaskStatusAction(formData);
       if (result.error) toast.error(result.error);
+      else offerStageDone(result.stageReady);
     });
   }
 
@@ -247,6 +252,7 @@ function CardView({ task, today, fixedProject, onOpen, overlay = false }: {
       <button type="button" onClick={() => onOpen?.(task)} className="text-left font-medium leading-snug after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none focus-visible:after:ring-3 focus-visible:after:ring-ring/50">
         {task.title}
       </button>
+      {task.milestoneTitle ? <span className="text-xs text-muted-foreground">Етап: {task.milestoneTitle}</span> : null}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {task.dueOn ? <span className={cn("inline-flex items-center gap-1", late && "font-semibold text-destructive")}><CalendarDays className="size-3.5" />{formatDue(task.dueOn, today)}</span> : null}
         <span className="ml-auto flex items-center gap-1.5">

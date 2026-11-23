@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { DataTable } from "@/components/workspace/data-table";
 import { EmptyResult } from "@/components/workspace/page/empty-result";
 import { PaidBar } from "@/components/projects/paid-bar";
-import { InstallmentActions, ReceiptsTable, SectionHeader, StageActions, StageDue, offerWorkOptions } from "@/components/projects/offer-execution";
+import { InstallmentActions, ReceiptsTable, SectionHeader, StageActions, StageDue, StageTasks, offerWorkOptions } from "@/components/projects/offer-execution";
 import { InstallmentDialog, RecordPaymentDialog } from "@/components/projects/project-controls";
 import { MilestoneDialog } from "@/components/projects/milestone-dialog";
 import { StatusSelect } from "@/components/workspace/status-select";
@@ -107,7 +107,7 @@ export function ProjectWorkSummary({ state, projectId, canManage, today }: { sta
         rows={loose.map((item) => ({
           id: item.id,
           cells: [
-            item.title,
+            <span key="title" className="min-w-0"><span className="block">{item.title}</span><StageTasks item={item} /></span>,
             <StageDue key="due" item={item} overdue={item.status !== "completed" && item.dueOn < today} afterDeadline={false} deadline={null} />,
             canManage
               ? <StatusSelect key="status" label={`Статус на ${item.title}`} name="status" value={item.status} options={stageOptions} action={updateMilestoneAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е обновен" />

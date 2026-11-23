@@ -103,7 +103,7 @@ export function OfferWork({ state, offer, projectId, canManage, today, stageFor 
           return {
             id: item.id,
             cells: [
-              <span key="title" className="min-w-0"><span className="block">{item.title}</span>{change ? <span className="block text-xs text-muted-foreground">от {documentCode("change", change.sequenceNumber)} · {change.title}</span> : null}</span>,
+              <span key="title" className="min-w-0"><span className="block">{item.title}</span>{change ? <span className="block text-xs text-muted-foreground">от {documentCode("change", change.sequenceNumber)} · {change.title}</span> : null}<StageTasks item={item} /></span>,
               <StageDue key="due" item={item} overdue={overdue} afterDeadline={afterDeadline} deadline={offer.deadline} />,
               canManage
                 ? <StatusSelect key="status" label={`Статус на ${item.title}`} name="status" value={item.status} options={stageOptions} action={updateMilestoneAction} fields={{ projectId, milestoneId: item.id }} success="Етапът е обновен" />
@@ -246,6 +246,16 @@ export function ReceiptsTable({ projectId, state, receipts, disputes, canRecord,
     }))}
     footer={footer}
   />;
+}
+
+/** "2 от 3 задачи готови" under a stage, and a nudge when all are done but the stage is still open. */
+export function StageTasks({ item }: { item: Milestone }) {
+  if (!item.tasksTotal) return null;
+  const allDone = item.tasksDone === item.tasksTotal;
+  return <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+    <Link href={`/app/projects/${item.projectId}?tab=tasks`} className="hover:underline">{item.tasksDone} от {item.tasksTotal} {item.tasksTotal === 1 ? "задача готова" : "задачи готови"}</Link>
+    {allDone && item.status !== "completed" ? <Badge variant="success-soft">задачите са готови</Badge> : null}
+  </span>;
 }
 
 export function StageDue({ item, overdue, afterDeadline, deadline }: { item: Milestone; overdue: boolean; afterDeadline: boolean; deadline: string | null }) {

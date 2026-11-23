@@ -21,7 +21,7 @@ import { ListPagination } from "@/components/workspace/list-filters";
 import { PaymentClaimsBlock, PaymentDisputesAlert } from "@/components/projects/project-controls";
 import { ProjectPaymentsSummary, ProjectWorkSummary } from "@/components/projects/project-summary";
 import { TaskBoard } from "@/components/tasks/task-board";
-import { canAssignTasks, listAssignablePeople, listTasks } from "@/modules/tasks/queries";
+import { canAssignTasks, listAssignablePeople, listTaskStages, listTasks } from "@/modules/tasks/queries";
 import { ClientAccess } from "@/components/projects/client-access";
 import { ProjectMenu } from "@/components/projects/project-menu";
 import { CountPill } from "@/components/workspace/tab-count";
@@ -64,7 +64,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople] = await Promise.all([
+  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople, taskStages] = await Promise.all([
     orForbidden(requireProjectCapability(context, projectId, "view")),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
@@ -73,6 +73,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     listProjectContacts(projectId),
     context.features.tasks ? listTasks(context, { projectId, includeOldDone: true }) : Promise.resolve([]),
     context.features.tasks ? listAssignablePeople(context, projectId) : Promise.resolve([]),
+    context.features.tasks ? listTaskStages(context, projectId) : Promise.resolve([]),
   ]);
   if (!project || !state) notFound();
   const { disputes, claims } = inbox;
@@ -203,6 +204,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
         {showTasks ? <TabsContent id="tasks" className="pt-5">
           <TaskBoard
             tasks={projectTasks}
+            stages={taskStages}
             people={can(member, "tasks.view_all") || canAssignTasks(context) ? taskPeople : taskPeople.filter((person) => person.userId === context.userId)}
             projects={active ? [{ id: project.id, name: project.name }] : []}
             fixedProject={{ id: project.id, name: project.name }}

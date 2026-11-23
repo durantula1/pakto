@@ -88,7 +88,8 @@ function clientView(state: ProjectState): ProjectState {
   return {
     ...state,
     offers,
-    milestones: state.milestones.filter((item) => visible(item.offerId)),
+    // The team's own tasks stay internal.
+    milestones: state.milestones.filter((item) => visible(item.offerId)).map((item) => ({ ...item, tasksTotal: 0, tasksDone: 0 })),
     nextMilestone: state.milestones.find((item) => item.status !== "completed" && visible(item.offerId)) ?? null,
     installments: state.installments.filter((item) => visible(item.offerId)),
   };

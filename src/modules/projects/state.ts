@@ -1,7 +1,7 @@
 import { formatAmount } from "@/lib/money";
 import "server-only";
 
-import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { getDatabase } from "@/db";
@@ -110,7 +110,12 @@ export async function getProjectState(organizationId: string, projectId: string)
       .leftJoin(recordedAgreements, eq(recordedAgreements.revisionId, changeOrderRevisions.id))
       .where(and(eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), eq(changeOrders.documentKind, "change"), isNull(changeOrders.archivedAt)))
       .orderBy(sql`coalesce(${portalDecisions.createdAt}, ${recordedAgreements.createdAt})`, asc(changeOrders.sequenceNumber)),
-    db.select().from(projectMilestones).where(and(eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, organizationId))).orderBy(asc(projectMilestones.dueOn)),
+    db.select({
+      ...getTableColumns(projectMilestones),
+      /** The team's tasks in this stage (staff only; the portal does not show them). */
+      tasksTotal: sql<number>`(select count(*)::int from app.tasks t where t.milestone_id = app.project_milestones.id)`,
+      tasksDone: sql<number>`(select count(*)::int from app.tasks t where t.milestone_id = app.project_milestones.id and t.status = 'done')`,
+    }).from(projectMilestones).where(and(eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, organizationId))).orderBy(asc(projectMilestones.dueOn)),
     db.select().from(paymentInstallments).where(and(eq(paymentInstallments.projectId, projectId), eq(paymentInstallments.organizationId, organizationId))).orderBy(asc(paymentInstallments.dueOn)),
     db.select().from(projectReceipts).where(receiptScope)
       .orderBy(desc(projectReceipts.receivedOn), desc(projectReceipts.createdAt), desc(projectReceipts.id))

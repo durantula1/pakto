@@ -1231,6 +1231,8 @@ export const tasks = appSchema.table(
     status: taskStatus("status").notNull().default("todo"),
     assigneeId: uuid("assignee_id"),
     dueOn: date("due_on"),
+    /** The stage of the project this task is part of; cleared when the stage is deleted. */
+    milestoneId: uuid("milestone_id").references(() => projectMilestones.id, { onDelete: "set null" }),
     createdBy: uuid("created_by").notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     ...timestamps,
@@ -1243,6 +1245,7 @@ export const tasks = appSchema.table(
     }).onDelete("cascade"),
     index("tasks_org_status_due_idx").on(table.organizationId, table.status, table.dueOn),
     index("tasks_project_idx").on(table.projectId),
+    index("tasks_milestone_idx").on(table.milestoneId).where(sql`${table.milestoneId} is not null`),
     index("tasks_assignee_idx").on(table.organizationId, table.assigneeId).where(sql`${table.assigneeId} is not null`),
   ],
 );
