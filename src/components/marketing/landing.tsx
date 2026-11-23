@@ -20,8 +20,8 @@ import { SiteFooter, SiteNav } from "./site-chrome";
  */
 
 const navLinks = [
-  { href: "#problem", label: "Проблемът" },
   { href: "#process", label: "Процес" },
+  { href: "#po-tvoya-nachin", label: "Твоите правила" },
   { href: "#proekti", label: "Проекти" },
   { href: "#polzi", label: "Ползи" },
   { href: "#vaprosi", label: "Въпроси" },
@@ -34,13 +34,13 @@ const trades = [
   "уеб и рекламни агенции",
   "събития",
   "автосервизи",
-  "технически услуги",
+  "поддръжка и абонаменти",
   "фотография и видео",
 ];
 
 const phrases = [
   ["„Нали се разбрахме?“", "→ одобрена v2 · 20.11 14:32"],
-  ["„Не помня такава цена.“", "→ заключена версия · отпечатък 7f3a…c91e"],
+  ["„Не помня такава цена.“", "→ изпратена версия · не може да се промени"],
   ["„Това не беше в офертата.“", "→ промяна №3 · +540 € · одобрена"],
   ["„Кога ще е готово?“", "→ етап 2 от 3 · срок 12.12"],
 ] as const;
@@ -162,7 +162,7 @@ const steps = [
   },
   {
     title: "Оферта",
-    text: "Позиции от твоя каталог, количества, отстъпка и ДДС. При изпращане версията се заключва и получава уникален отпечатък.",
+    text: "Позиции от твоя каталог, количества, отстъпка и ДДС. При изпращане версията се заключва и вече не може да се промени.",
     head: ["Оферта v1", "заключена", ""],
     rows: [
       ["Шкафове, 4,2 л.м.", "5 460 €"],
@@ -436,7 +436,7 @@ const workModes = [
 
 const workModeWins = [
   [
-    "Плащат ти по-рано.",
+    "Вноската идва с всеки етап.",
     "Клиентът приема всеки готов етап и вноската за него става дължима веднага, а не в края на проекта.",
   ],
   [
@@ -444,23 +444,16 @@ const workModeWins = [
     "Клиентът избира от снимки в портала, а изборът остава записан.",
   ],
   [
-    "Само това, което ползваш.",
-    "Включваш модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал.",
+    "Всеки знае какво е днес.",
+    "Изгледът „Днес“ показва на всеки от екипа задачите му за деня, подредени по проекти.",
   ],
-] as const;
-
-const facts = [
-  [0, "регистрации за клиента"],
-  [6, "цифри в кода от имейла за всяко „да“"],
-  [1, "личен линк за целия проект"],
-  [0, "€ по време на бетата"],
 ] as const;
 
 const trust = [
   [
     "Неизменност",
     "Заключени версии",
-    "Изпратената оферта е защитена от промени в самата база данни и има криптографски отпечатък.",
+    "Изпратената оферта не може да се промени. За всяка промяна правиш нова версия, а старата остава в историята.",
   ],
   [
     "Достъп",
@@ -475,7 +468,7 @@ const trust = [
   [
     "Данни",
     "В Европейския съюз",
-    "Сървъри в ЕС, криптирана връзка и възможност да изтеглиш данните си по всяко време.",
+    "Сървъри в ЕС, защитена връзка и възможност да изтеглиш данните си по всяко време.",
   ],
 ] as const;
 
@@ -635,7 +628,6 @@ export function Landing() {
   const trackRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef<HTMLDivElement>(null);
   const baRef = useRef<HTMLDivElement>(null);
-  const factsRef = useRef<HTMLDivElement>(null);
 
   const [stage, setStage] = useState(2);
   const [live, setLive] = useState(false);
@@ -644,7 +636,6 @@ export function Landing() {
   const [filter, setFilter] = useState<(typeof filters)[number]["id"]>("all");
   const [open, setOpen] = useState<number | null>(0);
   const [tab, setTab] = useState<"biz" | "cli">("biz");
-  const [counts, setCounts] = useState<number[]>(facts.map(([n]) => n));
   const baTouched = useRef(false);
 
   // The root layout's inline script runs once per page load; after a client navigation to "/"
@@ -704,24 +695,6 @@ export function Landing() {
     );
     if (baRef.current) ba.observe(baRef.current);
 
-    // Facts count up once.
-    let frame = 0;
-    const factsObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || reduce) return;
-        factsObserver.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const q = Math.min(1, (now - start) / 1200);
-          setCounts(facts.map(([n]) => Math.round(n * (1 - (1 - q) ** 3))));
-          if (q < 1) frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-      },
-      { threshold: 0.4 },
-    );
-    if (factsRef.current) factsObserver.observe(factsRef.current);
-
     // Struck phrases and the sideways process, both driven by scroll.
     const phrases = [...root.querySelectorAll<HTMLElement>(".phr")];
     const onScroll = () => {
@@ -759,10 +732,8 @@ export function Landing() {
 
     return () => {
       window.clearTimeout(timer);
-      cancelAnimationFrame(frame);
       reveal.disconnect();
       ba.disconnect();
-      factsObserver.disconnect();
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", onScroll);
     };
@@ -1252,19 +1223,15 @@ export function Landing() {
         </div>
       </section>
 
-      <section id="sigurnost" className="sec tight">
-        <div ref={factsRef} className="facts">
-          {facts.map(([, label], index) => (
-            <div key={label}>
-              <b>{counts[index]}</b>
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
+      <section id="sigurnost" className="sec">
+        <SectionHead
+          num="08 / Сигурност"
+          title="Договореното остава договорено."
+          text="Какво пази теб и клиента ти, ако някой по-късно не помни."
+        />
         <div className="g12 trust">
-          {trust.map(([key, title, text]) => (
+          {trust.map(([, title, text]) => (
             <div className="col rv" key={title}>
-              <span className="lbl">{key}</span>
               <h4>{title}</h4>
               <p>{text}</p>
             </div>
@@ -1275,7 +1242,7 @@ export function Landing() {
       <section id="vaprosi" className="sec">
         <SectionHead
           className="short"
-          num="08 / Въпроси"
+          num="09 / Въпроси"
           title="Често задавани въпроси."
         />
         <div className="g12">

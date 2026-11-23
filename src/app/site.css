@@ -130,7 +130,8 @@ html:has(.ys) {
   grid-column: 4 / 10;
   display: flex;
   justify-content: center;
-  gap: 1.8rem;
+  gap: clamp(1rem, 2vw, 1.8rem);
+  white-space: nowrap;
   font-size: 0.92rem;
 }
 .ys .nav .links a {
@@ -1382,45 +1383,6 @@ html:has(.ys) {
 }
 
 /* Facts and trust */
-.ys .facts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-.ys .facts div {
-  padding: 2rem;
-  border-right: 1px solid var(--line);
-}
-.ys .facts div:last-child {
-  border: 0;
-}
-.ys .facts b {
-  display: block;
-  font-size: clamp(3.5rem, 7vw, 7rem);
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 0.9;
-  font-variant-numeric: tabular-nums;
-}
-.ys .facts span {
-  display: block;
-  margin-top: 1rem;
-  color: var(--g);
-  max-width: 14rem;
-}
-@media (max-width: 48rem) {
-  .ys .facts {
-    grid-template-columns: 1fr 1fr;
-  }
-  .ys .facts div {
-    padding: 1.4rem 1.1rem;
-    border-bottom: 1px solid var(--line);
-  }
-  .ys .facts div:nth-child(2) {
-    border-right: 0;
-  }
-}
 .ys .trust {
   margin-top: 5rem;
 }
