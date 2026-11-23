@@ -405,6 +405,7 @@ const workModes = [
     title: "Работиш сам",
     text: "Оферта, срок и плащане, без излишни менюта. Задачите и каталогът се включват, когато ти потрябват.",
     art: "solo",
+    alt: "Офертата е одобрена от клиента и платена изцяло.",
     mods: "Оферти · Финанси · Портал",
   },
   {
@@ -412,6 +413,7 @@ const workModes = [
     title: "Имаш екип",
     text: "Всеки вижда задачите си за деня, а клиентът одобрява и приема готовите етапи от телефона си.",
     art: "team",
+    alt: "Задачата на Иван минава в Готово и клиентът приема етап 2 от 3.",
     mods: "Всички модули",
   },
   {
@@ -419,6 +421,7 @@ const workModes = [
     title: "Имаш подписан договор",
     text: "Отбелязваш „договорено“, а Pakto следи етапите, вноските и месечния абонамент.",
     art: "contract",
+    alt: "Абонамент 120 € на месец: платени 3 от 12 вноски, април чака.",
     mods: "Договорено · Финанси · Портал · Задачи",
   },
   {
@@ -426,6 +429,7 @@ const workModes = [
     title: "Клиентът не иска линк",
     text: "Разбрахте се по телефона? Записваш уговорката с дата и сума, а клиентът не трябва да прави нищо.",
     art: "phone",
+    alt: "След обаждане с клиента записваш, че сте се договорили устно.",
     mods: "Договорено · Финанси · Задачи · Каталог",
   },
 ] as const;
@@ -478,117 +482,113 @@ const trust = [
 const eur = (n: number) =>
   `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €`;
 
-/* One small line drawing per way of working: 1px ink lines, square corners, green for done, blue for "waits". */
-function WorkModeArt({ kind }: { kind: (typeof workModes)[number]["art"] }) {
-  const arrow = (x1: number, x2: number, y: number) => (
-    <>
-      <line x1={x1} y1={y} x2={x2 - 1} y2={y} />
-      <path d={`M${x2 - 6} ${y - 4} L${x2} ${y} L${x2 - 6} ${y + 4}`} />
-    </>
-  );
-  return (
-    <svg viewBox="0 0 280 120" className="wm-art" aria-hidden="true">
-      {kind === "solo" ? (
-        <>
-          <rect x="8" y="42" width="56" height="36" />
-          <text x="36" y="64">
-            ТИ
-          </text>
-          {arrow(64, 108, 60)}
-          <text x="86" y="50" className="s">
-            оферта
-          </text>
-          <rect x="108" y="42" width="68" height="36" />
-          <text x="142" y="64">
-            КЛИЕНТ
-          </text>
-          {arrow(176, 216, 60)}
-          <text x="196" y="50" className="s">
-            „да“
-          </text>
-          <rect x="216" y="42" width="56" height="36" className="ok" />
-          <text x="244" y="65" className="inv">
-            €
-          </text>
-          <text x="140" y="104" className="s">
-            ОФ-014 · одобрена
-          </text>
-        </>
-      ) : kind === "team" ? (
-        <>
-          {["ПРЕДСТОЯТ", "В РАБОТА", "ГОТОВО"].map((label, i) => (
-            <g key={label}>
-              <text x={8 + i * 92 + 40} y="16" className="s">
-                {label}
-              </text>
-              <line x1={8 + i * 92} y1="24" x2={8 + i * 92 + 80} y2="24" />
-            </g>
-          ))}
-          <rect x="8" y="34" width="80" height="24" />
-          <rect x="8" y="64" width="80" height="24" />
-          <rect x="100" y="34" width="80" height="24" />
-          <rect x="106" y="40" width="12" height="12" className="fill" />
-          <text x="112" y="50" className="inv xs">
-            И
-          </text>
-          <line x1="124" y1="46" x2="170" y2="46" />
-          <rect x="192" y="34" width="80" height="24" className="ok" />
-          <path d="M226 46 l4 4 l8 -8" className="inv-line" />
-          <rect x="192" y="64" width="80" height="24" className="b" />
-          <text x="232" y="80" className="s blue">
-            етап 2 от 3
-          </text>
-          <line x1="16" y1="46" x2="72" y2="46" />
-          <line x1="16" y1="76" x2="60" y2="76" />
-          <text x="140" y="110" className="s">
-            Днес · Иван · Монтаж
-          </text>
-        </>
-      ) : kind === "contract" ? (
-        <>
-          <rect x="8" y="14" width="52" height="72" />
-          <line x1="16" y1="28" x2="52" y2="28" />
-          <line x1="16" y1="38" x2="52" y2="38" />
-          <line x1="16" y1="48" x2="44" y2="48" />
-          <path d="M16 72 q6 -12 10 0 t10 0 t12 -4" />
-          {arrow(64, 96, 50)}
-          {Array.from({ length: 12 }, (_, i) => (
-            <rect
+/*
+ * One tiny product moment per way of working. Each plays its story once when the card scrolls in
+ * (CSS in site.css, `.wms-*`) and rests on the final state; with reduced motion only the final state shows.
+ */
+const callWave = [
+  4, 7, 5, 9, 12, 8, 5, 10, 14, 11, 6, 4, 8, 13, 9, 6, 11, 7, 4, 6, 10, 8, 5, 3,
+];
+const months = ["Я", "Ф", "М", "А", "М", "Ю", "Ю", "А", "С", "О", "Н", "Д"];
+
+function WorkModeScene({ kind }: { kind: (typeof workModes)[number]["art"] }) {
+  if (kind === "solo") {
+    return (
+      <div className="wms wms-solo">
+        <div className="wms-head">
+          <span>ОФ-014 Баня</span>
+          <span className="wms-st">
+            <i className="tag b">изпратена</i>
+            <i className="tag ok">одобрена</i>
+          </span>
+        </div>
+        <div className="wms-lines mono">
+          <span>Плочки, 18 м²</span>
+          <b>1 260 €</b>
+          <span>Монтаж</span>
+          <b>940 €</b>
+          <span>Фуга и лепило</span>
+          <b>200 €</b>
+        </div>
+        <div className="wms-total">
+          <span className="mono">Платено</span>
+          <span className="wms-bar">
+            <i />
+          </span>
+          <b className="mono">2 400 €</b>
+        </div>
+      </div>
+    );
+  }
+  if (kind === "team") {
+    return (
+      <div className="wms wms-team">
+        <div className="wms-cols mono">
+          <span>Предстои</span>
+          <span>В работа</span>
+          <span>Готово</span>
+        </div>
+        <div className="wms-board">
+          <span className="wms-card">Боя</span>
+          <span className="wms-card">
+            <i className="wms-av">М</i>Фаянс
+          </span>
+          <span className="wms-card done">Демонтаж</span>
+          <span className="wms-card wms-move">
+            <i className="wms-av">И</i>Плот
+          </span>
+        </div>
+        <div className="wms-stage">
+          <span className="wms-seg on" />
+          <span className="wms-seg fill" />
+          <span className="wms-seg" />
+          <span className="mono">Етап 2 от 3 приет</span>
+        </div>
+      </div>
+    );
+  }
+  if (kind === "contract") {
+    return (
+      <div className="wms wms-contract">
+        <div className="wms-head">
+          <span>Абонамент</span>
+          <b className="mono">120 € / месец</b>
+        </div>
+        <div className="wms-months">
+          {months.map((m, i) => (
+            <span
               key={i}
-              x={100 + (i % 6) * 29}
-              y={i < 6 ? 30 : 56}
-              width="22"
-              height="22"
-              className={i < 3 ? "ok" : i === 3 ? "b" : undefined}
-            />
+              className={i < 3 ? "paid" : i === 3 ? "due" : undefined}
+              style={{ "--i": i } as React.CSSProperties}
+            >
+              <i />
+              <small className="mono">{m}</small>
+            </span>
           ))}
-          <text x="140" y="104" className="s">
-            вноска 3 от 12 · 120 €
-          </text>
-        </>
-      ) : (
-        <>
-          <rect x="14" y="26" width="38" height="66" />
-          <line x1="27" y1="84" x2="39" y2="84" />
-          <path d="M60 46 q8 13 0 26" />
-          <path d="M68 40 q12 19 0 38" />
-          {arrow(80, 120, 59)}
-          <rect x="120" y="41" width="60" height="36" />
-          <text x="150" y="63">
-            ТИ
-          </text>
-          <text x="150" y="31" className="s">
-            записваш
-          </text>
-          {arrow(180, 214, 59)}
-          <rect x="214" y="41" width="58" height="36" className="ok" />
-          <path d="M235 59 l5 5 l10 -10" className="inv-line" />
-          <text x="140" y="108" className="s">
-            договорено · 14.11 · 2 400 €
-          </text>
-        </>
-      )}
-    </svg>
+        </div>
+        <div className="wms-foot mono">
+          <span>Платени 3 от 12</span>
+          <span className="due-t">Април чака</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="wms wms-phone">
+      <div className="wms-head">
+        <span>Обаждане с Мария</span>
+        <span className="mono">04:12</span>
+      </div>
+      <div className="wms-wave">
+        {callWave.map((h, i) => (
+          <i key={i} style={{ "--h": h, "--i": i } as React.CSSProperties} />
+        ))}
+      </div>
+      <div className="wms-note">
+        <span>Записа: договорено устно, 2 400 €</span>
+        <span className="wms-stamp mono">Договорено</span>
+      </div>
+    </div>
   );
 }
 
@@ -1036,14 +1036,15 @@ export function Landing() {
           text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
         />
         <div className="g12 trust wmodes">
-          {workModes.map(({ key, title, text, art, mods }) => (
+          {workModes.map(({ title, text, art, alt, mods }) => (
             <div className="col rv" key={title}>
-              <span className="lbl">{key}</span>
               <h4>{title}</h4>
               <p>{text}</p>
-              <div className="wm">
-                <WorkModeArt kind={art} />
-                <div className="wm-mods mono">{mods}</div>
+              <div className="wm" role="img" aria-label={alt}>
+                <WorkModeScene kind={art} />
+                <div className="wm-mods mono" aria-hidden="true">
+                  {mods}
+                </div>
               </div>
             </div>
           ))}
