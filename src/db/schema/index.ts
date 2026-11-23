@@ -1061,6 +1061,52 @@ export const stageAcceptances = appSchema.table(
   ],
 );
 
+/** One option of a client choice. `image` is a path in the "client-choices" bucket. */
+export type ChoiceOption = { key: string; label: string; description: string | null; image: string | null };
+
+/** A small question to the client without a price. Options never change once asked. */
+export const clientChoices = appSchema.table(
+  "client_choices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    question: text("question").notNull(),
+    note: text("note"),
+    options: jsonb("options").$type<ChoiceOption[]>().notNull(),
+    dueOn: date("due_on"),
+    createdBy: uuid("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    canceledAt: timestamp("canceled_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("client_choices_project_idx").on(table.projectId, table.createdAt),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "client_choices_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
+/** The one answer to a client choice. Append-only. */
+export const clientChoiceAnswers = appSchema.table(
+  "client_choice_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id),
+    projectId: uuid("project_id").notNull(),
+    choiceId: uuid("choice_id").notNull().references(() => clientChoices.id, { onDelete: "cascade" }),
+    optionKey: text("option_key").notNull(),
+    comment: text("comment"),
+    actorType: text("actor_type", { enum: ["staff", "portal_contact"] }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    ip: inet("ip"),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("client_choice_answers_choice_uidx").on(table.choiceId),
+    foreignKey({ columns: [table.organizationId, table.projectId], foreignColumns: [projects.organizationId, projects.id], name: "client_choice_answers_project_tenant_fk" }).onDelete("cascade"),
+  ],
+);
+
 export const internalNotes = appSchema.table(
   "internal_notes",
   {

@@ -23,6 +23,8 @@ import { ProjectPaymentsSummary, ProjectWorkSummary } from "@/components/project
 import { TaskBoard } from "@/components/tasks/task-board";
 import { canAssignTasks, listAssignablePeople, listTaskStages, listTasks } from "@/modules/tasks/queries";
 import { ClientAccess } from "@/components/projects/client-access";
+import { ClientChoices } from "@/components/projects/client-choices";
+import { listProjectChoices } from "@/modules/client-choices/queries";
 import { ProjectMenu } from "@/components/projects/project-menu";
 import { CountPill } from "@/components/workspace/tab-count";
 import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
@@ -64,7 +66,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   const notes = canNotes ? loadNotes(context.organizationId, { projectId }, notesPage) : null;
   const documents = loadProjectDocuments(context, projectId, offersPage, changesPage);
   // One parallel round: the access check runs with the reads, and nothing is rendered unless it passes.
-  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople, taskStages] = await Promise.all([
+  const [member, project, offersTotal, state, inbox, contacts, projectTasks, taskPeople, taskStages, choices] = await Promise.all([
     orForbidden(requireProjectCapability(context, projectId, "view")),
     getProject(context.organizationId, projectId),
     countChangeOrders({ context, projectId, documentKind: "offer" }),
@@ -74,6 +76,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     context.features.tasks ? listTasks(context, { projectId, includeOldDone: true }) : Promise.resolve([]),
     context.features.tasks ? listAssignablePeople(context, projectId) : Promise.resolve([]),
     context.features.tasks ? listTaskStages(context, projectId) : Promise.resolve([]),
+    listProjectChoices(context.organizationId, projectId, { includeCanceled: true }),
   ]);
   if (!project || !state) notFound();
   const { disputes, claims } = inbox;
@@ -198,8 +201,9 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
             <ProjectDocuments documents={documents} path={path} />
           </Suspense>
         </TabsContent>
-        <TabsContent id="work" className="pt-5">
+        <TabsContent id="work" className="flex flex-col gap-8 pt-5">
           <ProjectWorkSummary state={state} projectId={projectId} canManage={canManage} today={today} handover={context.features.portalMode === "full" ? "portal" : "staff"} />
+          <ClientChoices projectId={projectId} choices={choices} canAsk={canSend && active} portal={context.features.portalMode === "full"} />
         </TabsContent>
         {showTasks ? <TabsContent id="tasks" className="pt-5">
           <TaskBoard

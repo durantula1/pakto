@@ -13,7 +13,7 @@ export const notificationCategories: { id: NotificationCategory; label: string }
 /** Event types per category; `prefixes` match the start of the type. Anything else is an offer event. */
 export const categoryRules: Record<Exclude<NotificationCategory, "offers">, { exact: string[]; prefixes: string[] }> = {
   payments: { exact: [], prefixes: ["payment_", "installment_", "receipt_"] },
-  clients: { exact: ["client_message", "revision_viewed", "acceptance_accepted", "acceptance_issues"], prefixes: ["contact_", "portal_"] },
+  clients: { exact: ["client_message", "revision_viewed", "acceptance_accepted", "acceptance_issues", "choice_answered"], prefixes: ["contact_", "portal_"] },
   team: { exact: ["permissions_changed"], prefixes: ["owner_", "member_", "invite_", "invitation_", "task_"] },
 };
 
@@ -30,7 +30,7 @@ export function notificationCategory(eventType: string): NotificationCategory {
 export function notificationIcon(eventType: string): NotificationIcon {
   if (eventType.endsWith("_disputed") || eventType === "acceptance_issues" || eventType === "revision_expired") return "alert";
   if (eventType === "client_message") return "message";
-  if (eventType === "decision_approved" || eventType === "agreement_recorded" || eventType === "acceptance_accepted" || eventType === "payment_received") return "check";
+  if (eventType === "decision_approved" || eventType === "agreement_recorded" || eventType === "acceptance_accepted" || eventType === "choice_answered" || eventType === "payment_received") return "check";
   const category = notificationCategory(eventType);
   if (category === "payments") return "euro";
   if (category === "team") return "user";

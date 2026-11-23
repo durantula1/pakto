@@ -68,6 +68,10 @@ const eventLabels: Record<string, string> = {
   stage_acceptance_accepted: "Етапът е приет",
   stage_acceptance_issues: "Изпратени забележки по етап",
   stage_acceptance_recorded: "Фирмата отбеляза етапа като приет",
+  choice_asked: "Фирмата Ви попита за избор",
+  choice_answered: "Направихте избор",
+  choice_recorded: "Фирмата отбеляза Вашия избор",
+  choice_canceled: "Фирмата отмени въпрос",
 };
 
 type Status = { tone: "success" | "info" | "warn" | "muted"; text: React.ReactNode; note?: string | null };

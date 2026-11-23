@@ -12,6 +12,7 @@ export const emailEvents = {
   payment_claimed: { label: "Клиентът отбеляза плащане", group: "deadlines", emailByDefault: true },
   acceptance_accepted: { label: "Клиентът прие работата", group: "decisions", emailByDefault: true },
   acceptance_issues: { label: "Клиентът има забележки по работата", group: "decisions", emailByDefault: true },
+  choice_answered: { label: "Клиентът направи избор", group: "decisions", emailByDefault: true },
   contact_verified: { label: "Клиентът потвърди имейла си", group: "activity", emailByDefault: true },
 } as const;
 
