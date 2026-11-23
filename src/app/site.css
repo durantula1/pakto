@@ -1469,25 +1469,71 @@ html:has(.ys) {
   margin-bottom: 1.25rem;
 }
 .ys .wm-mods {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.9rem;
-  padding: 0.75rem 0.9rem;
-  border-bottom: 1px solid var(--line);
-  font-size: 0.72rem;
-}
-.ys .wm-mods .off {
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--line);
   color: var(--g);
-  text-decoration: line-through;
+  font-size: 0.7rem;
 }
-.ys .wm-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
-  font-size: 0.85rem;
+.ys .wm-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 0.75rem 0.75rem 0.25rem;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+.ys .wm-art * {
+  vector-effect: non-scaling-stroke;
+}
+.ys .wm-art text {
+  fill: var(--ink);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  text-anchor: middle;
+}
+.ys .wm-art text.s {
+  font-size: 10px;
+  font-weight: 400;
+  fill: var(--g);
+}
+.ys .wm-art text.blue {
+  fill: var(--blue);
+}
+.ys .wm-art text.inv {
+  fill: #fff;
+  font-size: 14px;
+}
+.ys .wm-art text.inv.xs {
+  font-size: 8px;
+}
+.ys .wm-art .ok {
+  fill: var(--ok);
+  stroke: var(--ok);
+}
+.ys .wm-art .b {
+  stroke: var(--blue);
+}
+.ys .wm-art .fill {
+  fill: var(--ink);
+}
+.ys .wm-art .inv-line {
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ys .wmodes .rv .wm-art line,
+  .ys .wmodes .rv .wm-art path {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    transition: stroke-dashoffset 0.6s ease 0.2s;
+  }
+  .ys .wmodes .rv.in .wm-art line,
+  .ys .wmodes .rv.in .wm-art path {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* Questions (landing and /faq) */

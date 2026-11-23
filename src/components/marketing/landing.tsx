@@ -402,42 +402,31 @@ const features = [
 const workModes = [
   {
     key: "Сам",
-    title: "Самостоятелна дейност",
-    text: "Работиш сам: оферта, срок и плащане, без излишни менюта. Задачите и каталогът са изключени, докато не ти потрябват.",
-    modules: [
-      ["Оферти", true],
-      ["Финанси", true],
-      ["Портал", true],
-      ["Задачи", false],
-      ["Каталог", false],
-    ],
-    row: ["ОФ-014 · Баня, ул. Раковски 12", "одобрена", "ok"],
+    title: "Работиш сам",
+    text: "Оферта, срок и плащане, без излишни менюта. Задачите и каталогът се включват, когато ти потрябват.",
+    art: "solo",
+    mods: "Оферти · Финанси · Портал",
   },
   {
     key: "Екип",
-    title: "Екип с онлайн одобрение",
-    text: "Екипът вижда задачите си за деня, а клиентът одобрява и приема всеки етап от телефона.",
-    modules: [
-      ["Оферти", true],
-      ["Финанси", true],
-      ["Портал", true],
-      ["Задачи", true],
-      ["Каталог", true],
-    ],
-    row: ["Днес · Иван · Монтаж на плота", "етап 2 от 3", "b"],
+    title: "Имаш екип",
+    text: "Всеки вижда задачите си за деня, а клиентът одобрява и приема готовите етапи от телефона си.",
+    art: "team",
+    mods: "Всички модули",
   },
   {
     key: "Договор",
-    title: "Работа по договор",
-    text: "Договорът е на хартия? Отбелязваш „договорено“, а етапите, вноските и месечният абонамент се водят в Pakto.",
-    modules: [
-      ["Договорено", true],
-      ["Финанси", true],
-      ["Портал", true],
-      ["Задачи", true],
-      ["Каталог", false],
-    ],
-    row: ["Абонамент · месец 3 от 12 · 120 €", "платено", "ok"],
+    title: "Имаш подписан договор",
+    text: "Отбелязваш „договорено“, а Pakto следи етапите, вноските и месечния абонамент.",
+    art: "contract",
+    mods: "Договорено · Финанси · Портал · Задачи",
+  },
+  {
+    key: "По телефона",
+    title: "Клиентът не иска линк",
+    text: "Разбрахте се по телефона? Записваш уговорката с дата и сума, а клиентът не трябва да прави нищо.",
+    art: "phone",
+    mods: "Договорено · Финанси · Задачи · Каталог",
   },
 ] as const;
 
@@ -488,6 +477,120 @@ const trust = [
 
 const eur = (n: number) =>
   `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €`;
+
+/* One small line drawing per way of working: 1px ink lines, square corners, green for done, blue for "waits". */
+function WorkModeArt({ kind }: { kind: (typeof workModes)[number]["art"] }) {
+  const arrow = (x1: number, x2: number, y: number) => (
+    <>
+      <line x1={x1} y1={y} x2={x2 - 1} y2={y} />
+      <path d={`M${x2 - 6} ${y - 4} L${x2} ${y} L${x2 - 6} ${y + 4}`} />
+    </>
+  );
+  return (
+    <svg viewBox="0 0 280 120" className="wm-art" aria-hidden="true">
+      {kind === "solo" ? (
+        <>
+          <rect x="8" y="42" width="56" height="36" />
+          <text x="36" y="64">
+            ТИ
+          </text>
+          {arrow(64, 108, 60)}
+          <text x="86" y="50" className="s">
+            оферта
+          </text>
+          <rect x="108" y="42" width="68" height="36" />
+          <text x="142" y="64">
+            КЛИЕНТ
+          </text>
+          {arrow(176, 216, 60)}
+          <text x="196" y="50" className="s">
+            „да“
+          </text>
+          <rect x="216" y="42" width="56" height="36" className="ok" />
+          <text x="244" y="65" className="inv">
+            €
+          </text>
+          <text x="140" y="104" className="s">
+            ОФ-014 · одобрена
+          </text>
+        </>
+      ) : kind === "team" ? (
+        <>
+          {["ПРЕДСТОЯТ", "В РАБОТА", "ГОТОВО"].map((label, i) => (
+            <g key={label}>
+              <text x={8 + i * 92 + 40} y="16" className="s">
+                {label}
+              </text>
+              <line x1={8 + i * 92} y1="24" x2={8 + i * 92 + 80} y2="24" />
+            </g>
+          ))}
+          <rect x="8" y="34" width="80" height="24" />
+          <rect x="8" y="64" width="80" height="24" />
+          <rect x="100" y="34" width="80" height="24" />
+          <rect x="106" y="40" width="12" height="12" className="fill" />
+          <text x="112" y="50" className="inv xs">
+            И
+          </text>
+          <line x1="124" y1="46" x2="170" y2="46" />
+          <rect x="192" y="34" width="80" height="24" className="ok" />
+          <path d="M226 46 l4 4 l8 -8" className="inv-line" />
+          <rect x="192" y="64" width="80" height="24" className="b" />
+          <text x="232" y="80" className="s blue">
+            етап 2 от 3
+          </text>
+          <line x1="16" y1="46" x2="72" y2="46" />
+          <line x1="16" y1="76" x2="60" y2="76" />
+          <text x="140" y="110" className="s">
+            Днес · Иван · Монтаж
+          </text>
+        </>
+      ) : kind === "contract" ? (
+        <>
+          <rect x="8" y="14" width="52" height="72" />
+          <line x1="16" y1="28" x2="52" y2="28" />
+          <line x1="16" y1="38" x2="52" y2="38" />
+          <line x1="16" y1="48" x2="44" y2="48" />
+          <path d="M16 72 q6 -12 10 0 t10 0 t12 -4" />
+          {arrow(64, 96, 50)}
+          {Array.from({ length: 12 }, (_, i) => (
+            <rect
+              key={i}
+              x={100 + (i % 6) * 29}
+              y={i < 6 ? 30 : 56}
+              width="22"
+              height="22"
+              className={i < 3 ? "ok" : i === 3 ? "b" : undefined}
+            />
+          ))}
+          <text x="140" y="104" className="s">
+            вноска 3 от 12 · 120 €
+          </text>
+        </>
+      ) : (
+        <>
+          <rect x="14" y="26" width="38" height="66" />
+          <line x1="27" y1="84" x2="39" y2="84" />
+          <path d="M60 46 q8 13 0 26" />
+          <path d="M68 40 q12 19 0 38" />
+          {arrow(80, 120, 59)}
+          <rect x="120" y="41" width="60" height="36" />
+          <text x="150" y="63">
+            ТИ
+          </text>
+          <text x="150" y="31" className="s">
+            записваш
+          </text>
+          {arrow(180, 214, 59)}
+          <rect x="214" y="41" width="58" height="36" className="ok" />
+          <path d="M235 59 l5 5 l10 -10" className="inv-line" />
+          <text x="140" y="108" className="s">
+            договорено · 14.11 · 2 400 €
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
 
 function StartButtons({ className = "btn p" }: { className?: string }) {
   return (
@@ -928,29 +1031,19 @@ export function Landing() {
 
       <section id="po-tvoya-nachin" className="sec">
         <SectionHead
-          num="04 / По твоя начин"
-          title="Работи по твоите правила."
+          num="04 / По твоите правила"
+          title="Твоята фирма, твоите правила."
           text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
         />
         <div className="g12 trust wmodes">
-          {workModes.map(({ key, title, text, modules, row }) => (
+          {workModes.map(({ key, title, text, art, mods }) => (
             <div className="col rv" key={title}>
               <span className="lbl">{key}</span>
               <h4>{title}</h4>
               <p>{text}</p>
-              {/* A miniature of the app for this way of working: which modules are on, and one typical row. */}
-              <div className="wm" aria-hidden="true">
-                <div className="wm-mods mono">
-                  {modules.map(([name, on]) => (
-                    <span key={name} className={on ? "on" : "off"}>
-                      {on ? "✓" : "—"} {name}
-                    </span>
-                  ))}
-                </div>
-                <div className="wm-row">
-                  <span>{row[0]}</span>
-                  <span className={`tag ${row[2]}`}>{row[1]}</span>
-                </div>
+              <div className="wm">
+                <WorkModeArt kind={art} />
+                <div className="wm-mods mono">{mods}</div>
               </div>
             </div>
           ))}
