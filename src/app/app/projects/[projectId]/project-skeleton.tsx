@@ -22,7 +22,7 @@ export const projectTabLabels = {
   overview: "Преглед",
   documents: "Оферти",
   work: "Работа",
-  choices: "Избори",
+  choices: "Въпроси",
   tasks: "Задачи",
   payments: "Плащания",
   notes: "Бележки",

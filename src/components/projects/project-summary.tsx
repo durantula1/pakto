@@ -169,6 +169,11 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
   const openInstallments = looseInstallments.filter((item) => item.remainingMinor > 0n);
   const paidInstallments = looseInstallments.filter((item) => item.remainingMinor <= 0n);
   return <div className="flex flex-col gap-8">
+    {/* What waits for an action comes first. */}
+    {looseReceipts.length || state.unassigned.receiptsCount ? <section className="flex flex-col gap-3">
+      <SectionHeader title="Получени, но още не отнесени към оферта" description="Свържи ги с оферта, за да влязат в нейната сметка. Клиентът ги вижда като получени." />
+      <ReceiptsTable projectId={projectId} state={state} receipts={looseReceipts} disputes={inbox.disputes} canRecord={canRecord} />
+    </section> : null}
     <section className="flex flex-col gap-3">
       <SectionHeader
         title={offers.length ? "Плащания по оферти" : "Плащания"}
@@ -193,10 +198,6 @@ export function ProjectPaymentsSummary({ state, projectId, canRecord, today, inb
         })}
       </div> : looseInstallments.length ? null : <EmptyResult className="rounded-xl border border-dashed" title="Още няма договорено." description="Сумите и вноските се появяват след одобрена оферта. Ако работите без оферта, добави вноските по-долу." />}
     </section>
-    {looseReceipts.length || state.unassigned.receiptsCount ? <section className="flex flex-col gap-3">
-      <SectionHeader title="Получени, но още не отнесени към оферта" description="Свържи ги с оферта, за да влязат в нейната сметка. Клиентът ги вижда като получени." />
-      <ReceiptsTable projectId={projectId} state={state} receipts={looseReceipts} disputes={inbox.disputes} canRecord={canRecord} />
-    </section> : null}
     {looseInstallments.length || (canRecord && !offers.length) ? <section className="flex flex-col gap-3">
       <SectionHeader title={offers.length ? "Вноски без оферта" : "Платежен план"} description="Плащания, договорени без оферта: по договор, абонамент или на думи. Клиентът ги вижда в портала и може да отбележи, че е платил." action={addProjectInstallment} />
       {looseInstallments.length ? <>

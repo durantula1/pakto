@@ -196,10 +196,17 @@ function FilterChip({ active, onPress, children }: { active: boolean; onPress: (
   );
 }
 
+/** Done cards a column shows before "Покажи всички". */
+const DONE_LIMIT = 6;
+
 function Column({ status, tasks, today, fixedProject, onOpen }: {
   status: TaskStatus; tasks: TaskItem[]; today: string; fixedProject?: { id: string; name: string }; onOpen: (task: TaskItem) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
+  // "Готово" only grows: it shows a few cards and the rest on request, so the open work stays in view.
+  const [expanded, setExpanded] = useState(false);
+  const limit = status === "done" && !expanded ? DONE_LIMIT : Infinity;
+  const shown = tasks.slice(0, limit);
   return (
     <section ref={setNodeRef} aria-label={taskStatusLabels[status]}
       className={cn("flex min-w-0 flex-col gap-2 rounded-2xl border border-ink/10 bg-ink/[0.06] p-2.5 transition-[background-color,box-shadow] duration-200 motion-reduce:transition-none", isOver && "bg-ink/10 shadow-[inset_0_0_0_2px_var(--color-primary)]")}>
@@ -208,8 +215,9 @@ function Column({ status, tasks, today, fixedProject, onOpen }: {
         {taskStatusLabels[status]}
         <span className="font-normal text-muted-foreground">{tasks.length}</span>
       </h2>
-      {tasks.length ? tasks.map((task) => <TaskCard key={task.id} task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />)
+      {tasks.length ? shown.map((task) => <TaskCard key={task.id} task={task} today={today} fixedProject={fixedProject} onOpen={onOpen} />)
         : <p className="rounded-xl border border-dashed border-ink/30 px-3 py-6 text-center text-sm font-medium text-ink/70">Няма задачи</p>}
+      {tasks.length > shown.length ? <button type="button" onClick={() => setExpanded(true)} className="px-1 py-1 text-left text-sm font-medium text-blue underline underline-offset-2">Покажи всички ({tasks.length})</button> : null}
     </section>
   );
 }
