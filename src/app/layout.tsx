@@ -61,11 +61,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {/* Kept out of `metadata`: Next swaps its head tags on every navigation, and a re-added icon link makes the tab icon blink. */}
       <head>
         {/* ICO and 48px PNG for Google's search results and older browsers; the SVG stays the main icon. */}
-        <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
-        <link rel="icon" href="/icon-48.png" sizes="48x48" type="image/png" />
-        <link rel="icon" href="/icon.svg" sizes="any" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="icon" href="/favicon.ico?v=yasno" sizes="16x16 32x32 48x48" />
+        <link rel="icon" href="/icon-48.png?v=yasno" sizes="48x48" type="image/png" />
+        <link rel="icon" href="/icon.svg?v=yasno" sizes="any" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=yasno" />
+        <link rel="manifest" href="/manifest.webmanifest?v=yasno" />
         {/* Before the first paint: marks <html data-auth> so the marketing pages show the right buttons (no flash).
             The root layout is never rendered again on the client, so this runs once per page load; `AuthHint` covers client navigations. */}
         <script dangerouslySetInnerHTML={{ __html: authHintScript }} />
