@@ -129,6 +129,7 @@ html:has(.ys) {
 .ys .nav .links {
   grid-column: 4 / 10;
   display: flex;
+  justify-content: center;
   gap: 1.8rem;
   font-size: 0.92rem;
 }
