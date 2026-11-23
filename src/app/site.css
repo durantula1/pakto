@@ -1450,6 +1450,45 @@ html:has(.ys) {
   }
 }
 
+/* Work modes: a miniature of the app under each card */
+.ys .wm {
+  margin-top: 1.25rem;
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+/* The three miniatures line up at the bottom even when the texts differ in length. */
+.ys .wmodes .col {
+  display: flex;
+  flex-direction: column;
+}
+.ys .wmodes .wm {
+  margin-top: auto;
+}
+.ys .wmodes .col p {
+  margin-bottom: 1.25rem;
+}
+.ys .wm-mods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.72rem;
+}
+.ys .wm-mods .off {
+  color: var(--g);
+  text-decoration: line-through;
+}
+.ys .wm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 /* Questions (landing and /faq) */
 .ys .faq {
   grid-column: 3 / 13;

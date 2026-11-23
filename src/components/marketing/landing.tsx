@@ -400,15 +400,60 @@ const features = [
 
 /** The three ways of working a company picks at sign-up, then what is new for each. */
 const workModes = [
-  ["Сам", "Самостоятелна дейност", "Работиш сам: оферта, срок и плащане, без излишни менюта. Задачите и каталогът са изключени, докато не ти потрябват."],
-  ["Екип", "Екип с онлайн одобрение", "Екипът вижда задачите си за деня, а клиентът одобрява и приема всеки етап от телефона."],
-  ["Договор", "Работа по договор", "Договорът е на хартия? Отбелязваш „договорено“, а етапите, вноските и месечният абонамент се водят в Pakto."],
+  {
+    key: "Сам",
+    title: "Самостоятелна дейност",
+    text: "Работиш сам: оферта, срок и плащане, без излишни менюта. Задачите и каталогът са изключени, докато не ти потрябват.",
+    modules: [
+      ["Оферти", true],
+      ["Финанси", true],
+      ["Портал", true],
+      ["Задачи", false],
+      ["Каталог", false],
+    ],
+    row: ["ОФ-014 · Баня, ул. Раковски 12", "одобрена", "ok"],
+  },
+  {
+    key: "Екип",
+    title: "Екип с онлайн одобрение",
+    text: "Екипът вижда задачите си за деня, а клиентът одобрява и приема всеки етап от телефона.",
+    modules: [
+      ["Оферти", true],
+      ["Финанси", true],
+      ["Портал", true],
+      ["Задачи", true],
+      ["Каталог", true],
+    ],
+    row: ["Днес · Иван · Монтаж на плота", "етап 2 от 3", "b"],
+  },
+  {
+    key: "Договор",
+    title: "Работа по договор",
+    text: "Договорът е на хартия? Отбелязваш „договорено“, а етапите, вноските и месечният абонамент се водят в Pakto.",
+    modules: [
+      ["Договорено", true],
+      ["Финанси", true],
+      ["Портал", true],
+      ["Задачи", true],
+      ["Каталог", false],
+    ],
+    row: ["Абонамент · месец 3 от 12 · 120 €", "платено", "ok"],
+  },
 ] as const;
 
 const workModeWins = [
-  ["Плащат ти по-рано.", "Клиентът приема всеки готов етап и вноската за него става дължима веднага, а не в края на проекта."],
-  ["Край на „коя плочка казахте?“.", "Клиентът избира от снимки в портала, а изборът остава записан."],
-  ["Само това, което ползваш.", "Включваш модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал."],
+  [
+    "Плащат ти по-рано.",
+    "Клиентът приема всеки готов етап и вноската за него става дължима веднага, а не в края на проекта.",
+  ],
+  [
+    "Край на „коя плочка казахте?“.",
+    "Клиентът избира от снимки в портала, а изборът остава записан.",
+  ],
+  [
+    "Само това, което ползваш.",
+    "Включваш модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал.",
+  ],
 ] as const;
 
 const facts = [
@@ -652,7 +697,8 @@ export function Landing() {
             <p className="lead">
               Pakto води проекта от първата оферта до последното плащане.
               Клиентът одобрява офертата, всяка промяна и всеки готов етап от
-              телефона си, без регистрация. Всяко решение остава записано с версия, дата и час.
+              телефона си, без регистрация. Всяко решение остава записано с
+              версия, дата и час.
             </p>
             <div className="ctas" id="hero-cta">
               <StartButtons />
@@ -738,8 +784,8 @@ export function Landing() {
         <SectionHead
           className="first"
           num="01 / Проблемът"
-          title="Във всеки проект има изречения, които струват пари."
-          text="Pakto заменя всяко от тях с ясен запис."
+          title="Устните уговорки ти струват пари."
+          text="Всяко „нали се разбрахме“ в Pakto става запис с цена, срок и дата."
         />
         <div className="g12 strike">
           {phrases.map(([quote, record]) => (
@@ -756,8 +802,8 @@ export function Landing() {
       <section id="red" className="sec tight">
         <SectionHead
           num="02 / Преди и след"
-          title="Седем канала. Една история."
-          text="Viber, SMS, имейли, бележки и пропуснати обаждания. Превключи, за да видиш същия проект в Pakto."
+          title="Край на ровенето във Viber."
+          text="Уговорки, снимки и цени са разпилени по чатове, SMS и бележки. Превключи, за да видиш същия проект в Pakto."
         />
         <div className="g12">
           <div className="col-span-full">
@@ -880,9 +926,49 @@ export function Landing() {
         </div>
       </section>
 
+      <section id="po-tvoya-nachin" className="sec">
+        <SectionHead
+          num="04 / По твоя начин"
+          title="Работи така, както вече работиш."
+          text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
+        />
+        <div className="g12 trust wmodes">
+          {workModes.map(({ key, title, text, modules, row }) => (
+            <div className="col rv" key={title}>
+              <span className="lbl">{key}</span>
+              <h4>{title}</h4>
+              <p>{text}</p>
+              {/* A miniature of the app for this way of working: which modules are on, and one typical row. */}
+              <div className="wm" aria-hidden="true">
+                <div className="wm-mods mono">
+                  {modules.map(([name, on]) => (
+                    <span key={name} className={on ? "on" : "off"}>
+                      {on ? "✓" : "—"} {name}
+                    </span>
+                  ))}
+                </div>
+                <div className="wm-row">
+                  <span>{row[0]}</span>
+                  <span className={`tag ${row[2]}`}>{row[1]}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="rows-list mt-12">
+          {workModeWins.map(([title, text], index) => (
+            <div className="br ink rv" key={title}>
+              <span className="k">4.{index + 1}</span>
+              <h3>{title}</h3>
+              <p className="d">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section id="proekti" className="sec">
         <SectionHead
-          num="04 / Проекти"
+          num="05 / Проекти"
           title="Всички проекти на едно място."
           text="Кое чака клиента, кое закъснява, кое е платено. Избери филтър или отвори проект."
         />
@@ -1020,9 +1106,9 @@ export function Landing() {
       <section id="polzi" className="sec">
         <SectionHead
           className="!pb-10"
-          num="05 / Ползи"
-          title="Какво печелиш, когато всичко е записано."
-          text="Работиш по-спокойно, плащат ти за всяка свършена работа и клиентите те препоръчват."
+          num="06 / Ползи"
+          title="Плащат ти за всяка свършена работа."
+          text="По-малко обаждания, по-малко спорове и клиенти, които те препоръчват."
         />
         <div className="tg btabs" role="group" aria-label="Ползи">
           <button
@@ -1057,38 +1143,12 @@ export function Landing() {
 
       <section id="funkcii" className="sec">
         <SectionHead
-          num="06 / Функции"
-          title="Шест неща, направени както трябва."
+          num="07 / Функции"
+          title="Всичко от офертата до последното плащане."
           text="Включваш само модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал."
         />
         <div className="rows-list">
           {features.map(([title, text], index) => (
-            <div className="br ink rv" key={title}>
-              <span className="k">6.{index + 1}</span>
-              <h3>{title}</h3>
-              <p className="d">{text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="po-tvoya-nachin" className="sec">
-        <SectionHead
-          num="07 / По твоя начин"
-          title="Работи така, както вече работиш."
-          text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
-        />
-        <div className="g12 trust">
-          {workModes.map(([key, title, text]) => (
-            <div className="col rv" key={title}>
-              <span className="lbl">{key}</span>
-              <h4>{title}</h4>
-              <p>{text}</p>
-            </div>
-          ))}
-        </div>
-        <div className="rows-list mt-12">
-          {workModeWins.map(([title, text], index) => (
             <div className="br ink rv" key={title}>
               <span className="k">7.{index + 1}</span>
               <h3>{title}</h3>
@@ -1119,7 +1179,11 @@ export function Landing() {
       </section>
 
       <section id="vaprosi" className="sec">
-        <SectionHead className="short" num="08 / Въпроси" title="Накратко." />
+        <SectionHead
+          className="short"
+          num="08 / Въпроси"
+          title="Често задавани въпроси."
+        />
         <div className="g12">
           <div className="faq">
             {faqQuestions.map(({ q, a }) => (
