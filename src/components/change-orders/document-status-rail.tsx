@@ -358,7 +358,7 @@ export function DocumentStatusCard({
                 state={decisionState}
               />
             </ol>
-            {status === "draft" && canSend ? <ApprovalModeSwitch changeOrderId={change.id} kind={change.documentKind} staff={change.approvalMode === "staff"} overridden={change.documentApprovalMode !== null} /> : null}
+            {status === "draft" && canSend && change.portalMode === "full" ? <ApprovalModeSwitch changeOrderId={change.id} kind={change.documentKind} staff={change.approvalMode === "staff"} overridden={change.documentApprovalMode !== null} /> : null}
             {change.clientRemindedAt && awaiting ? (
               <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
                 <BellRing className="size-3.5" /> Последно напомняне:{" "}

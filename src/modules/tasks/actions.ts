@@ -10,7 +10,7 @@ import { organizationMembers, projectMembers, projects, tasks } from "@/db/schem
 import { attempt, type ActionResult } from "@/lib/action-result";
 import { can } from "@/lib/authz/permissions";
 import { requireProjectCapability } from "@/lib/authz/project-access";
-import { requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
+import { requireModule, requireTenantContext, type TenantContext } from "@/lib/authz/tenant-context";
 import { notifyUsers } from "@/modules/notifications/staff";
 import { taskStatuses } from "./labels";
 
@@ -69,6 +69,7 @@ export async function createTaskAction(formData: FormData): Promise<ActionResult
   return attempt(async () => {
     const data = createSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     await requireProjectCapability(context, data.projectId, "view");
     const [project] = await getDatabase().select({ status: projects.status }).from(projects)
       .where(and(eq(projects.id, data.projectId), eq(projects.organizationId, context.organizationId))).limit(1);
@@ -103,6 +104,7 @@ export async function updateTaskAction(formData: FormData): Promise<ActionResult
   return attempt(async () => {
     const data = updateSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task, mine } = await loadTask(context, data.taskId);
     if (!mine && !can(context, "tasks.assign")) throw new Error("Задачата е на колега. Само който дава задачи може да я променя.");
     // The assignee is changed by who may assign; others keep it as it is.
@@ -125,6 +127,7 @@ export async function setTaskStatusAction(formData: FormData): Promise<ActionRes
     const taskId = z.uuid().parse(formData.get("taskId"));
     const status = z.enum(taskStatuses).parse(formData.get("status"));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task, mine } = await loadTask(context, taskId);
     if (!mine && !can(context, "tasks.assign")) throw new Error("Задачата е на колега. Само който дава задачи може да я мести.");
     await getDatabase().update(tasks).set({
@@ -140,6 +143,7 @@ export async function deleteTaskAction(formData: FormData): Promise<ActionResult
   return attempt(async () => {
     const taskId = z.uuid().parse(formData.get("taskId"));
     const context = await requireTenantContext();
+    requireModule(context, "tasks");
     const { task } = await loadTask(context, taskId);
     if (!can(context, "tasks.assign") && task.createdBy !== context.userId) throw new Error("Задачата може да изтрие само който я е създал или който дава задачи.");
     await getDatabase().delete(tasks).where(and(eq(tasks.id, task.id), eq(tasks.organizationId, context.organizationId)));

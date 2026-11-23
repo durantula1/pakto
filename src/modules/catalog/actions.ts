@@ -8,7 +8,7 @@ import "@/lib/zod-messages";
 import { getDatabase } from "@/db";
 import { catalogItems, changeOrderLineItems, changeOrderRevisions, changeOrders, offerTemplates } from "@/db/schema";
 import { requirePermission, requireProjectCapability } from "@/lib/authz/project-access";
-import { requireTenantContext } from "@/lib/authz/tenant-context";
+import { requireModule, requireTenantContext } from "@/lib/authz/tenant-context";
 import { canonicalCategory, categoryKey } from "@/modules/catalog/categories";
 
 export type CatalogState = { error?: string; ok?: number; imported?: number };
@@ -23,6 +23,7 @@ const itemSchema = z.object({
 
 async function catalogEditor() {
   const context = await requireTenantContext();
+  requireModule(context, "catalog");
   await requirePermission(context, "offers.edit");
   return context;
 }
@@ -140,6 +141,7 @@ export async function saveTemplateFromOfferAction(_: CatalogState, formData: For
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   try {
     const context = await requireTenantContext();
+    requireModule(context, "catalog");
     const db = getDatabase();
     const [offer] = await db.select({ projectId: changeOrders.projectId, revisionId: changeOrderRevisions.id, title: changeOrderRevisions.title, description: changeOrderRevisions.description, clientNote: changeOrderRevisions.clientNote, taxRate: changeOrderRevisions.taxRate })
       .from(changeOrders).innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))

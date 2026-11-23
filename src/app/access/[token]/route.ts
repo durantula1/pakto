@@ -38,6 +38,7 @@ export async function GET(
       organizationId: projects.organizationId,
       portalSessionDays: organizations.portalSessionDays,
       clientId: projectContacts.clientId,
+      portalMode: organizations.portalMode,
     })
     .from(portalGrants)
     .innerJoin(projects, eq(projects.id, portalGrants.projectId))
@@ -51,7 +52,8 @@ export async function GET(
       ),
     )
     .limit(1);
-  if (!grant)
+  // A company that switched its client portal off has no links that open anything.
+  if (!grant || grant.portalMode === "off")
     return NextResponse.redirect(appUrl("/portal/invalid"));
 
   const cookieName = grant.clientId ? clientCookieName(grant.organizationId) : `${PORTAL_COOKIE}_${grant.publicId}`;

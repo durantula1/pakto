@@ -57,7 +57,7 @@ const changeKinds: Array<{ value: ChangeKind; label: string }> = [
  * `withdrawsRevision` is set when the client already has this version; saving takes it back.
  * With `canSend`, "Запази и изпрати" sends the new version (and the email) in the same step.
  */
-export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevision, canSend = false, catalog = [], currency = "EUR", cancelHref, attachments, absorbable = [], agreement }: {
+export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevision, canSend = false, catalog = [], catalogEnabled = true, paymentTermsEnabled = true, currency = "EUR", cancelHref, attachments, absorbable = [], agreement }: {
   initial: RevisionFormInitial;
   /** An offer in force: its agreed price (with approved changes) and what is paid, in cents. A new version below either is checked. */
   agreement?: { contractMinor: number; paidMinor: number };
@@ -70,6 +70,9 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
   withdrawsRevision?: number;
   canSend?: boolean;
   catalog?: CatalogPick[];
+  /** The company's "Каталог" and "Пари" modules (Settings → Company → Modules). */
+  catalogEnabled?: boolean;
+  paymentTermsEnabled?: boolean;
   currency?: string;
   cancelHref: string;
   /** The files panel; it saves on its own, so it sits beside the form rather than inside it. */
@@ -240,7 +243,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
                 <input type="hidden" name="changeKind" value="addition" />
                 <input type="hidden" name="subtotal" value="0" />
                 <input type="hidden" name="scheduleImpactType" value="none" />
-                <div id={`${formId}-lines`} className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog minQuantity={0} currency={currency} /></div>
+                <div id={`${formId}-lines`} className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} catalogEnabled={catalogEnabled} canSaveCatalog={catalogEnabled} minQuantity={0} currency={currency} /></div>
               </>
             ) : (
               <EditorSection id={`${formId}-price`} title="Цена">
@@ -303,7 +306,7 @@ export function RevisionForm({ initial, revisionNumber, frozen, withdrawsRevisio
               </EditorSection>
             ) : null}
 
-            {isOffer ? (
+            {isOffer && paymentTermsEnabled ? (
               <EditorSection id={`${formId}-terms`} title="Плащане" description="По желание. Клиентът ги одобрява с офертата; след одобрение стават вноски.">
                 <PaymentTermsEditor rows={termRows} setRows={setTermRows} total={bill.total} stages={schedulePayload(scheduleRows).map((line) => line.title)} />
               </EditorSection>

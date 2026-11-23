@@ -101,7 +101,7 @@ export default async function ChangeOrderPage({ params, searchParams }: PageProp
   const offerState = execution?.state.offers.find((item) => item.id === change.id) ?? null;
   // Work and money of an offer in force (or one waiting for a new version to be decided).
   const inForce = !!offerState && (offerState.inForce || offerState.approved);
-  const showMoney = can(member, "payments.record") || can(member, "finance.view");
+  const showMoney = context.features.finance && (can(member, "payments.record") || can(member, "finance.view"));
   const projectOpen = change.projectStatus === "active";
   const tab = eventsBefore !== undefined ? "history"
     : requestedTab === "messages" && showThread ? "messages"

@@ -57,6 +57,7 @@ async function decisionContext(data: z.infer<typeof decisionSchema>) {
   const session = await getPortalSession(data.projectPublicId);
   if (!session || session.contactRole !== "approver") throw new Error("Решението може да вземе само одобряващият, посочен от фирмата.");
   if (session.projectStatus !== "active") throw new Error("Проектът е приключен. Свържете се с фирмата.");
+  if (session.portalMode !== "full") throw new Error("Офертите се договарят директно с фирмата. Свържете се с тях.");
   // The decision code goes to the contact's email, so the first decision also confirms it.
   if (!session.contactEmail) throw new Error("Първо потвърдете имейла си.");
   if (await isOrganizationStaff(session.organizationId)) {

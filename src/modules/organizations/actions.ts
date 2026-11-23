@@ -25,6 +25,7 @@ const onboardingSchema = z.object({
   displayName: z.string().trim().min(2).max(100),
   organizationName: z.string().trim().min(2).max(120),
   currency: z.literal("EUR").default("EUR"),
+  profile: z.enum(["solo", "team", "contract"], "Избери как работи фирмата."),
 });
 
 export async function completeOnboardingAction(

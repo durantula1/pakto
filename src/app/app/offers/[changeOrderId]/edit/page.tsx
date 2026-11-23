@@ -76,6 +76,8 @@ export default async function EditDocumentPage({ params }: PageProps<"/app/offer
         withdrawsRevision={awaitingClient ? change.revisionNumber : undefined}
         canSend={can(member, "documents.send")}
         catalog={catalog}
+        catalogEnabled={context.features.catalog}
+        paymentTermsEnabled={context.features.finance}
         currency={change.currency}
         cancelHref={path}
         absorbable={absorbable}

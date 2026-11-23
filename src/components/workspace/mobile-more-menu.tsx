@@ -7,12 +7,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-export function MobileMoreMenu({ owner, finance, admin }: { owner: boolean; finance: boolean; admin: boolean }) {
+export function MobileMoreMenu({ owner, finance, tasks, catalog, admin }: { owner: boolean; finance: boolean; tasks: boolean; catalog: boolean; admin: boolean }) {
   const [open, setOpen] = useState(false);
   const items = [
     { href: "/app", label: "Работен преглед", icon: LayoutDashboard },
-    { href: "/app/tasks", label: "Задачи", icon: CheckSquare },
-    { href: "/app/catalog", label: "Каталог и шаблони", icon: BookOpen },
+    ...(tasks ? [{ href: "/app/tasks", label: "Задачи", icon: CheckSquare }] : []),
+    ...(catalog ? [{ href: "/app/catalog", label: "Каталог и шаблони", icon: BookOpen }] : []),
     ...(owner ? [{ href: "/app/team", label: "Екип", icon: Users }] : []),
     ...(finance ? [{ href: "/app/finance", label: "Плащания", icon: Euro }] : []),
     { href: "/app/settings", label: "Настройки", icon: Settings },

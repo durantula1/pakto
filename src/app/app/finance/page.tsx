@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -20,6 +21,7 @@ export const metadata: Metadata = { title: "Плащания" };
 
 export default async function FinancePage({ searchParams }: PageProps<"/app/finance">) {
   const context = await requireTenantContext();
+  if (!context.features.finance) notFound();
   const member = await getCurrentMember(context);
   if (!can(member, "finance.view")) return <PageShell><PageHeader page="finance" /><EmptyState illustration={false} title="Нямаш достъп до месечната справка." /></PageShell>;
   const params = await searchParams;

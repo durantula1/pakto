@@ -105,7 +105,10 @@ export default async function WorkspaceLayout({
       ? { href: "/app/offers/changes/new", label: "Нова промяна" }
       : null;
   const clients = seesClients(context);
-  const finance = can(context, "finance.view");
+  const finance = can(context, "finance.view") && context.features.finance;
+  // Modules the company switched off disappear from every menu (Settings → Company → Modules).
+  const tasks = context.features.tasks;
+  const catalog = context.features.catalog;
   const owner = context.role === "owner";
   const groups: {
     label: string;
@@ -129,11 +132,7 @@ export default async function WorkspaceLayout({
           label: "Проекти",
           icon: <FolderKanban className="size-4" />,
         },
-        {
-          href: "/app/tasks",
-          label: "Задачи",
-          icon: <CheckSquare className="size-4" />,
-        },
+        ...(tasks ? [{ href: "/app/tasks", label: "Задачи", icon: <CheckSquare className="size-4" /> }] : []),
         ...(clients
           ? [
               {
@@ -167,11 +166,7 @@ export default async function WorkspaceLayout({
     {
       label: "Фирма",
       links: [
-        {
-          href: "/app/catalog",
-          label: "Каталог",
-          icon: <BookOpen className="size-4" />,
-        },
+        ...(catalog ? [{ href: "/app/catalog", label: "Каталог", icon: <BookOpen className="size-4" /> }] : []),
         ...(owner
           ? [
               {
@@ -194,7 +189,7 @@ export default async function WorkspaceLayout({
   const palettePages: PaletteLink[] = [
     { href: "/app", label: "Работен преглед", icon: "dashboard" },
     { href: "/app/projects", label: "Проекти", icon: "projects" },
-    { href: "/app/tasks", label: "Задачи", icon: "tasks" },
+    ...(tasks ? [{ href: "/app/tasks", label: "Задачи", icon: "tasks" as const }] : []),
     ...(clients
       ? [{ href: "/app/clients", label: "Клиенти", icon: "clients" as const }]
       : []),
@@ -203,7 +198,7 @@ export default async function WorkspaceLayout({
     ...(finance
       ? [{ href: "/app/finance", label: "Плащания", icon: "finance" as const }]
       : []),
-    { href: "/app/catalog", label: "Каталог", icon: "catalog" },
+    ...(catalog ? [{ href: "/app/catalog", label: "Каталог", icon: "catalog" as const }] : []),
     ...(owner
       ? [{ href: "/app/team", label: "Екип", icon: "team" as const }]
       : []),
@@ -398,7 +393,7 @@ export default async function WorkspaceLayout({
               variant="tab"
             />
           )}
-          <MobileMoreMenu owner={owner} finance={finance} admin={admin} />
+          <MobileMoreMenu owner={owner} finance={finance} tasks={tasks} catalog={catalog} admin={admin} />
         </nav>
       </section>
     </div>

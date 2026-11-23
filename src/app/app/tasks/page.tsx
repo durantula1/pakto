@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { TaskBoard } from "@/components/tasks/task-board";
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Задачи" };
 
 export default async function TasksPage() {
   const context = await requireTenantContext();
+  if (!context.features.tasks) notFound();
   const seesEveryone = can(context, "tasks.view_all");
   const canAssign = canAssignTasks(context);
   const [tasks, projects, people] = await Promise.all([

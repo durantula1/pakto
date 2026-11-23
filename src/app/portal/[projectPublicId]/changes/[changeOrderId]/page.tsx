@@ -115,7 +115,7 @@ export default async function PortalChangePage({
     ? data.revisions.find((revision) => revision.id === change.approvedRevisionId)
     : undefined;
   const projectActive = data.project.status === "active";
-  const awaitingDecision = projectActive && ["sent", "viewed"].includes(change.status) && data.session.contactRole === "approver";
+  const awaitingDecision = projectActive && data.session.portalMode === "full" && ["sent", "viewed"].includes(change.status) && data.session.contactRole === "approver";
   // An offer in force anchors its own work and payments; a change belongs to one offer.
   const offerState = isOffer ? data.state?.offers.find((offer) => offer.id === change.id) ?? null : null;
   const parentOffer = !isOffer && change.baselineOfferId ? data.state?.offers.find((offer) => offer.id === change.baselineOfferId) ?? null : null;

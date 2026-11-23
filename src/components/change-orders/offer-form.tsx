@@ -78,12 +78,17 @@ export function OfferForm({
   defaultTaxRate,
   catalog = [],
   canSaveCatalog = false,
+  catalogEnabled = true,
+  paymentTermsEnabled = true,
   initial,
 }: {
   defaultProject?: ProjectOption | null;
   defaultTaxRate: string;
   catalog?: CatalogPick[];
   canSaveCatalog?: boolean;
+  /** The company's "Каталог" and "Пари" modules (Settings → Company → Modules). */
+  catalogEnabled?: boolean;
+  paymentTermsEnabled?: boolean;
   initial?: OfferFormInitial | null;
 }) {
   const [state, action, pending] = useActionState<QuickChangeState, FormData>(
@@ -269,7 +274,7 @@ export function OfferForm({
             </label>
           </section>
 
-          <div id="offer-lines" className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} canSaveCatalog={canSaveCatalog} /></div>
+          <div id="offer-lines" className="rounded-2xl"><LineItemsEditor lines={lines} setLines={setLines} catalog={catalog} catalogEnabled={catalogEnabled} canSaveCatalog={canSaveCatalog && catalogEnabled} /></div>
 
           {/* Side by side only when the column is wide enough; beside the menu and the bill it is not. */}
           <section className="@container rounded-2xl border bg-card p-4"><div className="grid gap-4 @xl:grid-cols-2 @xl:gap-6">
@@ -286,10 +291,10 @@ export function OfferForm({
             <ScheduleEditor rows={scheduleRows} setRows={setScheduleRows} deadline={deadline} today={today} />
           </section>
 
-          <section id="offer-terms" className="rounded-2xl border bg-card p-4">
+          {paymentTermsEnabled ? <section id="offer-terms" className="rounded-2xl border bg-card p-4">
             <p className="mb-2 text-sm font-medium">Плащане <span className="font-normal text-muted-foreground">(по желание)</span></p>
             <PaymentTermsEditor rows={termRows} setRows={setTermRows} total={totals.total} stages={schedule.map((line) => line.title)} />
-          </section>
+          </section> : null}
 
           <StagedAttachments files={files} onChange={setFiles} />
         </div>

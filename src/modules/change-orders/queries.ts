@@ -344,7 +344,8 @@ async function loadChangeOrder<Extra>(organizationId: string, changeOrderId: str
   const decidedHash = decision?.revisionContentHash ?? agreement?.revisionContentHash;
   const fingerprint = decidedHash ? await verifyRevision(change.revisionId, decidedHash) : null;
   // Whether the client confirms this document in the portal or the team records the agreement.
-  const approvalMode = rest.documentApprovalMode ?? rest.organizationApprovalMode;
+  // Without the full client portal the client has nowhere to approve, so the team records it.
+  const approvalMode = rest.portalMode === "full" ? rest.documentApprovalMode ?? rest.organizationApprovalMode : "staff";
   return { ...rest, approvalMode, logo, revisions, events, hasOlderEvents, disputeEvent, decision, agreement, fingerprint, lineItems, baselineOffer, schedule, paymentTerms, absorbedChanges, extra };
 }
 

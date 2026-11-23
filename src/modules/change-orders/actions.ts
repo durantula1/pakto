@@ -688,6 +688,7 @@ async function sendCurrentRevision(context: TenantContext, changeOrderId: string
   const [target] = await database.select({ projectId: changeOrders.projectId })
     .from(changeOrders).where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
   if (!target) throw new Error("Не намерихме тази оферта или промяна.");
+  if (context.features.portalMode !== "full") throw new Error("Клиентският портал е изключен, няма къде да изпратиш. Отбележи офертата като договорена.");
   await requireProjectCapability(context, target.projectId, "send");
   await requireActiveProject(context.organizationId, target.projectId);
   await assertSendable(context.organizationId, changeOrderId);
@@ -1031,6 +1032,7 @@ export async function setDocumentApprovalModeAction(formData: FormData): Promise
   return attempt(async () => {
     const { changeOrderId, mode } = approvalModeSchema.parse(Object.fromEntries(formData));
     const context = await requireTenantContext();
+    if (mode === "client" && context.features.portalMode !== "full") throw new Error("Клиентът потвърждава с линк само при пълен клиентски портал.");
     const db = getDatabase();
     const [document] = await db.select({ projectId: changeOrders.projectId }).from(changeOrders)
       .where(and(eq(changeOrders.id, changeOrderId), eq(changeOrders.organizationId, context.organizationId))).limit(1);
