@@ -20,8 +20,8 @@ import { SiteFooter, SiteNav } from "./site-chrome";
  */
 
 const navLinks = [
-  { href: "#problem", label: "Проблемът" },
   { href: "#process", label: "Процес" },
+  { href: "#po-tvoya-nachin", label: "Твоите правила" },
   { href: "#proekti", label: "Проекти" },
   { href: "#polzi", label: "Ползи" },
   { href: "#vaprosi", label: "Въпроси" },
@@ -34,13 +34,13 @@ const trades = [
   "уеб и рекламни агенции",
   "събития",
   "автосервизи",
-  "технически услуги",
+  "поддръжка и абонаменти",
   "фотография и видео",
 ];
 
 const phrases = [
   ["„Нали се разбрахме?“", "→ одобрена v2 · 20.11 14:32"],
-  ["„Не помня такава цена.“", "→ заключена версия · отпечатък 7f3a…c91e"],
+  ["„Не помня такава цена.“", "→ изпратена версия · не може да се промени"],
   ["„Това не беше в офертата.“", "→ промяна №3 · +540 € · одобрена"],
   ["„Кога ще е готово?“", "→ етап 2 от 3 · срок 12.12"],
 ] as const;
@@ -162,7 +162,7 @@ const steps = [
   },
   {
     title: "Оферта",
-    text: "Позиции от твоя каталог, количества, отстъпка и ДДС. При изпращане версията се заключва и получава уникален отпечатък.",
+    text: "Позиции от твоя каталог, количества, отстъпка и ДДС. При изпращане версията се заключва и вече не може да се промени.",
     head: ["Оферта v1", "заключена", ""],
     rows: [
       ["Шкафове, 4,2 л.м.", "5 460 €"],
@@ -398,18 +398,62 @@ const features = [
   ],
 ] as const;
 
-const facts = [
-  [0, "регистрации за клиента"],
-  [6, "цифри в кода от имейла за всяко „да“"],
-  [1, "личен линк за целия проект"],
-  [0, "€ по време на бетата"],
+/** The three ways of working a company picks at sign-up, then what is new for each. */
+const workModes = [
+  {
+    key: "Сам",
+    title: "Работиш сам",
+    text: "Оферта, срок и плащане, без излишни менюта. Задачите и каталогът се включват, когато ти потрябват.",
+    art: "solo",
+    alt: "Офертата е одобрена от клиента и платена изцяло.",
+    mods: "Оферти · Финанси · Портал",
+  },
+  {
+    key: "Екип",
+    title: "Имаш екип",
+    text: "Всеки вижда задачите си за деня, а клиентът одобрява и приема готовите етапи от телефона си.",
+    art: "team",
+    alt: "Задачата на Иван минава в Готово и клиентът приема етап 2 от 3.",
+    mods: "Всички модули",
+  },
+  {
+    key: "Договор",
+    title: "Имаш подписан договор",
+    text: "Отбелязваш „договорено“, а Pakto следи етапите, вноските и месечния абонамент.",
+    art: "contract",
+    alt: "Абонамент 120 € на месец: платени 3 от 12 вноски, април чака.",
+    mods: "Договорено · Финанси · Портал · Задачи",
+  },
+  {
+    key: "По телефона",
+    title: "Клиентът не иска линк",
+    text: "Разбрахте се по телефона? Записваш уговорката с дата и сума, а клиентът не трябва да прави нищо.",
+    art: "phone",
+    alt: "След обаждане с клиента записваш, че сте се договорили устно.",
+    mods: "Договорено · Финанси · Задачи · Каталог",
+  },
+] as const;
+
+const workModeWins = [
+  [
+    "Вноската идва с всеки етап.",
+    "Клиентът приема всеки готов етап и вноската за него става дължима веднага, а не в края на проекта.",
+  ],
+  [
+    "Край на „коя плочка казахте?“.",
+    "Клиентът избира от снимки в портала, а изборът остава записан.",
+  ],
+  [
+    "Всеки знае какво е днес.",
+    "Изгледът „Днес“ показва на всеки от екипа задачите му за деня, подредени по проекти.",
+  ],
 ] as const;
 
 const trust = [
   [
     "Неизменност",
     "Заключени версии",
-    "Изпратената оферта е защитена от промени в самата база данни и има криптографски отпечатък.",
+    "Изпратената оферта не може да се промени. За всяка промяна правиш нова версия, а старата остава в историята.",
   ],
   [
     "Достъп",
@@ -424,12 +468,122 @@ const trust = [
   [
     "Данни",
     "В Европейския съюз",
-    "Сървъри в ЕС, криптирана връзка и възможност да изтеглиш данните си по всяко време.",
+    "Сървъри в ЕС, защитена връзка и възможност да изтеглиш данните си по всяко време.",
   ],
 ] as const;
 
 const eur = (n: number) =>
   `${String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €`;
+
+/*
+ * One tiny product moment per way of working. Each plays its story once when the card scrolls in
+ * (CSS in site.css, `.wms-*`) and rests on the final state; with reduced motion only the final state shows.
+ */
+const callWave = [
+  4, 7, 5, 9, 12, 8, 5, 10, 14, 11, 6, 4, 8, 13, 9, 6, 11, 7, 4, 6, 10, 8, 5, 3,
+];
+const months = ["Я", "Ф", "М", "А", "М", "Ю", "Ю", "А", "С", "О", "Н", "Д"];
+
+function WorkModeScene({ kind }: { kind: (typeof workModes)[number]["art"] }) {
+  if (kind === "solo") {
+    return (
+      <div className="wms wms-solo">
+        <div className="wms-head">
+          <span>ОФ-014 Баня</span>
+          <span className="wms-st">
+            <i className="tag b">изпратена</i>
+            <i className="tag ok">одобрена</i>
+          </span>
+        </div>
+        <div className="wms-lines mono">
+          <span>Плочки, 18 м²</span>
+          <b>1 260 €</b>
+          <span>Монтаж</span>
+          <b>940 €</b>
+          <span>Фуга и лепило</span>
+          <b>200 €</b>
+        </div>
+        <div className="wms-total">
+          <span className="mono">Платено</span>
+          <span className="wms-bar">
+            <i />
+          </span>
+          <b className="mono">2 400 €</b>
+        </div>
+      </div>
+    );
+  }
+  if (kind === "team") {
+    return (
+      <div className="wms wms-team">
+        <div className="wms-cols mono">
+          <span>Предстои</span>
+          <span>В работа</span>
+          <span>Готово</span>
+        </div>
+        <div className="wms-board">
+          <span className="wms-card">Боя</span>
+          <span className="wms-card">
+            <i className="wms-av">М</i>Фаянс
+          </span>
+          <span className="wms-card done">Демонтаж</span>
+          <span className="wms-card wms-move">
+            <i className="wms-av">И</i>Плот
+          </span>
+        </div>
+        <div className="wms-stage">
+          <span className="wms-seg on" />
+          <span className="wms-seg fill" />
+          <span className="wms-seg" />
+          <span className="mono">Етап 2 от 3 приет</span>
+        </div>
+      </div>
+    );
+  }
+  if (kind === "contract") {
+    return (
+      <div className="wms wms-contract">
+        <div className="wms-head">
+          <span>Абонамент</span>
+          <b className="mono">120 € / месец</b>
+        </div>
+        <div className="wms-months">
+          {months.map((m, i) => (
+            <span
+              key={i}
+              className={i < 3 ? "paid" : i === 3 ? "due" : undefined}
+              style={{ "--i": i } as React.CSSProperties}
+            >
+              <i />
+              <small className="mono">{m}</small>
+            </span>
+          ))}
+        </div>
+        <div className="wms-foot mono">
+          <span>Платени 3 от 12</span>
+          <span className="due-t">Април чака</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="wms wms-phone">
+      <div className="wms-head">
+        <span>Обаждане с Мария</span>
+        <span className="mono">04:12</span>
+      </div>
+      <div className="wms-wave">
+        {callWave.map((h, i) => (
+          <i key={i} style={{ "--h": h, "--i": i } as React.CSSProperties} />
+        ))}
+      </div>
+      <div className="wms-note">
+        <span>Записа: договорено устно, 2 400 €</span>
+        <span className="wms-stamp mono">Договорено</span>
+      </div>
+    </div>
+  );
+}
 
 function StartButtons({ className = "btn p" }: { className?: string }) {
   return (
@@ -474,7 +628,6 @@ export function Landing() {
   const trackRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef<HTMLDivElement>(null);
   const baRef = useRef<HTMLDivElement>(null);
-  const factsRef = useRef<HTMLDivElement>(null);
 
   const [stage, setStage] = useState(2);
   const [live, setLive] = useState(false);
@@ -483,7 +636,6 @@ export function Landing() {
   const [filter, setFilter] = useState<(typeof filters)[number]["id"]>("all");
   const [open, setOpen] = useState<number | null>(0);
   const [tab, setTab] = useState<"biz" | "cli">("biz");
-  const [counts, setCounts] = useState<number[]>(facts.map(([n]) => n));
   const baTouched = useRef(false);
 
   // The root layout's inline script runs once per page load; after a client navigation to "/"
@@ -543,24 +695,6 @@ export function Landing() {
     );
     if (baRef.current) ba.observe(baRef.current);
 
-    // Facts count up once.
-    let frame = 0;
-    const factsObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || reduce) return;
-        factsObserver.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const q = Math.min(1, (now - start) / 1200);
-          setCounts(facts.map(([n]) => Math.round(n * (1 - (1 - q) ** 3))));
-          if (q < 1) frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-      },
-      { threshold: 0.4 },
-    );
-    if (factsRef.current) factsObserver.observe(factsRef.current);
-
     // Struck phrases and the sideways process, both driven by scroll.
     const phrases = [...root.querySelectorAll<HTMLElement>(".phr")];
     const onScroll = () => {
@@ -598,10 +732,8 @@ export function Landing() {
 
     return () => {
       window.clearTimeout(timer);
-      cancelAnimationFrame(frame);
       reveal.disconnect();
       ba.disconnect();
-      factsObserver.disconnect();
       removeEventListener("scroll", onScroll);
       removeEventListener("resize", onScroll);
     };
@@ -639,7 +771,8 @@ export function Landing() {
             <p className="lead">
               Pakto води проекта от първата оферта до последното плащане.
               Клиентът одобрява офертата, всяка промяна и всеки готов етап от
-              телефона си, без регистрация. Всяко решение остава записано с версия, дата и час.
+              телефона си, без регистрация. Всяко решение остава записано с
+              версия, дата и час.
             </p>
             <div className="ctas" id="hero-cta">
               <StartButtons />
@@ -725,8 +858,8 @@ export function Landing() {
         <SectionHead
           className="first"
           num="01 / Проблемът"
-          title="Във всеки проект има изречения, които струват пари."
-          text="Pakto заменя всяко от тях с ясен запис."
+          title="Устните уговорки ти струват пари."
+          text="Всяко „нали се разбрахме“ в Pakto става запис с цена, срок и дата."
         />
         <div className="g12 strike">
           {phrases.map(([quote, record]) => (
@@ -743,8 +876,8 @@ export function Landing() {
       <section id="red" className="sec tight">
         <SectionHead
           num="02 / Преди и след"
-          title="Седем канала. Една история."
-          text="Viber, SMS, имейли, бележки и пропуснати обаждания. Превключи, за да видиш същия проект в Pakto."
+          title="Край на ровенето във Viber."
+          text="Уговорки, снимки и цени са разпилени по чатове, SMS и бележки. Превключи, за да видиш същия проект в Pakto."
         />
         <div className="g12">
           <div className="col-span-full">
@@ -867,10 +1000,41 @@ export function Landing() {
         </div>
       </section>
 
+      <section id="po-tvoya-nachin" className="sec">
+        <SectionHead
+          num="04 / По твоите правила"
+          title="Твоята фирма, твоите правила."
+          text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
+        />
+        <div className="g12 trust wmodes">
+          {workModes.map(({ title, text, art, alt, mods }) => (
+            <div className="col rv" key={title}>
+              <h4>{title}</h4>
+              <p>{text}</p>
+              <div className="wm" role="img" aria-label={alt}>
+                <WorkModeScene kind={art} />
+                <div className="wm-mods mono" aria-hidden="true">
+                  {mods}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="rows-list mt-12">
+          {workModeWins.map(([title, text], index) => (
+            <div className="br ink rv" key={title}>
+              <span className="k">4.{index + 1}</span>
+              <h3>{title}</h3>
+              <p className="d">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section id="proekti" className="sec">
         <SectionHead
-          num="04 / Проекти"
-          title="Всички проекти на един поглед."
+          num="05 / Проекти"
+          title="Всички проекти на едно място."
           text="Кое чака клиента, кое закъснява, кое е платено. Избери филтър или отвори проект."
         />
         <div className="pad rv">
@@ -1007,9 +1171,9 @@ export function Landing() {
       <section id="polzi" className="sec">
         <SectionHead
           className="!pb-10"
-          num="05 / Ползи"
-          title="Какво печелиш, когато всичко е записано."
-          text="Работиш по-спокойно, плащат ти за всяка свършена работа и клиентите те препоръчват."
+          num="06 / Ползи"
+          title="Плащат ти за всяка свършена работа."
+          text="По-малко обаждания, по-малко спорове и клиенти, които те препоръчват."
         />
         <div className="tg btabs" role="group" aria-label="Ползи">
           <button
@@ -1044,14 +1208,14 @@ export function Landing() {
 
       <section id="funkcii" className="sec">
         <SectionHead
-          num="06 / Функции"
-          title="Шест неща, направени както трябва."
+          num="07 / Функции"
+          title="Всичко от офертата до последното плащане."
           text="Включваш само модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал."
         />
         <div className="rows-list">
           {features.map(([title, text], index) => (
             <div className="br ink rv" key={title}>
-              <span className="k">6.{index + 1}</span>
+              <span className="k">7.{index + 1}</span>
               <h3>{title}</h3>
               <p className="d">{text}</p>
             </div>
@@ -1059,19 +1223,15 @@ export function Landing() {
         </div>
       </section>
 
-      <section id="sigurnost" className="sec tight">
-        <div ref={factsRef} className="facts">
-          {facts.map(([, label], index) => (
-            <div key={label}>
-              <b>{counts[index]}</b>
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
+      <section id="sigurnost" className="sec">
+        <SectionHead
+          num="08 / Сигурност"
+          title="Договореното остава договорено."
+          text="Какво пази теб и клиента ти, ако някой по-късно не помни."
+        />
         <div className="g12 trust">
-          {trust.map(([key, title, text]) => (
+          {trust.map(([, title, text]) => (
             <div className="col rv" key={title}>
-              <span className="lbl">{key}</span>
               <h4>{title}</h4>
               <p>{text}</p>
             </div>
@@ -1080,7 +1240,11 @@ export function Landing() {
       </section>
 
       <section id="vaprosi" className="sec">
-        <SectionHead className="short" num="07 / Въпроси" title="Накратко." />
+        <SectionHead
+          className="short"
+          num="09 / Въпроси"
+          title="Често задавани въпроси."
+        />
         <div className="g12">
           <div className="faq">
             {faqQuestions.map(({ q, a }) => (
