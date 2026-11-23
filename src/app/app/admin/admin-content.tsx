@@ -165,7 +165,7 @@ export async function AdminContent({ filters }: { filters: AdminFilters }) {
         <StatCard label="Активни за 30 дни" value={number.format(activity.active30)} hint={`${share(activity.active30, growth.users)} от потребителите`} />
         <StatCard label="Активни фирми за 30 дни" value={number.format(activity.organizations30)} hint={`${share(activity.organizations30, growth.organizations)} от фирмите`} />
       </div>
-      <ChartCard title={`Действия в хронологията на офертите. ${bucketText[filters.period]}`}>
+      <ChartCard title={`Действия по офертите (екип и клиенти). ${bucketText[filters.period]}`}>
         <AdminChart data={activity.chart} series={[
           { key: "staff", label: "Екипи", color: "var(--primary)" },
           { key: "clients", label: "Клиенти", color: "var(--chart-2)" },
@@ -194,7 +194,7 @@ export async function AdminContent({ filters }: { filters: AdminFilters }) {
       <div className={statsClassName}>
         <StatCard label="Създадени линкове" value={number.format(client.links)} />
         <StatCard label="Отваряния на линк" value={number.format(client.opened)} hint={`${number.format(client.contacts)} различни клиенти`} icon={<MousePointerClick className="size-5" />} />
-        <StatCard label="Кодове за потвърждение" value={number.format(client.codes)} />
+        <StatCard label="Кодове до клиенти" value={number.format(client.codes)} hint="за потвърждение на имейла" />
         <StatCard label="Време до първо отваряне" value={duration(client.averageViewSeconds)} hint="средно, от изпращането" />
       </div>
     </Section>

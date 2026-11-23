@@ -49,7 +49,6 @@ export default function FaqPage() {
 
         <div className="g12 doc">
           <div className="rail">
-            <p className="lbl">ВЪПРОСИ</p>
             <h1>Въпроси и отговори.</h1>
             <p>
               Отговори на въпросите, които фирмите задават най-често, преди да

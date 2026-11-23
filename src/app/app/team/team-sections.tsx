@@ -22,7 +22,7 @@ export function TeamPageSkeleton() {
     <PageShell loading>
       <PageHeader page="team" actions={<Skeleton className="h-8 w-36 rounded-lg" />} />
       <div className="flex flex-col gap-2">
-        <TabsSkeleton labels={["Членове", "Покани", "Одобрения"]} />
+        <TabsSkeleton labels={["Членове", "Покани", "За потвърждение"]} />
         <div className="flex flex-col gap-4 pt-4">
           <ListFiltersSkeleton label={searchLabel} />
           <DataTableSkeleton label={membersLabel} columns={memberColumns} footer={<ListPaginationSkeleton />} />

@@ -21,7 +21,6 @@ export function PageHeader({ page, back, actions, variant = "default" }: {
 }) {
   const copy = workspacePageCopy[page];
   if (variant === "hidden") return <h1 className="sr-only">{copy.title}</h1>;
-  const eyebrow = "eyebrow" in copy ? copy.eyebrow : undefined;
   return (
     <div className="flex flex-col gap-4">
       {back ? back.href
@@ -30,9 +29,8 @@ export function PageHeader({ page, back, actions, variant = "default" }: {
         : null}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          {eyebrow ? <p className="font-mono text-xs tracking-[0.06em] text-muted-foreground uppercase">{eyebrow}</p> : null}
-          <h1 className={cn("text-4xl leading-[0.95] font-black tracking-[-0.05em] sm:text-5xl", eyebrow && "mt-2")}>{copy.title}</h1>
-          <p className="mt-3 max-w-2xl text-muted-foreground">{copy.description}</p>
+          <h1 className="text-4xl leading-[0.95] font-black tracking-[-0.05em] sm:text-5xl">{copy.title}</h1>
+          {copy.description ? <p className="mt-3 max-w-2xl text-muted-foreground">{copy.description}</p> : null}
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2 max-lg:[&:not(:has(>:not(.hidden)))]:hidden">{actions}</div> : null}
       </div>

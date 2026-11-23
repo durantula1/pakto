@@ -143,7 +143,7 @@ export function TaskBoard({
 
       {!tasks.length ? (
         <p className="rounded-2xl border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
-          Още няма задачи. Добави първата с „Нова задача“: какво, за кой проект, кой я прави и до кога.
+          Още няма задачи. Добави първата с „Нова задача“: какво, за кой проект, кой я прави и до кога. Клиентът не ги вижда.
         </p>
       ) : view === "board" ? (
         <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setDragging(null)}>

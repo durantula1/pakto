@@ -43,7 +43,6 @@ export function LegalDocument({
   return (
     <div className="g12 doc">
       <div className="rail">
-        <p className="lbl">ПРАВНИ УСЛОВИЯ</p>
         <h1>{title}</h1>
         <p>{lead}</p>
         <p className="mt-6 text-sm text-muted-foreground">

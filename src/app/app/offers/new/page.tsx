@@ -81,7 +81,7 @@ export default async function NewOfferPage({
           />
         </div>
       ) : (
-        <EmptyState title="Първо добави проект.">
+        <EmptyState title="Първо добави проект." description="Всяка оферта е към проект. В него са клиентът и адресът.">
           <Link href="/app/projects?new=1" className="mt-3 inline-block font-semibold text-blue">
             Създай проект →
           </Link>

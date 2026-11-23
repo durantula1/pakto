@@ -1,75 +1,77 @@
-export const workspacePageCopy = {
+/** Page titles, with a subtitle only where it says something the title and menu do not. */
+export const workspacePageCopy: Record<
+  WorkspacePage,
+  { title: string; description?: string }
+> = {
   admin: {
-    eyebrow: "Само за теб",
     title: "Админ",
-    description: "Как се използва Pakto от другите фирми. Твоите профили, фирми и тестове не се броят.",
+    description: "Твоите профили, фирми и тестове не се броят.",
   },
   catalog: {
     title: "Каталог и шаблони",
-    description: "Услуги и материали с цени и готови оферти, от които започваш за секунди.",
+    description: "Услуги, материали и шаблони за офертите.",
   },
   guide: {
-    eyebrow: "Ръководство",
     title: "Как работи Pakto",
-    description: "Целият път на една оферта, обяснен без технически думи. Избери сценарий и натисни „Пусни“.",
   },
   dashboard: {
-    eyebrow: "Работен преглед",
     title: "Какво изисква внимание",
-    description:
-      "Всичко започва от офертата. Промяна идва, след като клиентът я одобри.",
   },
   projects: {
     title: "Проекти",
-    description: "Клиент, адрес и всички договорени промени на едно място.",
   },
   tasks: {
     title: "Задачи",
-    description: "Ежедневната работа на екипа по проектите: какво, за кой проект, кой го прави и до кога.",
   },
   work: {
     title: "Етапи",
-    description: "Неприключените етапи на активните проекти, подредени по срок. Най-спешните са първи.",
+    description: "Неприключените етапи, най-спешните първи.",
   },
   clients: {
     title: "Клиенти",
-    description: "Всеки клиент с неговите проекти. Един клиент може да има няколко проекта.",
   },
   offers: {
     title: "Оферти",
-    description: "Основната оферта на всеки проект и промените към нея.",
   },
   notifications: {
     title: "Известия",
-    description: "Отвори известие, за да го маркираш като прочетено.",
   },
   team: {
     title: "Екип",
-    description: "Служители, покани и права за работа по проектите.",
   },
   finance: {
     title: "Плащания",
-    description: "Плащанията от клиенти по месеци, проекти и начин на плащане.",
   },
   settings: {
-    eyebrow: "Профил и фирма",
     title: "Настройки",
-    description: "Твоите данни, сигурността на профила и поверителността.",
   },
   newProject: {
     title: "Нов проект",
-    description: "Добави проекта и одобряващия.",
   },
   newOffer: {
     title: "Нова оферта",
-    description:
-      "Попълваш услугите и материалите, преглеждаш сумата и след това я запазваш.",
   },
   newChange: {
-    eyebrow: "Допълнителна работа",
     title: "Нова промяна",
-    description: "Разликата спрямо вече одобрена оферта на същия проект.",
+    description:
+      "Допълнителна работа, намаление или нов срок по одобрена оферта.",
   },
-} as const;
+};
 
-export type WorkspacePage = keyof typeof workspacePageCopy;
+export type WorkspacePage =
+  | "admin"
+  | "catalog"
+  | "guide"
+  | "dashboard"
+  | "projects"
+  | "tasks"
+  | "work"
+  | "clients"
+  | "offers"
+  | "notifications"
+  | "team"
+  | "finance"
+  | "settings"
+  | "newProject"
+  | "newOffer"
+  | "newChange";
