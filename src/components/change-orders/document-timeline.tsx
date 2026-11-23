@@ -21,6 +21,7 @@ export const eventLabels: Record<string, string> = {
   revision_expired: "Срокът за решение изтече",
   client_reminded: "Изпратено напомняне към клиента",
   decision_approved: "Одобрена от клиента",
+  agreement_recorded: "Отбелязана като договорена",
   decision_declined: "Отказана от клиента",
   changes_requested: "Клиентът поиска промяна",
   decision_changes_requested: "Клиентът поиска промяна",
@@ -73,6 +74,7 @@ export const eventLabels: Record<string, string> = {
 /** Events worth a colored dot: the client's decisions and disputes. */
 const eventTones: Record<string, string> = {
   decision_approved: "bg-ok",
+  agreement_recorded: "bg-ok",
   decision_declined: "bg-late",
   decision_changes_requested: "bg-warn",
   changes_requested: "bg-warn",

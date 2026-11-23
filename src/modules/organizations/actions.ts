@@ -107,6 +107,35 @@ export async function updateClientRemindersAction(formData: FormData) {
   revalidatePath("/app/settings/organization");
 }
 
+/**
+ * How the company works with Pakto: how clients confirm, how much of the client portal is on, and
+ * which modules show. Switching a module off hides it and stops its emails; its data stays.
+ * Without the full portal the client has nowhere to approve, so the team records agreements.
+ */
+export async function updateWorkModesAction(formData: FormData) {
+  const toggle = z.enum(["on", "off"], "Избери от списъка.");
+  const parsed = z.object({
+    approval: z.enum(["client", "staff"], "Избери от списъка."),
+    portal: z.enum(["full", "view_only", "off"], "Избери от списъка."),
+    tasks: toggle,
+    catalog: toggle,
+    finance: toggle,
+  }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const context = await requireTenantContext();
+  requireRole(context, ["owner"]);
+  const { approval, portal } = parsed.data;
+  await getDatabase().update(organizations).set({
+    approvalMode: portal === "full" ? approval : "staff",
+    portalMode: portal,
+    tasksEnabled: parsed.data.tasks === "on",
+    catalogEnabled: parsed.data.catalog === "on",
+    financeEnabled: parsed.data.finance === "on",
+    updatedAt: new Date(),
+  }).where(eq(organizations.id, context.organizationId));
+  revalidatePath("/app", "layout");
+}
+
 /** How many days ahead a stage counts as "coming up" on the dashboard and in the stages list. */
 export async function updateStageWarningAction(formData: FormData) {
   const parsed = z.object({

@@ -11,12 +11,12 @@ import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DetailTabs } from "@/components/workspace/detail-tabs";
 import { requireOwner } from "@/lib/authz/project-access";
 import { requireTenantContext } from "@/lib/authz/tenant-context";
-import { updateDefaultTaxRateAction, updateClientRemindersAction, updateOfferValidityAction, updateOrganizationAction, updateOrganizationPhoneAction, updateStageWarningAction } from "@/modules/organizations/actions";
+import { updateDefaultTaxRateAction, updateClientRemindersAction, updateOfferValidityAction, updateOrganizationAction, updateOrganizationPhoneAction, updateStageWarningAction, updateWorkModesAction } from "@/modules/organizations/actions";
 import { stageWarningChoices } from "@/modules/work/labels";
 import { getOrganizationSettings } from "@/modules/organizations/queries";
 import { orForbidden } from "@/lib/authz/page-access";
 
-const tabs = ["company", "offers", "deadlines", "data"] as const;
+const tabs = ["company", "modules", "offers", "deadlines", "data"] as const;
 
 export const metadata: Metadata = { title: "Фирма · Настройки" };
 
@@ -32,6 +32,7 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
     <DetailTabs defaultTab={tab}>
       <TabsList>
         <TabsTrigger id="company">Фирмен профил</TabsTrigger>
+        <TabsTrigger id="modules">Модули</TabsTrigger>
         <TabsTrigger id="offers">Оферти</TabsTrigger>
         <TabsTrigger id="deadlines">Срокове и писма</TabsTrigger>
         <TabsTrigger id="data">Данни</TabsTrigger>
@@ -70,6 +71,29 @@ export default async function OrganizationSettingsPage({ searchParams }: PagePro
               <AutoSaveStatus />
             </AutoSaveForm>
           </SettingsRow>
+        </SettingsGroup>
+      </TabsContent>
+      <TabsContent id="modules" className="flex flex-col gap-7 pt-4">
+        <SettingsGroup id="approval" title="Как се договаряте с клиентите" description="Важи за новите оферти и промени. Всяка оферта може да го смени само за себе си.">
+          <AutoSaveForm action={updateWorkModesAction} className="flex w-full flex-col">
+            <SettingsRow label="Как клиентите потвърждават офертите" description={organization.portalMode === "full" ? "С линк: клиентът одобрява в портала с код от имейла. Отбелязваме го ние: ти записваш, че клиентът се е съгласил устно, с подписан договор или по имейл." : "Без пълен клиентски портал клиентът няма къде да одобри, затова съгласието го отбелязвате вие."}>
+              <AutoSaveSelect label="Как клиентите потвърждават офертите" name="approval" value={organization.approvalMode} options={[{ value: "client", label: "Клиентът одобрява с линк" }, { value: "staff", label: "Отбелязваме го ние" }]} />
+            </SettingsRow>
+            <SettingsRow label="Клиентски портал" description="Пълен: клиентът вижда проекта, одобрява, пита и приема работата. Само за преглед: вижда етапите, плащанията и документите, без да решава. Изключен: без линкове и без писма до клиента.">
+              <AutoSaveSelect label="Клиентски портал" name="portal" value={organization.portalMode} options={[{ value: "full", label: "Пълен" }, { value: "view_only", label: "Само за преглед" }, { value: "off", label: "Изключен" }]} />
+            </SettingsRow>
+            <SettingsRow label="Модул „Задачи“" description="Табло със задачи за екипа, по проекти и по хора.">
+              <AutoSaveSelect label="Модул „Задачи“" name="tasks" value={organization.tasksEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
+            </SettingsRow>
+            <SettingsRow label="Модул „Каталог“" description="Услуги и материали с цени, които се добавят в офертите с едно докосване.">
+              <AutoSaveSelect label="Модул „Каталог“" name="catalog" value={organization.catalogEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
+            </SettingsRow>
+            <SettingsRow label="Модул „Пари“" description="Планът за плащане в офертите, плащанията по проектите и страницата „Плащания“.">
+              <AutoSaveSelect label="Модул „Пари“" name="finance" value={organization.financeEnabled ? "on" : "off"} options={[{ value: "on", label: "Включен" }, { value: "off", label: "Изключен" }]} />
+              <AutoSaveStatus />
+            </SettingsRow>
+          </AutoSaveForm>
+          <p className="text-sm text-muted-foreground">Изключеният модул изчезва от менюто и спира писмата си. Данните остават и се връщат, щом го включиш отново.</p>
         </SettingsGroup>
       </TabsContent>
       <TabsContent id="deadlines" className="flex flex-col gap-7 pt-4">

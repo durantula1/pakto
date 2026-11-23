@@ -11,6 +11,11 @@ export function eventDetail(event: { eventType: string; metadata?: unknown }): s
     case "decision_dispute_resolved": case "payment_dispute_resolved": return text("resolution");
     case "payment_claim_rejected": return text("response");
     case "acceptance_requested": case "acceptance_issues": return text("note");
+    case "agreement_recorded": {
+      const how = { verbal: "Устно", signed: "Подписан договор", email: "По имейл", other: "Друго" }[String(meta.method)] ?? null;
+      const day = text("agreedOn")?.split("-").reverse().join(".");
+      return [how && day ? `${how}, ${day}` : how, text("note")].filter(Boolean).join(". ") || null;
+    }
     default: return null;
   }
 }

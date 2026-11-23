@@ -19,11 +19,14 @@ import { ResolveDecisionDisputeDialog } from "@/components/change-orders/dispute
 import { CopyPortalLink } from "@/components/change-orders/copy-portal-link";
 import { ActionForm, ActionSubmit } from "@/components/workspace/action-form";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
+import { ApprovalModeSwitch, RecordAgreementDialog } from "@/components/change-orders/record-agreement";
 import { maskEmail } from "@/lib/email/send";
 import { cn } from "@/lib/utils";
 import { sendChangeOrderAction } from "@/modules/change-orders/actions";
 import { discountLabel } from "@/modules/change-orders/pricing";
 import {
+  agreementLine,
+  agreementMethodLabels,
   documentStatusStepLabels,
   formatDay,
   scheduleLabel,
@@ -150,7 +153,15 @@ export function DocumentStatusCard({
     status === "changes_requested";
   const editHref = `${path}/edit`;
   const decision = change.decision;
-  const decisionState: StepState = decision
+  const agreement = change.agreement;
+  // The company (or this document) records agreements itself instead of asking for a decision in the portal.
+  const staffMode = change.approvalMode === "staff";
+  // Never went to the client's portal: no "sent" and "opened" steps, the version is only locked and agreed.
+  // The agreement was recorded the moment the version was locked (never sent for a decision).
+  const offPortal = agreement
+    ? !change.viewedAt && !!change.frozenAt && Math.abs(agreement.createdAt.getTime() - change.frozenAt.getTime()) < 60_000
+    : staffMode && status === "draft";
+  const decisionState: StepState = agreement ? "done" : decision
     ? decision.decision === "approved"
       ? "done"
       : "alert"
@@ -161,7 +172,14 @@ export function DocumentStatusCard({
         : "pending";
 
   let primary: ReactNode = null;
-  if (status === "draft" && canSend) {
+  let secondary: ReactNode = null;
+  if (status === "draft" && canSend && staffMode) {
+    primary = <RecordAgreementDialog changeOrderId={change.id} kind={change.documentKind} sent={false} primary />;
+  } else if (awaiting && canSend) {
+    // Sent for the client's decision, but they may agree another way (a call, a signature).
+    secondary = <RecordAgreementDialog changeOrderId={change.id} kind={change.documentKind} sent primary={false} />;
+  }
+  if (status === "draft" && canSend && !staffMode) {
     // Sending cannot be undone: the client gets an email and the version is frozen. Ask first.
     primary = (
       <ConfirmDialog
@@ -296,11 +314,11 @@ export function DocumentStatusCard({
                 state={status === "draft" ? "current" : "done"}
               />
               <Step
-                label={documentStatusStepLabels[1]}
+                label={offPortal ? "Заключена" : documentStatusStepLabels[1]}
                 detail={change.frozenAt ? shortDateTime(change.frozenAt) : undefined}
                 state={change.frozenAt ? "done" : "pending"}
               />
-              <Step
+              {offPortal ? null : <Step
                 label={documentStatusStepLabels[2]}
                 detail={
                   change.viewedAt
@@ -316,18 +334,22 @@ export function DocumentStatusCard({
                       ? "current"
                       : "pending"
                 }
-              />
+              />}
               <Step
                 last
                 label={
-                  decision
+                  agreement
+                    ? "Договорено"
+                    : decision
                     ? (decisionLabels[decision.decision] ?? "Решение")
                     : status === "expired"
                       ? "Изтекла без решение"
-                      : documentStatusStepLabels[3]
+                      : offPortal ? "Договорено" : documentStatusStepLabels[3]
                 }
                 detail={
-                  decision
+                  agreement
+                    ? `${agreementMethodLabels[agreement.method]} · ${formatDay(agreement.agreedOn)}`
+                    : decision
                     ? `${decision.typedName} · ${shortDateTime(decision.createdAt)}`
                     : change.responseDueAt && (awaiting || status === "expired")
                       ? `${status === "expired" ? "Изтече на" : "Валидна до"} ${shortDateTime(change.responseDueAt)}`
@@ -336,6 +358,7 @@ export function DocumentStatusCard({
                 state={decisionState}
               />
             </ol>
+            {status === "draft" && canSend ? <ApprovalModeSwitch changeOrderId={change.id} kind={change.documentKind} staff={change.approvalMode === "staff"} overridden={change.documentApprovalMode !== null} /> : null}
             {change.clientRemindedAt && awaiting ? (
               <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
                 <BellRing className="size-3.5" /> Последно напомняне:{" "}
@@ -343,9 +366,10 @@ export function DocumentStatusCard({
               </p>
             ) : null}
           </div>
-          {primary || showEdit || portalUrl ? (
+          {primary || secondary || showEdit || portalUrl ? (
             <div className="flex flex-col gap-2 border-t pt-4 lg:shrink-0 lg:flex-row lg:items-center lg:border-t-0 lg:pt-0">
               {primary}
+              {secondary}
               {showEdit ? (
                 <Link href={editHref} className={secondaryClassName}>
                   <PencilLine className="size-4" /> {status === "draft" ? "Редактирай" : "Коригирай"}
@@ -449,6 +473,33 @@ export function DocumentFacts({
           </p>
         </CardContent>
       </Card>
+      {change.agreement ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Как е договорено</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2 text-sm">
+            <p>{agreementLine(change.agreement.method, change.agreement.agreedOn)}</p>
+            {change.agreement.note ? <p className="whitespace-pre-line">{change.agreement.note}</p> : null}
+            <p className="text-muted-foreground">
+              Отбелязано от {change.agreement.recordedByName ?? "служител"} · {dateTime(change.agreement.createdAt)}
+            </p>
+            {change.fingerprint === "match" ? (
+              <p className="flex items-start gap-2 text-ok">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0" /> Съдържанието е същото като при отбелязването.
+              </p>
+            ) : change.fingerprint === "mismatch" ? (
+              <p role="alert" className="flex items-start gap-2 text-destructive">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0" /> Записаното съдържание не съвпада с отпечатъка. Пиши ни на info@pakto.net.
+              </p>
+            ) : null}
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer select-none">Технически детайли</summary>
+              <p className="mt-2 break-all">Отпечатък на версията: <span className="font-mono">{change.agreement.revisionContentHash}</span></p>
+            </details>
+          </CardContent>
+        </Card>
+      ) : null}
       {decision ? (
         <Card>
           <CardHeader>
@@ -504,3 +555,4 @@ export function DocumentFacts({
     </div>
   );
 }
+

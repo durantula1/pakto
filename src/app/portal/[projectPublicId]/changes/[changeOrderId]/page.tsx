@@ -13,7 +13,7 @@ import { OfferQuestions } from "@/components/portal/offer-questions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttachmentsPanel } from "@/components/change-orders/attachments-panel";
 import { DocumentBody } from "@/components/change-orders/document-body";
-import { documentName, scheduleLabel, vatLabel } from "@/modules/change-orders/labels";
+import { agreementLine, documentName, scheduleLabel, vatLabel } from "@/modules/change-orders/labels";
 import { clientStatusLabels } from "@/components/portal/client-status";
 import { cents, formatCents } from "@/modules/projects/state";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,7 @@ const eventLabels: Record<string, string> = {
   revision_withdrawn: "Оттеглена от фирмата за корекция",
   revision_expired: "Срокът за решение изтече",
   decision_approved: "Одобрена",
+  agreement_recorded: "Договорена с фирмата",
   decision_declined: "Отказана",
   decision_changes_requested: "Поискана промяна",
   decision_disputed: "Решението е оспорено от клиента",
@@ -251,6 +252,8 @@ export default async function PortalChangePage({
           ? { tone: "info", text: `Фирмата обновява ${isOffer ? "тази оферта" : "тази промяна"}. Ще получите имейл, когато новата версия е готова за решение.${stillInForce}` }
           : waiting
             ? { tone: "info", text: projectActive ? "Чака решението на одобряващия, посочен от фирмата." : "Проектът е приключен и тази версия вече не чака решение." }
+            : data.agreement
+              ? { tone: "success", text: <><strong className="font-semibold">{agreementLine(data.agreement.method, data.agreement.agreedOn)}</strong> с {data.project.organizationName}</> }
             : data.decision?.decision === "approved"
               ? { tone: "success", text: <><strong className="font-semibold">Одобрихте</strong> · {decidedOn}{data.decision.verifiedEmail ? <span className="opacity-80"> · потвърдено с код до {maskEmail(data.decision.verifiedEmail)}</span> : null}</> }
               : data.decision?.decision === "declined"

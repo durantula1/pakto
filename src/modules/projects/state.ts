@@ -14,6 +14,7 @@ import {
   paymentInstallments,
   portalDecisions,
   projectMilestones,
+  recordedAgreements,
   projectReceipts,
   projects,
 } from "@/db/schema";
@@ -83,11 +84,12 @@ export async function getProjectState(organizationId: string, projectId: string)
       approvedTotal: approvedRevision.total,
       approvedCurrency: approvedRevision.currency,
       approvedDeadline: approvedRevision.agreedDeadline,
-      approvedAt: approvalDecision.createdAt,
+      approvedAt: sql<Date | null>`coalesce(${approvalDecision.createdAt}, ${recordedAgreements.createdAt})`.mapWith(changeOrders.updatedAt),
     }).from(changeOrders)
       .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.currentRevisionId))
       .leftJoin(approvedRevision, eq(approvedRevision.id, changeOrders.approvedRevisionId))
       .leftJoin(approvalDecision, and(eq(approvalDecision.revisionId, approvedRevision.id), eq(approvalDecision.decision, "approved")))
+      .leftJoin(recordedAgreements, eq(recordedAgreements.revisionId, approvedRevision.id))
       .where(and(eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), eq(changeOrders.documentKind, "offer"), isNull(changeOrders.archivedAt)))
       .orderBy(asc(changeOrders.sequenceNumber)),
     // Approved changes. A change absorbed by a later offer version no longer adds to the price.
@@ -100,12 +102,14 @@ export async function getProjectState(organizationId: string, projectId: string)
       total: changeOrderRevisions.total,
       deadline: changeOrderRevisions.agreedDeadline,
       workStatus: changeOrders.workStatus,
-      approvedAt: portalDecisions.createdAt,
+      // Approved by the client in the portal, or recorded by the team.
+      approvedAt: sql<Date>`coalesce(${portalDecisions.createdAt}, ${recordedAgreements.createdAt})`.mapWith(changeOrders.updatedAt),
     }).from(changeOrders)
       .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
-      .innerJoin(portalDecisions, eq(portalDecisions.revisionId, changeOrderRevisions.id))
+      .leftJoin(portalDecisions, eq(portalDecisions.revisionId, changeOrderRevisions.id))
+      .leftJoin(recordedAgreements, eq(recordedAgreements.revisionId, changeOrderRevisions.id))
       .where(and(eq(changeOrders.projectId, projectId), eq(changeOrders.organizationId, organizationId), eq(changeOrders.documentKind, "change"), isNull(changeOrders.archivedAt)))
-      .orderBy(asc(portalDecisions.createdAt), asc(changeOrders.sequenceNumber)),
+      .orderBy(sql`coalesce(${portalDecisions.createdAt}, ${recordedAgreements.createdAt})`, asc(changeOrders.sequenceNumber)),
     db.select().from(projectMilestones).where(and(eq(projectMilestones.projectId, projectId), eq(projectMilestones.organizationId, organizationId))).orderBy(asc(projectMilestones.dueOn)),
     db.select().from(paymentInstallments).where(and(eq(paymentInstallments.projectId, projectId), eq(paymentInstallments.organizationId, organizationId))).orderBy(asc(paymentInstallments.dueOn)),
     db.select().from(projectReceipts).where(receiptScope)
@@ -307,7 +311,6 @@ export async function getProjectsTotals(organizationId: string, projectIds: stri
     db.select({ baselineOfferId: changeOrders.baselineOfferId, total: changeOrderRevisions.total })
       .from(changeOrders)
       .innerJoin(changeOrderRevisions, eq(changeOrderRevisions.id, changeOrders.approvedRevisionId))
-      .innerJoin(portalDecisions, eq(portalDecisions.revisionId, changeOrderRevisions.id))
       .where(and(offerScope, eq(changeOrders.documentKind, "change"), isNull(changeOrders.absorbedByRevisionId))),
     db.select({ offerId: projectMilestones.offerId, count: sql<number>`count(*)::int` })
       .from(projectMilestones)

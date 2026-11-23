@@ -30,7 +30,7 @@ export function notificationCategory(eventType: string): NotificationCategory {
 export function notificationIcon(eventType: string): NotificationIcon {
   if (eventType.endsWith("_disputed") || eventType === "acceptance_issues" || eventType === "revision_expired") return "alert";
   if (eventType === "client_message") return "message";
-  if (eventType === "decision_approved" || eventType === "acceptance_accepted" || eventType === "payment_received") return "check";
+  if (eventType === "decision_approved" || eventType === "agreement_recorded" || eventType === "acceptance_accepted" || eventType === "payment_received") return "check";
   const category = notificationCategory(eventType);
   if (category === "payments") return "euro";
   if (category === "team") return "user";

@@ -71,3 +71,18 @@ export const vatRateOptions = [
 
 /** Rows per page in the changes table under an offer. */
 export const OFFER_CHANGES_PAGE_SIZE = 10;
+
+/** How the client agreed when the team records it instead of a decision in the portal. */
+export const agreementMethodLabels = {
+  verbal: "Устно",
+  signed: "Подписан договор",
+  email: "По имейл",
+  other: "Друго",
+} as const;
+
+/** "Договорено устно на 23.11.2026": the line under an agreement the team recorded. */
+export function agreementLine(method: keyof typeof agreementMethodLabels, agreedOn: string) {
+  const how = { verbal: "устно", signed: "с подписан договор", email: "по имейл", other: "" }[method];
+  const [year, month, day] = agreedOn.split("-");
+  return `Договорено ${how ? `${how} ` : ""}на ${day}.${month}.${year}`;
+}
