@@ -398,6 +398,19 @@ const features = [
   ],
 ] as const;
 
+/** The three ways of working a company picks at sign-up, then what is new for each. */
+const workModes = [
+  ["Сам", "Самостоятелна дейност", "Работиш сам: оферта, срок и плащане, без излишни менюта. Задачите и каталогът са изключени, докато не ти потрябват."],
+  ["Екип", "Екип с онлайн одобрение", "Екипът вижда задачите си за деня, а клиентът одобрява и приема всеки етап от телефона."],
+  ["Договор", "Работа по договор", "Договорът е на хартия? Отбелязваш „договорено“, а етапите, вноските и месечният абонамент се водят в Pakto."],
+] as const;
+
+const workModeWins = [
+  ["Плащат ти по-рано.", "Клиентът приема всеки готов етап и вноската за него става дължима веднага, а не в края на проекта."],
+  ["Край на „коя плочка казахте?“.", "Клиентът избира от снимки в портала, а изборът остава записан."],
+  ["Само това, което ползваш.", "Включваш модулите, които ти трябват: Задачи, Каталог, Финанси, Клиентски портал."],
+] as const;
+
 const facts = [
   [0, "регистрации за клиента"],
   [6, "цифри в кода от имейла за всяко „да“"],
@@ -1059,6 +1072,32 @@ export function Landing() {
         </div>
       </section>
 
+      <section id="po-tvoya-nachin" className="sec">
+        <SectionHead
+          num="07 / По твоя начин"
+          title="Работи така, както вече работиш."
+          text="Не всеки проект започва с оферта и не всеки клиент иска линк. Pakto се нагажда към теб."
+        />
+        <div className="g12 trust">
+          {workModes.map(([key, title, text]) => (
+            <div className="col rv" key={title}>
+              <span className="lbl">{key}</span>
+              <h4>{title}</h4>
+              <p>{text}</p>
+            </div>
+          ))}
+        </div>
+        <div className="rows-list mt-12">
+          {workModeWins.map(([title, text], index) => (
+            <div className="br ink rv" key={title}>
+              <span className="k">7.{index + 1}</span>
+              <h3>{title}</h3>
+              <p className="d">{text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section id="sigurnost" className="sec tight">
         <div ref={factsRef} className="facts">
           {facts.map(([, label], index) => (
@@ -1080,7 +1119,7 @@ export function Landing() {
       </section>
 
       <section id="vaprosi" className="sec">
-        <SectionHead className="short" num="07 / Въпроси" title="Накратко." />
+        <SectionHead className="short" num="08 / Въпроси" title="Накратко." />
         <div className="g12">
           <div className="faq">
             {faqQuestions.map(({ q, a }) => (
