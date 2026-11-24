@@ -17,7 +17,7 @@ import { finishWelcomeAction } from "@/modules/account/actions";
 
 const loadMotionFeatures = () => import("@/components/marketing/motion-features").then((module) => module.default);
 
-type Slide = { id: string; kicker: string; title: ReactNode; text: string; points: string[]; final?: boolean; visual: ReactNode };
+type Slide = { id: string; kicker: string; title: ReactNode; text: string; points: string[]; final?: boolean; visualLast?: boolean; visual: ReactNode };
 
 type Props = {
   firstName: string;
@@ -36,14 +36,14 @@ function RulesVisual({ features }: { features: OrganizationFeatures }) {
   const rows: Array<{ icon: LucideIcon; title: string; text: string }> = [
     link
       ? features.approvalMode === "client"
-        ? { icon: Link2, title: "С линк и потвърждение онлайн", text: "Клиентът одобрява с името си и код от имейла." }
-        : { icon: Link2, title: "С линк, но договорено от теб", text: "Клиентът вижда, а ти отбелязваш договореното." }
-      : { icon: Handshake, title: "Без линк към клиента", text: "Договаряш се по свой начин и записваш в Pakto." },
-    { icon: Handshake, title: "Отбележи като договорено", text: "По телефона, на място или с договор: един бутон и етапите и плащанията тръгват." },
-    { icon: ClipboardCheck, title: "Етапи с приемане", text: link && features.portalMode === "full" ? "Клиентът приема етапа в портала." : "Завършваш етапа и го отбелязваш като приет." },
-    ...(link && features.portalMode === "full" ? [{ icon: MessageCircleQuestion, title: "„Попитай клиента“", text: "Въпрос с 2 до 6 варианта, и със снимки. Изборът остава в историята." }] : []),
-    ...(features.finance ? [{ icon: CalendarRange, title: "Етапи и вноски без оферта", text: "За договор или абонамент, и с месечно повтаряне." }] : []),
-    ...(features.tasks ? [{ icon: ListChecks, title: "Задачи по етапи и „Днес“", text: "Виждаш кой върху какво работи днес." }] : []),
+        ? { icon: Link2, title: "Клиентът потвърждава онлайн", text: "Получава линк и одобрява с името си и код от имейла. Не гониш отговор по телефона." }
+        : { icon: Link2, title: "Клиентът само вижда, ти записваш договореното", text: "Линкът е за преглед. Когато се разберете, го записваш ти." }
+      : { icon: Handshake, title: "Без линк към клиента", text: "Договаряш се както досега и записваш в Pakto какво е договорено." },
+    { icon: Handshake, title: "Договорихте се извън Pakto? Запиши го", text: "По телефона, на място или с договор на хартия: отбелязваш офертата като договорена. Pakto пази кога и как е станало, и проектът тръгва." },
+    { icon: ClipboardCheck, title: link && features.portalMode === "full" ? "Клиентът приема всеки етап" : "Приемане на етапите", text: link && features.portalMode === "full" ? "Завършиш етап и клиентът го приема или пише какво да се поправи. Не спорите накрая какво е било готово." : "Завършваш етап и записваш, че е приет." },
+    ...(link && features.portalMode === "full" ? [{ icon: MessageCircleQuestion, title: "Клиентът избира, ти не гадаеш", text: "Плочка, цвят, модел: питаш с 2 до 6 варианта, и със снимки. Изборът му остава записан." }] : []),
+    ...(features.finance ? [{ icon: CalendarRange, title: "Работа по договор или абонамент", text: "Не ти трябва оферта: добавяш етапи и вноски направо в проекта, и месечно повтарящи се." }] : []),
+    ...(features.tasks ? [{ icon: ListChecks, title: "Знаеш кой какво прави днес", text: "Свързваш задача с етап. Когато задачите са готови, Pakto предлага да затвориш етапа, а „Днес“ показва работата за деня." }] : []),
   ];
   return (
     <div aria-hidden="true" className="mx-auto w-full max-w-[28rem] border border-ink bg-card p-4 shadow-[6px_6px_0_var(--ink)] sm:p-5">
@@ -162,16 +162,16 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       id: "hello",
       kicker: "ДОБРЕ ДОШЪЛ",
       title: <>{firstName ? `Здравей, ${firstName}!` : "Здравей!"} <span className="text-blue">Договореното – записано и потвърдено.</span></>,
-      text: `Pakto пази какво сте договорили с клиента: офертата, всяка промяна, сроковете и плащанията. ${owner ? "" : `Вече си в екипа на „${organizationName}“. `}Ето най-важното за минута.`,
-      points: ["Всичко по проекта на едно място", "Клиентът решава от телефона", "Всяко „да“ остава записано"],
+      text: `Клиентът „не помни“ какво сте се разбрали? Pakto записва офертата, промените, сроковете и плащанията по всеки проект, за да няма спор после. ${owner ? "" : `Вече си в екипа на „${organizationName}“. `}Ето най-важното за минута.`,
+      points: ["Всичко по проекта на едно място, не в чатове и бележки", "Клиентът потвърждава от телефона си", "Всяко „да“ остава записано, с име и час"],
       visual: <HelloVisual />,
     },
     {
       id: "offer",
       kicker: "ОФЕРТИ",
       title: "Изготви оферта направо от телефона.",
-      text: "Редове от каталога, количества и цени. Сумите и ДДС се смятат сами, а условията за плащане стават вноски, щом клиентът одобри.",
-      points: [features.catalog ? "Каталог с услуги и материали" : "Редове с количества и цени", "Срок, график и условия за плащане", "PDF с логото на фирмата"],
+      text: "Не смяташ на ръка. Добавяш редове с количества и цени, а Pakto смята сумите и ДДС. Условията за плащане стават вноски, щом офертата е договорена.",
+      points: [features.catalog ? "Каталог: услугите ти са готови за повторно ползване" : "Редове с количества и цени", "Срок, график и условия за плащане в една оферта", "PDF с логото на фирмата, готов за клиента"],
       visual: <OfferDemo />,
     },
     ...(features.portalMode === "off" ? [] : [{
@@ -179,10 +179,10 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       kicker: "КЛИЕНТЪТ",
       title: features.approvalMode === "client" && features.portalMode === "full" ? "Клиентът решава от телефона." : "Клиентът вижда от телефона.",
       text: features.approvalMode === "client" && features.portalMode === "full"
-        ? "Получава личен линк, без регистрация и парола. Вижда точната версия и одобрява с името си и код от имейла."
+        ? "Не го караш да се регистрира. Получава линк по имейл, вижда точно твоята версия и одобрява с името си и код от имейла."
         : "Получава личен линк, без регистрация и парола. Вижда точната версия и как върви проектът, а договореното отбелязваш ти.",
       points: features.approvalMode === "client" && features.portalMode === "full"
-        ? ["Одобрява, иска промяна или отказва", "Ти получаваш известие веднага", "Пита за офертата на едно място"]
+        ? ["Може да одобри, да поиска промяна или да откаже", "Ти получаваш известие веднага", "Може да ти зададе въпрос в самата оферта"]
         : ["Вижда офертата, етапите и плащанията", "Без регистрация и парола", "Ти решаваш какво вижда"],
       visual: <PortalDemo />,
     }]),
@@ -190,8 +190,8 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       id: "changes",
       kicker: "ПРОМЕНИ",
       title: "Промени без спорове.",
-      text: "Изпратеното не се пренаписва. Всяка промяна е нова версия и клиентът вижда точно какво се е променило и с колко.",
-      points: ["Допълнителна работа, намаление или само срок", "Сума преди и след за клиента", "Старите версии остават в историята"],
+      text: "Изпратената оферта не се променя тайно. Всяка корекция е нова версия, а клиентът вижда какво точно се е променило и с колко.",
+      points: ["Допълнителна работа, намаление или само нов срок", "Сума преди и след, на едно място", "Старите версии остават в историята"],
       visual: <QuickChangeDemo />,
     },
     {
@@ -199,17 +199,18 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       kicker: "ТВОИТЕ ПРАВИЛА",
       title: "Работиш по твоите правила.",
       text: owner
-        ? "Ти избираш дали работиш с клиента с линк и онлайн потвърждение, или без, и кои модули ползваш. Всичко се сменя от Настройки → Фирма."
+        ? "Pakto не те кара да работиш по един начин. Избираш как се договаряш с клиента и кои модули ползваш. Сменяш го по всяко време от Настройки → Фирма."
         : "Фирмата е избрала как работи с клиента и кои модули ползва. Ето какво важи за вас.",
       points: ["С линк и потвърждение онлайн, или без линк", "Модули: Задачи, Каталог, Финанси, Клиентски портал", "Изключеният модул изчезва, данните му остават"],
+      visualLast: true,
       visual: <RulesVisual features={features} />,
     },
     ...(finance ? [{
       id: "payments",
       kicker: "ПЛАЩАНИЯ",
       title: "Виждаш какво е платено и какво остава.",
-      text: "Вноските следват одобрената оферта и всяка одобрена промяна. Клиентът натиска „Платих“, а ти потвърждаваш.",
-      points: ["Вноски по договорените условия", "Етапи на работата и приемане в края", "Напомняния към клиента"],
+      text: "Вноските следват договореното и всяка одобрена промяна, затова не смяташ наново. Клиентът натиска „Платих“, а ти потвърждаваш, когато получиш парите.",
+      points: ["Вноски по договорените условия", "Етапи на работата, с приемане в края", "Автоматични напомняния към клиента"],
       visual: <FinanceDemo />,
     }] : []),
     owner
@@ -217,8 +218,8 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
         id: "team",
         kicker: "ЕКИП",
         title: "Покани екипа си.",
-        text: "Всеки член вижда само проектите, които му дадеш, и прави само това, което ролята му позволява.",
-        points: ["Покана по имейл", "Роли и права по проекти", "Финансите се скриват с едно превключване"],
+        text: "Колегите работят в същите проекти, но всеки вижда само това, което му дадеш.",
+        points: ["Покана по имейл", "Роли и достъп до конкретни проекти", "Финансите са скрити за тези, които не трябва да ги виждат"],
         visual: <TeamDemo />,
       }
       : {
@@ -297,7 +298,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
             aria-label="Какво можеш с Pakto"
             className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {slides.map(({ id, kicker, title, text, points, final, visual }, index) => {
+            {slides.map(({ id, kicker, title, text, points, final, visualLast, visual }, index) => {
               const shown = index === active;
               return (
                 <section
@@ -315,7 +316,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
                       initial={false}
                       animate={shown ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
                       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: shown ? 0.1 : 0 }}
-                      className="order-2 lg:order-1"
+                      className={cn("lg:order-1", visualLast ? "order-1" : "order-2")}
                     >
                       <span className="inline-block bg-blue-tint px-3 py-1 font-mono text-xs font-bold tracking-[0.08em]">
                         {String(index + 1).padStart(2, "0")} · {kicker}
@@ -323,7 +324,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
                       <h1 className="mt-4 max-w-lg text-[1.75rem] leading-[1.04] font-black tracking-[-0.05em] sm:text-5xl">{title}</h1>
                       <p className="mt-4 max-w-md text-[0.9375rem] leading-7 text-muted-foreground">{text}</p>
                       {!final ? (
-                        <ul className="mt-5 space-y-2.5">
+                        <ul className={cn("mt-5 space-y-2.5", visualLast && "max-sm:hidden")}>
                           {points.map((point) => (
                             <li key={point} className="flex items-start gap-2.5 text-sm font-bold">
                               <span className="mt-0.5 grid size-4 shrink-0 place-items-center bg-ok-tint"><Check className="size-2.5" /></span>
@@ -342,7 +343,7 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
                         </div>
                       )}
                     </m.div>
-                    <div className="order-1 min-w-0 [--demo-size:0.6875rem] sm:[--demo-size:0.875rem] lg:order-2 lg:[--demo-size:1rem]">
+                    <div className={cn("min-w-0 [--demo-size:0.6875rem] sm:[--demo-size:0.875rem] lg:order-2 lg:[--demo-size:1rem]", visualLast ? "order-2" : "order-1")}>
                       {visual}
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard, CalendarRange, Handshake, Link2, ListChecks, MessageCircleQuestion, ToggleRight } from "lucide-react";
+import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard, CalendarRange, ClipboardCheck, Handshake, Link2, ListChecks, MessageCircleQuestion, ToggleRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
@@ -10,23 +10,23 @@ import { PageShell } from "@/components/workspace/page/page-shell";
 
 const promises = [
   { icon: FileLock2, title: "Изпратеното не се променя", text: "Изпратената версия се заключва. Корекция означава нова версия, а старата остава." },
-  { icon: Smartphone, title: "Клиентът решава от телефона", text: "Без регистрация и парола: линк, името му и код от имейла." },
-  { icon: Signature, title: "Всяко „да“ остава доказуемо", text: "Име, час, имейл, отпечатък и PDF, които и двете страни пазят." },
+  { icon: Smartphone, title: "Клиентът потвърждава от телефона", text: "Без регистрация и парола: линк, името му и код от имейла." },
+  { icon: Signature, title: "Всяко „да“ остава записано", text: "Име, час, имейл и PDF, които пазите и двамата и които не могат да се променят после." },
 ];
 
 const clientRules = [
   { icon: Contact, title: "Един клиент – няколко проекта", text: "Един клиент може да има няколко проекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
   { icon: FolderKanban, title: "Проектът е една работа за един клиент", text: "Нова работа за същия клиент е нов проект: „Нов проект“ → „Съществуващ клиент“. Още работа по същия проект е нова оферта в него." },
-  { icon: CalendarRange, title: "Проект и без оферта", text: "За работа по договор или абонамент добавяш етапи и вноски направо в проекта. Клиентът ги вижда в портала." },
+  { icon: CalendarRange, title: "Работа по договор или абонамент", text: "Не ти трябва оферта: добавяш етапи и вноски направо в проекта. Клиентът ги вижда в портала, ако порталът е включен." },
 ];
 
 const yourRules = [
-  { icon: Link2, title: "С линк или без", text: "В Настройки → Фирма избираш как работиш с клиента: с личен линк и портал, само за преглед, или без линк изобщо." },
-  { icon: Handshake, title: "Потвърждаване онлайн или от теб", text: "Клиентът одобрява с името си и код от имейла, или ти отбелязваш офертата като договорена." },
-  { icon: Handshake, title: "Отбележи като договорено", text: "Договорили сте се по телефона, на място или с договор на хартия? В офертата натисни „Отбележи като договорено“. Pakto записва кога и как, а етапите и плащанията тръгват." },
-  { icon: ToggleRight, title: "Модули по избор", text: "Задачи, Каталог, Финанси, Клиентски портал. Изключеният модул изчезва от менюто, а данните му остават." },
-  { icon: ListChecks, title: "Задачи по етапи и „Днес“", text: "Свържи задача с етап. Когато последната е готова, Pakto предлага да затвориш етапа. „Задачи“ → „Днес“ показва кой върху какво работи." },
-  { icon: MessageCircleQuestion, title: "„Попитай клиента“", text: "Въпрос с 2 до 6 варианта, и със снимки, в проекта, раздел „Въпроси“. Клиентът избира в портала." },
+  { icon: Link2, title: "Клиентът потвърждава онлайн", text: "Получава линк и одобрява с името си и код от имейла. Не гониш отговор по телефона. В Настройки → Фирма избираш и друго: линк само за преглед, или без линк изобщо." },
+  { icon: Handshake, title: "Договорихте се извън Pakto? Запиши го", text: "По телефона, на място или с договор на хартия: в офертата натисни „Отбележи като договорено“. Pakto пази кога и как е станало, и проектът тръгва." },
+  { icon: ClipboardCheck, title: "Клиентът приема всеки етап", text: "Завършиш етап и клиентът го приема или пише какво да се поправи. Не спорите накрая какво е било готово." },
+  { icon: MessageCircleQuestion, title: "Клиентът избира, ти не гадаеш", text: "Плочка, цвят, модел: в проекта, раздел „Въпроси“, питаш с 2 до 6 варианта, и със снимки. Изборът му остава записан." },
+  { icon: ListChecks, title: "Знаеш кой какво прави днес", text: "Свързваш задача с етап. Когато задачите са готови, Pakto предлага да затвориш етапа, а „Задачи“ → „Днес“ показва работата за деня." },
+  { icon: ToggleRight, title: "Включваш само каквото ползваш", text: "Модули: Задачи, Каталог, Финанси, Клиентски портал. Изключеният модул изчезва от менюто, а данните му остават." },
 ];
 
 const stageStatuses: Array<{ label: string; variant: "sent" | "approved" | "warning-soft"; text: string }> = [
