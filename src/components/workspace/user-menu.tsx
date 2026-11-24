@@ -86,11 +86,18 @@ export function UserMenu({
   ];
 
   function onAction(key: React.Key) {
-    if (key === "sign-out") startSignOut(() => signOutAction());
-    else {
-      startNavigationProgress(String(key));
-      router.push(String(key));
+    if (key === "sign-out") {
+      startSignOut(() => signOutAction());
+      return;
     }
+    // The report link carries the current page, but its item id must stay fixed: React Aria throws
+    // "Cannot change the id of an item" when the path changes while the menu is still closing.
+    const href =
+      key === "report"
+        ? `/contact?from=${encodeURIComponent(pathname)}`
+        : String(key);
+    startNavigationProgress(href);
+    router.push(href);
   }
 
   return (
@@ -157,7 +164,7 @@ export function UserMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          id={`/contact?from=${encodeURIComponent(pathname)}`}
+          id="report"
           textValue="Съобщи за проблем"
           className="min-h-9"
         >
