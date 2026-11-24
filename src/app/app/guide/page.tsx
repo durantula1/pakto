@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard, CalendarRange } from "lucide-react";
+import { FolderKanban, Contact, EyeOff, Eye, FileLock2, KeyRound, Signature, Smartphone, Clapperboard, CalendarRange, Handshake, Link2, ListChecks, MessageCircleQuestion, ToggleRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { DocumentStatusBadge } from "@/components/change-orders/document-status-badge";
@@ -18,6 +18,15 @@ const clientRules = [
   { icon: Contact, title: "Един клиент – няколко проекта", text: "Един клиент може да има няколко проекта. Данните му се пишат веднъж и се редактират от картата му в „Клиенти“." },
   { icon: FolderKanban, title: "Проектът е една работа за един клиент", text: "Нова работа за същия клиент е нов проект: „Нов проект“ → „Съществуващ клиент“. Още работа по същия проект е нова оферта в него." },
   { icon: CalendarRange, title: "Проект и без оферта", text: "За работа по договор или абонамент добавяш етапи и вноски направо в проекта. Клиентът ги вижда в портала." },
+];
+
+const yourRules = [
+  { icon: Link2, title: "С линк или без", text: "В Настройки → Фирма избираш как работиш с клиента: с личен линк и портал, само за преглед, или без линк изобщо." },
+  { icon: Handshake, title: "Потвърждаване онлайн или от теб", text: "Клиентът одобрява с името си и код от имейла, или ти отбелязваш офертата като договорена." },
+  { icon: Handshake, title: "Отбележи като договорено", text: "Договорили сте се по телефона, на място или с договор на хартия? В офертата натисни „Отбележи като договорено“. Pakto записва кога и как, а етапите и плащанията тръгват." },
+  { icon: ToggleRight, title: "Модули по избор", text: "Задачи, Каталог, Финанси, Клиентски портал. Изключеният модул изчезва от менюто, а данните му остават." },
+  { icon: ListChecks, title: "Задачи по етапи и „Днес“", text: "Свържи задача с етап. Когато последната е готова, Pakto предлага да затвориш етапа. „Задачи“ → „Днес“ показва кой върху какво работи." },
+  { icon: MessageCircleQuestion, title: "„Попитай клиента“", text: "Въпрос с 2 до 6 варианта, и със снимки, в проекта, раздел „Въпроси“. Клиентът избира в портала." },
 ];
 
 const stageStatuses: Array<{ label: string; variant: "sent" | "approved" | "warning-soft"; text: string }> = [
@@ -64,6 +73,18 @@ export default function GuidePage() {
         <h2 className="text-lg font-semibold">Клиенти и проекти</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {clientRules.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
+              <Icon className="mt-0.5 size-5 shrink-0 text-blue" />
+              <div><p className="font-medium">{title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border bg-card p-4 sm:p-6">
+        <h2 className="text-lg font-semibold">Работиш по твоите правила</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {yourRules.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3">
               <Icon className="mt-0.5 size-5 shrink-0 text-blue" />
               <div><p className="font-medium">{title}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p></div>
