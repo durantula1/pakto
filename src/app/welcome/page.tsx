@@ -25,7 +25,8 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
       organizationName={context.organizationName}
       owner={context.role === "owner"}
       roleLabel={roleLabel(context)}
-      finance={can(context, "finance.view")}
+      finance={can(context, "finance.view") && context.features.finance}
+      features={context.features}
       createsProjects={can(context, "projects.create")}
       editsOffers={can(context, "offers.edit")}
     />

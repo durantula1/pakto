@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { LazyMotion, MotionConfig, m } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, Compass, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarRange, Check, ClipboardCheck, Compass, Handshake, Link2, ListChecks, LoaderCircle, MessageCircleQuestion, ShieldCheck, Sparkles, type LucideIcon } from "lucide-react";
+import type { OrganizationFeatures } from "@/lib/authz/tenant-context";
 
 import { Wordmark } from "@/components/brand/wordmark";
 import { FinanceDemo } from "@/components/marketing/platform-demos/finance-demo";
@@ -26,7 +27,40 @@ type Props = {
   finance: boolean;
   createsProjects: boolean;
   editsOffers: boolean;
+  features: OrganizationFeatures;
 };
+
+/** "Работиш по твоите правила": only what this company has switched on and how it works with the client. */
+function RulesVisual({ features }: { features: OrganizationFeatures }) {
+  const link = features.portalMode !== "off";
+  const rows: Array<{ icon: LucideIcon; title: string; text: string }> = [
+    link
+      ? features.approvalMode === "client"
+        ? { icon: Link2, title: "С линк и потвърждение онлайн", text: "Клиентът одобрява с името си и код от имейла." }
+        : { icon: Link2, title: "С линк, но договорено от теб", text: "Клиентът вижда, а ти отбелязваш договореното." }
+      : { icon: Handshake, title: "Без линк към клиента", text: "Договаряш се по свой начин и записваш в Pakto." },
+    { icon: Handshake, title: "Отбележи като договорено", text: "По телефона, на място или с договор: един бутон и етапите и плащанията тръгват." },
+    { icon: ClipboardCheck, title: "Етапи с приемане", text: link && features.portalMode === "full" ? "Клиентът приема етапа в портала." : "Завършваш етапа и го отбелязваш като приет." },
+    ...(link && features.portalMode === "full" ? [{ icon: MessageCircleQuestion, title: "„Попитай клиента“", text: "Въпрос с 2 до 6 варианта, и със снимки. Изборът остава в историята." }] : []),
+    ...(features.finance ? [{ icon: CalendarRange, title: "Етапи и вноски без оферта", text: "За договор или абонамент, и с месечно повтаряне." }] : []),
+    ...(features.tasks ? [{ icon: ListChecks, title: "Задачи по етапи и „Днес“", text: "Виждаш кой върху какво работи днес." }] : []),
+  ];
+  return (
+    <div aria-hidden="true" className="mx-auto w-full max-w-[28rem] border border-ink bg-card p-4 shadow-[6px_6px_0_var(--ink)] sm:p-5">
+      <ul className="space-y-2">
+        {rows.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="flex items-start gap-3 bg-paper px-3 py-2.5">
+            <span className="grid size-8 shrink-0 place-items-center bg-blue-tint text-blue"><Icon className="size-4" /></span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold">{title}</p>
+              <p className="mt-0.5 text-[0.6875rem] leading-4 text-muted-foreground">{text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 /** The opening slide: the mark with the versions of one offer orbiting it. */
 function HelloVisual() {
@@ -122,7 +156,7 @@ function SubmitButton({ next, variant = "primary", children }: { next: string; v
   );
 }
 
-export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel, finance, createsProjects, editsOffers }: Props) {
+export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel, finance, createsProjects, editsOffers, features }: Props) {
   const slides: Slide[] = [
     {
       id: "hello",
@@ -137,17 +171,21 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       kicker: "ОФЕРТИ",
       title: "Изготви оферта направо от телефона.",
       text: "Редове от каталога, количества и цени. Сумите и ДДС се смятат сами, а условията за плащане стават вноски, щом клиентът одобри.",
-      points: ["Каталог с услуги и материали", "Срок, график и условия за плащане", "PDF с логото на фирмата"],
+      points: [features.catalog ? "Каталог с услуги и материали" : "Редове с количества и цени", "Срок, график и условия за плащане", "PDF с логото на фирмата"],
       visual: <OfferDemo />,
     },
-    {
+    ...(features.portalMode === "off" ? [] : [{
       id: "portal",
       kicker: "КЛИЕНТЪТ",
-      title: "Клиентът решава от телефона.",
-      text: "Получава личен линк, без регистрация и парола. Вижда точната версия и одобрява с името си и код от имейла.",
-      points: ["Одобрява, иска промяна или отказва", "Ти получаваш известие веднага", "Пита за офертата на едно място"],
+      title: features.approvalMode === "client" && features.portalMode === "full" ? "Клиентът решава от телефона." : "Клиентът вижда от телефона.",
+      text: features.approvalMode === "client" && features.portalMode === "full"
+        ? "Получава личен линк, без регистрация и парола. Вижда точната версия и одобрява с името си и код от имейла."
+        : "Получава личен линк, без регистрация и парола. Вижда точната версия и как върви проектът, а договореното отбелязваш ти.",
+      points: features.approvalMode === "client" && features.portalMode === "full"
+        ? ["Одобрява, иска промяна или отказва", "Ти получаваш известие веднага", "Пита за офертата на едно място"]
+        : ["Вижда офертата, етапите и плащанията", "Без регистрация и парола", "Ти решаваш какво вижда"],
       visual: <PortalDemo />,
-    },
+    }]),
     {
       id: "changes",
       kicker: "ПРОМЕНИ",
@@ -155,6 +193,16 @@ export function WelcomeCarousel({ firstName, organizationName, owner, roleLabel,
       text: "Изпратеното не се пренаписва. Всяка промяна е нова версия и клиентът вижда точно какво се е променило и с колко.",
       points: ["Допълнителна работа, намаление или само срок", "Сума преди и след за клиента", "Старите версии остават в историята"],
       visual: <QuickChangeDemo />,
+    },
+    {
+      id: "rules",
+      kicker: "ТВОИТЕ ПРАВИЛА",
+      title: "Работиш по твоите правила.",
+      text: owner
+        ? "Ти избираш дали работиш с клиента с линк и онлайн потвърждение, или без, и кои модули ползваш. Всичко се сменя от Настройки → Фирма."
+        : "Фирмата е избрала как работи с клиента и кои модули ползва. Ето какво важи за вас.",
+      points: ["С линк и потвърждение онлайн, или без линк", "Модули: Задачи, Каталог, Финанси, Клиентски портал", "Изключеният модул изчезва, данните му остават"],
+      visual: <RulesVisual features={features} />,
     },
     ...(finance ? [{
       id: "payments",
